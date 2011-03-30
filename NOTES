@@ -1,0 +1,18 @@
+NOTES
+
+= xmeml format =
+The xml export format of FCP, called xmeml, is documented at the Mac OS X Dev Library:
+http://developer.apple.com/library/mac/#documentation/AppleApplications/Reference/FinalCutPro_XML/Topics/Topics.html
+
+
+= volume levels = 
+Quoting the dev library:
+"The volume level for the audio track of a clip is encoded by the Audio Levels effect. 
+The parameter Level expresses linear gain rather than decibels. 
+To convert gain to decibels, use the formula 
+                    decibels = 20 * log10(Level). 
+Conversely, to convert decibels to gain, use 
+                    Level = 10 ^ (decibels / 20)."
+
+
+
