@@ -1,0 +1,18 @@
+Pling Plong Odometer
+====================
+
+-- keeping track of what goes into your sound track --
+
+This tool will analyze your FCP project and tell you what 
+audio clips goes in it and for how long each clip is audible.
+
+You'll need this data if you're lucky enough to have someone
+interested in what music your little masterpiece uses.
+
+===
+
+Prerequisites
+
+python-qt
+https://github.com/havardgulldahl/xmeml
+
