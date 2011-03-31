@@ -4,6 +4,7 @@
 import sys
 from PyQt4.uic import loadUi
 import PyQt4.QtGui as Gui
+import PyQt4.QtCore as Core
 
 import xmeml
 
@@ -24,16 +25,19 @@ def audiblesecs(clipitem, values, threshold=0.1):
       prev = float(keyframe)
   return secs
 
-
-
-class Odometer(object):
+class Odometer(Gui.QMainWindow):
   UIFILE="pling-plong-odometer.ui"
 
-  def __init__(self, argv, xmemlfile):
+  rows = []
+  rowCreated = Core.pyqtSignal(['QTreeWidgetItem'], name="rowCreated")
+
+  def __init__(self, xmemlfile,parent=None):
+    super(Odometer, self).__init__(parent)
     self.xmeml = xmeml.VideoSequence(file=xmemlfile)
-    self.app = Gui.QApplication(argv)
-    self.ui = loadUi(self.UIFILE)
+    #self.app = Gui.QApplication(argv)
+    self.ui = loadUi(self.UIFILE, self)
     self.ui.loadFileButton.clicked.connect(self.clicked)
+    self.rowCreated.connect(self.lookuprow)
 
   def clicked(self, qml):
     print "clicked"
@@ -44,17 +48,23 @@ class Odometer(object):
         if f.id != "audiolevels": continue
         for param in f.parameters:
           if param.values:
-            print "    - %s (%s - %s) = %.1f -> %s" % (param.id, param.min, param.max, audiblesecs(c, param.values), param.values)
-            Gui.QTreeWidgetItem([c.name, audiblesecs(c, param.values)]) 
-          elif param.value:
-            print "    - %s (%s - %s) = %.1f -> %s" % (param.id, param.min, param.max, audiblesecs(c, param.value), param.value)
-            Gui.QTreeWidgetItem([c.name, audiblesecs(c, param.value)]) 
+            secs = "%.1fs" % audiblesecs(c, param.values)
+          else:
+            secs = "%.1fs" % audiblesecs(c, param.value)
 
-  def run(self):
+          r = Gui.QTreeWidgetItem(self.ui.clips, ['', c.name, secs, '...'])
+          self.rows.append(r)
+          self.rowCreated.emit(r)
+
+  def lookuprow(self, r):
+    print "lookup row: ", r
+
+  def run(self, app):
     self.ui.show()
-    sys.exit(self.app.exec_())
+    sys.exit(app.exec_())
 
 if __name__ == '__main__':
-  o = Odometer(sys.argv, "../../data/fcp.sample.xml")
-  o.run()
+  app = Gui.QApplication(sys.argv)
+  o = Odometer("../../data/fcp.sample.xml")
+  o.run(app)
 

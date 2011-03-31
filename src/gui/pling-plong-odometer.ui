@@ -40,6 +40,11 @@
       </attribute>
       <column>
        <property name="text">
+        <string>x</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
         <string>Clip name</string>
        </property>
       </column>
@@ -60,7 +65,7 @@
       <item>
        <widget class="QPushButton" name="loadFileButton">
         <property name="text">
-         <string>Last inn ...</string>
+         <string>&amp;Last inn ...</string>
         </property>
        </widget>
       </item>
