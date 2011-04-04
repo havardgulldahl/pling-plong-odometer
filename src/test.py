@@ -21,10 +21,11 @@ def main(fcpfile):
                                 
     for audioclip, pieces in audioclips.iteritems():
         length = 12.2
-        print audioclip, "%.1fs" % length 
+        a = []
         for subclip in pieces:
-            #print " - ", subclip.id, "%s - %s = %s/%s" % (subclip.start(), subclip.end(), subclip.duration, subclip.end()-subclip.start())
-            print " - ", subclip.id, subclip.audibleframes()
+            a += subclip.audibleframes()
+        print a
+        
 
     return
         ##for f in c.filters:
