@@ -14,18 +14,29 @@ def main(fcpfile):
         #print "    - duration: %s - in: %s - out: %s - start: %s - end: %s" % \
              #(c.duration, c.in_frame, c.out_frame, c.start_frame, c.end_frame)
         #continue
-        if not audioclips.has_key(c.file.id): 
-            audioclips[c.file.id] = [c,]
+        if not audioclips.has_key(c.file): 
+            audioclips[c.file] = [c,]
         else:
-            audioclips[c.file.id] += [c,]
+            audioclips[c.file] += [c,]
                                 
     for audioclip, pieces in audioclips.iteritems():
         length = 12.2
         a = []
         for subclip in pieces:
             a += subclip.audibleframes()
-        print a
-        
+        r = []
+        start, end = a[0]
+        for (s, e) in a[1:]: 
+            if s < end and s > start and e > end:
+                end = e
+            elif s > end: 
+                r.append( (start, end) )
+                start = s
+                end = e 
+        r.append( (start, end) )
+        frames = sum( o-i for (i,o) in r )
+        secs = frames  / audioclip.rate
+        print audioclip.name, a, r, frames, secs
 
     return
         ##for f in c.filters:
