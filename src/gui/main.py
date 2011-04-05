@@ -49,7 +49,7 @@ class Odometer(Gui.QMainWindow):
         self.load(self.xmemlfile)
 
     def load(self, xmemlfile):
-        print "load: ", xmemlfile
+        self.ui.statusbar.showMessage("Loading %s..." % xmemlfile)
         audioclips = {}
         self.xmeml = xmeml.VideoSequence(file=xmemlfile)
         for c in self.xmeml.track_items:
@@ -59,6 +59,7 @@ class Odometer(Gui.QMainWindow):
             else:
                 audioclips[c.file] += [c,]
                     
+        self.ui.statusbar.showMessage("%i audio clips loaded from %s" % (len(audioclips.keys()), xmemlfile)
         for audioclip, pieces in audioclips.iteritems():
             a = []
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioclip.name, "xx", '...'])
