@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
 
-import sys
+import sys, os.path
 from PyQt4.uic import loadUi
 import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
 import PyQt4.Qt as Qt
 
 import xmeml
+import odometer_rc 
 
 
 class Odometer(Gui.QMainWindow):
@@ -28,9 +29,29 @@ class Odometer(Gui.QMainWindow):
         if event.key() == Core.Qt.Key_Escape:
             self.close()
 
+    def dragEnterEvent(self, event):
+        return event.accept()
+
+    def dragMoveEvent(self, event):
+        if xmemlfileFromEvent(event):
+            event.accept()
+            return
+        print "no xml file, ignoring"
+        event.ignore()
+
+    def dropEvent(self, event):
+        event.acceptProposedAction()
+        x = xmemlfileFromEvent(event)
+        if x:
+            self.load(x)
+
     def clicked(self, qml):
+        self.load(self.xmemlfile)
+
+    def load(self, xmemlfile):
+        print "load: ", xmemlfile
         audioclips = {}
-        self.xmeml = xmeml.VideoSequence(file=self.xmemlfile)
+        self.xmeml = xmeml.VideoSequence(file=xmemlfile)
         for c in self.xmeml.track_items:
             if not ( c.type == 'clipitem' and c.file.mediatype == 'audio' ): continue
             if not audioclips.has_key(c.file): 
@@ -84,11 +105,11 @@ class Odometer(Gui.QMainWindow):
             #print vars(r.clip)
             s += """<i>Name:</i><br>%(name)s<br>
                     <i>Type:</i><br>%(mediatype)s<br>
-                    <i>Length:</i><br>%(duration)ss<br>
+                    <i>Length:</i><br>%(duration)sf<br>
                     <i>Rate:</i><br>%(timebase)sfps<br>
                     """ % (vars(r.clip))
             if isinstance(r.clip, xmeml.TrackItem):
-                s += """<i>Start/End:</i><br>%.1ff/%.1ff<br>
+                s += """<i>Start/End:</i><br>%.0ff/%.0ff<br>
                         <i>Filters:</i><br><ul><li>%s</li></ul><br>
                         """ % (r.clip.start(), r.clip.end(), 
                               '</li><li>'.join([f.name for f in r.clip.filters]))
@@ -104,6 +125,18 @@ def uniqify(seq):
     for e in seq: 
         keys[e] = 1 
     return keys.keys()
+
+def xmemlfileFromEvent(event):
+    data = event.mimeData()
+    try:
+        for f in data.urls():
+            fil = unicode(f.toLocalFile())
+            if os.path.isfile(fil) and os.path.splitext(fil.upper())[1] == ".XML":
+                # also try to load it with xmeml.Videosequence ?
+                return fil
+    except Exception, (e):
+        print e
+    return False
 
 if __name__ == '__main__':
     app = Gui.QApplication(sys.argv)

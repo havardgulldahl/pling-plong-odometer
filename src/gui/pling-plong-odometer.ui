@@ -10,6 +10,9 @@
     <height>600</height>
    </rect>
   </property>
+  <property name="acceptDrops">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>♫ ♪ Odometer</string>
   </property>
@@ -150,6 +153,8 @@
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources/>
+ <resources>
+  <include location="odometer.qrc"/>
+ </resources>
  <connections/>
 </ui>
