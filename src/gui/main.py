@@ -11,19 +11,43 @@ import xmeml
 import odometer_rc 
 
 
+class Worker(Core.QThread):
+    loaded = Core.pyqtSignal([xmeml.VideoSequence], name="loaded")
+
+    def __init__(self, parent=None):
+        super(Worker, self).__init__(parent)
+        self.exiting = False
+
+    def __del__(self):
+        self.exiting = True
+        self.wait()
+
+    def load(self, filename):
+        self.xmemlfile = filename
+        self.start()
+
+    def run(self):
+        x = xmeml.VideoSequence(file=self.xmemlfile)
+        print "thread xmeml loaded"
+        self.loaded.emit(x)
+
 class Odometer(Gui.QMainWindow):
     UIFILE="pling-plong-odometer.ui"
 
     rows = []
     rowCreated = Core.pyqtSignal(['QTreeWidgetItem'], name="rowCreated")
+    msg = Core.pyqtSignal([unicode], name="msg")
 
     def __init__(self, xmemlfile,parent=None):
         super(Odometer, self).__init__(parent)
         self.xmemlfile = xmemlfile
+        self.thread = Worker()
+        self.thread.loaded.connect(self.load)
         self.ui = loadUi(self.UIFILE, self)
         self.ui.loadFileButton.clicked.connect(self.clicked)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.rowCreated.connect(self.lookuprow)
+        self.msg.connect(self.showstatus)
 
     def keyPressEvent(self, event):
         if event.key() == Core.Qt.Key_Escape:
@@ -43,23 +67,31 @@ class Odometer(Gui.QMainWindow):
         event.acceptProposedAction()
         x = xmemlfileFromEvent(event)
         if x:
-            self.load(x)
+            self.loadxml(x)
+
+    def showstatus(self, msg):
+        self.ui.statusbar.showMessage(msg)
 
     def clicked(self, qml):
-        self.load(self.xmemlfile)
+        self.loadxml(self.xmemlfile)
 
-    def load(self, xmemlfile):
-        self.ui.statusbar.showMessage("Loading %s..." % xmemlfile)
+    def loadxml(self, xmemlfile):
+        self.msg.emit("Loading %s..." % xmemlfile)
+        #self.xmeml = xmeml.VideoSequence(file=xmemlfile)
+        self.thread.load(xmemlfile)
+
+    def load(self, xmeml):
+        print "load: got xmeml: ", xmeml 
         audioclips = {}
-        self.xmeml = xmeml.VideoSequence(file=xmemlfile)
-        for c in self.xmeml.track_items:
+        self.clips.clear()
+        for c in xmeml.track_items:
             if not ( c.type == 'clipitem' and c.file.mediatype == 'audio' ): continue
             if not audioclips.has_key(c.file): 
                 audioclips[c.file] = [c,]
             else:
                 audioclips[c.file] += [c,]
-                    
-        self.ui.statusbar.showMessage("%i audio clips loaded from %s" % (len(audioclips.keys()), xmemlfile)
+        self.msg.emit("%i audio clips loaded from %s" % (len(audioclips.keys()), xmeml))
+
         for audioclip, pieces in audioclips.iteritems():
             a = []
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioclip.name, "xx", '...'])
