@@ -1,0 +1,8 @@
+<RCC>
+  <qresource prefix="gfx">
+    <file alias="spinner">Spinning_wheel_throbber.gif</file>
+  </qresource>
+  <qresource prefix="data">
+    <file alias="ui">pling-plong-odometer.ui</file>
+  </qresource>
+</RCC>
