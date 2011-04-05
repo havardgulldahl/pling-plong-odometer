@@ -25,6 +25,31 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="metadata">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::RichText</enum>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="verticalSpacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -40,21 +65,21 @@
       <item>
        <widget class="QPushButton" name="PRFButton">
         <property name="text">
-         <string>Til PRF</string>
+         <string>Til &amp;PRF</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="AUXButton">
         <property name="text">
-         <string>Til AUX</string>
+         <string>Til &amp;AUX</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="CreditsButton">
         <property name="text">
-         <string>rulletekst</string>
+         <string>&amp;Rulletekst</string>
         </property>
        </widget>
       </item>
@@ -63,6 +88,9 @@
     <item row="0" column="0">
      <widget class="QTreeWidget" name="clips">
       <property name="acceptDrops">
+       <bool>true</bool>
+      </property>
+      <property name="tabKeyNavigation">
        <bool>true</bool>
       </property>
       <property name="dragDropMode">
@@ -74,18 +102,21 @@
       <property name="alternatingRowColors">
        <bool>true</bool>
       </property>
-      <property name="rootIsDecorated">
-       <bool>false</bool>
-      </property>
       <property name="uniformRowHeights">
        <bool>true</bool>
       </property>
       <property name="sortingEnabled">
        <bool>true</bool>
       </property>
+      <property name="allColumnsShowFocus">
+       <bool>false</bool>
+      </property>
+      <property name="expandsOnDoubleClick">
+       <bool>false</bool>
+      </property>
       <column>
        <property name="text">
-        <string>x</string>
+        <string> </string>
        </property>
       </column>
       <column>
