@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
 
-import sys, os.path
+import sys, os.path, random, time
 import PyQt4.QtCore as Core
 import PyQt4.Qt as Qt
 
@@ -39,13 +39,14 @@ class ResolverBase(Core.QObject):
 class SonotonResolver(ResolverBase):
     prefixes = ['SCD', ]
     def resolve(self, filename):
-        md = TrackMetadata()
-        md.filename = unicode(filename)
-        md.title = "Funky title"
-        md.length = 232.0
-        md.composer = "Mr. Composer"
-        md.artist = "Mr. Performer"
-        md.year = 1901
+        i = random.randint(0,1000)
+        md = TrackMetadata( filename = unicode(filename),
+                            title = "Funky title %i" % i,
+                            length = random.randint(30,500),
+                            composer = "Mr. Composer %i" % i,
+                            artist = "Mr. Performer %i" % i,
+                            year = random.randint(1901,2011) )
+        time.sleep(random.random() * 4)
         return md
 
 class DMAResolver(ResolverBase):
