@@ -45,12 +45,12 @@ class MetadataWorker(Core.QThread):
         self.wait()
 
     def load(self, filename):
-        print "thread %s loading filename: %s" % (self, filename)
+        #print "thread %s loading filename: %s" % (self, filename)
         self.filename = filename
         self.start()
 
     def run(self):
-        print "finding metadata from", self.filename
+        #print "finding metadata from", self.filename
         metadata = self.query.resolve(self.filename)
         self.resolved.emit(self.filename, metadata)
 
@@ -63,9 +63,10 @@ class Odometer(Gui.QMainWindow):
     msg = Core.pyqtSignal([unicode], name="msg")
     filenameFound = Core.pyqtSignal([unicode], name="filenameFound")
 
-    def __init__(self, xmemlfile,parent=None):
+    def __init__(self, xmemlfile, volume=0.1, parent=None):
         super(Odometer, self).__init__(parent)
         self.xmemlfile = xmemlfile
+        self.volumethreshold = xmeml.Volume(volume)
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
         self.ui = loadUi(self.UIFILE, self)
@@ -129,9 +130,10 @@ class Odometer(Gui.QMainWindow):
             w.load(audioclip.name)
             self.rowCreated.emit(r)
             for subclip in pieces:
-                sr = Gui.QTreeWidgetItem(r, ['', subclip.id, "%s" % (subclip.audibleframes(),)])
+                sr = Gui.QTreeWidgetItem(r, ['', subclip.id, "%s" % (subclip.audibleframes(self.volumethreshold),)])
                 sr.clip = subclip
-                a += subclip.audibleframes()
+                a += subclip.audibleframes(self.volumethreshold)
+                #a += subclip.audibleframes()
                 r.addChild(sr)
             aa = uniqify(a)
             aa.sort()
@@ -155,17 +157,17 @@ class Odometer(Gui.QMainWindow):
             r.setText(2, "%i frames = %.1fs" % (frames, secs))
 
     def loadMetadata(self, filename, metadata):
-        print "got metadata for %s: %s" % (filename, metadata)
-        print vars(metadata)
+        #print "got metadata for %s: %s" % (filename, metadata)
         row = self.rows[unicode(filename)]
         row.metadata = metadata
-        row.setText(3, "%(composer)s - %(year)s: %(title)s" % vars(metadata))
+        row.setText(3, u"%(composer)s \u2117 %(year)s: %(title)s" % vars(metadata))
 
     def lookuprow(self, r):
-        print "lookup row: ", r
+        #print "lookup row: ", r
+        pass
 
     def hilited(self, rows):
-        print "hilite row: ", rows
+        #print "hilite row: ", rows
         self.ui.metadata.setText('')
         if not len(rows): return
         s = "<b>Metadata:</b><br>"
