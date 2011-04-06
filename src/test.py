@@ -61,7 +61,12 @@ def main(fcpfile):
         
 if __name__ == '__main__':
     import sys, os.path
-    f = sys.argv[1]
-    if os.path.exists(f):
-        main(os.path.realpath(f))
+    #f = sys.argv[1]
+    #if os.path.exists(f):
+        #main(os.path.realpath(f))
+    print xmeml.Volume(gain=0.001).decibel
+    print xmeml.Volume(gain=3.98).decibel
+    print xmeml.Volume(decibel=-26).gain
+
+
 

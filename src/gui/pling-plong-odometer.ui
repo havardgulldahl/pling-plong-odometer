@@ -52,7 +52,7 @@
         </property>
         <column>
          <property name="text">
-          <string/>
+          <string>♫</string>
          </property>
         </column>
         <column>
@@ -210,6 +210,25 @@
        </widget>
       </item>
       <item>
+       <widget class="QSpinBox" name="volumeThreshold">
+        <property name="suffix">
+         <string> dB</string>
+        </property>
+        <property name="prefix">
+         <string>&gt; </string>
+        </property>
+        <property name="minimum">
+         <number>-60</number>
+        </property>
+        <property name="maximum">
+         <number>9</number>
+        </property>
+        <property name="value">
+         <number>-20</number>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QLabel" name="metadata">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
@@ -249,6 +268,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="PRFButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Til &amp;PRF</string>
         </property>
@@ -256,6 +278,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="AUXButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>Til &amp;AUX</string>
         </property>
@@ -263,6 +288,9 @@
       </item>
       <item>
        <widget class="QPushButton" name="creditsButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
         <property name="text">
          <string>&amp;Rulletekst</string>
         </property>

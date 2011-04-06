@@ -10,6 +10,7 @@ import PyQt4.Qt as Qt
 class TrackMetadata(object):
     def __init__(self,
                  filename=None,
+                 musiclibrary=None,
                  title=None,
                  length=-1,
                  composer=None,
@@ -25,6 +26,7 @@ class TrackMetadata(object):
                  label=None,
                  ):
         self.filename = filename
+        self.musiclibrary = musiclibrary
         self.title = title
         self.length = length # in seconds
         self.composer = composer
@@ -60,6 +62,7 @@ class ResolverBase(Core.QObject):
         self.filename = filename
         i = random.randint(0,1000)
         md = TrackMetadata( filename = unicode(filename),
+                            musiclibrary = self.name, 
                             title = "Funky title %i" % i,
                             length = random.randint(30,500),
                             composer = "Mr. Composer %i" % i,
@@ -88,7 +91,7 @@ class SonotonResolver(ResolverBase):
         
     def parse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
-        metadata = TrackMetadata(filename=self.doc.filename)
+        metadata = TrackMetadata(filename=self.doc.filename, musiclibrary=self.name)
         try:
             duration = unicode(self.doc.frame.findAllElements("div[style='top:177px;']")[1].toInnerXml())
             mins, secs = [int(s.strip()) for s in duration.split(' ')[0].split(":")]
