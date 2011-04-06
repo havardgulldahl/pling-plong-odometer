@@ -31,35 +31,11 @@ class XmemlWorker(Core.QThread):
         #print "thread xmeml loaded"
         self.loaded.emit(x)
 
-class MetadataWorker(Core.QThread):
-    worklist = []
-    resolved = Core.pyqtSignal( [ unicode, metadata.TrackMetadata ], name="resolved")
-
-    def __init__(self, parent=None):
-        super(MetadataWorker, self).__init__(parent)
-        self.exiting = False
-        self.query = metadata.MetadataQuery()
-
-    def __del__(self):
-        self.exiting = True
-        self.wait()
-
-    def load(self, filename):
-        #print "thread %s loading filename: %s" % (self, filename)
-        self.filename = filename
-        self.start()
-
-    def run(self):
-        #print "finding metadata from", self.filename
-        metadata = self.query.resolve(self.filename)
-        self.resolved.emit(self.filename, metadata)
-
 class Odometer(Gui.QMainWindow):
     UIFILE="pling-plong-odometer.ui"
 
     workers = []
     rows = {}
-    rowCreated = Core.pyqtSignal(['QTreeWidgetItem'], name="rowCreated")
     msg = Core.pyqtSignal([unicode], name="msg")
     filenameFound = Core.pyqtSignal([unicode], name="filenameFound")
 
@@ -72,7 +48,6 @@ class Odometer(Gui.QMainWindow):
         self.ui = loadUi(self.UIFILE, self)
         self.ui.loadFileButton.clicked.connect(self.clicked)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
-        self.rowCreated.connect(self.lookuprow)
         self.msg.connect(self.showstatus)
 
     def keyPressEvent(self, event):
@@ -124,16 +99,15 @@ class Odometer(Gui.QMainWindow):
             r.setCheckState(0, Core.Qt.Checked)
             r.clip = audioclip
             self.rows[audioclip.name] = r
-            w = MetadataWorker()
-            w.resolved.connect(self.loadMetadata)
-            self.workers.append(w)
-            w.load(audioclip.name)
-            self.rowCreated.emit(r)
+            #w = metadata.MetadataWorker() # create new threaded metadata resolver
+            w = metadata.SonotonResolver()
+            w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
+            self.workers.append(w) # keep track of the worker
+            w.resolve(audioclip.name) # put the worker to work
             for subclip in pieces:
                 sr = Gui.QTreeWidgetItem(r, ['', subclip.id, "%s" % (subclip.audibleframes(self.volumethreshold),)])
                 sr.clip = subclip
                 a += subclip.audibleframes(self.volumethreshold)
-                #a += subclip.audibleframes()
                 r.addChild(sr)
             aa = uniqify(a)
             aa.sort()
@@ -161,10 +135,6 @@ class Odometer(Gui.QMainWindow):
         row = self.rows[unicode(filename)]
         row.metadata = metadata
         row.setText(3, u"%(composer)s \u2117 %(year)s: %(title)s" % vars(metadata))
-
-    def lookuprow(self, r):
-        #print "lookup row: ", r
-        pass
 
     def hilited(self, rows):
         #print "hilite row: ", rows
