@@ -43,6 +43,8 @@ class ResolverBase(Core.QObject):
 
     prefixes = [] # file prefixes this resolver recognizes
     name = 'general'
+    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
+    trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" )
 
     def accepts(self, filename): 
         for f in self.prefixes:
@@ -54,6 +56,18 @@ class ResolverBase(Core.QObject):
         # reimplement this to return a TrackMetadata object if found
         return False
         
+    def testresolve(self, filename):
+        self.filename = filename
+        i = random.randint(0,1000)
+        md = TrackMetadata( filename = unicode(filename),
+                            title = "Funky title %i" % i,
+                            length = random.randint(30,500),
+                            composer = "Mr. Composer %i" % i,
+                            artist = "Mr. Performer %i" % i,
+                            year = random.randint(1901,2011) )
+        #time.sleep(random.random() * 4)
+        self.trackResolved.emit(self.filename, md)
+    
 
 class SonotonResolver(ResolverBase):
     prefixes = ['SCD', ]
@@ -61,8 +75,6 @@ class SonotonResolver(ResolverBase):
     url = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
     #url = 'http://www.google.com/?q=%s'
     #url = 'file:///home/havard/Documents/dev/Pling-Plong-Odometer/src/metadata/sonoton.%s.example'
-    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
-    trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" )
 
     def resolve(self, filename):
         self.filename = filename
@@ -104,17 +116,6 @@ class DMAResolver(ResolverBase):
     prefixes = ['NDRO', ]
     name = 'DMA'
 
-    def testresolve(self, filename):
-        i = random.randint(0,1000)
-        md = TrackMetadata( filename = unicode(filename),
-                            title = "Funky title %i" % i,
-                            length = random.randint(30,500),
-                            composer = "Mr. Composer %i" % i,
-                            artist = "Mr. Performer %i" % i,
-                            year = random.randint(1901,2011) )
-        time.sleep(random.random() * 4)
-        return md
-    
 def findResolver(filename):
     resolvers = [ SonotonResolver(), DMAResolver() ]
     for resolver in resolvers:

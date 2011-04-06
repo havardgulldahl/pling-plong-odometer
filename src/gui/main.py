@@ -46,9 +46,16 @@ class Odometer(Gui.QMainWindow):
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
         self.ui = loadUi(self.UIFILE, self)
+        self.ui.detailsBox.hide()
+        self.ui.previousButton = self.ui.buttonBox.addButton(u'Pre&vious', Gui.QDialogButtonBox.ActionRole)
+        self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
+        self.ui.nextButton = self.ui.buttonBox.addButton(u'Ne&xt', Gui.QDialogButtonBox.ActionRole)
+        self.ui.nextButton.clicked.connect(self.showNextMetadata)
+        self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
+        self.ui.clips.itemActivated.connect(self.showMetadata)
         self.msg.connect(self.showstatus)
 
     def keyPressEvent(self, event):
@@ -105,7 +112,8 @@ class Odometer(Gui.QMainWindow):
             w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
             w.trackProgress.connect(self.showProgress) 
             self.workers.append(w) # keep track of the worker
-            w.resolve(audioclip.name) # put the worker to work async
+            #w.resolve(audioclip.name) # put the worker to work async
+            w.testresolve(audioclip.name) # put the worker to work async
             for subclip in pieces:
                 sr = Gui.QTreeWidgetItem(r, ['', subclip.id, "%s" % (subclip.audibleframes(self.volumethreshold),)])
                 sr.clip = subclip
@@ -165,14 +173,40 @@ class Odometer(Gui.QMainWindow):
                               '</li><li>'.join([f.name for f in r.clip.filters]))
         self.ui.metadata.setText(s)
 
+    def showMetadata(self, row, col=None):
+        self.ui.detailsBox.currentRow = row
+        self.ui.detailsBox.show()
+        self.ui.clipTitle.setText(row.metadata.title or '')
+        self.ui.clipArtist.setText(row.metadata.artist or '')
+        self.ui.clipComposer.setText(row.metadata.composer or '')
+        self.ui.clipYear.setValue(row.metadata.year or 0)
+        self.ui.clipTracknumber.setText(row.metadata.tracknumber or '')
+        self.ui.clipCopyright.setText(row.metadata.copyright or '')
+        self.ui.clipLabel.setText(row.metadata.label or '')
+        self.ui.previousButton.setEnabled(self.ui.clips.itemAbove(row) is not None)
+        self.ui.nextButton.setEnabled(self.ui.clips.itemBelow(row) is not None)
+
+    def showPreviousMetadata(self, b):
+        clips = self.ui.clips
+        r = clips.itemAbove(self.ui.detailsBox.currentRow)
+        clips.setCurrentItem(r)
+        clips.itemActivated.emit(r, -1)
+
+    def showNextMetadata(self, b):
+        clips = self.ui.clips
+        r = clips.itemBelow(self.ui.detailsBox.currentRow)
+        clips.setCurrentItem(r)
+        clips.itemActivated.emit(r, -1)
+
     def creditsToClipboard(self):
         s = ""
         for r in self.rows.values():
-            s += u"%(title)s\r\n%(composer)s \u2117 %(year)s\r\n" % vars(r.metadata)
-        clipboard = self.clipboard()
+            s += u"%(title)s\r\n%(composer)s \u2117 %(year)s\r\n\r\n\r\n" % vars(r.metadata)
+        clipboard = self.app.clipboard()
         clipboard.setText(s)
 
     def run(self, app):
+        self.app = app
         self.ui.show()
         sys.exit(app.exec_())
 
