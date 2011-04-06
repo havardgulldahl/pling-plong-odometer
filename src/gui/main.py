@@ -56,6 +56,13 @@ class Odometer(Gui.QMainWindow):
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
+        self.ui.clipTitle.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'title', unicode(s)))
+        self.ui.clipArtist.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'artist', unicode(s)))
+        self.ui.clipComposer.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'composer', unicode(s)))
+        self.ui.clipYear.valueChanged.connect(lambda i: setattr(self.ui.detailsBox.currentRow.metadata, 'year', int(i)))
+        self.ui.clipTracknumber.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'tracknumber', unicode(s)))
+        self.ui.clipCopyright.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'copyright', unicode(s)))
+        self.ui.clipLabel.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'label', unicode(s)))
         self.msg.connect(self.showstatus)
 
     def keyPressEvent(self, event):
