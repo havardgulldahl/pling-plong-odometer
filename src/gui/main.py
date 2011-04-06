@@ -47,6 +47,7 @@ class Odometer(Gui.QMainWindow):
         self.xmemlthread.loaded.connect(self.load)
         self.ui = loadUi(self.UIFILE, self)
         self.ui.loadFileButton.clicked.connect(self.clicked)
+        self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.msg.connect(self.showstatus)
 
@@ -99,11 +100,12 @@ class Odometer(Gui.QMainWindow):
             r.setCheckState(0, Core.Qt.Checked)
             r.clip = audioclip
             self.rows[audioclip.name] = r
-            #w = metadata.MetadataWorker() # create new threaded metadata resolver
-            w = metadata.SonotonResolver()
+            #w = metadata.SonotonResolver()
+            w = metadata.findResolver(audioclip.name)
             w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
+            w.trackProgress.connect(self.showProgress) 
             self.workers.append(w) # keep track of the worker
-            w.resolve(audioclip.name) # put the worker to work
+            w.resolve(audioclip.name) # put the worker to work async
             for subclip in pieces:
                 sr = Gui.QTreeWidgetItem(r, ['', subclip.id, "%s" % (subclip.audibleframes(self.volumethreshold),)])
                 sr.clip = subclip
@@ -136,6 +138,14 @@ class Odometer(Gui.QMainWindow):
         row.metadata = metadata
         row.setText(3, u"%(composer)s \u2117 %(year)s: %(title)s" % vars(metadata))
 
+    def showProgress(self, filename, progress):
+        print "got progress for %s: %s" % (filename, progress)
+        return
+        p = Gui.QProgressBar(parent=self.ui.clips)
+        p.setValue(progress)
+        row = self.rows[unicode(filename)]
+        self.ui.clips.setItemWidget(row, 3, p)
+
     def hilited(self, rows):
         #print "hilite row: ", rows
         self.ui.metadata.setText('')
@@ -155,6 +165,12 @@ class Odometer(Gui.QMainWindow):
                               '</li><li>'.join([f.name for f in r.clip.filters]))
         self.ui.metadata.setText(s)
 
+    def creditsToClipboard(self):
+        s = ""
+        for r in self.rows.values():
+            s += u"%(title)s\r\n%(composer)s \u2117 %(year)s\r\n" % vars(r.metadata)
+        clipboard = self.clipboard()
+        clipboard.setText(s)
 
     def run(self, app):
         self.ui.show()

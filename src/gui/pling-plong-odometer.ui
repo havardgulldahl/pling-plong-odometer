@@ -80,7 +80,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="CreditsButton">
+       <widget class="QPushButton" name="creditsButton">
         <property name="text">
          <string>&amp;Rulletekst</string>
         </property>
