@@ -232,7 +232,7 @@ class Odometer(Gui.QMainWindow):
     def creditsToClipboard(self):
         s = ""
         for r in self.rows.values():
-            s += u"%(title)s\r\n%(composer)s \u2117 %(year)s\r\n\r\n\r\n" % vars(r.metadata)
+            s += u"%(title)s\r\n%(artist)s\r\n%(label)s \u2117 %(year)s\r\n\r\n\r\n" % vars(r.metadata)
         clipboard = self.app.clipboard()
         clipboard.setText(s)
         self.msg.emit("End credit metadata copied to clipboard.")
