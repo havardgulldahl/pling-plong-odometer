@@ -12715,7 +12715,8 @@
 						<mastercomment4/>
 					</comments>
 					<file id="SCD047530 ">
-						<name>SCD047530.wav</name>
+						<xname>SCD047530.wav</xname>
+						<name>NONRT900497LP0205_xxx.wav</name>
 						<pathurl>file://localhost/Volumes/Askepott/Prosjekter/DNPR637010_Kra%CC%8Akeklubben_TEM_011212/MUSIKK/INSEKT/Humle/SCD047530.wav</pathurl>
 						<rate>
 							<timebase>25</timebase>

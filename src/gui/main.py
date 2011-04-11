@@ -99,6 +99,7 @@ class Odometer(Gui.QMainWindow):
 
     def load(self, xmeml):
         #print "load: got xmeml: ", xmeml 
+        self.xmeml = xmeml
         self.audioclips = {}
         for c in xmeml.track_items:
             if not ( c.type == 'clipitem' and c.file.mediatype == 'audio' ): continue
@@ -108,7 +109,7 @@ class Odometer(Gui.QMainWindow):
                 self.audioclips[c.file] += [c,]
         numclips = len(self.audioclips.keys())
         self.ui.creditsButton.setEnabled(numclips > 0)
-        self.msg.emit("%i audio clips loaded from xml file." % numclips)
+        self.msg.emit(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb." % (numclips, xmeml.name))
         self.computeAudibleDuration()
 
     def computeAudibleDuration(self, volumethreshold=None):
@@ -116,7 +117,7 @@ class Odometer(Gui.QMainWindow):
             volumethreshold = xmeml.Volume(gain=volumethreshold)
         elif volumethreshold is None:
             volumethreshold = xmeml.Volume(decibel=int(self.ui.volumeThreshold.value()))
-        self.msg.emit('Computing duration of audio above %idB' % volumethreshold.decibel)
+        self.msg.emit(u'Computing duration of audio above %idB in sequence \u00ab%s\u00bb' % (volumethreshold.decibel, self.xmeml.name))
         print "gain: ", volumethreshold.gain
         self.clips.clear()
         for audioclip, pieces in self.audioclips.iteritems():
@@ -138,7 +139,7 @@ class Odometer(Gui.QMainWindow):
                 a += subclip.audibleframes(volumethreshold)
                 r.addChild(sr)
             if not len(a):
-                self.msg.emit('There are no audible frames at this volume threshold (%s dB)' % volumethreshold.decibel)
+                self.msg.emit(u'There are no audible frames at this volume threshold (%s dB)' % volumethreshold.decibel)
                 self.clips.clear()
                 return None # no audible frames at this volume threshold
             aa = uniqify(a)
@@ -166,10 +167,8 @@ class Odometer(Gui.QMainWindow):
         #print "got metadata for %s: %s" % (filename, metadata)
         row = self.rows[unicode(filename)]
         row.metadata = metadata
-        row.setText(3, u"%(composer)s \u2117 %(year)s: \u00ab%(title)s\u00bb" % vars(metadata))
-        if metadata.musiclibrary == "DMA":
-            self.PRFButton.setEnabled(True)
-        elif metadata.musiclibrary == "Sonoton":
+        row.setText(3, u"%(artist)s \u2117 %(year)s: \u00ab%(title)s\u00bb" % vars(metadata))
+        if metadata.musiclibrary == "Sonoton":
             self.AUXButton.setEnabled(True)
 
     def showProgress(self, filename, progress):

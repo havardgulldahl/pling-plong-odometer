@@ -26,6 +26,9 @@
         <property name="acceptDrops">
          <bool>true</bool>
         </property>
+        <property name="statusTip">
+         <string>Drop a Final Cut Pro sequence (XML export) anywhere to load it.</string>
+        </property>
         <property name="tabKeyNavigation">
          <bool>true</bool>
         </property>
@@ -138,6 +141,9 @@
          </item>
          <item row="6" column="1">
           <widget class="QSpinBox" name="clipYear">
+           <property name="statusTip">
+            <string/>
+           </property>
            <property name="minimum">
             <number>1900</number>
            </property>
@@ -190,6 +196,9 @@
          </item>
          <item row="11" column="1">
           <widget class="QDialogButtonBox" name="buttonBox">
+           <property name="statusTip">
+            <string>Close the Details box</string>
+           </property>
            <property name="standardButtons">
             <set>QDialogButtonBox::Close</set>
            </property>
@@ -204,13 +213,22 @@
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
        <widget class="QPushButton" name="loadFileButton">
+        <property name="statusTip">
+         <string>Locate a Final Cut Pro sequence (XML export) and load it.</string>
+        </property>
         <property name="text">
-         <string>&amp;Last inn ...</string>
+         <string>&amp;Open file...</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QSpinBox" name="volumeThreshold">
+        <property name="toolTip">
+         <string>Select a threshold in dB</string>
+        </property>
+        <property name="statusTip">
+         <string>All audio below this value is left out when the total duration of each clip is computed.</string>
+        </property>
         <property name="suffix">
          <string> dB</string>
         </property>
@@ -269,7 +287,7 @@
       <item>
        <widget class="QPushButton" name="PRFButton">
         <property name="enabled">
-         <bool>false</bool>
+         <bool>true</bool>
         </property>
         <property name="text">
          <string>Til &amp;PRF</string>
