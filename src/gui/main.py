@@ -126,13 +126,12 @@ class Odometer(Gui.QMainWindow):
             r.setCheckState(0, Core.Qt.Checked)
             r.clip = audioclip
             self.rows[audioclip.name] = r
-            #w = metadata.SonotonResolver()
             w = metadata.findResolver(audioclip.name)
             w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
             w.trackProgress.connect(self.showProgress) 
             self.workers.append(w) # keep track of the worker
-            #w.resolve(audioclip.name) # put the worker to work async
-            w.testresolve(audioclip.name) # put the worker to work async
+            w.resolve(audioclip.name) # put the worker to work async
+            #w.testresolve(audioclip.name) # put the worker to work async
             for subclip in pieces:
                 sr = Gui.QTreeWidgetItem(r, ['', subclip.id, "%s" % (subclip.audibleframes(volumethreshold),)])
                 sr.clip = subclip

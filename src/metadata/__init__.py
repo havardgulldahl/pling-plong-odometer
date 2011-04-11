@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
 
-import sys, os.path, random, time, urllib2, urlparse
+import sys, os.path, random, time, urllib2, urlparse, re, json
 import PyQt4.QtCore as Core
 import PyQt4.QtGui as Gui
 import PyQt4.QtWebKit as Web
@@ -43,7 +43,7 @@ class TrackMetadata(object):
 
 class ResolverBase(Core.QObject):
 
-    prefixes = [] # file prefixes this resolver recognizes
+    prefixes = [] # a list of file prefixes that this resolver recognizes
     name = 'general'
     trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
     trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" )
@@ -54,9 +54,10 @@ class ResolverBase(Core.QObject):
                 return True
         return False
 
-    def resolve(self, filename): 
-        # reimplement this to return a TrackMetadata object if found
-        return False
+    def parse(self): 
+        # reimplement this to emit a signal with a TrackMetadata object when found
+        #self.trackResolved.emit(self.filename, md)
+        pass
         
     def testresolve(self, filename):
         self.filename = filename
@@ -71,24 +72,27 @@ class ResolverBase(Core.QObject):
         #time.sleep(random.random() * 4)
         self.trackResolved.emit(self.filename, md)
     
-
-class SonotonResolver(ResolverBase):
-    prefixes = ['SCD', ]
-    name = 'Sonoton'
-    url = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
-    #url = 'http://www.google.com/?q=%s'
-    #url = 'file:///home/havard/Documents/dev/Pling-Plong-Odometer/src/metadata/sonoton.%s.example'
-
     def resolve(self, filename):
         self.filename = filename
-        self.doc = webdoc(self.filename, parent=None)
+        self.doc = webdoc(self.filename, self.url(filename), parent=None)
         self.doc.frame.loadFinished.connect(self.parse)
         self.doc.page.loadProgress.connect(self.progress)
         self.doc.load()
 
     def progress(self, i):
         self.trackProgress.emit(self.filename, i)
+
+    def url(self, filename): # return url from filename
+        tracknumber, fileext = os.path.splitext(filename)
+        return self.urlbase % tracknumber
         
+
+class SonotonResolver(ResolverBase):
+    prefixes = ['SCD', ]
+    name = 'Sonoton'
+    urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
+    urlbase = 'http://localhost:8000/sonoton.html?%s'
+
     def parse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
         metadata = TrackMetadata(filename=self.doc.filename, musiclibrary=self.name)
@@ -102,7 +106,7 @@ class SonotonResolver(ResolverBase):
                     'Track Number': 'tracknumber', #SCD 821 20.0
                     'Composer': 'composer', #Mladen Franko
                     'Artist': 'artist', #(N/A for production music)
-                    'Album Name': 'album',#ORCHESTRAL LANDSCAPES 2
+                    'Album Name': 'albumname',#ORCHESTRAL LANDSCAPES 2
                     'Catalogue number': 'catalogue', #821
                     'Label': 'label', #SCD
                     'Copyright Owner': 'copyright', #(This information requires login)
@@ -115,9 +119,40 @@ class SonotonResolver(ResolverBase):
         #print vars(metadata)
         self.trackResolved.emit(self.filename, metadata)
 
+
+
 class DMAResolver(ResolverBase):
-    prefixes = ['NDRO', ]
+    prefixes = ['NONRT', ]
     name = 'DMA'
+    #urlbase = ''
+    #urlbase = 'file:///home/havard/Documents/dev/Pling-Plong-Odometer/src/metadata/dma.%s.example2'
+    urlbase = 'http://localhost:8000/dma.html?%s'
+
+    def parse(self):
+        print "parsing"
+        sc = self.doc.frame.findAllElements("script")
+        rawdata = unicode(sc.toList()[2].toInnerXml(), encoding='latin1')
+        data = re.findall(r'NRK.record.MusicObject\((.+?)\)', rawdata, re.S)[0]
+        jsonfix = re.sub(r'([a-zA-Z]+)\ ?:', r'"\1":', data)
+        meta = json.loads(jsonfix.replace("'", '"'))["data"]
+        print meta
+        mt = TrackMetadata(filename=self.doc.filename, 
+                           musiclibrary=self.name,
+                           title = meta["title"],
+                           year = int(meta["releaseYear"]),
+                           artist = ", ".join([x["name"] for x in meta["artists"]]),
+                           albumname = ", ".join([x["name"] for x in meta["albums"]]),
+                           composer = ", ".join([x["name"] for x in meta["composer"]]),
+                           tracknumber = meta["trackNumber"]
+                           )
+        mins, secs = (int(i.strip()) for i in meta["duration"].split(":"))
+        mt.length = mins*60+secs
+        self.trackResolved.emit(self.filename, mt)
+
+    def url(self, filename): # return url from filename
+        tracknumber_songname, fileext = os.path.splitext(filename)
+        tracknumber, songname = tracknumber_songname.split('_', 1)
+        return self.urlbase % tracknumber
 
 def findResolver(filename):
     resolvers = [ SonotonResolver(), DMAResolver() ]
@@ -127,13 +162,11 @@ def findResolver(filename):
     return False
 
 class webdoc(Core.QObject):
-    urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
 
-    def __init__(self, filename, parent=None):
+    def __init__(self, filename, url, parent=None):
         super(webdoc, self).__init__(parent)
         self.filename = filename
-        tracknumber, fileext = os.path.splitext(filename)
-        self.url = self.urlbase % tracknumber
+        self.url = url
         self.page = Web.QWebPage(self)
         self.frame = self.page.mainFrame()
         self.settings = self.page.settings()
@@ -141,13 +174,16 @@ class webdoc(Core.QObject):
         self.settings.setAttribute(Web.QWebSettings.AutoLoadImages, False)
 
     def load(self):
-        #print "loading url: ", self.url
+        print "loading url: ", self.url
         self.frame.load(Core.QUrl(self.url))
-        return
 
 if __name__ == '__main__':
+    #filename = 'SCD082120.wav'
+    filename = 'NONRT900497LP0205_xxx.wav'
     app = Gui.QApplication(sys.argv)
-    mq = MetadataQuery()
-    resolve = mq.resolve('SCD082120')
-    print resolve
+    mq = findResolver(filename)
+    if not mq:
+        sys.exit(1)
+    mq.trackResolved.connect(lambda f,m: app.quit())
+    resolve = mq.resolve(filename)
     app.exec_()
