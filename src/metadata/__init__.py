@@ -125,7 +125,6 @@ class DMAResolver(ResolverBase):
     prefixes = ['NONRT', ]
     name = 'DMA'
     #urlbase = ''
-    #urlbase = 'file:///home/havard/Documents/dev/Pling-Plong-Odometer/src/metadata/dma.%s.example2'
     urlbase = 'http://localhost:8000/dma.html?%s'
 
     def parse(self):

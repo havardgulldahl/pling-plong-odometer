@@ -38,6 +38,8 @@ class Odometer(Gui.QMainWindow):
     workers = []
     rows = {}
     msg = Core.pyqtSignal(unicode, name="msg")
+    loaded = Core.pyqtSignal()
+    metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
 
     def __init__(self, xmemlfile, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
@@ -47,6 +49,7 @@ class Odometer(Gui.QMainWindow):
         self.xmemlthread.loaded.connect(self.load)
         self.ui = loadUi(self.UIFILE, self)
         self.ui.detailsBox.hide()
+        self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.decibel)
         self.ui.previousButton = self.ui.buttonBox.addButton(u'Pre&vious', Gui.QDialogButtonBox.ActionRole)
         self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
@@ -66,6 +69,8 @@ class Odometer(Gui.QMainWindow):
         self.ui.clipLabel.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'label', unicode(s)))
         self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmeml.Volume(decibel=int(i))))
         self.msg.connect(self.showstatus)
+        self.loaded.connect(self.computeAudibleDuration)
+        self.metadataLoaded.connect(self.checkUsage)
 
     def keyPressEvent(self, event):
         if event.key() == Core.Qt.Key_Escape:
@@ -110,14 +115,14 @@ class Odometer(Gui.QMainWindow):
         numclips = len(self.audioclips.keys())
         self.ui.creditsButton.setEnabled(numclips > 0)
         self.msg.emit(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb." % (numclips, xmeml.name))
-        self.computeAudibleDuration()
+        self.loaded.emit()
 
     def computeAudibleDuration(self, volumethreshold=None):
         if isinstance(volumethreshold, float):
             volumethreshold = xmeml.Volume(gain=volumethreshold)
         elif volumethreshold is None:
             volumethreshold = xmeml.Volume(decibel=int(self.ui.volumeThreshold.value()))
-        self.msg.emit(u'Computing duration of audio above %idB in sequence \u00ab%s\u00bb' % (volumethreshold.decibel, self.xmeml.name))
+        self.msg.emit(u'Computing duration of audio above %idB' % volumethreshold.decibel)
         print "gain: ", volumethreshold.gain
         self.clips.clear()
         for audioclip, pieces in self.audioclips.iteritems():
@@ -162,6 +167,7 @@ class Odometer(Gui.QMainWindow):
             secs = frames  / audioclip.timebase
             #print audioclip.name, a, comp, frames, secs
             r.setText(2, "%i frames = %.1fs" % (frames, secs))
+            r.clip.audibleDuration = secs
 
     def loadMetadata(self, filename, metadata):
         #print "got metadata for %s: %s" % (filename, metadata)
@@ -170,6 +176,7 @@ class Odometer(Gui.QMainWindow):
         row.setText(3, u"%(artist)s \u2117 %(year)s: \u00ab%(title)s\u00bb" % vars(metadata))
         if metadata.musiclibrary == "Sonoton":
             self.AUXButton.setEnabled(True)
+        self.metadataLoaded.emit(row)
 
     def showProgress(self, filename, progress):
         print "got progress for %s: %s" % (filename, progress)
@@ -235,6 +242,36 @@ class Odometer(Gui.QMainWindow):
         clipboard = self.app.clipboard()
         clipboard.setText(s)
         self.msg.emit("End credit metadata copied to clipboard.")
+
+    def checkUsage(self, row):
+        maxArtists = None
+        maxTitlePerArtist = 3
+        maxTitleLength = 60
+        artists = {}
+        for filename, row in self.rows.iteritems():
+            try:
+                md = row.clip.metadata
+                print row.clip.audibleDuration
+                if row.clip.audibleDuration > maxTitleLength:
+                    row.setIcon(':/gfx/warn.png')
+                if not artists.has_key(md.artist):
+                    artists[md.artist] = []
+                artists[md.artist].append(md.title)
+            except AttributeError:
+                pass
+
+        bads = [ (a,t) for a,t in artists.iteritems() if len(t) > maxTitlePerArtist ]
+        print bads
+        if bads:
+            self.ui.errors.show()
+            self.ui.errors.setText("""<h1>Warning</h1><p>Current agreements set a limit of %i titles per artist,
+                    but in this sequence:</p><ul>%s<ul>""" % (maxTitlePerArtist, 
+                        "".join(["<li>%s: %s times</li>" % (a,t) for a,t in bads])))
+        else:
+            self.ui.errors.hide()
+
+            
+
 
     def run(self, app):
         self.app = app

@@ -22,6 +22,25 @@
     <item row="0" column="0">
      <layout class="QVBoxLayout" name="verticalLayout_2">
       <item>
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Project</string>
+        </property>
+        <layout class="QFormLayout" name="formLayout_2">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Production no.</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="prodno"/>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item>
        <widget class="QTreeWidget" name="clips">
         <property name="acceptDrops">
          <bool>true</bool>
@@ -73,6 +92,13 @@
           <string>Metadata</string>
          </property>
         </column>
+       </widget>
+      </item>
+      <item>
+       <widget class="QGroupBox" name="errors">
+        <property name="title">
+         <string>Errors and warnings</string>
+        </property>
        </widget>
       </item>
       <item>
