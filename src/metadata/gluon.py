@@ -21,7 +21,13 @@ class GluonBuilder(object):
         self.objects = metadatalist
 
     def build(self):
-        self.root = ezEl('gluon')
+        self.root = ezEl('gluon', {'priority':'3',
+                                   'artID':'odofon-1234',
+                                   'xmlns':'http://gluon.nrk.no/gluon2',
+                                   'xmlns:gluonDict':'http://gluon.nrk.no/gluonDict',
+                                   'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                                   'xsi:schemaLocation': 'http://gluon.nrk.no/gluon2 http://gluon.nrk.no/gluon2.xsd'
+                                })
         head = self.root.add('head')
         md = head.add('metadata')
         creators = md.add('creators')
