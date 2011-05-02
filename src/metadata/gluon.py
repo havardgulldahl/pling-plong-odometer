@@ -8,11 +8,13 @@ import sys, xml.etree.ElementTree as ET
 from metadata import TrackMetadata
 
 GLUON_NAMESPACE='{http://gluon.nrk.no/gluon2}'
+GLUONDICT_NAMESPACE='{http://gluon.nrk.no/gluonDict}'
+XSI_NAMESPACE='{http://www.w3.org/2001/XMLSchema-instance}'
 
 def ezSubEl(parent, tagName, *args, **kwargs):
     return ET.SubElement(parent, '%s%s' % (GLUON_NAMESPACE, tagName), *args, **kwargs)
 
-class ezEl(ET.Element):
+class ezEl(ET._ElementInterface):
     def add(self, tagName):
         return ezSubEl(self, '%s%s' % (GLUON_NAMESPACE, tagName))
 
@@ -27,11 +29,9 @@ class GluonBuilder(object):
     def build(self):
         self.root = ezEl('gluon', {'priority':'3',
                                    'artID':'odofon-1234',
-                                   'xmlns':'http://gluon.nrk.no/gluon2',
-                                   'xmlns:gluonDict':'http://gluon.nrk.no/gluonDict',
-                                   'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-                                   'xsi:schemaLocation': 'http://gluon.nrk.no/gluon2 http://gluon.nrk.no/gluon2.xsd'
                                 })
+        self.root.set('%s%s' % (XSI_NAMESPACE, 'schemaLocation'),
+                      'http://gluon.nrk.no/gluon2 http://gluon.nrk.no/gluon2.xsd')
         head = self.root.add('head')
         md = head.add('metadata')
         creators = md.add('creators')
@@ -49,14 +49,29 @@ class GluonBuilder(object):
             duration = ezSubEl(ezSubEl(xobj,'format'),'formatExtend').text='%.2f' % obj['duration']
         return ET.tostring(self.root, encoding='utf-8')
 
+def glns(tag):
+    return '%s%s' % (GLUON_NAMESPACE, tag)
+
 class GluonParser(object):
 
     def parse(self, xmlsource):
         self.tree = ET.parse(xmlsource)
-        print self.tree
-        for obj in self.tree.iter(GLUON_NAMESPACE+'object'):
+        for obj in self.tree.getiterator(glns('object')):
             md = TrackMetadata()
-
+            md.identifier = obj.find('.//'+glns('identifier')).text
+            md.title = obj.find('.//'+glns('title')).text
+            md.albumname = obj.find('.//'+glns('titleAlternative')).text
+            for creator in obj.findall('.//'+glns('creator')):
+                self.c = creator
+                if creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V34':
+                    # Komponist
+                    md.composer = creator.find('./'+glns('name')).text
+                elif creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V811':
+                    # Tekstforfatter
+                    md.writer = creator.find('./'+glns('name')).text
+            md.artist = obj.find('.//'+glns('contributors')+'/'+glns('contributor')+'/'+glns('name')).text
+            md.year = obj.find('.//'+glns('dates')+'/*/'+glns('start')).get('startYear')
+        return md
 
 if __name__ == '__main__':
     items = [

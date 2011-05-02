@@ -7,9 +7,13 @@ import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
 import PyQt4.Qt as Qt
 
+trans = Core.QCoreApplication.translate
+
 import xmeml
 import metadata
 import odometer_rc 
+
+
 
 class XmemlWorker(Core.QThread):
     loaded = Core.pyqtSignal([xmeml.VideoSequence], name="loaded")
@@ -51,9 +55,9 @@ class Odometer(Gui.QMainWindow):
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.decibel)
-        self.ui.previousButton = self.ui.buttonBox.addButton(u'Pre&vious', Gui.QDialogButtonBox.ActionRole)
+        self.ui.previousButton = self.ui.buttonBox.addButton(trans('Pre&vious'), Gui.QDialogButtonBox.ActionRole)
         self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
-        self.ui.nextButton = self.ui.buttonBox.addButton(u'Ne&xt', Gui.QDialogButtonBox.ActionRole)
+        self.ui.nextButton = self.ui.buttonBox.addButton(trans('Ne&xt'), Gui.QDialogButtonBox.ActionRole)
         self.ui.nextButton.clicked.connect(self.showNextMetadata)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
@@ -114,7 +118,7 @@ class Odometer(Gui.QMainWindow):
                 self.audioclips[c.file] += [c,]
         numclips = len(self.audioclips.keys())
         self.ui.creditsButton.setEnabled(numclips > 0)
-        self.msg.emit(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb." % (numclips, xmeml.name))
+        self.msg.emit(self.tr(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb." % (numclips, xmeml.name)))
         self.loaded.emit()
 
     def computeAudibleDuration(self, volumethreshold=None):

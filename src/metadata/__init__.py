@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
 
+#__all__ = ['gluon',]
+__name__ = 'metadata'
+
 import sys, os.path, random, time, urllib2, urlparse, re, json
 import PyQt4.QtCore as Core
 import PyQt4.QtGui as Gui
@@ -24,6 +27,8 @@ class TrackMetadata(object):
                  ean=None,
                  catalogue=None,
                  label=None,
+                 writer=None,
+                 identifier=None,
                  ):
         self.filename = filename
         self.musiclibrary = musiclibrary
@@ -40,6 +45,8 @@ class TrackMetadata(object):
         self.ean = ean
         self.catalogue = catalogue
         self.label = label
+        self.writer = writer
+        self.identifier = identifier
 
 class ResolverBase(Core.QObject):
 

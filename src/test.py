@@ -64,9 +64,25 @@ if __name__ == '__main__':
     #f = sys.argv[1]
     #if os.path.exists(f):
         #main(os.path.realpath(f))
-    print xmeml.Volume(gain=0.001).decibel
-    print xmeml.Volume(gain=3.98).decibel
-    print xmeml.Volume(decibel=-26).gain
+    #print xmeml.Volume(gain=0.001).decibel
+    #print xmeml.Volume(gain=3.98).decibel
+    #print xmeml.Volume(decibel=-26).gain
+
+    import metadata
+    from metadata import gluon
+    items = [
+             {'musicid':'DNPRNPNPNPN',
+              'musiclibrary':'DMA',
+              'duration':2.0}
+            ]
+    #gb = GluonBuilder('DNPR630009AA', items)
+    #r = gb.build()
+    #print r
+    gp = gluon.GluonParser()
+    x = gp.parse(sys.argv[1])
+            
+
+
 
 
 
