@@ -5,12 +5,14 @@
 
 import sys, xml.etree.ElementTree as ET
 
+GLUON_NAMESPACE='{http://gluon.nrk.no/gluon2}'
+
 def ezSubEl(parent, tagName, *args, **kwargs):
-    return ET.SubElement(parent, tagName, *args, **kwargs)
+    return ET.SubElement(parent, '%s%s' % (GLUON_NAMESPACE, tagName), *args, **kwargs)
 
 class ezEl(ET.Element):
     def add(self, tagName):
-        return ezSubEl(self, tagName)
+        return ezSubEl(self, '%s%s' % (GLUON_NAMESPACE, tagName))
 
 class GluonBuilder(object):
     prodno = 'DNPR63001010AA'
@@ -45,6 +47,15 @@ class GluonBuilder(object):
             duration = ezSubEl(ezSubEl(xobj,'format'),'formatExtend').text='%.2f' % obj['duration']
         return ET.tostring(self.root, encoding='utf-8')
 
+class GluonParser(object):
+
+    def parse(self, xmlsource):
+        self.tree = ET.parse(xmlsource)
+        print self.tree
+        for obj in self.tree.iter(GLUON_NAMESPACE+'object'):
+            print obj
+            print obj.metadata.titles.title
+
 if __name__ == '__main__':
     items = [
              {'musicid':'DNPRNPNPNPN',
@@ -54,6 +65,8 @@ if __name__ == '__main__':
     gb = GluonBuilder('DNPR630009AA', items)
     r = gb.build()
     print r
+    gp = GluonParser()
+    x = gp.parse(sys.argv[1])
             
 
 
