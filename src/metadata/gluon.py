@@ -5,6 +5,8 @@
 
 import sys, xml.etree.ElementTree as ET
 
+from metadata import TrackMetadata
+
 GLUON_NAMESPACE='{http://gluon.nrk.no/gluon2}'
 
 def ezSubEl(parent, tagName, *args, **kwargs):
@@ -53,8 +55,8 @@ class GluonParser(object):
         self.tree = ET.parse(xmlsource)
         print self.tree
         for obj in self.tree.iter(GLUON_NAMESPACE+'object'):
-            print obj
-            print obj.metadata.titles.title
+            md = TrackMetadata()
+
 
 if __name__ == '__main__':
     items = [
