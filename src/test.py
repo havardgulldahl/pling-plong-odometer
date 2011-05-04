@@ -73,13 +73,18 @@ if __name__ == '__main__':
     items = [
              {'musicid':'DNPRNPNPNPN',
               'musiclibrary':'DMA',
-              'duration':2.0}
+              'duration':2.0},
+             {'musicid':'SCDASDFAS',
+              'musiclibrary':'SONOTON',
+              'duration':42.0},
+             {'musicid':'DNPTRADFD',
+              'musiclibrary':'DMA',
+              'duration':200.0},
             ]
-    #gb = GluonBuilder('DNPR630009AA', items)
-    #r = gb.build()
-    #print r
-    gp = gluon.GluonParser()
-    x = gp.parse(sys.argv[1])
+    gb = gluon.GluonBuilder('DNPR630009AA', items)
+    print gb.toxml()
+    #gp = gluon.GluonParser()
+    #x = gp.parse(sys.argv[1])
             
 
 
