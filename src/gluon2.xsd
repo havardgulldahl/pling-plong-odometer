@@ -1,0 +1,3223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+Skjema og dokumentasjon er laget av Tormod Værvågen og Gunnar Dahl, Norsk rikskringkasting (NRK AS). Epost: tormod.varvagen@nrk.no eller gunnar.dahl@nrk.no
+
+XML Schemes and documentation is written by Tormod Værvågen and Gunnar Dahl, Norsk rikskringkasting (NRK AS), Norway. Email: tormod.varvagen@nrk.no eller gunnar.dahl@nrk.no
+
+-->
+<xs:schema xmlns="http://gluon.nrk.no/gluon2" xmlns:ebucore="urn:ebu:metadata-schema:ebuCore_2010" xmlns:gluonBetting="http://gluon.nrk.no/gluonBetting" xmlns:gluonDict="http://gluon.nrk.no/gluonDict" xmlns:gluonNews="http://gluon.nrk.no/gluonNews" xmlns:gluonResult="http://gluon.nrk.no/gluonResult" xmlns:gluonWeather="http://gluon.nrk.no/gluonWeather" xmlns:iso3166="http://gluon.nrk.no/countrycodes" xmlns:mpeg7="urn:tva:mpeg7:2005" xmlns:tpeg="http://gluon.nrk.no/tpeg" xmlns:tva="urn:tva:metadata:2005" xmlns:xml="http://www.w3.org/XML/1998/namespace" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://gluon.nrk.no/gluon2" elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.1.0">
+	<xs:import namespace="http://www.w3.org/XML/1998/namespace" schemaLocation="xml.xsd"/>
+	<!--http://www.w3.org/2001/xml.xsd-->
+	<xs:import namespace="http://gluon.nrk.no/countrycodes" schemaLocation="ISO3166_nonrk.xsd"/>
+	<xs:import namespace="http://gluon.nrk.no/tpeg" schemaLocation="tpeg2.xsd"/>
+	<xs:import namespace="http://gluon.nrk.no/gluonBetting" schemaLocation="gluonBetting.xsd"/>
+	<xs:import namespace="http://gluon.nrk.no/gluonNews" schemaLocation="gluonNews.xsd"/>
+	<xs:import namespace="http://gluon.nrk.no/gluonWeather" schemaLocation="gluonWeather.xsd"/>
+	<xs:import namespace="http://gluon.nrk.no/gluonResult" schemaLocation="gluonResult.xsd"/>
+	<xs:import namespace="urn:ebu:metadata-schema:ebuCore_2010" schemaLocation="ebuCoreMetadataSet.xsd"/>
+	<xs:import namespace="http://gluon.nrk.no/gluonDict" schemaLocation="gluonDict.xsd"/>
+	<xs:import namespace="urn:tva:metadata:2005" schemaLocation="tva_metadata_3-1_v131.xsd"/>
+	<xs:import namespace="urn:tva:mpeg7:2005" schemaLocation="tva_mpeg7.xsd"/>
+	<!-- Importere et dokument inneholdende alle grupper fra dataordboka som er merket med makeEnumList, gruppenavn for sufix Type-->
+	<xs:element name="gluon">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Gluon er NRKs standardiserte XML-utvekslingsdataskjema som binder sammen  de ulike enhetene innen produksjon, publisering og distribusjon. Skjema og dokumentasjon er laget av Tormod Værvågen og Gunnar Dahl, Norsk rikskringkasting (NRK AS). Epost: tormod.varvagen@nrk.no eller gunnar.dahl@nrk.no</xs:documentation>
+			<xs:documentation xml:lang="en">Top node of the Gluon content management system. XML Schemes and documentation is written by Tormod Værvågen and Gunnar Dahl, Norsk rikskringkasting (NRK AS), Norway. Email: tormod.varvagen@nrk.no eller gunnar.dahl@nrk.no</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="head">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Brukes for elementer som beskriver selve dokumentet,</xs:documentation>
+						<xs:documentation xml:lang="en">Information regarding the document</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="metadata" type="gluonMetadataType"/>
+							<xs:element name="display" type="displayType" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation xml:lang="nb">Angir visningsgyldigheten for et dokument</xs:documentation>
+								</xs:annotation>
+							</xs:element>
+							<xs:element name="channels" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation xml:lang="nb">Muliggjør versjonering av inhold på grunnlag av målgruppe</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="channel" type="xs:string" maxOccurs="unbounded"/>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="transmitters" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation xml:lang="nb">Brukes bare dersom en adresat skal tvangsstyres</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:choice maxOccurs="unbounded">
+										<xs:element name="system" type="transmitterType">
+											<xs:annotation>
+												<xs:documentation xml:lang="nb">Brukes dersom karusellen skal sende til noen av enhetene som ikke er utkanaler</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="transmitter" type="transmitterType">
+											<xs:annotation>
+												<xs:documentation xml:lang="nb">Generell transmittertype</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+									</xs:choice>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="publishingpoints" minOccurs="0">
+								<xs:annotation>
+									<xs:documentation xml:lang="nb">Brukes i tilfeller der kilden bestemmer hvor i et gitt hirarki noe skal publiseres.
+Polopoly ext.</xs:documentation>
+								</xs:annotation>
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="publishingpoint" maxOccurs="unbounded">
+											<xs:complexType>
+												<xs:sequence>
+													<xs:element name="section" type="sectionType"/>
+												</xs:sequence>
+												<xs:attribute name="quark" type="xs:string">
+													<xs:annotation>
+														<xs:documentation xml:lang="nb">Publiseringspunktet kan tilordnes en mottager, f. eks wap</xs:documentation>
+													</xs:annotation>
+												</xs:attribute>
+											</xs:complexType>
+										</xs:element>
+									</xs:sequence>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:choice>
+					<xs:element name="body">
+						<xs:complexType>
+							<xs:choice>
+								<xs:element name="news" type="gluonNews:newsType"/>
+								<xs:element name="result" type="gluonResult:resultType"/>
+								<xs:element name="weather" type="gluonWeather:weatherType"/>
+								<xs:element name="response" type="responseType"/>
+								<xs:element name="traffic" type="trafficType"/>
+								<xs:element name="tables" type="tablesType"/>
+								<xs:element name="betting" type="gluonBetting:bettingType"/>
+								<xs:element name="devicecontrol" type="devicecontrolType"/>
+								<xs:element name="envelope" type="xs:anyType">
+									<xs:annotation>
+										<xs:documentation xml:lang="nb">For midlertidig bruk av gluons transport lag for fremmede xml strukturer</xs:documentation>
+										<xs:documentation xml:lang="en">For ad-hoc use of the transport layer, for foregn xml structures</xs:documentation>
+									</xs:annotation>
+								</xs:element>
+							</xs:choice>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="objects">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes når et objekt overføres alene</xs:documentation>
+							<xs:documentation xml:lang="en">Use only if one object is to be transferred</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:sequence>
+								<xs:element name="object" type="objectType" maxOccurs="unbounded"/>
+							</xs:sequence>
+						</xs:complexType>
+					</xs:element>
+					<xs:element name="maintenance" type="maintenanceType">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">For administrative meldinger</xs:documentation>
+							<xs:documentation xml:lang="en">System maintenance</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:choice>
+			</xs:sequence>
+			<xs:attribute name="artID" type="xs:string" use="required"/>
+			<xs:attribute name="priority" use="required">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">priority=0 -&gt; stryk
+priority=1 -&gt; kun til arkiv, hendelsen er lite viktig eller er foreldet, er med bare for aa beholde helheten.
+priority=2 -&gt; ikke direkte kampopdatering, men dagsaktuelt, bare til oversiktsider langt ned i publiseringstreet.
+priority=3 -&gt; normal direkte overfoert kamp, vanlig nyhetsartikkel
+priority=4 -&gt; Viktig nyhetsartikkel, sportsevenemang med almenn interesse
+priority=5 -&gt; Breaking news
+</xs:documentation>
+				</xs:annotation>
+				<xs:simpleType>
+					<xs:restriction base="xs:int">
+						<xs:minInclusive value="0"/>
+						<xs:maxInclusive value="5"/>
+						<xs:totalDigits value="1"/>
+					</xs:restriction>
+				</xs:simpleType>
+			</xs:attribute>
+			<xs:attribute name="version" type="xs:string">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Eventuelt versjonsnummer for datatypen (Brukes i tilfeller der en ny eksport og en gammel eksport går ut fra samme systemet)</xs:documentation>
+					<xs:documentation xml:lang="en">Versionnumber for the export type. (Not the versionnumber for one spesific document)</xs:documentation>
+				</xs:annotation>
+			</xs:attribute>
+			<xs:attribute ref="xml:lang" default="no"/>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="relationsElementType" mixed="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Referanse for forskjellige lister</xs:documentation>
+			<xs:documentation xml:lang="en">Reference type in various sort of lists</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attributeGroup ref="referenceGroup"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="displayType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Type som kan definere tidsintervaller og antall visninger for objecter. Tider og datoer er definert ved separate attributter slik at en kan fylle ut bare det som er kjent. Dersom en ikke har et interval som utrykker usikkerhet for tidsomfanget, brukes bare start attributtene</xs:documentation>
+			<xs:documentation xml:lang="en">Time interval and number of use for an object. Time and date are defined with seperate attributes</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="startDate" type="xs:dateTime">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Start tid og dato i ISO format</xs:documentation>
+				<xs:documentation xml:lang="en">Start time and date in ISO format</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="startYear" type="xs:int">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Startår</xs:documentation>
+				<xs:documentation xml:lang="en">Start year</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="startMonth">
+			<xs:simpleType>
+				<xs:restriction base="xs:int">
+					<xs:minInclusive value="1"/>
+					<xs:maxInclusive value="12"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="startDay">
+			<xs:simpleType>
+				<xs:restriction base="xs:int">
+					<xs:minInclusive value="1"/>
+					<xs:maxInclusive value="31"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="startTime" type="xs:time">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Tidspunkt for hendelse</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="startDayOfWeek">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Ukedag etter ISO 8601 er 1 mandag, 7 søndag</xs:documentation>
+				<xs:documentation xml:lang="en">Day of week, starts on 1 with Monday, ends on 7 for Sunday</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:int">
+					<xs:maxInclusive value="7"/>
+					<xs:minInclusive value="1"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="startPoint" type="xs:duration">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Start relativt fra start på foreldre objekt</xs:documentation>
+				<xs:documentation xml:lang="en">Start point relative from beginning of parent</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="endDate" type="xs:dateTime" use="optional">
+			<xs:annotation>
+				<xs:documentation>Eksakt dato</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="endYear" type="xs:int"/>
+		<xs:attribute name="endMonth">
+			<xs:simpleType>
+				<xs:restriction base="xs:int">
+					<xs:minInclusive value="1"/>
+					<xs:maxInclusive value="12"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="endDay">
+			<xs:simpleType>
+				<xs:restriction base="xs:int">
+					<xs:minInclusive value="1"/>
+					<xs:maxInclusive value="31"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="endTime" type="xs:time">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Tidspunkt for hendelse</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="endDayOfWeek">
+			<xs:simpleType>
+				<xs:restriction base="xs:int">
+					<xs:maxInclusive value="7"/>
+					<xs:minInclusive value="1"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="endPoint" type="xs:duration">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Slutt relativt fra start på foreldre objekt</xs:documentation>
+				<xs:documentation xml:lang="en">End point relative from beginning of parent</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="repeatMin" type="xs:int" use="optional">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Vises minimum antall ganger.
+Brukes av systemer som repeterer informasjonen, sendekaruseller</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="repeatMax" type="xs:int" use="optional">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Vises maksimum antall ganger.
+Brukes av systemer som repeterer informasjonen, sendekaruseller</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="gluonMetadataType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Metadatastruktur som følger Dublin Core</xs:documentation>
+			<xs:documentation xml:lang="en">Dublin Core metadata implementation</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="titles" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="title" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#title"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Tittel
+Beskriver objektets endelige navn
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Title
+Identifying the final name of the object
+</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attribute ref="xml:lang"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="titleAlternative" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#titlesGroup"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Titler
+F. eks.:
+
+Hovedtittel
+Arbeidstittel
+Serietittel
+Undertittel
+Orginaltittel
+Merkevaretittel
+Saksuniverstittel
+Sakstittel
+Populær tittel
+Førstelinje
+Refreng
+Album tittel
+Sorteringstittel
+Verkstittel
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Titles
+F. eks.:
+
+Main title
+Working title
+SeriesTitle
+Secondary Title
+Original title
+Brand title
+Event Series Universe
+Event Series Tittle
+Popular title
+First Line
+Refrain
+Album title
+Sort title
+Intellectual work title
+</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attribute ref="gluonDict:titlesGroupType" use="required"/>
+										<xs:attribute ref="xml:lang"/>
+										<xs:attributeGroup ref="distributionGroup"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="titleHistory" minOccurs="0">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="titleEvent" maxOccurs="unbounded">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="title" maxOccurs="unbounded">
+													<xs:annotation>
+														<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#title"/>
+														<xs:documentation source="NRK dataordbok" xml:lang="nb">Tittel
+Beskriver objektets endelige navn
+</xs:documentation>
+														<xs:documentation source="NRK data dictionary" xml:lang="en">Title
+Identifying the final name of the object
+</xs:documentation>
+													</xs:annotation>
+													<xs:complexType>
+														<xs:simpleContent>
+															<xs:extension base="xs:string">
+																<xs:attribute ref="xml:lang"/>
+															</xs:extension>
+														</xs:simpleContent>
+													</xs:complexType>
+												</xs:element>
+												<xs:element name="titleAlternative" minOccurs="0" maxOccurs="unbounded">
+													<xs:complexType>
+														<xs:simpleContent>
+															<xs:extension base="xs:string">
+																<xs:attribute ref="gluonDict:titlesGroupType" use="required"/>
+																<xs:attribute ref="xml:lang"/>
+															</xs:extension>
+														</xs:simpleContent>
+													</xs:complexType>
+												</xs:element>
+												<xs:element name="dateAlternative">
+													<xs:annotation>
+														<xs:documentation xml:lang="nb">Angir gyldighet for titteleventet</xs:documentation>
+													</xs:annotation>
+													<xs:complexType>
+														<xs:complexContent>
+															<xs:extension base="temporalType"/>
+														</xs:complexContent>
+													</xs:complexType>
+												</xs:element>
+											</xs:sequence>
+											<xs:attributeGroup ref="distributionGroup"/>
+											<xs:attributeGroup ref="referenceGroup"/>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="creators" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="creator" type="entityType" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#creator"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Opphavsmann
+Person som har skapt, eller bidrat til et objekt på en slik måte at man innehar intellektuelle rettigheter
+F. eks. Komponist, forfatter, oversetter
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Creator
+***
+</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="subjects" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="subject" type="subjectType" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#subject"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Emne
+Ord og uttrykk som beskriver temaet i objektet
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Subject
+Keyword, topics and expressions that describes the subject of the object
+</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="description" minOccurs="0">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#description"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Beskrivelse
+Sammendrag og innholdsbeskrivelse
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Description
+Summary and contents description
+</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="tableOfContent" type="xs:string" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation> Content map - utvikle ext. for denne</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="abstract" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#abstract&amp;comment"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Sammendrag
+Sammendrag av innholdet
+Merknad
+Relevante tilleggsopplysninger som ikke er en del av de publiserbare dataene
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Abstract
+Summary of the content
+Comment
+Relevant additional information which is not part of the published data
+</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attribute name="contentType" type="xs:string">
+											<xs:annotation>
+												<xs:documentation xml:lang="nb">Der det er nødvendig å skille på forskjellige mimetyper og tekniske fremstillingsformer</xs:documentation>
+											</xs:annotation>
+										</xs:attribute>
+										<xs:attributeGroup ref="referenceGroup"/>
+										<xs:attributeGroup ref="distributionGroup"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="publishers" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="publisher" type="entityType" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#publisher"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Utgiver
+Enhet som utgir et objekt og har et juridisk ansvar for dette
+F. eks. I vårt tilfelle er det NRK som er utgiver, eventuelt deligert til en spesifik redaksjon
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Publisher
+Unit legally responsible for publishing contents 
+</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="contributors" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="contributor" type="entityType" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#contributor"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Medvirkende
+Person bidrat til eller ellers har en relasjon til et objekt på en eller annen måte
+F. eks. Sanger, musikker, lydteknikker
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Contributor
+***
+</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="dates" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="dateCreated" type="xs:dateTime" minOccurs="0">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#productionDate"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Produksjonsdato
+Tid for produksjon av objektet
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Production date
+Date for production of the object
+</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="dateIssued" type="xs:dateTime" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#publicationDate&amp;transmissionDate"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Utgivelsesdato
+Tidspunkt for når objektet er gjort tilgjengelig for bruker. Brukes ikke for tradisjonell kringkasting
+F. eks. Dekker publikasjonstidsrom for podcast og  &quot;On-demand&quot;. Kan brukes for 
+Sendedato
+Dato for en bestemt sending i en kringkastingskanal
+F. eks. Gjelder bare for kringkasting, ikke &quot;On-demand&quot;
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Publication date
+
+Transmission date
+
+</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="dateDigitized" type="xs:dateTime" minOccurs="0">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#digitizedDate"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Digitaliseringsdato
+
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Date digitized
+
+</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="dateAlternative" minOccurs="0" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:complexContent>
+									<xs:extension base="temporalType">
+										<xs:attribute ref="gluonDict:datesGroupType"/>
+										<xs:attributeGroup ref="referenceGroup"/>
+									</xs:extension>
+								</xs:complexContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="types" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="type" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#objectType&amp;genre&amp;category"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Objekttype
+Klassifisering av objekt
+Genre
+Kategorisering basert på likhetstrekk i stil, form og innhold 
+F. eks. Jazz, folkemusikk, Blues
+Kategori
+Enhetens genre og klassifisering
+F. eks. Sport, Underholdning, Nyheter
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Object Type
+Classification of object
+Genre
+Classification based on similarities in style, form and contents
+Category
+The genre of the object
+</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attributeGroup ref="referenceGroup"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="format" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="formatExtent" type="xs:duration" minOccurs="0">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#editorialDuration"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Satt varighet
+Objektets redaksjonelt bestemte varighet
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Editorial duration
+The editorial duration of the object
+</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="formatMedium" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#storageMedium"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Lagringsmedium
+Beskrivelse av fysisk lagringsenhet
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Storage medium
+Description of physical storage medium
+</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attributeGroup ref="referenceGroup"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="identifier" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#archiveNumber&amp;upid"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Arkivnummer
+Identifikator i NRKs arkivsystemer
+Unik identifikator
+Unik identifikator av programinnholdet
+F. eks. Objekt ID, innslags ID
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Archive number
+Placing of the resource
+Unique identifier
+Unique identifier of the contents of the programme.
+</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="source" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#source"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Kilde
+Foregående ledd ved formatkonverteringer
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Source
+The previous link in format conversions
+</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:anyURI">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="language" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#language"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Språk
+Språket brukt i objektet
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Language
+Used language in the object
+</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:language">
+							<xs:attribute name="label" type="xs:string" use="optional"/>
+							<xs:attribute name="reference" type="xs:string">
+								<xs:annotation>
+									<xs:documentation xml:lang="nb">Ref til system, f. eks. Desken2Foldere</xs:documentation>
+								</xs:annotation>
+							</xs:attribute>
+							<xs:attribute name="link" type="xs:anyURI"/>
+							<xs:attribute ref="xml:lang"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="relations" type="relationsType" minOccurs="0">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationGroup"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Relasjoner
+F. eks.:
+
+Er en versjon av
+Har versjon
+Erstattet av
+Erstatter
+Behøvd av
+Behøver
+Er en del av
+Har delen
+Refereres som
+Refererer til
+Formatert av
+Har formatert versjon
+Beskrevet av
+Beskriver
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Relations
+F. eks.:
+
+Is version of
+Has version
+Replaced by
+Replaces
+Required by
+Requires
+Is part of
+Has part
+Referenced by
+References
+Format of
+Has format
+Described by
+Describes
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="coverage" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="coverageSpatial" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#coverageSpatial"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Geografisk plassering
+Hendelsens geografiske plassering
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Spatial coverage
+***
+</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:complexContent>
+									<xs:extension base="spatialType">
+										<xs:attributeGroup ref="referenceGroup"/>
+									</xs:extension>
+								</xs:complexContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="coverageTemporal" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#coverageTemporal"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Hendelsens tidsintervall
+Betegner en hendelses utstrekning
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Temporal coverage
+***
+</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:complexContent>
+									<xs:extension base="temporalType">
+										<xs:attributeGroup ref="referenceGroup"/>
+									</xs:extension>
+								</xs:complexContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="rights" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="right" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#rights"/>
+								<xs:documentation source="NRK dataordbok" xml:lang="nb">Rettigheter
+***
+</xs:documentation>
+								<xs:documentation source="NRK data dictionary" xml:lang="en">Rights
+***
+</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="description" type="xs:string" minOccurs="0">
+										<xs:annotation>
+											<xs:documentation xml:lang="nb">Fritekstbeskivelse av rettigheter</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+									<xs:element name="rightsHolder" type="entityType" minOccurs="0" maxOccurs="unbounded"/>
+									<xs:element name="contract" type="xs:anyURI" minOccurs="0"/>
+									<xs:element name="exploitationIssues" type="xs:string" minOccurs="0">
+										<xs:annotation>
+											<xs:documentation>Use to state any other restrictions, such as non-rights ones,
+						e.g. legal. State by media, territory, scope (restriction on whole item or
+						extracts) and possibly language. The presence of this information can be
+						used by asset management system implementing traffic lights like mechanism
+						to signal that content may be subject to particular restrictions to be
+						clarified before exploitation. </xs:documentation>
+										</xs:annotation>
+									</xs:element>
+									<xs:element name="rightsmatrix" minOccurs="0">
+										<xs:annotation>
+											<xs:documentation xml:lang="nb">Matrise av sendingskanaler og rettigheter, lesbart for publiseringsverktøy</xs:documentation>
+											<xs:documentation xml:lang="en">Matrix of rigts/publishing channels readable for broadcasting- and publishing systems</xs:documentation>
+										</xs:annotation>
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="channel" type="channelType" minOccurs="0" maxOccurs="unbounded">
+													<xs:annotation>
+														<xs:documentation xml:lang="nb">Kanal er enten en klassisk radio eller tv kanal, med sitt beskrevne utbredelse, eller et tenkt område for en publikasjon f. ek. på nett</xs:documentation>
+													</xs:annotation>
+												</xs:element>
+											</xs:sequence>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+								<xs:attributeGroup ref="referenceGroup"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="method" default="replace">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Betegner om metadataene skal skrives inn i motakssystemet eller om det bare er der for å gi en kontekst. Brukes der ikke hele dokumentet er en oppdatering.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="insert">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes der det er kjent at objektet eller egenskapen beskrevet av metadatablokken er et nytt element</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="update">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes der det er kjent at objektet eller egenskapen beskrevet av metadatablokken er en oppdatering av et eksisterende element, oppdateringen skjer gruppevis, slik at dersom f. eks. titles finnes, oppdateres eksisterende titles med innholdet i titles, mens grupper som ikke er i dokumentet beholdes</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="replace">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes der det er kjent at objektet eller egenskapen beskrevet av metadatablokken skal erstattes med de nye dataene. Er forskjellig fra update ved at denne metoden skal stryke egenskapene og feltene som ikke er beskrevet. </xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="delete">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes der det er kjent at objektet eller egenskapen beskrevet av metadatablokken skal strykes</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="context">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes der det er kjent at objektet eller egenskapen beskrevet av metadatablokken bare står der for å gi en kontekst til andre data.</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute ref="xml:lang"/>
+	</xs:complexType>
+	<xs:complexType name="entityType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Alle navn skrives slik</xs:documentation>
+			<xs:documentation xml:lang="en">All names of persons, firms or organizations.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="personalTitle" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#personalTitle"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Persontittel
+Tiltaleord som Herr, Frøken, o.l.
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Personal Title
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="jobFunction" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#jobFunction"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Yrkestittel
+Yrkestitler som snekker o.l.
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Job function
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="preSurname" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#preSurname"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Prefix etternavn
+Småord som er en del av etternavnet men som ikke nødvendigvis skal ha stor bokstav
+F. eks. Skrue mc Duck, Rembrand van der Rijn. Merk at det irske O'Brian eller det franske d'Artagnan alfabetiseres som en del av etternavnet og er dermed ikke et Prefix
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Pre Surname
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice minOccurs="0">
+				<xs:sequence>
+					<xs:element name="givenName" type="xs:string">
+						<xs:annotation>
+							<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#givenName"/>
+							<xs:documentation source="NRK dataordbok" xml:lang="nb">Fornavn
+Fornavn og mellomnavn
+</xs:documentation>
+							<xs:documentation source="NRK data dictionary" xml:lang="en">Given Name
+All given names
+</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+					<xs:element name="familyName" type="xs:string">
+						<xs:annotation>
+							<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#familyName"/>
+							<xs:documentation source="NRK dataordbok" xml:lang="nb">Etternavn
+Etternavn på personer
+</xs:documentation>
+							<xs:documentation source="NRK data dictionary" xml:lang="en">FamilyName
+The surname of persons
+</xs:documentation>
+						</xs:annotation>
+					</xs:element>
+				</xs:sequence>
+				<xs:element name="businessName" type="xs:string">
+					<xs:annotation>
+						<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#businessName"/>
+						<xs:documentation source="NRK dataordbok" xml:lang="nb">Firmanavn
+Fullt navn på grupper og virksomheter
+</xs:documentation>
+						<xs:documentation source="NRK data dictionary" xml:lang="en">Business name
+Name on groups and businesses
+</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="name" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#name"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Visningsnavn
+Navnefelt som gir oss et visningsnavn, fylles ut med så gode data som mulig, vil ofte være en kombinasjon og gjentagelse av andre navnefelt. Visningsnavn, primærnavn. Det vi til en hver tid menneskelig identifiserer enheten med
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Display name
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="nameSufix" type="xs:string" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#nameSufix"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Navnevedheng
+Etterhengt ledd som sier noe om generasjonsforhold
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Name sufix
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="role" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#role"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Rolle
+Beskriver personens eller organsisajonens rolle i forhold til objektet
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Role
+
+</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute name="rolelist" type="xs:string">
+								<xs:annotation>
+									<xs:documentation xml:lang="nb">Betegnelse på rollelista</xs:documentation>
+								</xs:annotation>
+							</xs:attribute>
+							<xs:attribute name="label" type="xs:string">
+								<xs:annotation>
+									<xs:documentation xml:lang="nb">Brukes der rollen har numerisk verdi</xs:documentation>
+									<xs:documentation xml:lang="en">Label for numeric values</xs:documentation>
+								</xs:annotation>
+							</xs:attribute>
+							<xs:attribute name="link" type="xs:anyURI">
+								<xs:annotation>
+									<xs:documentation xml:lang="nb">Lenke til rolleliste definisjon, ev. med #term</xs:documentation>
+								</xs:annotation>
+							</xs:attribute>
+							<xs:attribute ref="xml:lang"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="stageName" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#stageName"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Artistnavn
+Navn personer kaller seg i artistiske sammenhenger
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Stagename
+
+</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="nationality" minOccurs="0">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#nationality"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Nasjonalitet
+Beskriver personens eller organsisajonens nasjonstilknytning
+F. eks. Norsk, svensk, Russisk
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Nationality
+The status of belonging to a particular nation
+</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="iso3166:CountryCodeType">
+							<xs:attribute name="label" type="xs:string" use="optional"/>
+							<xs:attribute name="reference" type="xs:string">
+								<xs:annotation>
+									<xs:documentation xml:lang="nb">Ref til system, f. eks. Desken2Foldere</xs:documentation>
+								</xs:annotation>
+							</xs:attribute>
+							<xs:attribute name="link" type="xs:anyURI"/>
+							<xs:attribute ref="xml:lang"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="otherName" type="entityType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#pseudonym&amp;stageName&amp;nickname&amp;roleName"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Pseudonym
+Oppdiktet påtatt navn
+Artistnavn
+Navn personer kaller seg i artistiske sammenhenger
+Kallenavn
+Uformelt navn på person
+Rollenavn
+Navn på framstilt karakter
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Pseudonym
+
+Stagename
+
+Nickname
+
+Role name
+Name of the portrait caracter
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="events" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Beskriver hendelser i en biografi</xs:documentation>
+					<xs:documentation xml:lang="en">Biographic information</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="event" type="gluonNews:newsType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="relations" type="relationsType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Peker til andre navneelementer. Må for hvert av de genererende systemer må denne id lages unik innenfor hvert enkelt dokument. Brukes for   å lenke band til sine medlemmer o.l., eller andre relasjoner slik som ideer i systemer</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="timeFrame" type="temporalType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Gir oss et tidsstempel for når navne - og rolle opplysningene er gyldige</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="contactInformation" type="contactInformationType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Adresseinformasjon</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="person" default="false">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Dersom det er et firma, settes verdien til false, elllers male eller female dersom vi vet kjønnet, eller true. Hvis vi ikke vet noenting kuttes attributet ut.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="male"/>
+					<xs:enumeration value="female"/>
+					<xs:enumeration value="true"/>
+					<xs:enumeration value="false"/>
+					<xs:enumeration value="none">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes der en skal bekrefte at en spesiel rolle ikke er tilknytet et objekt. F. eks. ingen tekstforfatter</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="anonymous">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes der identiteten til en person er ukjent</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="traditional"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="id" type="xs:string">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Identifikator inne refererte system</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attributeGroup ref="referenceGroup"/>
+	</xs:complexType>
+	<xs:complexType name="contactInformationType">
+		<xs:sequence>
+			<xs:element name="organisation" minOccurs="0">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="telephone" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>sip o.l.</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="chat" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:anyURI">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="email" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:anyURI">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="address" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>post og besøksadresse</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="adressOwner" type="xs:string" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation xml:lang="en">c/o address</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="contact" type="xs:string" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation xml:lang="en">for addressing organisations</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="street" type="xs:string" minOccurs="0"/>
+						<xs:element name="houseNumber" type="xs:string" minOccurs="0"/>
+						<xs:element name="appartmentNumber" type="xs:string" minOccurs="0"/>
+						<xs:element name="poBox" type="xs:string" minOccurs="0"/>
+						<xs:element name="postalCode" type="xs:string" minOccurs="0"/>
+						<xs:element name="postalPlace" type="xs:string" minOccurs="0"/>
+						<xs:element name="municipality" type="xs:string" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation xml:lang="en">I. e. a city or a town</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="country" type="xs:string" minOccurs="0"/>
+						<xs:element name="addressField" minOccurs="0">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attributeGroup ref="referenceGroup"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attributeGroup ref="referenceGroup"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="bankConnection" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="bankName" type="xs:string" minOccurs="0"/>
+						<xs:element name="accountNumber" type="xs:string" minOccurs="0"/>
+						<xs:element name="swiftNumber" type="xs:string" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation xml:lang="nb">Ref. ISO 9362</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="accountField" minOccurs="0">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attributeGroup ref="referenceGroup"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attributeGroup ref="referenceGroup"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="relationsType">
+		<xs:sequence>
+			<xs:element name="relationIsVersionOf" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationIsVersionOf"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Er en versjon av
+Objektet er en versjon av ressursen det vises til
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Is version of
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationHasVersion" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationHasVersion"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Har versjon
+Ressursen det vises til er en versjon av objektet
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Has version
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationIsReplacedBy" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationIsReplacedBy"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Erstattet av
+Objektet er erstattet av ressursen det vises til
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Replaced by
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationReplaces" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationReplaces"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Erstatter
+Objektet erstatter ressursen det vises til
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Replaces
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationIsRequiredBy" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationIsRequiredBy"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Behøvd av
+Objektet er påkrevet av ressursen det vises til
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Required by
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationRequires" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationRequires"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Behøver
+Objektet krever ressursen det vises til
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Requires
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationIsPartOf" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationIsPartOf"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Er en del av
+Objektet er en del av ressursen det vises til
+F. eks. Brukes der et inslag skal peke til hvilket program det hører hjemme i
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Is part of
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationHasPart" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationHasPart"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Har delen
+Objektet inneholder ressursen det vises til
+F. eks. Et program har slike pekere til inslagene sine
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Has part
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationIsReferencedBy" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationIsReferencedBy"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Refereres som
+Objektet er henvist av ressursen det henvises til
+F. eks. Brukes for fremmednøkler
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Referenced by
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationReferences" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationReferences"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Refererer til
+Objektet viser til ressursen
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">References
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationIsFormatOf" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationIsFormatOf"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Formatert av
+Objektet er i et format basert på ressursen det vises til
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Format of
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationHasFormat" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationHasFormat"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Har formatert versjon
+Objektet har formatet det vises til
+F. eks. Et innslag publisert på nrk.no i et egnet internett-filformat, vil ha denne relasjonen til den publiserte fila
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Has format
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationIsDescribedBy" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationIsDescribedBy"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Beskrevet av
+Objektet beskrevet av ressursen det vises til
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Described by
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="relationDescribes" type="relationsElementType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#relationDescribes"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Beskriver
+Objektet beskriver ressursen det vises til
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Describes
+
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="trafficType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Basetype for trafikkinformasjon</xs:documentation>
+			<xs:documentation xml:lang="en">Traffic information</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="incidentDescription" type="gluonNews:newsType" minOccurs="0"/>
+			<xs:element ref="tpeg:tpeg_document" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation>Denne noden tilsvarer toppnoden i tpeg. Denne definisjonen impporterer vi som eget navnerom når tpeg sjemaet foreligger.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="announcement" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="object" type="objectType"/>
+					</xs:sequence>
+					<xs:attribute name="region" type="xs:string" use="optional"/>
+					<xs:attribute name="cluster" type="xs:string" use="optional"/>
+					<xs:attribute name="new">
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="0"/>
+								<xs:enumeration value="1"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="dataid" type="xs:string"/>
+		<xs:attribute name="type" type="xs:string">
+			<xs:annotation>
+				<xs:documentation xml:lang="en">The classes as in TPEG, eller tpeg-set</xs:documentation>
+				<xs:documentation xml:lang="nb">Klassene fra TPEG, brukes for å grovsortere meldingene.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="state">
+			<xs:annotation>
+				<xs:documentation>Status for hendelsesforløpet meldingen omfatter</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="announcementType" type="xs:string"/>
+	</xs:complexType>
+	<xs:complexType name="responseType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Type for bruk av gluon:returia</xs:documentation>
+			<xs:documentation xml:lang="en">Base type for responses from weavers and listeners.</xs:documentation>
+		</xs:annotation>
+		<xs:choice>
+			<xs:element name="polling" type="pollingType">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Lage en poll som kan være delt i geografi, så et sett av svar.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="message">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="metadata" type="gluonMetadataType"/>
+						<xs:element name="image" minOccurs="0">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attribute name="type" type="xs:string"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="shorttext" type="gluonNews:basicContentType"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:choice>
+		<xs:attribute name="dataid" type="xs:string"/>
+		<xs:attribute name="status"/>
+		<xs:attribute name="key" type="xs:string">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Kodeordet som er brukt (send KODE til 1987)</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="tablesType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Tabeller, lister og epg-er</xs:documentation>
+			<xs:documentation xml:lang="en">Tables, lists and epg</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="metadata" type="gluonMetadataType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Brukes dersom sammlingen/listen trenger metadata</xs:documentation>
+					<xs:documentation xml:lang="en">For meta data describing the collection or list</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice>
+				<xs:element name="object" type="objectType" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Brukes ved epg, iteminfo og playlist</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="news" type="gluonNews:newsType" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Brukes der man skal fortelle om et helt nyhetsbilde, slik man gjør i en rss</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:element name="traffic" type="trafficType" maxOccurs="unbounded">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Viser oversikt over et trafikkbilde</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+				<xs:sequence>
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Sportstabeller består av en peker til arrangement / liga samt en liste over deltagere, eller kamper</xs:documentation>
+					</xs:annotation>
+					<xs:element name="arrangement">
+						<xs:annotation>
+							<xs:documentation>BRUK metadatadelen isteden</xs:documentation>
+						</xs:annotation>
+						<xs:complexType>
+							<xs:simpleContent>
+								<xs:extension base="xs:string">
+									<xs:attribute name="arrID" type="xs:string" use="required"/>
+									<xs:attribute name="season" type="xs:string" use="optional"/>
+									<xs:attributeGroup ref="gluonResult:sportGroup"/>
+								</xs:extension>
+							</xs:simpleContent>
+						</xs:complexType>
+					</xs:element>
+					<xs:choice>
+						<xs:element name="sportstable" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation xml:lang="nb">Typisk for ligatabeller o.l.</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="participant" type="gluonResult:participantType" maxOccurs="unbounded"/>
+								</xs:sequence>
+								<xs:attribute name="type" use="required">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:enumeration value="standardtable"/>
+											<xs:enumeration value="hometable"/>
+											<xs:enumeration value="awaytable"/>
+											<xs:enumeration value="topscore"/>
+											<xs:enumeration value="punishments"/>
+											<xs:enumeration value="yellowcard"/>
+											<xs:enumeration value="redcard"/>
+											<xs:enumeration value="grouptables"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="tableGroup" type="xs:string" use="optional"/>
+								<xs:attribute name="name" type="xs:string"/>
+								<xs:attribute name="ordered" type="xs:int" default="0">
+									<xs:annotation>
+										<xs:documentation xml:lang="nb">Settes dersom en liste er sortert, playlister er som regel ikke sortert, mens f.eks en ligatabell er det.</xs:documentation>
+									</xs:annotation>
+								</xs:attribute>
+								<xs:attribute name="dynamic" default="0">
+									<xs:annotation>
+										<xs:documentation xml:lang="nb">Settes til 1 dersom det dreier seg om en tabell dynamisk, d.v.s. at den oppdateres som om alle kampene i en serierunde er ferdigspillte.
+Brukes på prognoselignende tabeller.</xs:documentation>
+									</xs:annotation>
+									<xs:simpleType>
+										<xs:restriction base="xs:int">
+											<xs:enumeration value="0"/>
+											<xs:enumeration value="1"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="dataid" type="xs:string"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="events">
+							<xs:annotation>
+								<xs:documentation>Brukes for terminlister. Hver runde tilsvarer runde 1, 2, 3 osv. i en serie, mens event er beskrivelse av hver enkelt kamp i denne runden</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="round" maxOccurs="unbounded">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="event" type="gluonResult:sportsEventType" maxOccurs="unbounded">
+													<xs:annotation>
+														<xs:documentation>Når den brukes i forbindelse med terminlister settes scoringene som attributter til dette elementet.</xs:documentation>
+													</xs:annotation>
+												</xs:element>
+											</xs:sequence>
+											<xs:attribute name="label" type="xs:string"/>
+											<xs:attribute name="level" type="xs:string"/>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+				</xs:sequence>
+				<xs:element name="location" type="locationType">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">For geografiske strukturer</xs:documentation>
+						<xs:documentation xml:lang="en">Geography structures</xs:documentation>
+					</xs:annotation>
+				</xs:element>
+			</xs:choice>
+		</xs:sequence>
+		<xs:attribute name="type" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="archiveReport">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Komplett utdrag fra sendingslogger som inneholder alle detaljer for hva som er sendt eller publisert</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="epgReport">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Oversikt over sendte programmer</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="archive">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Beskriver et hvert uttrekk av data fra et arkiv</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="textinfo">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">textinfo - brukes for kommunikasjon mellom avvikler og lytter. Som iteminfo men for tekst i en sending.</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="iteminfo">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes for fortløpende program- og innslagsinformasjon, består av intill 2 objekterpå programnivå og inslagsobjekter for det første programmet.</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="playlist">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Sammenstilling av musikkobjektersom er planlagt for musikkrotering i en kanal</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="epg">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">For programoversikter, inneholder et element som representerer programoversikten. Beskriver planlagte programmer fram i tid</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="audioanalysis"/>
+					<xs:enumeration value="newswire"/>
+					<xs:enumeration value="sportslist"/>
+					<xs:enumeration value="leaguetable"/>
+					<xs:enumeration value="grouptable"/>
+					<xs:enumeration value="ligatabell"/>
+					<xs:enumeration value="toppscorer"/>
+					<xs:enumeration value="råtass"/>
+					<xs:enumeration value="terminliste"/>
+					<xs:enumeration value="fixtures"/>
+					<xs:enumeration value="gazetteer"/>
+					<xs:enumeration value="trafficOverview"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="name" type="xs:string"/>
+		<xs:attribute name="ordered" type="xs:int" default="0">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Settes dersom en liste er sortert, playlister er som regel ikke sortert, mens f.eks en ligatabell er det.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="dynamic" default="0">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Settes til 1 dersom det dreier seg om en tabell dynamisk, d.v.s. at den oppdateres som om alle kampene i en serierunde er ferdigspillte.
+Brukes på prognoselignende tabeller.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:int">
+					<xs:enumeration value="0"/>
+					<xs:enumeration value="1"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="dataid" type="xs:string"/>
+		<xs:attribute ref="xml:lang"/>
+		<xs:attribute name="documentSeries" type="xs:int">
+			<xs:annotation>
+				<xs:documentation>Brukes for å bestemme at dette dokumentet er en del av en sekvens av dokumenter. Eks. epg-programmoversikter som sendes ut i set av 14, eller  arkiveksporter som kommer tre ganger med flere dagers mellomrom. Legg inn verdi for maks antall i serien, her 3
+</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="sequenceNumber" type="xs:int">
+			<xs:annotation>
+				<xs:documentation>Viser hvilket nummer i en dokumentserie det gjeldende dokumentet har.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="devicecontrolType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Styring av matriser og kringkastingsutstyr</xs:documentation>
+			<xs:documentation xml:lang="en">Broadcast matrix control.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="channel" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Her kan man enten sende ut en og en kanal eller dumpe ut hele matrisen</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="name" type="xs:string">
+							<xs:annotation>
+								<xs:documentation xml:lang="nb">Kanalnavn, som i pi</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="source" type="xs:string">
+							<xs:annotation>
+								<xs:documentation xml:lang="nb">Kontrlollrom eller lignende i formen mak60</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="change" type="xs:boolean" use="optional">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Settes til true dersom et er en endring i matrisen. False dersom dette bare er et resultat av en større dump</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="type" type="xs:string" use="required"/>
+	</xs:complexType>
+	<xs:complexType name="maintenanceType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Tekniske meldinger i gluonsystemet</xs:documentation>
+			<xs:documentation xml:lang="en">Control and reporting inside the gluon system</xs:documentation>
+		</xs:annotation>
+		<xs:choice>
+			<xs:element name="publishingDirectives">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Sidevisning, brukes foreløpig kun av gluon:arena</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:choice>
+						<xs:element name="result">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="arrangement">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="teletextPage" minOccurs="0">
+													<xs:complexType>
+														<xs:simpleContent>
+															<xs:extension base="xs:string">
+																<xs:attribute name="status" type="xs:boolean" use="required"/>
+																<xs:attribute name="from" type="xs:boolean" use="required"/>
+																<xs:attribute name="to" type="xs:boolean" use="optional"/>
+																<xs:attribute name="subpages" type="xs:string" use="optional"/>
+																<xs:attribute name="indexPage" type="xs:string" use="optional"/>
+																<xs:attribute name="paddingTop" type="xs:boolean" use="required"/>
+																<xs:attribute name="paddingBottom" type="xs:boolean" use="required"/>
+																<xs:attribute name="titleOverride" type="xs:string" use="optional"/>
+																<xs:attribute name="footerOverride" type="xs:string" use="optional"/>
+																<xs:attribute name="removeOlderThan" type="xs:string" use="optional"/>
+															</xs:extension>
+														</xs:simpleContent>
+													</xs:complexType>
+												</xs:element>
+											</xs:sequence>
+											<xs:attribute name="arrID" type="xs:string"/>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="response">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="polling" minOccurs="0">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="televisionPage" type="televisionPageType"/>
+											</xs:sequence>
+											<xs:attribute name="id" type="xs:string"/>
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="message" minOccurs="0">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="televisionPage" type="televisionPageType"/>
+											</xs:sequence>
+											<xs:attribute name="id" type="xs:string"/>
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="quiz" minOccurs="0">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="televisionPage" type="televisionPageType"/>
+											</xs:sequence>
+											<xs:attribute name="id" type="xs:string"/>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:choice>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="retransmit" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Display i head bestemmer tidsrom som skal gjenskapes</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="artID" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation xml:lang="nb">Id på uteblivende dokument</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="purpose" type="xs:string" use="required">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Betegnelse på quark dette skal sendes til. 
+</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="requestStatus">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Ber om status på system</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="report">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">For transport av feillogger, og tilstandsrapporter</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:choice maxOccurs="unbounded">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Det kan forekomme at utsendingen til en transmitter feiler mens en annen går bra. Derfor vil en segvend av alle disse være mulig.</xs:documentation>
+						</xs:annotation>
+						<xs:element name="transmitter" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation xml:lang="nb">Dette er oppbyggingen av en tilstandsrapport etter en suksessfull utsendelse av et gluon. Resultatet trenger ikke å ha gått bra riktignok</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="status">
+										<xs:complexType>
+											<xs:simpleContent>
+												<xs:extension base="xs:string">
+													<xs:attribute name="reference" type="xs:int" use="required"/>
+												</xs:extension>
+											</xs:simpleContent>
+										</xs:complexType>
+									</xs:element>
+									<xs:element name="duration" type="xs:duration" minOccurs="0"/>
+									<xs:choice>
+										<xs:element name="message" type="xs:string" minOccurs="0">
+											<xs:annotation>
+												<xs:documentation xml:lang="nb">Her skal innholdet formateres, og skal kunne inneholde errorType, eller okType. Ergo dette elementet utgår.</xs:documentation>
+											</xs:annotation>
+										</xs:element>
+										<xs:element name="error" type="errorType"/>
+										<xs:element name="OK" type="okType"/>
+									</xs:choice>
+								</xs:sequence>
+								<xs:attribute name="quark" type="xs:string" use="required">
+									<xs:annotation>
+										<xs:documentation xml:lang="nb">Navn på transmitter det er sendt noe til</xs:documentation>
+									</xs:annotation>
+								</xs:attribute>
+							</xs:complexType>
+						</xs:element>
+						<xs:sequence>
+							<xs:element name="error" type="errorType"/>
+						</xs:sequence>
+						<xs:element name="OK" type="okType"/>
+					</xs:choice>
+					<xs:attribute name="date" type="xs:dateTime" use="required"/>
+					<xs:attribute name="sender" use="required">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">En nøkkel bestående av en ipadresse et kolon og et quarknavn</xs:documentation>
+						</xs:annotation>
+						<xs:simpleType>
+							<xs:restriction base="xs:string"/>
+						</xs:simpleType>
+					</xs:attribute>
+					<xs:attribute name="threads" type="xs:int" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="probe">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">For testdata av ymse slag</xs:documentation>
+					<xs:documentation xml:lang="en">For any testdata</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:attributeGroup ref="referenceGroup"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:sequence>
+				<xs:element name="systemLabels">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Nøkling mellom betegnelser og adresser</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="transmitter" type="transmitterType" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="senders">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Adresselister for gkuonspin</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="sender" maxOccurs="unbounded">
+								<xs:complexType>
+									<xs:sequence>
+										<xs:element name="transmitter" type="transmitterType" maxOccurs="unbounded"/>
+									</xs:sequence>
+									<xs:attribute name="ip" type="xs:anyURI"/>
+									<xs:attribute name="url" type="xs:anyURI" use="optional"/>
+									<xs:attribute name="quark" type="xs:string"/>
+									<xs:attribute name="encoding" type="xs:string" use="optional" default="raw"/>
+								</xs:complexType>
+							</xs:element>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+			</xs:sequence>
+			<xs:element name="nuclei">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Oversikt over adresse til karusellene</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="nucleus" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:attribute name="url" type="xs:anyURI" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="dictionary" type="dictionaryType"/>
+		</xs:choice>
+	</xs:complexType>
+	<xs:complexType name="objectType">
+		<xs:annotation>
+			<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#object"/>
+			<xs:documentation source="NRK dataordbok" xml:lang="nb">Objekt
+Manifestasjon av idé som omhandles
+F. eks. Et program, et system, en tjeneste kan være et objekt i denne sammenhengen
+</xs:documentation>
+			<xs:documentation source="NRK data dictionary" xml:lang="en">Object
+Expression of the concept in question
+</xs:documentation>
+			<xs:documentation xml:lang="nb">Element for metadata primært for binærobjekter. Dette er bærer for alle elementer som kan settes inn i en artikkel f. eks.</xs:documentation>
+			<xs:documentation xml:lang="en">Type for metadata who describes multimedia objects.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:choice>
+				<xs:element name="metadata" type="gluonMetadataType"/>
+				<xs:element ref="ebucore:ebuCoreMain"/>
+				<xs:element ref="tva:TVAMain"/>
+			</xs:choice>
+			<xs:element name="longDescription" type="gluonNews:newsType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">News Type som brukes på denne måten har ikke egne metadata, dersom det ikke dreier seg om en selvstendig artikkel som er knyttet til et program. Denne artikkelen kan jo ha en egen forfatter. Dersom det er tekstinnhold i et program - ingen egne metadata. </xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="origin" type="originType" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Teknisk informasjon om mediaset, bærer og format</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="publications" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Hvis objektet er en sending, beskirves andre publikasjoner i dette feltet; hvis objektet er et program eller et innslag beskrives alle mulige kjente publiseringer</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="publication" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="metadata" type="gluonMetadataType">
+										<xs:annotation>
+											<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#title"/>
+											<xs:documentation source="NRK dataordbok" xml:lang="nb">Tittel
+Beskriver objektets endelige navn
+</xs:documentation>
+											<xs:documentation source="NRK data dictionary" xml:lang="en">Title
+Identifying the final name of the object
+</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+								</xs:sequence>
+								<xs:attribute name="publishingPoint" type="xs:string" use="required">
+									<xs:annotation>
+										<xs:documentation xml:lang="nb">Navn på kanal, eller publiseringssted</xs:documentation>
+									</xs:annotation>
+								</xs:attribute>
+								<xs:attribute name="issueCount" type="xs:int">
+									<xs:annotation>
+										<xs:documentation xml:lang="nb">Brukes for å angi multiple antal utspillinger av beskrevet publikasjon</xs:documentation>
+									</xs:annotation>
+								</xs:attribute>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="subelements" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="object" type="objectType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="objecttype" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:NMTOKEN">
+					<xs:enumeration value="itemGroup">
+						<xs:annotation>
+							<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#itemGroup"/>
+							<xs:documentation source="NRK dataordbok" xml:lang="nb">Innslagsgruppe
+En samling av innslag som har en redaksjonell sammenheng
+</xs:documentation>
+							<xs:documentation source="NRK data dictionary" xml:lang="en">Item group
+A collection of elements in a group, with mutual editorial connection
+</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="programmeGroup">
+						<xs:annotation>
+							<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#programmeGroup"/>
+							<xs:documentation source="NRK dataordbok" xml:lang="nb">Programgruppe
+Samling av programmer, som resultat av en publiseringsvedtak, gruppert etter et felles redaksjonelt konsept
+</xs:documentation>
+							<xs:documentation source="NRK data dictionary" xml:lang="en">PGR
+A series of shows, collected and grouped by a mutual editorial interest
+</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="programme">
+						<xs:annotation>
+							<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#programme"/>
+							<xs:documentation source="NRK dataordbok" xml:lang="nb">Program
+Åndsverk definert og laget etter en redaksjonell vurdering
+</xs:documentation>
+							<xs:documentation source="NRK data dictionary" xml:lang="en">Programme
+Creative or intellectual work produced with editorial consideration
+</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="itemBlock">
+						<xs:annotation>
+							<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#itemBlock"/>
+							<xs:documentation source="NRK dataordbok" xml:lang="nb">Innslagsblokk
+En samling av innslag gruppert, som en sammenhengende del av et program.
+</xs:documentation>
+							<xs:documentation source="NRK data dictionary" xml:lang="en">Item block
+A collection of elements in a group, as a continues part of a show.
+</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="item">
+						<xs:annotation>
+							<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#item"/>
+							<xs:documentation source="NRK dataordbok" xml:lang="nb">Innslag
+En selvstendig enhet i et program, kan bestå av et eller flere hele eller deler av mediaobjekt.
+</xs:documentation>
+							<xs:documentation source="NRK data dictionary" xml:lang="en">Item
+An independent element in a show which consists of one or several media objects, in their entirety or a part of
+</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="mediaObject">
+						<xs:annotation>
+							<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#mediaObject"/>
+							<xs:documentation source="NRK dataordbok" xml:lang="nb">Mediaobjekt
+En enkelt kontinuerlig mediakomponent bestående av en mediatype. Inngår som en del av et innslag eller et program
+F. eks. Et platekutt
+</xs:documentation>
+							<xs:documentation source="NRK data dictionary" xml:lang="en">Media object
+A single continuous component consisting of one media type. Part of an item or a show.
+</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="objectEvent">
+						<xs:annotation>
+							<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#objectEvent"/>
+							<xs:documentation source="NRK dataordbok" xml:lang="nb">Hendelse i objekt
+En hendelse langs en tidslinje i et object
+</xs:documentation>
+							<xs:documentation source="NRK data dictionary" xml:lang="en">Object event
+An event in the timeline of an object
+</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="container"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="channel" use="optional">
+			<xs:simpleType>
+				<xs:restriction base="xs:string"/>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="subChannel" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Brukes for å beskrive regionale tjenester, distrikssendinger, når disse beskrives i samme dokument.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="fragment">
+			<xs:annotation>
+				<xs:documentation>Brukes som spittnummer der  et program er delt av en kort nyhetssending </xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="layer" use="optional">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Brukes der programmet eller innslaget har flere lag, f. eks. en ting foregår i lyden, men samtidig skal det vises tekster, eller bilder, og disse har en egen timing i forhold til innslag i programmet</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="subtitle"/>
+					<xs:enumeration value="manuscript"/>
+					<xs:enumeration value="illustrations"/>
+					<xs:enumeration value="video"/>
+					<xs:enumeration value="graphic"/>
+					<xs:enumeration value="audio"/>
+					<xs:enumeration value="super"/>
+					<xs:enumeration value="storyIndex">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Indexpunkter som beskriver ikke tekniske aspecter i et program, f. eks. temaskifte</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="editIndex">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">For markører etc. i en editor</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="keyframes"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="dataid" type="xs:string">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Bør våre xs:NMTOKEN</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="localid" type="xs:ID">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Brukes som mål for localid pekeren i placeholder elementet som brukes i news typen</xs:documentation>
+				<xs:documentation xml:lang="en">Target ID for the IDREF in the placeholder element</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="type" default="rich">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">type er normalt rich, og kan utelates. Summary, betyr at informasjonen i dette elementet ikke er komplet, mens report viser til at dette er en informasjon om noe som har skjedd.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:NMTOKEN">
+					<xs:enumeration value="summary">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes der objektet har et sammendrag av informasjon, der subelemntene er utilstrekkelige bruk fragment</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="rich"/>
+					<xs:enumeration value="report"/>
+					<xs:enumeration value="fragment">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes der elementet inneholder fragmentert info som må matches med andre data, f.eks intensiometeret, ellerobjektet ikke beskriver alle sine subelementer.</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="runorder" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Viser om elementet er i fortiden, spilles nå, eller er noe som ligger klart til avspilling</xs:documentation>
+				<xs:documentation xml:lang="en">Is this element just played, are playing or ready to be played</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute ref="gluonDict:statesGroupType"/>
+		<xs:attribute name="reportState">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Viser tilstanden i rapporteringen av et program eller en sekvens. Brukes som flagg for TONO og GRAMO</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="internal">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">internal - kun for egne systemer, må ikke publiseres på noe måte</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="external">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">export - Dataene kan publiseres, men endringer kan forekomme på et senere tidspunkt</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="ready">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Ready - Ferdig og endelig offentlig informasjon.</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="purpose" type="xs:string">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Dersom dette elementet har et spesifikt bruksområde, wap-versjon eller webversjon av et bilde f. eks</xs:documentation>
+				<xs:documentation xml:lang="en">The intended use of the multimedia element.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="distribution">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Er beskrivelsen for internt bruk eller kan den publiseres av metadataene. Distribusjon av asset styres på annen måte</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="internal"/>
+					<xs:enumeration value="external"/>
+					<xs:enumeration value="public"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="priority">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Setter prioritet for et og et objekt, ellers som prioritet for hele dokumentet.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:int">
+					<xs:minInclusive value="0"/>
+					<xs:maxInclusive value="5"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="spatialType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Geografiske strukturer</xs:documentation>
+			<xs:documentation xml:lang="en">Describes geographical information.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence maxOccurs="unbounded">
+			<xs:element name="location" type="locationType">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Et geografisk sted. En trestruktur. Ytterst er koordinatene, så følger det geografisk største området, normalt en statsdannelse. Så følger de forskjellige administrative eller geografiske områdene innover.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="locationType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Et geografisk sted. Type avgjør hva slag. Det geografisk største området skal være ytterst.</xs:documentation>
+			<xs:documentation xml:lang="en">Geographical origin, a tree structure with country, county, city…</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="name" minOccurs="0">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="division" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">For å spesifisere en eller flere delområder</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="location" type="locationType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="exclusion" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">For å spesifisere en utelatelse av et område. Eks Hordaland uten Bergen</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="location" type="locationType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="posy" type="xs:decimal" use="optional"/>
+		<xs:attribute name="posx" type="xs:decimal" use="optional"/>
+		<xs:attribute name="latitude" type="xs:decimal" use="optional"/>
+		<xs:attribute name="longitude" type="xs:decimal" use="optional"/>
+		<xs:attribute name="altitude" type="xs:decimal" use="optional"/>
+		<xs:attribute name="dataid" type="xs:string" use="optional"/>
+		<xs:attribute name="order" type="xs:int">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Beskriver rekkefolge, eller gruppering av  steder.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="type" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="region"/>
+					<xs:enumeration value="geographical"/>
+					<xs:enumeration value="position">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Brukes som holder for lengde og breddegrader</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="union"/>
+					<xs:enumeration value="state"/>
+					<xs:enumeration value="country"/>
+					<xs:enumeration value="county"/>
+					<xs:enumeration value="municipality"/>
+					<xs:enumeration value="constituency"/>
+					<xs:enumeration value="postalCode"/>
+					<xs:enumeration value="place"/>
+					<xs:enumeration value="quarter"/>
+					<xs:enumeration value="building"/>
+					<xs:enumeration value="road"/>
+					<xs:enumeration value="railway"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="temporalType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Struktur for å vise tidsintervalet til det som er beskrevet</xs:documentation>
+			<xs:documentation xml:lang="en">Temporal extent</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="start" type="displayType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Starten på en periode, gitt enten som en eksakt verdi eller som et interval</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="end" type="displayType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Slutten på en periode</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="epoch" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Epoke, betegnelse på stilepoke, historisk periode</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="contentMapType">
+		<xs:annotation>
+			<xs:documentation>Mapping for diverse contentmaps, for beskrivelse av dokumenter og lydfiler</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="occurrence" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Et element som beskriver en hendelse i et dokument eller en lydfil</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="description" type="xs:string" minOccurs="0"/>
+						<xs:choice>
+							<xs:element name="xpath" type="xs:string"/>
+							<xs:sequence>
+								<xs:annotation>
+									<xs:documentation>Brukes der vi har en mediafil som er referert til</xs:documentation>
+								</xs:annotation>
+								<xs:element name="start" type="startEndType"/>
+								<xs:element name="end" type="startEndType" minOccurs="0"/>
+							</xs:sequence>
+						</xs:choice>
+					</xs:sequence>
+					<xs:attribute name="type" use="required">
+						<xs:annotation>
+							<xs:documentation>Hovedklasse for hvilken type hendelse dette er.</xs:documentation>
+						</xs:annotation>
+						<xs:simpleType>
+							<xs:restriction base="xs:string">
+								<xs:enumeration value="other">
+									<xs:annotation>
+										<xs:documentation xml:lang="nb">Brukes for fritekst data</xs:documentation>
+									</xs:annotation>
+								</xs:enumeration>
+								<xs:enumeration value="segment"/>
+								<xs:enumeration value="paragraph"/>
+								<xs:enumeration value="intro"/>
+								<xs:enumeration value="cue_in"/>
+								<xs:enumeration value="cue_out"/>
+								<xs:enumeration value="edit"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+					<xs:attribute name="channel" type="xs:string">
+						<xs:annotation>
+							<xs:documentation>Brukes dersom et cuepunkt bare brukes for en spasifik kanal</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+					<xs:attribute name="medialayer">
+						<xs:annotation>
+							<xs:documentation>Om hendelsen er i supring, bilde, eller lyd</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="subjectType" mixed="true">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Utkast for hvordan dynamiske emneregistre kan bygges. For predefinerte lister har vi bare en strengverdi her, da denne typen kan være mikset.</xs:documentation>
+			<xs:documentation xml:lang="en">Subject registry</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="name" type="xs:string" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Det beskrivende emneordet</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="creator" type="entityType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Bidragsyter for emneordet, brukes i forbindelse med frie emneord (tags)</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="topic" type="subjectType" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Spesifiserer et emne dette emnet har mest med å gjøre. Fra en detaljert til en mindre detaljert indeling.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attributeGroup ref="referenceGroup"/>
+	</xs:complexType>
+	<xs:complexType name="originType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Peker for ressurser i produksjons og arkivsystemer</xs:documentation>
+			<xs:documentation xml:lang="en">References content in the production systems.</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="metadata" type="gluonMetadataType" minOccurs="0">
+				<xs:annotation>
+					<xs:appinfo source="http://gluon.nrk.no/dataordbok.xml#storageIdentifier"/>
+					<xs:documentation source="NRK dataordbok" xml:lang="nb">Lagringsidentifikator
+Identifikasjon av bærer
+</xs:documentation>
+					<xs:documentation source="NRK data dictionary" xml:lang="en">Storage identifier
+Identifier of the storage
+</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="technicalMetadata" type="ebucore:formatType" minOccurs="0"/>
+			<xs:element name="subOrigin" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="origin" type="originType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="fragmented" type="xs:boolean">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Flagg dersom en kilde er delt på flere bærere</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="purpose" type="xs:string">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Brukes der man har flere versjoner av samme bildet i hver sin størelse. Alle tekniske metadata kan være forskjellige, men alle andre metadata er like.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="startEndType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Start og slutt på innslag</xs:documentation>
+			<xs:documentation xml:lang="en">Beginning and end of broadcast items</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:duration">
+				<xs:attribute name="fade" type="xs:duration" use="optional"/>
+				<xs:attribute name="relativity" default="parent">
+					<xs:simpleType>
+						<xs:restriction base="xs:string">
+							<xs:enumeration value="parent"/>
+							<xs:enumeration value="timeOfDay"/>
+							<xs:enumeration value="carrier"/>
+						</xs:restriction>
+					</xs:simpleType>
+				</xs:attribute>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:simpleType name="TimecodeType">
+		<xs:annotation>
+			<xs:documentation>This should be a timecode in the format hh:mm:ss:ff/FF where: ff is the frame number and FF  
+  is the number of frame per second. There is no limitation in the number of digits for ff and FF 
+  </xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:pattern value="([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]:([0-9])+/([0-9])+"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="transmitterType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Beskrivelse av en mottager</xs:documentation>
+			<xs:documentation xml:lang="en">Transmitter description.</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="quark" type="xs:string" use="required"/>
+		<xs:attribute name="condition" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Brukes for betingelsene for videresending i karusellen</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="url" type="xs:anyURI" use="optional"/>
+		<xs:attribute name="ip" type="xs:anyURI" use="optional"/>
+		<xs:attribute name="encoding" use="optional">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Gir de forskjellige måtene systemet kan sende videre data på.</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="raw"/>
+					<xs:enumeration value="urlesc"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="errorType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Ny type for feil og statusmeldinger</xs:documentation>
+			<xs:documentation xml:lang="en">Response from a transmitter in case of error</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="errorMessage">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="user" type="xs:string"/>
+						<xs:element name="procedure" type="xs:string"/>
+						<xs:element name="message" type="xs:string"/>
+						<xs:element name="gluonDocument" type="xs:string" minOccurs="0"/>
+					</xs:sequence>
+					<xs:attribute name="errorType" type="xs:string">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Feilkode
+</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+					<xs:attribute name="errorPriority" type="xs:string"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="module">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="name" type="xs:string" minOccurs="0"/>
+						<xs:element name="host" type="xs:string" minOccurs="0">
+							<xs:annotation>
+								<xs:documentation xml:lang="nb">Maskinnavnet</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="contact" type="entityType" minOccurs="0"/>
+					</xs:sequence>
+					<xs:attribute name="moduleId" type="xs:string" use="required"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="quark" type="xs:string">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Betegnelse på gluon enhet som sender inn feilmeldingen</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="okType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Brukes dersom alt gikk bra</xs:documentation>
+			<xs:documentation xml:lang="en">Response from a transmitter in case of success</xs:documentation>
+		</xs:annotation>
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="quark" type="xs:string"/>
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+	<xs:complexType name="pollingType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">For valg og rundspørringer</xs:documentation>
+			<xs:documentation xml:lang="en">Polling and elections</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="metadata" type="gluonMetadataType">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Metadata for hele undersøkelsen.</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="points">
+					<xs:annotation>
+						<xs:documentation>For data som omfatter hele undersøkelsen</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:decimal">
+								<xs:attribute name="type">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:enumeration value="percent"/>
+											<xs:enumeration value="actual"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="label" type="xs:string"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="trend">
+					<xs:annotation>
+						<xs:documentation>For trender som omfatter hele undersøkelsen</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:decimal">
+								<xs:attribute name="type">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:enumeration value="percent"/>
+											<xs:enumeration value="actual"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="label" type="xs:string"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="prognosis">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Antagelser o.l. som kan uttrykkes ved tall</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="type">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:enumeration value="percent"/>
+											<xs:enumeration value="actual"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="label" type="xs:string"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="factual">
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="label" type="xs:string"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="question" type="xs:string" minOccurs="0"/>
+			<xs:element name="keyword" type="xs:string" minOccurs="0"/>
+			<xs:element name="divisions" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="division" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation xml:lang="nb">Dersom undersøkelsen er geografisk eller domografisk fordelt har man flere delundersøkelser her.</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="metadata" type="gluonMetadataType" minOccurs="0">
+										<xs:annotation>
+											<xs:documentation xml:lang="nb">Beskrivelse av denne delen av undersøkelsen. For denne delen av undersøkelsen. Arver metadataene fra elementet over.</xs:documentation>
+										</xs:annotation>
+									</xs:element>
+									<xs:choice minOccurs="0" maxOccurs="unbounded">
+										<xs:element name="points">
+											<xs:annotation>
+												<xs:documentation>For data som omfatter denne delen undersøkelsen</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:simpleContent>
+													<xs:extension base="xs:decimal">
+														<xs:attribute name="type">
+															<xs:simpleType>
+																<xs:restriction base="xs:string">
+																	<xs:enumeration value="percent"/>
+																	<xs:enumeration value="actual"/>
+																</xs:restriction>
+															</xs:simpleType>
+														</xs:attribute>
+														<xs:attribute name="label" type="xs:string"/>
+													</xs:extension>
+												</xs:simpleContent>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="trend">
+											<xs:annotation>
+												<xs:documentation>For trender som omfatter denne delen undersøkelsen</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:simpleContent>
+													<xs:extension base="xs:decimal">
+														<xs:attribute name="type">
+															<xs:simpleType>
+																<xs:restriction base="xs:string">
+																	<xs:enumeration value="percent"/>
+																	<xs:enumeration value="actual"/>
+																</xs:restriction>
+															</xs:simpleType>
+														</xs:attribute>
+														<xs:attribute name="label" type="xs:string"/>
+													</xs:extension>
+												</xs:simpleContent>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="prognosis">
+											<xs:annotation>
+												<xs:documentation xml:lang="nb">Antagelser o.l. som kan uttrykkes ved tall</xs:documentation>
+											</xs:annotation>
+											<xs:complexType>
+												<xs:simpleContent>
+													<xs:extension base="xs:string">
+														<xs:attribute name="type">
+															<xs:simpleType>
+																<xs:restriction base="xs:string">
+																	<xs:enumeration value="percent"/>
+																	<xs:enumeration value="actual"/>
+																</xs:restriction>
+															</xs:simpleType>
+														</xs:attribute>
+														<xs:attribute name="label" type="xs:string"/>
+													</xs:extension>
+												</xs:simpleContent>
+											</xs:complexType>
+										</xs:element>
+										<xs:element name="factual">
+											<xs:complexType>
+												<xs:simpleContent>
+													<xs:extension base="xs:string">
+														<xs:attribute name="label" type="xs:string"/>
+													</xs:extension>
+												</xs:simpleContent>
+											</xs:complexType>
+										</xs:element>
+									</xs:choice>
+									<xs:element name="propositions" minOccurs="0">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="proposition" type="propositionType" maxOccurs="unbounded"/>
+											</xs:sequence>
+											<xs:attribute name="electors" type="xs:int" use="optional">
+												<xs:annotation>
+													<xs:documentation xml:lang="nb">Totalt antall stemmeberettigede</xs:documentation>
+												</xs:annotation>
+											</xs:attribute>
+											<xs:attribute name="votes" type="xs:int">
+												<xs:annotation>
+													<xs:documentation xml:lang="nb">Totalt antall stemmer</xs:documentation>
+												</xs:annotation>
+											</xs:attribute>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="electionCoefficients" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Spesialtype for å beregne utgjevningsmandater</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="electionCoefficient" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:float">
+										<xs:attribute name="proposition" type="xs:string"/>
+										<xs:attribute name="county" type="xs:string"/>
+										<xs:attribute name="candidateRank" type="xs:int"/>
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="propositions" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Data for hele undersøkelsen</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="proposition" type="propositionType" maxOccurs="unbounded"/>
+					</xs:sequence>
+					<xs:attribute name="electors" type="xs:int" use="optional">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Totalt antall stemmeberettigede</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+					<xs:attribute name="votes" type="xs:int">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Totalt antall stemmer</xs:documentation>
+						</xs:annotation>
+					</xs:attribute>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="type">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="prognosis">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">For prognoser ved valg</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="election">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">Valgresultater</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="polling">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">For undersøkelser der grunnlaget er plukket ut. (Gallup)
+</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+					<xs:enumeration value="response">
+						<xs:annotation>
+							<xs:documentation xml:lang="nb">For undersøkelser der grunnlaget er tilfeldig. (Stem på 1987)</xs:documentation>
+						</xs:annotation>
+					</xs:enumeration>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="propositionType">
+		<xs:annotation>
+			<xs:documentation>For svaralternativer</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="metadata" type="gluonMetadataType"/>
+			<xs:choice minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Elementene kan komme i fri rekkefølge</xs:documentation>
+				</xs:annotation>
+				<xs:element name="points">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Målte/ talte resultater</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:decimal">
+								<xs:attribute name="type">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:enumeration value="percent"/>
+											<xs:enumeration value="actual"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="label" type="xs:string"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="trend">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Trender og differanser i forhold til tidligere målte resultater</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:decimal">
+								<xs:attribute name="type">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:enumeration value="percent"/>
+											<xs:enumeration value="actual"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="label" type="xs:string"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="prognosis">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">Antagelser o.l. som kan uttrykkes ved tall</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="type">
+									<xs:simpleType>
+										<xs:restriction base="xs:string">
+											<xs:enumeration value="percent"/>
+											<xs:enumeration value="actual"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="label" type="xs:string"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="factual">
+					<xs:annotation>
+						<xs:documentation xml:lang="nb">For resultater som ikke utrykes som tall</xs:documentation>
+					</xs:annotation>
+					<xs:complexType>
+						<xs:simpleContent>
+							<xs:extension base="xs:string">
+								<xs:attribute name="label" type="xs:string"/>
+							</xs:extension>
+						</xs:simpleContent>
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="keyword" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="dataid" type="xs:string" use="optional"/>
+	</xs:complexType>
+	<xs:complexType name="televisionPageType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Type for tvgrafikk sidevisning</xs:documentation>
+			<xs:documentation xml:lang="en">Control of television graphic system</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="item" maxOccurs="unbounded">
+				<xs:complexType mixed="true">
+					<xs:sequence>
+						<xs:element name="box">
+							<xs:complexType>
+								<xs:attribute name="x" type="xs:int" use="required"/>
+								<xs:attribute name="y" type="xs:int" use="required"/>
+								<xs:attribute name="width" type="xs:int" use="required"/>
+								<xs:attribute name="height" type="xs:int" use="required"/>
+								<xs:attribute name="color" use="required">
+									<xs:simpleType>
+										<xs:restriction base="xs:string"/>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="border" type="xs:boolean" use="required"/>
+								<xs:attribute name="fade" type="xs:boolean" use="required"/>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="font">
+							<xs:complexType>
+								<xs:attribute name="size" type="xs:int" use="required"/>
+								<xs:attribute name="family" type="xs:string" use="required"/>
+								<xs:attribute name="color" type="xs:string" use="required"/>
+								<xs:attribute name="direction" use="required">
+									<xs:simpleType>
+										<xs:restriction base="xs:NMTOKEN">
+											<xs:enumeration value="up"/>
+											<xs:enumeration value="down"/>
+											<xs:enumeration value="none"/>
+										</xs:restriction>
+									</xs:simpleType>
+								</xs:attribute>
+								<xs:attribute name="speed" type="xs:int" use="required"/>
+								<xs:attribute name="valign" type="xs:string" use="required"/>
+							</xs:complexType>
+						</xs:element>
+					</xs:sequence>
+					<xs:attribute name="id" type="xs:string" use="required"/>
+					<xs:attribute name="type" use="required">
+						<xs:simpleType>
+							<xs:restriction base="xs:NMTOKEN">
+								<xs:enumeration value="chat"/>
+								<xs:enumeration value="vote"/>
+							</xs:restriction>
+						</xs:simpleType>
+					</xs:attribute>
+					<xs:attribute name="title" type="xs:string" use="optional"/>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="sectionType">
+		<xs:sequence>
+			<xs:element name="value">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Kan være et sidenummer eller en del av en path brukt for publisering</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="subsection" type="sectionType" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="dictionaryType">
+		<xs:annotation>
+			<xs:documentation xml:lang="nb">Brukes for definisjoner sli, som i en datakatalog</xs:documentation>
+		</xs:annotation>
+		<xs:sequence>
+			<xs:element name="metadata" type="gluonMetadataType"/>
+			<xs:sequence maxOccurs="unbounded">
+				<xs:element name="group" minOccurs="0">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="metadata" type="gluonMetadataType"/>
+							<xs:element name="term" type="termType" maxOccurs="unbounded"/>
+						</xs:sequence>
+						<xs:attribute name="id" type="xs:ID"/>
+						<xs:attribute name="makeEnumList" type="xs:boolean"/>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="term" type="termType" minOccurs="0"/>
+			</xs:sequence>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="termType">
+		<xs:sequence>
+			<xs:element name="word" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute ref="xml:lang"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="definition" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute ref="xml:lang"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="comment" type="xs:string" maxOccurs="unbounded"/>
+			<xs:element name="example" minOccurs="0" maxOccurs="unbounded">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attribute ref="xml:lang"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="usage" minOccurs="0">
+				<xs:complexType>
+					<xs:attribute name="min"/>
+					<xs:attribute name="max"/>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="format">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Beskriver innholdet i elementet</xs:documentation>
+				</xs:annotation>
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="description" type="xs:string" maxOccurs="unbounded"/>
+						<xs:element name="humanInterface" type="xs:string">
+							<xs:annotation>
+								<xs:documentation xml:lang="nb">Visningsformat</xs:documentation>
+							</xs:annotation>
+						</xs:element>
+						<xs:element name="formatDefinition" type="xs:anyURI"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="reference" type="xs:IDREFS" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Brukes for krysreferanse til like eller anbefalte termer</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="refinementOf" type="xs:IDREF" minOccurs="0">
+				<xs:annotation>
+					<xs:documentation xml:lang="nb">Brukes for å peke til hovedkatagori for term eller rolle</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="id" type="xs:ID" use="required"/>
+		<xs:attribute name="status">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="proposed"/>
+					<xs:enumeration value="future"/>
+					<xs:enumeration value="proposedTerm"/>
+					<xs:enumeration value="definedTerm"/>
+					<xs:enumeration value="recommendedUse"/>
+					<xs:enumeration value="active"/>
+					<xs:enumeration value="schema"/>
+					<xs:enumeration value="obsolete"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="mastersystem" type="xs:anyURI">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Peker til system som er master for begrepet</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="note" type="xs:boolean"/>
+	</xs:complexType>
+	<xs:complexType name="channelType">
+		<xs:sequence>
+			<xs:element name="carrier" minOccurs="0">
+				<xs:complexType>
+					<xs:simpleContent>
+						<xs:extension base="xs:string">
+							<xs:attributeGroup ref="referenceGroup"/>
+						</xs:extension>
+					</xs:simpleContent>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="spatialAvailability" type="spatialType" minOccurs="0"/>
+			<xs:element name="temporalAvailability" type="temporalType" minOccurs="0"/>
+			<xs:element name="distributionIssues" type="relationsElementType" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+		<xs:attributeGroup ref="referenceGroup"/>
+	</xs:complexType>
+	<xs:attributeGroup name="pixelGroup">
+		<xs:attribute name="type" use="required">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="px"/>
+					<xs:enumeration value="cm"/>
+					<xs:enumeration value="mm"/>
+					<xs:enumeration value="pt"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<xs:attributeGroup name="streamGroup">
+		<xs:attribute name="stream" default="total">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="total"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="bw" use="optional">
+			<xs:simpleType>
+				<xs:restriction base="xs:int">
+					<xs:minInclusive value="0"/>
+					<xs:maxInclusive value="1"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="type" use="optional">
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="mb/s"/>
+					<xs:enumeration value="b/s"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+	</xs:attributeGroup>
+	<xs:attributeGroup name="referenceGroup">
+		<xs:attribute name="label" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation>Dersom numeriske verdier benyttes, i f. eks IPTC er dette en forklaring på tallverdien</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="reference" type="xs:string">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Ref til system, f. eks. Desken2Foldere</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="link" type="xs:anyURI"/>
+		<xs:attribute ref="xml:lang"/>
+	</xs:attributeGroup>
+	<xs:attributeGroup name="distributionGroup">
+		<xs:annotation>
+			<xs:documentation>Her kan flere verdier og attributter settes inn</xs:documentation>
+		</xs:annotation>
+		<xs:attribute name="restriction" default="public">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Er ressursen for internt bruk eller kan den publiseres. Gjelder for elementet attributtet er satt på</xs:documentation>
+			</xs:annotation>
+			<xs:simpleType>
+				<xs:restriction base="xs:string">
+					<xs:enumeration value="internal"/>
+					<xs:enumeration value="external"/>
+					<xs:enumeration value="public"/>
+				</xs:restriction>
+			</xs:simpleType>
+		</xs:attribute>
+		<xs:attribute name="purpose" type="xs:string" use="optional">
+			<xs:annotation>
+				<xs:documentation xml:lang="nb">Antydet bruksområde for element</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:attributeGroup>
+</xs:schema>
