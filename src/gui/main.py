@@ -13,8 +13,6 @@ import xmeml
 import metadata
 import odometer_rc 
 
-
-
 class XmemlWorker(Core.QThread):
     loaded = Core.pyqtSignal([xmeml.VideoSequence], name="loaded")
 
@@ -44,6 +42,7 @@ class Odometer(Gui.QMainWindow):
     msg = Core.pyqtSignal(unicode, name="msg")
     loaded = Core.pyqtSignal()
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
+    metadataloaded = 0
 
     def __init__(self, xmemlfile, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
@@ -55,12 +54,14 @@ class Odometer(Gui.QMainWindow):
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.decibel)
-        self.ui.previousButton = self.ui.buttonBox.addButton(trans('Pre&vious'), Gui.QDialogButtonBox.ActionRole)
+        self.ui.previousButton = self.ui.buttonBox.addButton(trans('cmd', 'Pre&vious'), Gui.QDialogButtonBox.ActionRole)
         self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
-        self.ui.nextButton = self.ui.buttonBox.addButton(trans('Ne&xt'), Gui.QDialogButtonBox.ActionRole)
+        self.ui.nextButton = self.ui.buttonBox.addButton(trans('cmd', 'Ne&xt'), Gui.QDialogButtonBox.ActionRole)
         self.ui.nextButton.clicked.connect(self.showNextMetadata)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
+        self.ui.DMAButton.clicked.connect(self.gluon)
+        #self.ui.AUXButton.clicked.connect(self.creditsToClipboard)
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
@@ -138,6 +139,7 @@ class Odometer(Gui.QMainWindow):
             self.rows[audioclip.name] = r
             w = metadata.findResolver(audioclip.name)
             w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
+            w.trackResolved.connect(self.workCompleted) # connect the 'resolved' signal
             w.trackProgress.connect(self.showProgress) 
             self.workers.append(w) # keep track of the worker
             w.resolve(audioclip.name) # put the worker to work async
@@ -181,6 +183,11 @@ class Odometer(Gui.QMainWindow):
         if metadata.musiclibrary == "Sonoton":
             self.AUXButton.setEnabled(True)
         self.metadataLoaded.emit(row)
+
+    def trackCompleted(self, filename, metadata):
+        self.metadataloaded += 1
+        if len(self.audioclips)  == self.metadataloaded:
+            self.DMAButton.setEnabled(True)
 
     def showProgress(self, filename, progress):
         print "got progress for %s: %s" % (filename, progress)
@@ -275,7 +282,11 @@ class Odometer(Gui.QMainWindow):
             self.ui.errors.hide()
 
             
-
+    def gluon(self):
+        #ALL  data loaded
+        self.gluon = metadata.Gluon()
+        self.gluon.finished.connect(
+        self.resolve(self.prodno, self.rows.values())
 
     def run(self, app):
         self.app = app

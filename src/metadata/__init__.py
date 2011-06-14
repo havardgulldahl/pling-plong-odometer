@@ -10,6 +10,31 @@ import PyQt4.QtGui as Gui
 import PyQt4.QtWebKit as Web
 import PyQt4.Qt as Qt
 
+class GluonWorker(Core.QThread):
+    loaded = Core.pyqtSignal([list], name="loaded")
+    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
+
+    def __init__(self, parent=None):
+        super(GluonWorker, self).__init__(parent)
+        self.exiting = False
+
+    def __del__(self):
+        self.exiting = True
+        self.wait()
+
+    def load(self, prodno, clipnames):
+        self.prodno = prodno
+        self.clipnames = clipnames
+        self.start()
+
+    def run(self):
+        gb = gluon.GluonBuilder(self.prodno, self.clipnames)
+        xmlreq = gb.toxml()
+        gp = gluon.GluonParser()
+
+        for metadata in gp.parse(self.request(xmlreq)):
+            self.trackResolved.emit(metadata)
+
 class TrackMetadata(object):
     def __init__(self,
                  filename=None,
@@ -55,17 +80,15 @@ class ResolverBase(Core.QObject):
     trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
     trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" )
 
+    def __init__(self, prodno):
+        self.prodno = prodno
+
     def accepts(self, filename): 
         for f in self.prefixes:
             if unicode(filename).startswith(f):
                 return True
         return False
 
-    def parse(self): 
-        # reimplement this to emit a signal with a TrackMetadata object when found
-        #self.trackResolved.emit(self.filename, md)
-        pass
-        
     def testresolve(self, filename):
         self.filename = filename
         i = random.randint(0,1000)
@@ -92,6 +115,11 @@ class ResolverBase(Core.QObject):
     def url(self, filename): # return url from filename
         tracknumber, fileext = os.path.splitext(filename)
         return self.urlbase % tracknumber
+
+    def parse(self): 
+        # reimplement this to emit a signal with a TrackMetadata object when found
+        #self.trackResolved.emit(self.filename, md)
+        pass
         
 
 class SonotonResolver(ResolverBase):
@@ -126,46 +154,22 @@ class SonotonResolver(ResolverBase):
         #print vars(metadata)
         self.trackResolved.emit(self.filename, metadata)
 
-
-
-class DMAResolver(ResolverBase):
-    prefixes = ['NONRT', ]
-    name = 'DMA'
-    #urlbase = ''
-    urlbase = 'http://localhost:8000/dma.html?%s'
-
-    def parse(self):
-        print "parsing"
-        sc = self.doc.frame.findAllElements("script")
-        rawdata = unicode(sc.toList()[2].toInnerXml(), encoding='latin1')
-        data = re.findall(r'NRK.record.MusicObject\((.+?)\)', rawdata, re.S)[0]
-        jsonfix = re.sub(r'([a-zA-Z]+)\ ?:', r'"\1":', data)
-        meta = json.loads(jsonfix.replace("'", '"'))["data"]
-        print meta
-        mt = TrackMetadata(filename=self.doc.filename, 
-                           musiclibrary=self.name,
-                           title = meta["title"],
-                           year = int(meta["releaseYear"]),
-                           artist = ", ".join([x["name"] for x in meta["artists"]]),
-                           albumname = ", ".join([x["name"] for x in meta["albums"]]),
-                           composer = ", ".join([x["name"] for x in meta["composer"]]),
-                           tracknumber = meta["trackNumber"]
-                           )
-        mins, secs = (int(i.strip()) for i in meta["duration"].split(":"))
-        mt.length = mins*60+secs
-        self.trackResolved.emit(self.filename, mt)
-
-    def url(self, filename): # return url from filename
-        tracknumber_songname, fileext = os.path.splitext(filename)
-        tracknumber, songname = tracknumber_songname.split('_', 1)
-        return self.urlbase % tracknumber
-
 def findResolver(filename):
-    resolvers = [ SonotonResolver(), DMAResolver() ]
+    resolvers = [ SonotonResolver(), ]
     for resolver in resolvers:
         if resolver.accepts(filename):
             return resolver
     return False
+
+class Gluon(Core.QObject):
+    
+    def __init__(self, prodno, clipnames_or_metadata, parent=None):
+        super(gluon, self).__init__(parent)
+        self.worker = GluonWorker()
+
+    def resolve(super, prodno, clipnames):
+        self.worker.load(prodno, clipnames)
+
 
 class webdoc(Core.QObject):
 

@@ -78,7 +78,7 @@ class GluonBuilder(object):
 
 
 class GluonParser(object):
-    "Parse a gluon xml file to get metadata from audio clips"
+    "Parse a gluon xml response to retrieve metadata for audio clips"
 
     def parse(self, xmlsource):
         self.tree = ET.parse(xmlsource)
