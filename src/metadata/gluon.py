@@ -5,7 +5,7 @@
 
 import sys, xml.etree.ElementTree as ET
 
-from metadata import TrackMetadata
+#from metadata import TrackMetadata
 
 GLUON_NAMESPACE='{http://gluon.nrk.no/gluon2}'
 GLUONDICT_NAMESPACE='{http://gluon.nrk.no/gluonDict}'
@@ -30,11 +30,13 @@ class GluonBuilder(object):
     objects = []
 
     def __init__(self, prodno, metadatalist):
+        print "gluonbuilder init"
         self.prodno = prodno
         self.objects = metadatalist
         self.build()
 
     def build(self):
+        print "gluonbuilder build"
         self.root = glel(glns('gluon'), {'priority':'3',
                                    'artID':'odofon-1234',
                                 })
@@ -57,13 +59,16 @@ class GluonBuilder(object):
         elements = glsel(rootobject,'subelements')
 
         for obj in self.objects:
+            print vars(obj.metadata)
+            md = obj.metadata
+            clip = obj.clip
             xobj = glsel(elements,'object', {'objecttype':'item'})
-            identifier = glsel(xobj,'identifier').text=obj['musicid']
+            identifier = glsel(xobj,'identifier').text=md.getmusicid()
 
             types = glsel(xobj,'types')
-            lib = glsel(types,'type').text=obj['musiclibrary']
+            lib = glsel(types,'type').text=md.musiclibrary
             formatel = glsel(xobj,'format')
-            duration = glsel(formatel,'formatExtend').text='%.2f' % obj['duration']
+            duration = glsel(formatel,'formatExtend').text='%.2f' % clip.audibleDuration
 
             dates = glsel(xobj, 'dates')
             dateAlternative = glsel(dates, 'dateAlternative')
@@ -74,16 +79,19 @@ class GluonBuilder(object):
             end.set('startPoint', 'XX')
             
     def toxml(self):
-        return ET.tostring(self.root, encoding='utf-8')
+        xml = ET.tostring(self.root, encoding='utf-8')
+        print xml
+        return xml
 
 
 class GluonParser(object):
     "Parse a gluon xml response to retrieve metadata for audio clips"
 
-    def parse(self, xmlsource):
+    def parse(self, xmlsource, factory=object):
         self.tree = ET.parse(xmlsource)
         for obj in self.tree.getiterator(glns('object')):
-            md = TrackMetadata()
+            #md = TrackMetadata()
+            md = factory()
             md.identifier = obj.find('.//'+glns('identifier')).text
             md.title = obj.find('.//'+glns('title')).text
             md.albumname = obj.find('.//'+glns('titleAlternative')).text

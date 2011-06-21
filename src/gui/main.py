@@ -136,10 +136,17 @@ class Odometer(Gui.QMainWindow):
             r.setData(0, Core.Qt.ItemIsUserCheckable, True)
             r.setCheckState(0, Core.Qt.Checked)
             r.clip = audioclip
+            r.metadata = metadata.TrackMetadata(filename=audioclip.name)
             self.rows[audioclip.name] = r
             w = metadata.findResolver(audioclip.name)
+            if not w:
+                # no resolver found
+                # fast-track to gluon
+                self.trackCompleted(audioclip.name, object())
+                continue
+
             w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
-            w.trackResolved.connect(self.workCompleted) # connect the 'resolved' signal
+            w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
             w.trackProgress.connect(self.showProgress) 
             self.workers.append(w) # keep track of the worker
             w.resolve(audioclip.name) # put the worker to work async
@@ -186,6 +193,7 @@ class Odometer(Gui.QMainWindow):
 
     def trackCompleted(self, filename, metadata):
         self.metadataloaded += 1
+        print len(self.audioclips), self.metadataloaded
         if len(self.audioclips)  == self.metadataloaded:
             self.DMAButton.setEnabled(True)
 
@@ -285,8 +293,11 @@ class Odometer(Gui.QMainWindow):
     def gluon(self):
         #ALL  data loaded
         self.gluon = metadata.Gluon()
-        self.gluon.finished.connect(
-        self.resolve(self.prodno, self.rows.values())
+        self.gluon.worker.trackResolved.connect(self.gluonFinished)
+        self.gluon.resolve(self.prodno.text(), self.rows.values())
+
+    def gluonFinished(self, trackname, metadata):
+        print "gluonFinished: %s -> %s" % (trackname, metadata)
 
     def run(self, app):
         self.app = app

@@ -10,30 +10,7 @@ import PyQt4.QtGui as Gui
 import PyQt4.QtWebKit as Web
 import PyQt4.Qt as Qt
 
-class GluonWorker(Core.QThread):
-    loaded = Core.pyqtSignal([list], name="loaded")
-    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
-
-    def __init__(self, parent=None):
-        super(GluonWorker, self).__init__(parent)
-        self.exiting = False
-
-    def __del__(self):
-        self.exiting = True
-        self.wait()
-
-    def load(self, prodno, clipnames):
-        self.prodno = prodno
-        self.clipnames = clipnames
-        self.start()
-
-    def run(self):
-        gb = gluon.GluonBuilder(self.prodno, self.clipnames)
-        xmlreq = gb.toxml()
-        gp = gluon.GluonParser()
-
-        for metadata in gp.parse(self.request(xmlreq)):
-            self.trackResolved.emit(metadata)
+import gluon
 
 class TrackMetadata(object):
     def __init__(self,
@@ -73,15 +50,41 @@ class TrackMetadata(object):
         self.writer = writer
         self.identifier = identifier
 
+    def getmusicid(self):
+        "Return a music id (DMA/Sonoton unique key) from filename"
+        return os.path.splitext(self.filename)[0]
+
+class GluonWorker(Core.QThread):
+    loaded = Core.pyqtSignal([list], name="loaded")
+    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
+
+    def __init__(self, parent=None):
+        super(GluonWorker, self).__init__(parent)
+        self.exiting = False
+
+    def __del__(self):
+        self.exiting = True
+        self.wait()
+
+    def load(self, prodno, clipnames):
+        self.prodno = prodno
+        self.clipnames = clipnames
+        self.start()
+
+    def run(self):
+        gb = gluon.GluonBuilder(self.prodno, self.clipnames)
+        xmlreq = gb.toxml()
+        gp = gluon.GluonParser()
+
+        for metadata in gp.parse(self.request(xmlreq), factory=TrackMetadata):
+            self.trackResolved.emit(metadata)
+
 class ResolverBase(Core.QObject):
 
     prefixes = [] # a list of file prefixes that this resolver recognizes
     name = 'general'
     trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
     trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" )
-
-    def __init__(self, prodno):
-        self.prodno = prodno
 
     def accepts(self, filename): 
         for f in self.prefixes:
@@ -163,11 +166,11 @@ def findResolver(filename):
 
 class Gluon(Core.QObject):
     
-    def __init__(self, prodno, clipnames_or_metadata, parent=None):
-        super(gluon, self).__init__(parent)
+    def __init__(self, parent=None):
+        super(Gluon, self).__init__(parent)
         self.worker = GluonWorker()
 
-    def resolve(super, prodno, clipnames):
+    def resolve(self, prodno, clipnames):
         self.worker.load(prodno, clipnames)
 
 
