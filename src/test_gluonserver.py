@@ -2,8 +2,9 @@
 # -*- enc: utf-8 -*-
 
 import SimpleHTTPServer
-import BaseHTTPServer
+import BaseHTTPServer, urlparse
 import SocketServer
+import StringIO
 
 from metadata.gluon import GluonRequestParser
 
@@ -12,7 +13,13 @@ class GluonHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         print self.path
         if self.path == '/gluon':
             parser = GluonRequestParser()
-            print [vars(z) for z in parser.parse(self.rfile)]
+            #print [vars(z) for z in parser.parse(self.rfile)]
+            data = self.rfile.read()
+            print repr(data)
+            data = urlparse.parse_qs(data)["data"][0]
+            print repr(data)
+            f = StringIO.StringIO(data)
+            print [vars(z) for z in parser.parse(f)]
 
 
 def run_while_true(server_class=BaseHTTPServer.HTTPServer,

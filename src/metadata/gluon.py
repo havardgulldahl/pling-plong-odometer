@@ -65,14 +65,15 @@ class GluonBuilder(object):
             md = obj.metadata
             clip = obj.clip
             xobj = glsel(elements,'object', {'objecttype':'item'})
-            identifier = glsel(xobj,'identifier').text=md.getmusicid()
+            xobjmd = glsel(xobj, 'metadata')
+            identifier = glsel(xobjmd,'identifier').text=md.getmusicid()
 
-            types = glsel(xobj,'types')
+            types = glsel(xobjmd,'types')
             lib = glsel(types,'type').text=md.musiclibrary
-            formatel = glsel(xobj,'format')
-            duration = glsel(formatel,'formatExtend').text='%.2f' % clip.audibleDuration
+            formatel = glsel(xobjmd,'format')
+            duration = glsel(formatel,'formatExtent').text='%.2f' % clip.audibleDuration
 
-            dates = glsel(xobj, 'dates')
+            dates = glsel(xobjmd, 'dates')
             dateAlternative = glsel(dates, 'dateAlternative')
             dateAlternative.set(ET.QName(GLUONDICT_NAMESPACE+'datesGroupType'), 'objectEvent')
             start = glsel(dateAlternative, 'start')
