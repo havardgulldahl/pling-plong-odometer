@@ -15,7 +15,10 @@ XSI_NAMESPACE='{http://www.w3.org/2001/XMLSchema-instance}'
 ## namespace ugliness and clutter
 
 def glns(tag):
-    return '%s%s' % (GLUON_NAMESPACE, tag)
+    s = []
+    for ss in tag.split("/"):
+        s.append('%s%s' % (GLUON_NAMESPACE, ss))
+    return "/".join(s)
 
 class glel(ET._ElementInterface):
     def add(self, tagName):
@@ -59,7 +62,6 @@ class GluonBuilder(object):
         elements = glsel(rootobject,'subelements')
 
         for obj in self.objects:
-            print vars(obj.metadata)
             md = obj.metadata
             clip = obj.clip
             xobj = glsel(elements,'object', {'objecttype':'item'})
@@ -84,7 +86,7 @@ class GluonBuilder(object):
         return xml
 
 
-class GluonParser(object):
+class GluonResponseParser(object):
     "Parse a gluon xml response to retrieve metadata for audio clips"
 
     def parse(self, xmlsource, factory=object):
@@ -107,6 +109,40 @@ class GluonParser(object):
             md.year = obj.find('.//'+glns('dates')+'/*/'+glns('start')).get('startYear')
             yield md
 
+class GluonFactory(object):
+    pass
+
+class GluonRequestParser(object):
+    "Parse a gluon xml request to retrieve metadata for audio clips"
+
+    def parse(self, xmlsource, factory=GluonFactory):
+        self.tree = ET.parse(xmlsource)
+        programmeobj = self.tree.find('./'+glns('objects/object'))
+        if programmeobj.get('objecttype') != 'programme':
+            return 
+        programme = {"identifier": 
+                programmeobj.find('./'+glns('metadata/identifier')).text,
+                     "metadatacreator":
+                self.tree.find('./' + \
+                           glns('head/metadata/creators/creator/name')).text
+        }
+        subelements = programmeobj.find('./'+glns('subelements'))
+        for obj in subelements.getiterator(glns('object')):
+            if obj.get('objecttype') != 'item':
+                print "gaffe"
+                continue
+            md = factory()
+            md.programme = programme
+            metadatatree = obj.find('./'+glns('metadata'))
+            md.identifier = metadatatree.find('./'+glns('identifier')).text
+            md.musiclibrary = metadatatree.find('./'+glns('types/type')).text
+            md.duration = metadatatree.find('./'+glns('format/formatExtent')).text
+            md.dateStart = \
+            metadatatree.find('./'+glns('dates/dateAlternative/start')).get('startPoint')
+            md.dateEnd = \
+            metadatatree.find('./'+glns('dates/dateAlternative/end')).get('startPoint')
+            yield md
+
 if __name__ == '__main__':
     items = [
              {'musicid':'DNPRNPNPNPN',
@@ -119,11 +155,12 @@ if __name__ == '__main__':
               'musiclibrary':'DMA',
               'duration':200.0},
             ]
-    gb = GluonBuilder('DNPR630009AA', items)
-    r = gb.build()
-    print r
-    gp = GluonParser()
+    #gb = GluonBuilder('DNPR630009AA', items)
+    #r = gb.build()
+    #print r
+    gp = GluonRequestParser()
     x = gp.parse(sys.argv[1])
+    print [vars(z) for z in list(x)]
             
 
 
