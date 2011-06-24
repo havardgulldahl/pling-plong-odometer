@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
+# by havard.gulldahl@nrk.no
+
 
 import xmeml
 

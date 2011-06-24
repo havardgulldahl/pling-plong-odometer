@@ -11,6 +11,7 @@ trans = Core.QCoreApplication.translate
 
 import xmeml
 import metadata
+import odometer_ui
 import odometer_rc 
 
 class XmemlWorker(Core.QThread):
@@ -50,7 +51,9 @@ class Odometer(Gui.QMainWindow):
         self.volumethreshold = xmeml.Volume(gain=volume)
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
-        self.ui = loadUi(self.UIFILE, self)
+        #self.ui = loadUi(self.UIFILE, self)
+	self.ui = odometer_ui.Ui_MainWindow()
+	self.ui.setupUi(self)
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.decibel)
@@ -301,7 +304,9 @@ class Odometer(Gui.QMainWindow):
 
     def run(self, app):
         self.app = app
-        self.ui.show()
+        #self.ui.show()
+	self.show()
+	self.raise_()
         sys.exit(app.exec_())
 
 def uniqify(seq):
@@ -322,8 +327,10 @@ def xmemlfileFromEvent(event):
         print e
     return False
 
-if __name__ == '__main__':
-    app = Gui.QApplication(sys.argv)
+def rungui(argv):
+    app = Gui.QApplication(argv)
     o = Odometer("../../data/fcp.sample.xml")
     o.run(app)
 
+if __name__ == '__main__':
+    rungui(sys.argv)
