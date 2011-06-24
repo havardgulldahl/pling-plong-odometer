@@ -52,8 +52,8 @@ class Odometer(Gui.QMainWindow):
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
         #self.ui = loadUi(self.UIFILE, self)
-	self.ui = odometer_ui.Ui_MainWindow()
-	self.ui.setupUi(self)
+    	self.ui = odometer_ui.Ui_MainWindow()
+        self.ui.setupUi(self)
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.decibel)
@@ -132,7 +132,7 @@ class Odometer(Gui.QMainWindow):
             volumethreshold = xmeml.Volume(decibel=int(self.ui.volumeThreshold.value()))
         self.msg.emit(u'Computing duration of audio above %idB' % volumethreshold.decibel)
         print "gain: ", volumethreshold.gain
-        self.clips.clear()
+        self.ui.clips.clear()
         for audioclip, pieces in self.audioclips.iteritems():
             a = []
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioclip.name, "xx", '...'])
@@ -161,7 +161,7 @@ class Odometer(Gui.QMainWindow):
                 r.addChild(sr)
             if not len(a):
                 self.msg.emit(u'There are no audible frames at this volume threshold (%s dB)' % volumethreshold.decibel)
-                self.clips.clear()
+                self.ui.clips.clear()
                 return None # no audible frames at this volume threshold
             aa = uniqify(a)
             aa.sort()
@@ -182,7 +182,7 @@ class Odometer(Gui.QMainWindow):
             frames = sum( o-i for (i,o) in comp )
             secs = frames  / audioclip.timebase
             #print audioclip.name, a, comp, frames, secs
-            r.setText(2, "%i frames = %.1fs" % (frames, secs))
+            r.setText(2, "%.1fs (%i frames)" % (secs, frames))
             r.clip.audibleDuration = secs
 
     def loadMetadata(self, filename, metadata):
@@ -191,14 +191,14 @@ class Odometer(Gui.QMainWindow):
         row.metadata = metadata
         row.setText(3, u"%(artist)s \u2117 %(year)s: \u00ab%(title)s\u00bb" % vars(metadata))
         if metadata.musiclibrary == "Sonoton":
-            self.AUXButton.setEnabled(True)
+            self.ui.AUXButton.setEnabled(True)
         self.metadataLoaded.emit(row)
 
     def trackCompleted(self, filename, metadata):
         self.metadataloaded += 1
         print len(self.audioclips), self.metadataloaded
         if len(self.audioclips)  == self.metadataloaded:
-            self.DMAButton.setEnabled(True)
+            self.ui.DMAButton.setEnabled(True)
 
     def showProgress(self, filename, progress):
         print "got progress for %s: %s" % (filename, progress)
@@ -297,7 +297,7 @@ class Odometer(Gui.QMainWindow):
         #ALL  data loaded
         self.gluon = metadata.Gluon()
         self.gluon.worker.trackResolved.connect(self.gluonFinished)
-        self.gluon.resolve(self.prodno.text(), self.rows.values())
+        self.gluon.resolve(self.ui.prodno.text(), self.rows.values())
 
     def gluonFinished(self, trackname, metadata):
         print "gluonFinished: %s -> %s" % (trackname, metadata)
@@ -328,8 +328,16 @@ def xmemlfileFromEvent(event):
     return False
 
 def rungui(argv):
+    f = None
+    try:
+        if os.path.exists(argv[-1]):
+            f = argv[-1]
+            argv = argv[0:-1]
+    except IndexError:
+        pass
     app = Gui.QApplication(argv)
-    o = Odometer("../../data/fcp.sample.xml")
+    if f is not None: o = Odometer(f)
+    else: o = Odometer()
     o.run(app)
 
 if __name__ == '__main__':

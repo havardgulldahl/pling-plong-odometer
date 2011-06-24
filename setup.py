@@ -39,7 +39,7 @@ else:
      )
 
 setup(
-    name="MyApplication",
+    name="Pling Plong Odometer",
     **extra_options
 )
 
