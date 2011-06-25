@@ -1,0 +1,13 @@
+#-*- encoding: utf-8 -*-
+
+import urllib, sys
+
+s='<ns0:gluon xmlns:ns0="http://gluon.nrk.no/gluon2" xmlns:ns2="http://gluon.nrk.no/gluonDict" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" artID="odofon-1234" priority="3" xsi:schemaLocation="http://gluon.nrk.no/gluon2 http://gluon.nrk.no/gluon2.xsd"><ns0:head><ns0:metadata><ns0:creators><ns0:creator><ns0:name>odofon</ns0:name></ns0:creator></ns0:creators></ns0:metadata></ns0:head><ns0:objects><ns0:object objecttype="programme"><ns0:metadata><ns0:identifier /></ns0:metadata><ns0:subelements><ns0:object objecttype="item"><ns0:metadata><ns0:identifier>SCD082120</ns0:identifier><ns0:types><ns0:type>Sonoton</ns0:type></ns0:types><ns0:format><ns0:formatExtent>57.65</ns0:formatExtent></ns0:format><ns0:dates><ns0:dateAlternative ns2:datesGroupType="objectEvent"><ns0:start startPoint="XX" /><ns0:end startPoint="XX" /></ns0:dateAlternative></ns0:dates></ns0:metadata></ns0:object><ns0:object objecttype="item"><ns0:metadata><ns0:identifier>SCD077110</ns0:identifier><ns0:types><ns0:type>Sonoton</ns0:type></ns0:types><ns0:format><ns0:formatExtent>46.37</ns0:formatExtent></ns0:format><ns0:dates><ns0:dateAlternative ns2:datesGroupType="objectEvent"><ns0:start startPoint="XX" /><ns0:end startPoint="XX" /></ns0:dateAlternative></ns0:dates></ns0:metadata></ns0:object><ns0:object objecttype="item"><ns0:metadata><ns0:identifier>SCD047903</ns0:identifier><ns0:types><ns0:type>Sonoton</ns0:type></ns0:types><ns0:format><ns0:formatExtent>22.24</ns0:formatExtent></ns0:format><ns0:dates><ns0:dateAlternative ns2:datesGroupType="objectEvent"><ns0:start startPoint="XX" /><ns0:end startPoint="XX" /></ns0:dateAlternative></ns0:dates></ns0:metadata></ns0:object><ns0:object objecttype="item"><ns0:metadata><ns0:identifier>SCD047530</ns0:identifier><ns0:types><ns0:type>Sonoton</ns0:type></ns0:types><ns0:format><ns0:formatExtent>14.91</ns0:formatExtent></ns0:format><ns0:dates><ns0:dateAlternative ns2:datesGroupType="objectEvent"><ns0:start startPoint="XX" /><ns0:end startPoint="XX" /></ns0:dateAlternative></ns0:dates></ns0:metadata></ns0:object><ns0:object objecttype="item"><ns0:metadata><ns0:identifier>SCD077115</ns0:identifier><ns0:types><ns0:type>Sonoton</ns0:type></ns0:types><ns0:format><ns0:formatExtent>23.60</ns0:formatExtent></ns0:format><ns0:dates><ns0:dateAlternative ns2:datesGroupType="objectEvent"><ns0:start startPoint="XX" /><ns0:end startPoint="XX" /></ns0:dateAlternative></ns0:dates></ns0:metadata></ns0:object></ns0:subelements></ns0:object></ns0:objects></ns0:gluon>'
+
+data = urllib.urlencode( {"data":s} )
+req = urllib.urlopen('http://localhost:8000/gluon', data)
+response = req.read()
+
+print response
+
+
