@@ -91,6 +91,7 @@ class GluonResponseParser(object):
     "Parse a gluon xml response to retrieve metadata for audio clips"
 
     def parse(self, xmlsource, factory=object):
+        print repr(xmlsource.getvalue())
         self.tree = ET.parse(xmlsource)
         for obj in self.tree.getiterator(glns('object')):
             #md = TrackMetadata()

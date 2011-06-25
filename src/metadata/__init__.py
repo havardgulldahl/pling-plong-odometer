@@ -4,7 +4,8 @@
 #__all__ = ['gluon',]
 __name__ = 'metadata'
 
-import sys, os.path, random, time, urllib, urllib2, urlparse, re, json
+import sys, os.path, random, time, urllib, urllib2, urlparse, re
+import json, StringIO
 import PyQt4.QtCore as Core
 import PyQt4.QtGui as Gui
 import PyQt4.QtWebKit as Web
@@ -77,9 +78,10 @@ class GluonWorker(Core.QThread):
         gb = gluon.GluonBuilder(self.prodno, self.clipnames)
         xmlreq = gb.toxml()
         gp = gluon.GluonResponseParser()
+        response = StringIO.StringIO(self.request(xmlreq))
 
-        for metadata in gp.parse(self.request(xmlreq), factory=TrackMetadata):
-            self.trackResolved.emit(metadata)
+        for metadata in gp.parse(response, factory=TrackMetadata):
+            self.trackResolved.emit(metadata.identifier, metadata)
 
     def request(self, gluonpayload):
         "do an http post request with given gluon xml payload"

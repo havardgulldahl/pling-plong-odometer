@@ -21,8 +21,7 @@ class dummy(object):
         self.musicid = musicid
 
 def xml(data):
-    s = """
-<?xml version="1.0" encoding="utf-8"?>
+    s = """<?xml version="1.0" encoding="utf-8"?>
 <gluon priority="3" artID="gms123"
 xmlns="http://gluon.nrk.no/gluon2"
 xmlns:gluonDict="http://gluon.nrk.no/gluonDict"
@@ -93,7 +92,6 @@ class GluonHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             data = self.rfile.read(rlen)
             self.send_response(200)
             self.end_headers()
-            self.wfile.write("THanks!\r\n\r\n")
             data = urlparse.parse_qs(data)["data"][0]
             f = StringIO.StringIO(data)
             parser = GluonRequestParser()
