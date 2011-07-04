@@ -45,7 +45,7 @@ class Odometer(Gui.QMainWindow):
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
     metadataloaded = 0
 
-    def __init__(self, xmemlfile, volume=0.05, parent=None):
+    def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
         self.xmemlfile = xmemlfile
         self.volumethreshold = xmeml.Volume(gain=volume)
@@ -104,6 +104,15 @@ class Odometer(Gui.QMainWindow):
         self.ui.statusbar.showMessage(msg, 15000)
 
     def clicked(self, qml):
+        print repr(self.xmemlfile)
+        if self.xmemlfile is None:
+            xf = Gui.QFileDialog.getOpenFileName(self,
+                trans('dialog', 'Open an xmeml file (FCP export)'),
+                ""
+                'Xmeml files (*.xml)')
+            self.xmemlfile = unicode(xf)
+        if not os.path.exists(self.xmemlfile):
+            return False
         self.loadxml(self.xmemlfile)
 
     def loadxml(self, xmemlfile):
@@ -231,6 +240,7 @@ class Odometer(Gui.QMainWindow):
 
     def showMetadata(self, row, col=None):
         try:
+            self.ui.detailsBox.currentRow = row
             self.ui.clipTitle.setText(row.metadata.title or '')
             self.ui.clipArtist.setText(row.metadata.artist or '')
             self.ui.clipComposer.setText(row.metadata.composer or '')
@@ -238,7 +248,6 @@ class Odometer(Gui.QMainWindow):
             self.ui.clipTracknumber.setText(row.metadata.tracknumber or '')
             self.ui.clipCopyright.setText(row.metadata.copyright or '')
             self.ui.clipLabel.setText(row.metadata.label or '')
-            self.ui.detailsBox.currentRow = row
             self.ui.detailsBox.show()
         except AttributeError:
             self.ui.detailsBox.hide()
@@ -297,16 +306,22 @@ class Odometer(Gui.QMainWindow):
         #ALL  data loaded
         self.gluon = metadata.Gluon()
         self.gluon.worker.trackResolved.connect(self.gluonFinished)
-        self.gluon.resolve(self.ui.prodno.text(), self.rows.values())
+        self.gluon.resolve(unicode(self.ui.prodno.text()), self.rows.values())
 
     def gluonFinished(self, trackname, metadata):
         print "gluonFinished: %s -> %s" % (trackname, metadata)
+        icon = Gui.QIcon(":/gfx/star")
+        for nom, row in self.rows.items():
+            print repr(os.path.splitext(nom)[0]), repr(unicode(trackname))
+            if os.path.splitext(nom)[0] == unicode(trackname):
+                row.setIcon(0, icon)
+
+
 
     def run(self, app):
         self.app = app
-        #self.ui.show()
-	self.show()
-	self.raise_()
+        self.show()
+        self.raise_()
         sys.exit(app.exec_())
 
 def uniqify(seq):
@@ -330,9 +345,9 @@ def xmemlfileFromEvent(event):
 def rungui(argv):
     f = None
     try:
-        if os.path.exists(argv[-1]):
-            f = argv[-1]
-            argv = argv[0:-1]
+        if os.path.exists(argv[1]):
+            f = argv[1]
+            #argv = argv[0:-1]
     except IndexError:
         pass
     app = Gui.QApplication(argv)

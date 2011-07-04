@@ -88,7 +88,6 @@ class GluonWorker(Core.QThread):
         data = urllib.urlencode( {"data":gluonpayload} )
         req = urllib.urlopen(GLUON_HTTP_ENDPOINT, data)
         response = req.read()
-        print "response", response
         return response
 
 class ResolverBase(Core.QObject):
@@ -141,7 +140,7 @@ class SonotonResolver(ResolverBase):
     prefixes = ['SCD', ]
     name = 'Sonoton'
     urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
-    urlbase = 'http://localhost:8000/sonoton.html?%s'
+    #urlbase = 'http://localhost:8000/sonoton.html?%s'
 
     def parse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
