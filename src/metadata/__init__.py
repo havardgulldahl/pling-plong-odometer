@@ -6,6 +6,7 @@ __name__ = 'metadata'
 
 import sys, os.path, random, time, urllib, urllib2, urlparse, re
 import json, StringIO
+import xml.etree.ElementTree as ET
 import PyQt4.QtCore as Core
 import PyQt4.QtGui as Gui
 import PyQt4.QtWebKit as Web
@@ -134,7 +135,68 @@ class ResolverBase(Core.QObject):
         # reimplement this to emit a signal with a TrackMetadata object when found
         #self.trackResolved.emit(self.filename, md)
         pass
+
+    def musicid(self, filename):
+        "Returns musicid from filename. Reimplement for different resolvers"
+        return os.path.splitext(filename)[0]
         
+class DMAResolver(ResolverBase):
+    # Fra gammelt av har vi disse kodene:
+    # NRKO_
+    # NRKT_
+    # Fra en gang etter 2009 brukes disse:
+    # NONRO
+    # NONRT
+    # NONRE
+    # 
+    prefixes = ['NRKO_', 'NRKT_', 'NONRO', 'NONRT', 'NONRE' ]
+    name = 'DMA'
+
+    def musicid(self, filename):
+        rex = re.compile(r'^(((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6})CD\d{4})')
+        g = rex.search(filename)
+        return g.group(1), g.group(2)
+
+    def xresolve(self, filename):
+        # return placeholder metadata
+        # to be replaced by a gluon/DMA lookup later in the process
+        self.filename = filename
+        dummymetadata = TrackMetadata(filename=unicode(filename),
+                                      musiclibrary='DMA',
+                                      title = 'Kommer fra DMA',
+                                      composer = 'Kommer fra DMA',
+                                      artist = 'Kommer fra DMA',
+                                      year = 2011,
+                                      length = 23)
+        self.trackResolved.emit(self.filename, dummymetadata)
+
+    def resolve(self, filename):
+        self.filename = filename
+        #http://dma/trackDetailsPage.do?muobId=NONRT023272CD0010
+        # -> internal muobid
+        # http://dma/playerInformation.do?muobId=592113247
+        url = 'http://dma/trackDetailsPage.do?muobId='+self.musicid(filename)[0]
+        print url
+        data = urllib.urlopen(url).read(512)
+        print data
+
+        rex = re.compile(r'NRK.action.onMuobResultClick\((\d+)\);')
+        m = rex.search(data)
+        print m
+        muobid = m.group(1)
+        self.progress(50)
+        print 'http://dma/playerInformation.do?muobId='+muobid
+        xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
+        print xml
+        self.parse(xml)
+        self.progress(100)
+
+    def parse(self, xml):
+        tree = ET.parse(StringIO.StringIO(xml.strip()))
+        md = TrackMetadata()
+        md.title = tree.find('./track/title').text
+        print md.title
+        self.trackResolved.emit(self.filename, md)
 
 class SonotonResolver(ResolverBase):
     prefixes = ['SCD', ]
@@ -168,12 +230,21 @@ class SonotonResolver(ResolverBase):
         #print vars(metadata)
         self.trackResolved.emit(self.filename, metadata)
 
+class EchoprintResolver(ResolverBase):
+    "Acoustic fingerprinting using echoprint.me"
+    prefixes = ['*',]
+    name = 'echoprint'
+
 def findResolver(filename):
-    resolvers = [ SonotonResolver(), ]
+    resolvers = [ DMAResolver(), SonotonResolver(), ]
     for resolver in resolvers:
         if resolver.accepts(filename):
             return resolver
     return False
+    # no resolvers recognise the file name. Try catch-all fingerprinting
+    # using the open source music identification system Echoprint
+    # echoprint.me
+    return EchoprintResolver()
 
 class Gluon(Core.QObject):
     

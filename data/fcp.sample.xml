@@ -12687,8 +12687,10 @@
 				<outputchannelindex>1</outputchannelindex>
 			</track>
 			<track>
-				<clipitem id="SCD047530.wav">
-					<name>SCD047530.wav</name>
+                <!--clipitem id="SCD047530.wav" -->
+                    <clipitem id="NONRT023272CD0017 Pennywhistle Jig.wav">
+                    <name>NONRT023272CD0017 Pennywhistle Jig.wav</name>
+					<iname>SCD047530.wav</iname>
 					<duration>2308</duration>
 					<rate>
 						<ntsc>FALSE</ntsc>
@@ -12714,8 +12716,9 @@
 						<mastercomment3/>
 						<mastercomment4/>
 					</comments>
-					<file id="SCD047530 ">
-						<name>SCD047530.wav</name>
+					<file xid="SCD047530 " id="NONRT023272CD0017 Pennywhistle Jig">
+						<name>NONRT023272CD0017 Pennywhistle Jig.wav</name>
+						<iname>SCD047530.wav</iname>
 						<pathurl>file://localhost/Volumes/Askepott/Prosjekter/DNPR637010_Kra%CC%8Akeklubben_TEM_011212/MUSIKK/INSEKT/Humle/SCD047530.wav</pathurl>
 						<rate>
 							<timebase>25</timebase>
@@ -12977,7 +12980,8 @@
 						<mastercomment3/>
 						<mastercomment4/>
 					</comments>
-					<file id="SCD047530 "/>
+                    <!--file id="SCD047530 "-->
+                    <file id="NONRT023272CD0017 Pennywhistle Jig"/>
 					<filter>
 						<effect>
 							<name>Audio Levels</name>
