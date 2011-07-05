@@ -71,7 +71,8 @@ class GluonBuilder(object):
             types = glsel(xobjmd,'types')
             lib = glsel(types,'type').text=md.musiclibrary
             formatel = glsel(xobjmd,'format')
-            duration = glsel(formatel,'formatExtent').text='%.2f' % clip.audibleDuration
+            # duration is ISO 8601 formatted ("Durations")
+            duration = glsel(formatel,'formatExtent').text='PT%.2fS' % clip.audibleDuration
 
             dates = glsel(xobjmd, 'dates')
             dateAlternative = glsel(dates, 'dateAlternative')
@@ -83,7 +84,6 @@ class GluonBuilder(object):
             
     def toxml(self):
         xml = ET.tostring(self.root, encoding='utf-8')
-        print xml
         return xml
 
 
@@ -91,7 +91,6 @@ class GluonResponseParser(object):
     "Parse a gluon xml response to retrieve metadata for audio clips"
 
     def parse(self, xmlsource, factory=object):
-        print repr(xmlsource.getvalue())
         self.tree = ET.parse(xmlsource)
         for obj in self.tree.getiterator(glns('object')):
             #md = TrackMetadata()
