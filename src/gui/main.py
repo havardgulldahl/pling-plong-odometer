@@ -47,6 +47,7 @@ class Odometer(Gui.QMainWindow):
 
     def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
+        self.settings = Core.QSettings('nrk.no', 'Pling Plong Odometer')
         self.xmemlfile = xmemlfile
         self.volumethreshold = xmeml.Volume(gain=volume)
         self.xmemlthread = XmemlWorker()
@@ -104,15 +105,16 @@ class Odometer(Gui.QMainWindow):
         self.ui.statusbar.showMessage(msg, 15000)
 
     def clicked(self, qml):
-        print repr(self.xmemlfile)
-        if self.xmemlfile is None:
-            xf = Gui.QFileDialog.getOpenFileName(self,
-                trans('dialog', 'Open an xmeml file (FCP export)'),
-                ""
-                'Xmeml files (*.xml)')
-            self.xmemlfile = unicode(xf)
+        lastdir = self.settings.value('lastdir', '').toString()
+        print unicode(lastdir)
+        xf = Gui.QFileDialog.getOpenFileName(self,
+            trans('dialog', 'Open an xmeml file (FCP export)'),
+            lastdir,
+            'Xmeml files (*.xml)')
+        self.xmemlfile = unicode(xf)
         if not os.path.exists(self.xmemlfile):
             return False
+        self.settings.setValue('lastdir', os.path.dirname(self.xmemlfile))
         self.loadxml(self.xmemlfile)
 
     def loadxml(self, xmemlfile):
