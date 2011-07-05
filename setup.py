@@ -1,3 +1,4 @@
+#-*- encoding: utf-8 -*-
 """
 py2app/py2exe build script for MyApplication.
 
@@ -24,7 +25,18 @@ if sys.platform == 'darwin':
          app=[mainscript],
          # Cross-platform applications generally expect sys.argv to
          # be used for opening files.
-         options=dict(py2app=dict(argv_emulation=False)),
+         options=dict(py2app=dict(
+             argv_emulation=False,
+             iconfile='odometer.icns',
+             includes=['sip','PyQt4', 'PyQt4.QtNetwork'],
+             #plist=dict(CFBundleIdentifier='no.nrk.odometer',
+                        ##CFBundleDisplayName='♫ ♪ Odometer',
+                        #CFBundleDisplayName=u'\u266b \u266a Odometer',
+                        #CFBundleShortVersionString='Odometer, version x.x',
+                        #NSSupportsSuddenTermination=True,
+                        #NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011')
+             )
+         ),
      )
 elif sys.platform == 'win32':
      extra_options = dict(

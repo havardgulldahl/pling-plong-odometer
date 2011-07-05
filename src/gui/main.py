@@ -332,7 +332,7 @@ class Odometer(Gui.QMainWindow):
     def run(self, app):
         self.app = app
         self.show()
-        self.raise_()
+        #self.raise_()
         sys.exit(app.exec_())
 
 def uniqify(seq):

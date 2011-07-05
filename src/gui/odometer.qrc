@@ -1,7 +1,11 @@
 <RCC>
   <qresource prefix="gfx">
-    <file alias="star">software-update-available.png</file>
-    <file alias="error">software-update-urgent.png</file>
+    <file alias="note">audio-x-generic.svg</file>
+    <file alias="stop">dialog-error.svg</file>
+    <file alias="warn">dialog-warning.svg</file>
+    <file alias="info">dialog-information.svg</file>
+    <file alias="star">software-update-available.svg</file>
+    <file alias="error">software-update-urgent.svg</file>
     <file alias="spinner">Spinning_wheel_throbber.gif</file>
   </qresource>
   <qresource prefix="data">
