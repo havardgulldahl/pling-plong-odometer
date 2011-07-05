@@ -48,7 +48,6 @@ class Odometer(Gui.QMainWindow):
     def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
         self.settings = Core.QSettings('nrk.no', 'Pling Plong Odometer')
-        self.xmemlfile = xmemlfile
         self.volumethreshold = xmeml.Volume(gain=volume)
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
@@ -80,6 +79,8 @@ class Odometer(Gui.QMainWindow):
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
         self.metadataLoaded.connect(self.checkUsage)
+        if xmemlfile is not None: # program was started with an xmeml file as argument
+            self.loadxml(xmemlfile)
 
     def keyPressEvent(self, event):
         if event.key() == Core.Qt.Key_Escape:
@@ -200,7 +201,11 @@ class Odometer(Gui.QMainWindow):
         #print "got metadata for %s: %s" % (filename, metadata)
         row = self.rows[unicode(filename)]
         row.metadata = metadata
-        row.setText(3, u"%(artist)s \u2117 %(year)s: \u00ab%(title)s\u00bb" % vars(metadata))
+        if metadata.productionmusic:
+            txt = u"\u00ab%(title)s\u00bb \u2117 %(label)s"
+        else:
+            txt = u"%(artist)s: \u00ab%(title)s\u00bb \u2117 %(label)s %(year)s" 
+        row.setText(3, txt % vars(metadata))
         if metadata.musiclibrary == "Sonoton":
             self.ui.AUXButton.setEnabled(True)
         self.metadataLoaded.emit(row)
@@ -271,7 +276,11 @@ class Odometer(Gui.QMainWindow):
     def creditsToClipboard(self):
         s = ""
         for r in self.rows.values():
-            s += u"%(title)s\r\n%(artist)s\r\n%(label)s \u2117 %(year)s\r\n\r\n\r\n" % vars(r.metadata)
+            if r.metadata.productionmusic:
+                s += u"\u00ab%(title)s\u00bb\r\n\u2117 %(label)s" % vars(r.metadata)
+            else:
+                s += u"\u00ab%(title)s\u00bb\r\n%(artist)s\r\n \u2117 %(label)s %(year)s" % vars(r.metadata)
+            s += u"\r\n\r\n\r\n" 
         clipboard = self.app.clipboard()
         clipboard.setText(s)
         self.msg.emit("End credit metadata copied to clipboard.")

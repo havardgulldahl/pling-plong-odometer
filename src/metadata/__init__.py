@@ -53,6 +53,7 @@ class TrackMetadata(object):
         self.label = label
         self.writer = writer
         self.identifier = identifier
+        self.productionmusic = False
 
     def getmusicid(self):
         "Return a music id (DMA/Sonoton unique key) from filename"
@@ -247,6 +248,8 @@ class SonotonResolver(ResolverBase):
             meta, data = [s.strip() for s in l.split(':')]
             setattr(metadata, mapping[meta], data)
         #print vars(metadata)
+        metadata.productionmusic = True
+        metadata.label = 'Sonoton'
         self.trackResolved.emit(self.filename, metadata)
 
 class EchoprintResolver(ResolverBase):
