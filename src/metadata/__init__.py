@@ -176,18 +176,13 @@ class DMAResolver(ResolverBase):
         # -> internal muobid
         # http://dma/playerInformation.do?muobId=592113247
         url = 'http://dma/trackDetailsPage.do?muobId='+self.musicid(filename)[0]
-        print url
         data = urllib.urlopen(url).read(512)
-        print data
-
         rex = re.compile(r'NRK.action.onMuobResultClick\((\d+)\);')
         m = rex.search(data)
-        print m
         muobid = m.group(1)
         self.progress(50)
         print 'http://dma/playerInformation.do?muobId='+muobid
         xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
-        print xml
         self.parse(xml)
         self.progress(100)
 
@@ -195,7 +190,12 @@ class DMAResolver(ResolverBase):
         tree = ET.parse(StringIO.StringIO(xml.strip()))
         md = TrackMetadata()
         md.title = tree.find('./track/title').text
-        print md.title
+        md.musiclibrary='DMA'
+        md.composer = 'Kommer fra DMA'
+        md.label = 'Kommer fra DMA'
+        md.artist = '; '.join([a.text.strip() for a in tree.iterfind('./track/artists/artist/name')])
+        md.composer = 'Kommer fra DMA'
+        md.copyright = 'Kommer fra DMA'
         self.trackResolved.emit(self.filename, md)
 
 class SonotonResolver(ResolverBase):
