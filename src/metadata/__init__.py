@@ -57,7 +57,13 @@ class TrackMetadata(object):
 
     def getmusicid(self):
         "Return a music id (DMA/Sonoton unique key) from filename"
-        return os.path.splitext(self.filename)[0]
+        print repr(self.filename)
+        if self.musiclibrary == "DMA":
+            return DMAResolver.musicid(self.filename)
+        elif self.musiclibrary == "Sonoton":
+            return SonotonResolver.musicid(self.filename)
+        else:
+            return ResolverBase.musicid(self.filename)
 
 class GluonWorker(Core.QThread):
     loaded = Core.pyqtSignal([list], name="loaded")
@@ -102,8 +108,9 @@ class DMAWorker(Core.QThread):
     def __del__(self):
         self.wait()
 
-    def load(self, musicid):
-        self.musicid = musicid
+    def load(self, filename):
+        self.filename = filename
+        self.musicid = DMAResolver.musicid(filename)
         self.start()
 
     def run(self):
@@ -119,9 +126,8 @@ class DMAWorker(Core.QThread):
         print 'http://dma/playerInformation.do?muobId='+muobid
         xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
         tree = ET.parse(StringIO.StringIO(xml.strip()))
-        md = TrackMetadata()
+        md = TrackMetadata(filename=self.filename, identifier=self.musicid, musiclibrary='DMA')
         md.title = tree.find('./track/title').text
-        md.musiclibrary='DMA'
         md.composer = 'Kommer fra DMA'
         md.label = 'Kommer fra DMA'
         md.artist = '; '.join([a.text.strip() for a in tree.iterfind('./track/artists/artist/name')])
@@ -177,10 +183,11 @@ class ResolverBase(Core.QObject):
         #self.trackResolved.emit(self.filename, md)
         pass
 
-    def musicid(self, filename):
+    @staticmethod
+    def musicid(filename):
         "Returns musicid from filename. Reimplement for different resolvers"
         return os.path.splitext(filename)[0]
-        
+
 class DMAResolver(ResolverBase):
     # Fra gammelt av har vi disse kodene:
     # NRKO_
@@ -193,10 +200,11 @@ class DMAResolver(ResolverBase):
     prefixes = ['NRKO_', 'NRKT_', 'NONRO', 'NONRT', 'NONRE' ]
     name = 'DMA'
 
-    def musicid(self, filename):
-        rex = re.compile(r'^(((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6})CD\d{4})')
+    @staticmethod
+    def musicid(filename):
+        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}CD\d{4})')
         g = rex.search(filename)
-        return g.group(1), g.group(2)
+        return g.group(1)
 
     def xresolve(self, filename):
         # return placeholder metadata
@@ -216,7 +224,7 @@ class DMAResolver(ResolverBase):
         self.worker = DMAWorker()
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.load(self.musicid(filename)[0])
+        self.worker.load(filename)
 
 class SonotonResolver(ResolverBase):
     prefixes = ['SCD', ]

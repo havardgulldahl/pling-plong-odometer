@@ -35,8 +35,6 @@ class XmemlWorker(Core.QThread):
         self.loaded.emit(x)
 
 class Odometer(Gui.QMainWindow):
-    UIFILE="pling-plong-odometer.ui"
-
     audioclips = {}
     workers = []
     rows = {}
@@ -51,7 +49,6 @@ class Odometer(Gui.QMainWindow):
         self.volumethreshold = xmeml.Volume(gain=volume)
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
-        #self.ui = loadUi(self.UIFILE, self)
     	self.ui = odometer_ui.Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.detailsBox.hide()
@@ -107,7 +104,6 @@ class Odometer(Gui.QMainWindow):
 
     def clicked(self, qml):
         lastdir = self.settings.value('lastdir', '').toString()
-        print unicode(lastdir)
         xf = Gui.QFileDialog.getOpenFileName(self,
             trans('dialog', 'Open an xmeml file (FCP export)'),
             lastdir,
