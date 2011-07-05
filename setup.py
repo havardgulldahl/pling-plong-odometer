@@ -29,12 +29,12 @@ if sys.platform == 'darwin':
              argv_emulation=False,
              iconfile='odometer.icns',
              includes=['sip','PyQt4', 'PyQt4.QtNetwork'],
-             #plist=dict(CFBundleIdentifier='no.nrk.odometer',
+             plist=dict(CFBundleIdentifier='no.nrk.odometer',
                         ##CFBundleDisplayName='♫ ♪ Odometer',
                         #CFBundleDisplayName=u'\u266b \u266a Odometer',
-                        #CFBundleShortVersionString='Odometer, version x.x',
-                        #NSSupportsSuddenTermination=True,
-                        #NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011')
+                        CFBundleShortVersionString='Odometer, version x.x',
+                        NSSupportsSuddenTermination=True,
+                        NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011')
              )
          ),
      )
