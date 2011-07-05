@@ -91,6 +91,46 @@ class GluonWorker(Core.QThread):
         response = req.read()
         return response
 
+class DMAWorker(Core.QThread):
+    trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
+    progress = Core.pyqtSignal(int, name="progress" )
+
+    def __init__(self, parent=None):
+        super(DMAWorker, self).__init__(parent)
+
+    def __del__(self):
+        self.wait()
+
+    def load(self, musicid):
+        self.musicid = musicid
+        self.start()
+
+    def run(self):
+        #http://dma/trackDetailsPage.do?muobId=NONRT023272CD0010
+        # -> internal muobid
+        # http://dma/playerInformation.do?muobId=592113247
+        url = 'http://dma/trackDetailsPage.do?muobId='+self.musicid
+        data = urllib.urlopen(url).read(512)
+        rex = re.compile(r'NRK.action.onMuobResultClick\((\d+)\);')
+        m = rex.search(data)
+        muobid = m.group(1)
+        self.progress.emit(50)
+        print 'http://dma/playerInformation.do?muobId='+muobid
+        xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
+        tree = ET.parse(StringIO.StringIO(xml.strip()))
+        md = TrackMetadata()
+        md.title = tree.find('./track/title').text
+        md.musiclibrary='DMA'
+        md.composer = 'Kommer fra DMA'
+        md.label = 'Kommer fra DMA'
+        md.artist = '; '.join([a.text.strip() for a in tree.iterfind('./track/artists/artist/name')])
+        md.composer = 'Kommer fra DMA'
+        md.copyright = 'Kommer fra DMA'
+        self.progress.emit(100)
+        self.trackResolved.emit(md)
+
+
+
 class ResolverBase(Core.QObject):
 
     prefixes = [] # a list of file prefixes that this resolver recognizes
@@ -172,31 +212,10 @@ class DMAResolver(ResolverBase):
 
     def resolve(self, filename):
         self.filename = filename
-        #http://dma/trackDetailsPage.do?muobId=NONRT023272CD0010
-        # -> internal muobid
-        # http://dma/playerInformation.do?muobId=592113247
-        url = 'http://dma/trackDetailsPage.do?muobId='+self.musicid(filename)[0]
-        data = urllib.urlopen(url).read(512)
-        rex = re.compile(r'NRK.action.onMuobResultClick\((\d+)\);')
-        m = rex.search(data)
-        muobid = m.group(1)
-        self.progress(50)
-        print 'http://dma/playerInformation.do?muobId='+muobid
-        xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
-        self.parse(xml)
-        self.progress(100)
-
-    def parse(self, xml):
-        tree = ET.parse(StringIO.StringIO(xml.strip()))
-        md = TrackMetadata()
-        md.title = tree.find('./track/title').text
-        md.musiclibrary='DMA'
-        md.composer = 'Kommer fra DMA'
-        md.label = 'Kommer fra DMA'
-        md.artist = '; '.join([a.text.strip() for a in tree.iterfind('./track/artists/artist/name')])
-        md.composer = 'Kommer fra DMA'
-        md.copyright = 'Kommer fra DMA'
-        self.trackResolved.emit(self.filename, md)
+        self.worker = DMAWorker()
+        self.worker.progress.connect(self.progress)
+        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
+        self.worker.load(self.musicid(filename)[0])
 
 class SonotonResolver(ResolverBase):
     prefixes = ['SCD', ]
