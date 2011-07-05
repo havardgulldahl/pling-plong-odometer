@@ -1,4 +1,6 @@
 #-*- encoding: utf-8 -*-
+# This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
+# (C) 2011
 """
 py2app/py2exe build script for MyApplication.
 

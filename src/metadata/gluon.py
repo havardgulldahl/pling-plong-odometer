@@ -1,6 +1,6 @@
 #-*- encoding: utf8 -*-
 #
-# This file is part of odofon by Håvard Gulldahl <havard.gulldahl@nrk.no>
+# This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2011
 
 import sys, xml.etree.ElementTree as ET
@@ -29,7 +29,7 @@ def glsel(parent, tag, *a, **kw):
 
 class GluonBuilder(object):
     "Build a gluon xml tree from a list of audio clips and their length"
-    prodno = 'DNPR63001010AA'
+    prodno = ''
     objects = []
 
     def __init__(self, prodno, metadatalist):

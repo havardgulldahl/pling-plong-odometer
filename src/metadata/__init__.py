@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
+# This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
+# (C) 2011
 
 #__all__ = ['gluon',]
 __name__ = 'metadata'
@@ -206,7 +208,7 @@ class DMAResolver(ResolverBase):
         g = rex.search(filename)
         return g.group(1)
 
-    def xresolve(self, filename):
+    def resolve(self, filename):
         # return placeholder metadata
         # to be replaced by a gluon/DMA lookup later in the process
         self.filename = filename
@@ -217,9 +219,10 @@ class DMAResolver(ResolverBase):
                                       artist = 'Kommer fra DMA',
                                       year = 2011,
                                       length = 23)
+        self.progress(100)
         self.trackResolved.emit(self.filename, dummymetadata)
 
-    def resolve(self, filename):
+    def xresolve(self, filename):
         self.filename = filename
         self.worker = DMAWorker()
         self.worker.progress.connect(self.progress)
@@ -255,7 +258,6 @@ class SonotonResolver(ResolverBase):
             if not len(l.strip()): continue
             meta, data = [s.strip() for s in l.split(':')]
             setattr(metadata, mapping[meta], data)
-        #print vars(metadata)
         metadata.productionmusic = True
         metadata.label = 'Sonoton'
         self.trackResolved.emit(self.filename, metadata)

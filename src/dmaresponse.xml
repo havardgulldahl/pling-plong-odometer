@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<trackinfo>
+      <track playlistid="">
+      <albums>
+        
+          <album>
+              <title>
+                  <![CDATA[In the Pink - the Ultimate Collection]]>
+              </title>
+              <muobId>
+                  <![CDATA[509687329]]>
+              </muobId>
+          </album>
+        
+      </albums>
+      <artists>
+        
+          <artist>
+              <name>
+                  <![CDATA[Galway, James]]>
+              </name>
+              <muobId>
+                  <![CDATA[510610541]]>
+              </muobId>
+          </artist>
+        
+          <artist>
+              <name>
+                  <![CDATA[Mancini, Henry]]>
+              </name>
+              <muobId>
+                  <![CDATA[509988364]]>
+              </muobId>
+          </artist>
+        
+          <artist>
+              <name>
+                  <![CDATA[National Philharmonic Orchestra]]>
+              </name>
+              <muobId>
+                  <![CDATA[510609570]]>
+              </muobId>
+          </artist>
+        
+      </artists>
+      <title><![CDATA[Pennywhistle Jig]]></title>
+      <muobId>515897675</muobId>
+      <playlist><![CDATA[]]></playlist>
+      <duration>128</duration>
+      <trackPrice><![CDATA[]]></trackPrice>
+      <albumPrice><![CDATA[]]></albumPrice>
+      <currencyShort><![CDATA[]]></currencyShort>
+      
+      <asset>
+         <assetURL>http://madmasrv01/Cache09//mp3/10863191.mp3</assetURL>
+         <assetStartTime>0</assetStartTime>
+         <assetDuration>131</assetDuration>
+      </asset>
+   </track>
+</trackinfo>
+

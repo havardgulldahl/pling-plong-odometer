@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
+# This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
+# (C) 2011
 
 import sys, os.path
 from PyQt4.uic import loadUi
@@ -214,11 +216,13 @@ class Odometer(Gui.QMainWindow):
 
     def showProgress(self, filename, progress):
         print "got progress for %s: %s" % (filename, progress)
-        return
-        p = Gui.QProgressBar(parent=self.ui.clips)
-        p.setValue(progress)
         row = self.rows[unicode(filename)]
-        self.ui.clips.setItemWidget(row, 3, p)
+        if progress < 100: # not yet reached 100%
+            p = Gui.QProgressBar(parent=self.ui.clips)
+            p.setValue(progress)
+            self.ui.clips.setItemWidget(row, 3, p)
+        else: # finishd, show some text instead
+            self.ui.clips.removeItemWidget(row, 3)
 
     def hilited(self, rows):
         #print "hilite row: ", rows
@@ -281,17 +285,19 @@ class Odometer(Gui.QMainWindow):
         clipboard.setText(s)
         self.msg.emit("End credit metadata copied to clipboard.")
 
-    def checkUsage(self, row):
+    def checkUsage(self):
         maxArtists = None
         maxTitlePerArtist = 3
-        maxTitleLength = 60
+        maxTitleLength = 30
         artists = {}
+        icon = Gui.QIcon(':/gfx/warn')
         for filename, row in self.rows.iteritems():
             try:
-                md = row.clip.metadata
+                md = row.metadata
                 print row.clip.audibleDuration
                 if row.clip.audibleDuration > maxTitleLength:
-                    row.setIcon(':/gfx/warn.png')
+                    row.setIcon(2, icon)
+                    row.setToolTip(2, "You're currently not allowed to peruse more than %s secs from each clip" % maxTitleLength)
                 if not artists.has_key(md.artist):
                     artists[md.artist] = []
                 artists[md.artist].append(md.title)
@@ -302,18 +308,30 @@ class Odometer(Gui.QMainWindow):
         print bads
         if bads:
             self.ui.errors.show()
-            self.ui.errors.setText("""<h1>Warning</h1><p>Current agreements set a limit of %i titles per artist,
+            self.ui.errorText.setText("""<h1>Warning</h1><p>Current agreements set a limit of %i titles per artist,
                     but in this sequence:</p><ul>%s<ul>""" % (maxTitlePerArtist, 
-                        "".join(["<li>%s: %s times</li>" % (a,t) for a,t in bads])))
+                        "".join(["<li>%s: %s times</li>" % (a,len(t)) for a,t in bads])))
+            return False
         else:
             self.ui.errors.hide()
+            return True
 
             
     def gluon(self):
         #ALL  data loaded
+        prodno = unicode(self.ui.prodno.text()).strip()
+        ok = self.checkUsage()
+        if not ok:
+            msg = Gui.QMessageBox.critical(self, "Rights errors", "Not ok according to usage agreement")
+            return False
+        if len(prodno) == 0:
+            msg = Gui.QMessageBox.critical(self, "Need production number", 
+                                           "You must enter the production number")
+            self.ui.prodno.setFocus()
+            return False
         self.gluon = metadata.Gluon()
         self.gluon.worker.trackResolved.connect(self.gluonFinished)
-        self.gluon.resolve(unicode(self.ui.prodno.text()), self.rows.values())
+        self.gluon.resolve(prodno, self.rows.values())
 
     def gluonFinished(self, trackname, metadata):
         print "gluonFinished: %s -> %s" % (trackname, metadata)
@@ -322,8 +340,6 @@ class Odometer(Gui.QMainWindow):
             print repr(os.path.splitext(nom)[0]), repr(unicode(trackname))
             if os.path.splitext(nom)[0] == unicode(trackname):
                 row.setIcon(0, icon)
-
-
 
     def run(self, app):
         self.app = app

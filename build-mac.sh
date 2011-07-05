@@ -1,4 +1,6 @@
 #!/bin/bash
+# This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
+# (C) 2011
 
 # building pling plong odometer for mac os x
 
