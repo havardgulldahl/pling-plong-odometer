@@ -294,7 +294,6 @@ class Odometer(Gui.QMainWindow):
         for filename, row in self.rows.iteritems():
             try:
                 md = row.metadata
-                print row.clip.audibleDuration
                 if row.clip.audibleDuration > maxTitleLength:
                     row.setIcon(2, icon)
                     row.setToolTip(2, "You're currently not allowed to peruse more than %s secs from each clip" % maxTitleLength)
@@ -305,7 +304,7 @@ class Odometer(Gui.QMainWindow):
                 pass
 
         bads = [ (a,t) for a,t in artists.iteritems() if len(t) > maxTitlePerArtist ]
-        print bads
+        #print bads
         if bads:
             self.ui.errors.show()
             self.ui.errorText.setText("""<h1>Warning</h1><p>Current agreements set a limit of %i titles per artist,

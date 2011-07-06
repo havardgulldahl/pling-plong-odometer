@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>730</width>
-    <height>631</height>
+    <width>900</width>
+    <height>665</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -155,19 +155,6 @@
          <item row="2" column="1">
           <widget class="QLineEdit" name="clipArtist"/>
          </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>C&amp;omposer</string>
-           </property>
-           <property name="buddy">
-            <cstring>clipComposer</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLineEdit" name="clipComposer"/>
-         </item>
          <item row="6" column="0">
           <widget class="QLabel" name="label_2">
            <property name="text">
@@ -220,19 +207,6 @@
          <item row="8" column="1">
           <widget class="QLineEdit" name="clipCopyright"/>
          </item>
-         <item row="10" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>&amp;Label</string>
-           </property>
-           <property name="buddy">
-            <cstring>clipLabel</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="10" column="1">
-          <widget class="QLineEdit" name="clipLabel"/>
-         </item>
          <item row="11" column="1">
           <widget class="QDialogButtonBox" name="buttonBox">
            <property name="statusTip">
@@ -242,6 +216,42 @@
             <set>QDialogButtonBox::Close</set>
            </property>
           </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>C&amp;omposer</string>
+           </property>
+           <property name="buddy">
+            <cstring>clipComposer</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLineEdit" name="clipComposer"/>
+         </item>
+         <item row="9" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>&amp;Label</string>
+           </property>
+           <property name="buddy">
+            <cstring>clipLabel</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QLineEdit" name="clipLabel"/>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Writer</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLineEdit" name="clipWriter"/>
          </item>
         </layout>
        </widget>
@@ -329,7 +339,7 @@
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>Til &amp;DMA</string>
+         <string>Til &amp;PRF</string>
         </property>
        </widget>
       </item>
@@ -342,6 +352,22 @@
          <string>Til &amp;AUX</string>
         </property>
        </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType">
+         <enum>QSizePolicy::Maximum</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>150</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
       <item>
        <widget class="QPushButton" name="creditsButton">
@@ -362,12 +388,30 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>730</width>
+     <width>900</width>
      <height>22</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu_About">
+    <property name="title">
+     <string>♫ ♪ Odometer</string>
+    </property>
+    <addaction name="actionAbout_Odometer"/>
+    <addaction name="actionAbout_Qt"/>
+   </widget>
+   <addaction name="menu_About"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionAbout_Odometer">
+   <property name="text">
+    <string>About Odometer</string>
+   </property>
+  </action>
+  <action name="actionAbout_Qt">
+   <property name="text">
+    <string>About Qt</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="odometer.qrc"/>
