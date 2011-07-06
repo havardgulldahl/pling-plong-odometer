@@ -71,7 +71,12 @@ if __name__ == '__main__':
     #print xmeml.Volume(decibel=-26).gain
 
     import metadata
-    from metadata import gluon
+
+    r = metadata.EchonestResolver()
+    print r.resolve(sys.argv[1])
+    sys.exit()
+
+    #from metadata import gluon
     items = [
              {'musicid':'DNPRNPNPNPN',
               'musiclibrary':'DMA',

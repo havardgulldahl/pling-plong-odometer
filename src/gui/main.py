@@ -63,7 +63,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         self.ui.DMAButton.clicked.connect(self.gluon)
-        #self.ui.AUXButton.clicked.connect(self.creditsToClipboard)
+        self.ui.AUXButton.clicked.connect(self.echofon)
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
@@ -284,6 +284,9 @@ class Odometer(Gui.QMainWindow):
         clipboard = self.app.clipboard()
         clipboard.setText(s)
         self.msg.emit("End credit metadata copied to clipboard.")
+
+    def echofon(self):
+        pass
 
     def checkUsage(self):
         maxArtists = None

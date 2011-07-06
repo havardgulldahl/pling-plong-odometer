@@ -1,11 +1,11 @@
-#!/usr/bin/env python
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2011
 
 #__all__ = ['gluon',]
-__name__ = 'metadata'
+#__name__ = 'metadata'
 
+import time
 import sys, os.path, random, time, urllib, urllib2, urlparse, re
 import json, StringIO
 import xml.etree.ElementTree as ET
@@ -15,6 +15,7 @@ import PyQt4.QtWebKit as Web
 import PyQt4.Qt as Qt
 
 import gluon
+import echonest
 
 GLUON_HTTP_ENDPOINT="http://localhost:8000/gluon"
 
@@ -138,7 +139,35 @@ class DMAWorker(Core.QThread):
         self.progress.emit(100)
         self.trackResolved.emit(md)
 
+class EchonestWorker(Core.QThread):
+    trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
+    progress = Core.pyqtSignal(int, name="progress" )
+    finished = Core.pyqtSignal(name='finished')
 
+    def __init__(self, parent=None):
+        super(EchonestWorker, self).__init__(parent)
+
+    def __del__(self):
+        self.wait()
+
+    def load(self, filename):
+        self.filename = filename
+        self.start()
+
+    def run(self):
+        fingerprint = echonest.identify(self.filename)
+        print fingerprint
+        self.finished.emit()
+        if fingerprint['response']['status']['code'] != 0: # errors
+            return False
+        echo = fingerprint['response']['track']
+        md = TrackMetadata(filename=self.filename, musiclibrary='Unknown')
+        md.identifier = echo['id']
+        md.title = echo['title']
+        md.artist = echo['artist']
+        md.album = echo['release']
+        print vars(md)
+        self.trackResolved.emit(md)
 
 class ResolverBase(Core.QObject):
 
@@ -229,6 +258,20 @@ class DMAResolver(ResolverBase):
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.load(filename)
 
+    @staticmethod
+    def quicklookup(ltype, substring):
+        url = 'http://dma/getUnitNames.do?type=%s&limit=10' % ltype
+        data = urllib.urlencode( ('in', substring ), )
+        return json.loads(urllib.urlopen(url, data).read())
+
+    @staticmethod
+    def performerlookup(substring):
+        return self.quicklookup('performer', substring)
+
+    @staticmethod
+    def creatorlookup(substring):
+        return self.quicklookup('creator', substring)
+
 class SonotonResolver(ResolverBase):
     prefixes = ['SCD', ]
     name = 'Sonoton'
@@ -262,10 +305,37 @@ class SonotonResolver(ResolverBase):
         metadata.label = 'Sonoton'
         self.trackResolved.emit(self.filename, metadata)
 
-class EchoprintResolver(ResolverBase):
+class EchonestResolver(ResolverBase):
     "Acoustic fingerprinting using echoprint.me"
     prefixes = ['*',]
-    name = 'echoprint'
+    name = 'echonest'
+    stop = False
+
+    def accepts(self, filename):
+        return True # echonest is a generic fingerprinter
+
+    def resolve(self, filename):
+        self.filename = filename
+        self.worker = EchonestWorker()
+        #self.worker.progress.connect(self.progress)
+        #self.worker.finished.connect(lambda: self.stop = True)
+        self.worker.finished.connect(self.finished)
+        self.worker.trackResolved.connect(self.resolved)
+        self.worker.load(filename)
+        i = 1
+        while not self.stop and i < 30:
+            print "tick ", i
+            i += 1
+            time.sleep(3)
+
+    def finished(self):
+        print "finished"
+        self.stop = True
+
+    def resolved(self, metadata):
+        print "resolved"
+        self.stop = True
+        self.trackResolved.emit(self.filename, md)
 
 def findResolver(filename):
     resolvers = [ DMAResolver(), SonotonResolver(), ]
@@ -304,13 +374,18 @@ class webdoc(Core.QObject):
         print "loading url: ", self.url
         self.frame.load(Core.QUrl(self.url))
 
+def mdprint(f,m):
+    print "filename: ",f
+    print "metadata: ", vars(m)
+
+print __name__ 
+
 if __name__ == '__main__':
     #filename = 'SCD082120.wav'
     filename = 'NONRT900497LP0205_xxx.wav'
     app = Gui.QApplication(sys.argv)
-    mq = findResolver(filename)
-    if not mq:
-        sys.exit(1)
+    mq = EchonestResolver()
+    mq.trackResolved.connect(lambda f,m: mdprint)
     mq.trackResolved.connect(lambda f,m: app.quit())
-    resolve = mq.resolve(filename)
+    resolve = mq.resolve(sys.argv[1])
     app.exec_()
