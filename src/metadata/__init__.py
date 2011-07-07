@@ -314,22 +314,29 @@ class EchonestResolver(ResolverBase):
     def accepts(self, filename):
         return True # echonest is a generic fingerprinter
 
-    def resolve(self, filename):
+    def resolve(self, filename, timeout=40):
         self.filename = filename
         self.worker = EchonestWorker()
         #self.worker.progress.connect(self.progress)
         #self.worker.finished.connect(lambda: self.stop = True)
         self.worker.finished.connect(self.finished)
+        print self.worker.finished
         self.worker.trackResolved.connect(self.resolved)
         self.worker.load(filename)
         i = 1
-        while not self.stop and i < 30:
+        while not self.stop and i < timeout:
             print "tick ", i
-            i += 1
+            self.progress(i)
+            i += 3
             time.sleep(3)
+        if i > timeout:
+            self.finished()
+            self.trackResolved.emit(self.filename, TrackMetadata())
+            return False
 
     def finished(self):
         print "finished"
+        self.progress(100)
         self.stop = True
 
     def resolved(self, metadata):
@@ -378,14 +385,13 @@ def mdprint(f,m):
     print "filename: ",f
     print "metadata: ", vars(m)
 
-print __name__ 
-
 if __name__ == '__main__':
     #filename = 'SCD082120.wav'
     filename = 'NONRT900497LP0205_xxx.wav'
     app = Gui.QApplication(sys.argv)
     mq = EchonestResolver()
     mq.trackResolved.connect(lambda f,m: mdprint)
+    mq.trackResolved.connect(lambda f,m: app.quit())
     mq.trackResolved.connect(lambda f,m: app.quit())
     resolve = mq.resolve(sys.argv[1])
     app.exec_()

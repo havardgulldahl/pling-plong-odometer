@@ -14,7 +14,7 @@ pyrcc4-2.7 -o src/gui/odometer_rc.py src/gui/odometer.qrc
 
 # clean up old cruft
 echo "Removing old code"
-rm -rf ./build ./dist
+rm -rf ./build ./dist ./pling-plong-odometer.dmg
 
 # build the castle
 echo "Building the app (see build.log)"

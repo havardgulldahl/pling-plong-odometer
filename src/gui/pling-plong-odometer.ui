@@ -394,22 +394,40 @@
    </property>
    <widget class="QMenu" name="menu_About">
     <property name="title">
-     <string>♫ ♪ Odometer</string>
+     <string>About</string>
     </property>
     <addaction name="actionAbout_Odometer"/>
     <addaction name="actionAbout_Qt"/>
+    <addaction name="actionAbout_Echonest"/>
+   </widget>
+   <widget class="QMenu" name="menuConfig">
+    <property name="title">
+     <string>Config</string>
+    </property>
+    <addaction name="actionConfig"/>
    </widget>
    <addaction name="menu_About"/>
+   <addaction name="menuConfig"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAbout_Odometer">
    <property name="text">
-    <string>About Odometer</string>
+    <string>About ♫ ♪ Odometer</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
    <property name="text">
     <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionAbout_Echonest">
+   <property name="text">
+    <string>About Echo Nest</string>
+   </property>
+  </action>
+  <action name="actionConfig">
+   <property name="text">
+    <string>Setup...</string>
    </property>
   </action>
  </widget>

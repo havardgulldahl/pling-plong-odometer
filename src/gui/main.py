@@ -67,6 +67,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
+        self.ui.clips.itemDoubleClicked.connect(self.editDuration)
         self.ui.clipTitle.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'title', unicode(s)))
         self.ui.clipArtist.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'artist', unicode(s)))
         self.ui.clipComposer.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'composer', unicode(s)))
@@ -75,9 +76,13 @@ class Odometer(Gui.QMainWindow):
         self.ui.clipCopyright.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'copyright', unicode(s)))
         self.ui.clipLabel.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'label', unicode(s)))
         self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmeml.Volume(decibel=int(i))))
+        self.ui.actionAbout_Odometer.activated.connect(lambda: self.showstatus("About odometer"))
+        self.ui.actionAbout_Echonest.activated.connect(lambda: self.showstatus("About echo nest"))
+        self.ui.actionAbout_Qt.activated.connect(lambda: self.showstatus("About Qt"))
+        self.ui.actionConfig.activated.connect(lambda: self.showstatus("About Config"))
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
-        self.metadataLoaded.connect(self.checkUsage)
+        #self.metadataLoaded.connect(self.checkUsage)
         if xmemlfile is not None: # program was started with an xmeml file as argument
             self.loadxml(xmemlfile)
 
@@ -273,6 +278,19 @@ class Odometer(Gui.QMainWindow):
         clips.setCurrentItem(r)
         clips.itemActivated.emit(r, -1)
 
+    def editDuration(self, row, col): # called when double clicked
+        if col != 2: 
+            return False
+        editor = Gui.QDoubleSpinBox(parent=self.ui.clips)
+        editor.setValue(23.2)
+        editor.setSuffix('s')
+        def editingFinished():
+            val = float(editor.value())
+            self.ui.clips.removeItemWidget(row, col)
+            row.setText(2, unicode(val)+'s')
+        editor.editingFinished.connect(editingFinished)
+        self.ui.clips.setItemWidget(row, col, editor)
+
     def creditsToClipboard(self):
         s = ""
         for r in self.rows.values():
@@ -322,10 +340,9 @@ class Odometer(Gui.QMainWindow):
     def gluon(self):
         #ALL  data loaded
         prodno = unicode(self.ui.prodno.text()).strip()
-        ok = self.checkUsage()
+        #ok = self.checkUsage()
         if not ok:
             msg = Gui.QMessageBox.critical(self, "Rights errors", "Not ok according to usage agreement")
-            return False
         if len(prodno) == 0:
             msg = Gui.QMessageBox.critical(self, "Need production number", 
                                            "You must enter the production number")
