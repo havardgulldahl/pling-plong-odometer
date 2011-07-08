@@ -107,7 +107,25 @@ class Odometer(Gui.QMainWindow):
             self.loadxml(x)
 
     def showstatus(self, msg):
-        self.ui.statusbar.showMessage(msg, 15000)
+        #self.ui.statusbar.showMessage(msg, 15000)
+        w = Gui.QWidget(self)
+        w.setWindowFlags(Core.Qt.Popup)
+        w.setStyleSheet(u'QWidget { background-color: #ffff7f; }')
+        layout = Gui.QVBoxLayout(w)
+        s = Gui.QLabel(msg, w)
+        layout.addWidget(s)
+        def close():
+            print w.windowOpacity()
+            w.hide()
+            w.deleteLater()
+        anim = Core.QPropertyAnimation(w, "windowOpacity", self)
+        anim.setDuration(1000)
+        anim.setStartValue(1.0)
+        anim.setEndValue(0.0)
+        anim.finished.connect(close)
+        w.show()
+        Core.QTimer.singleShot(1000, anim.start)
+
 
     def clicked(self, qml):
         lastdir = self.settings.value('lastdir', '').toString()
