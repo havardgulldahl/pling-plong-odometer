@@ -177,14 +177,12 @@ class Odometer(Gui.QMainWindow):
             volumethreshold = xmeml.Volume(gain=volumethreshold)
         elif volumethreshold is None:
             volumethreshold = xmeml.Volume(decibel=int(self.ui.volumeThreshold.value()))
-        self.msg.emit(u'Computing duration of audio above %idB' % volumethreshold.decibel)
+        print u'Computing duration of audio above %idB' % volumethreshold.decibel
         print "gain: ", volumethreshold.gain
         self.ui.clips.clear()
         for audioclip, pieces in self.audioclips.iteritems():
             a = []
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioclip.name, "xx", '...'])
-            r.setData(0, Core.Qt.ItemIsUserCheckable, True)
-            r.setCheckState(0, Core.Qt.Checked)
             r.clip = audioclip
             r.metadata = metadata.TrackMetadata(filename=audioclip.name)
             self.rows[audioclip.name] = r
