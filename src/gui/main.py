@@ -384,11 +384,10 @@ class Odometer(Gui.QMainWindow):
 
     def gluonFinished(self, trackname, metadata):
         print "gluonFinished: %s -> %s" % (trackname, metadata)
-        icon = Gui.QIcon(":/gfx/star")
         for nom, row in self.rows.items():
             print repr(os.path.splitext(nom)[0]), repr(unicode(trackname))
             if os.path.splitext(nom)[0] == unicode(trackname):
-                row.setIcon(0, icon)
+                row.setBackground(0, Gui.QBrush(Gui.QColor("light green")))
 
     def run(self, app):
         self.app = app
