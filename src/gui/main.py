@@ -279,6 +279,8 @@ class Odometer(Gui.QMainWindow):
                         """ % (r.clip.start(), r.clip.end(), 
                               '</li><li>'.join([f.name for f in r.clip.filters]))
         self.ui.metadata.setText(s)
+        if self.ui.detailsBox.isVisible(): # currently editing metadata
+            self.showMetadata(r)
 
     def showMetadata(self, row, col=None):
         try:
