@@ -1,6 +1,7 @@
 <RCC>
   <qresource prefix="gfx">
     <file alias="note">audio-x-generic.svg</file>
+    <file alias="graystar">software-update-available-inactive.svg</file>
     <file alias="stop">dialog-error.svg</file>
     <file alias="warn">dialog-warning.svg</file>
     <file alias="info">dialog-information.svg</file>

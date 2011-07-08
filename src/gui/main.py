@@ -7,6 +7,7 @@ import sys, os.path
 from PyQt4.uic import loadUi
 import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
+import PyQt4.QtSvg as Svg
 import PyQt4.Qt as Qt
 
 trans = Core.QCoreApplication.translate
@@ -82,6 +83,9 @@ class Odometer(Gui.QMainWindow):
         self.ui.actionConfig.activated.connect(lambda: self.showstatus("About Config"))
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
+        self.ui.dropIcon = Svg.QSvgWidget(':/gfx/graystar', self.ui.clips)
+        self.ui.dropIcon.setMinimumSize(200,200)
+        self.ui.dropIcon.setToolTip('Drop your xml file here')
         #self.metadataLoaded.connect(self.checkUsage)
         if xmemlfile is not None: # program was started with an xmeml file as argument
             self.loadxml(xmemlfile)
@@ -91,6 +95,11 @@ class Odometer(Gui.QMainWindow):
             self.close()
 
     def dragEnterEvent(self, event):
+        self.ui.dropIcon.load(':/gfx/star')
+        return event.accept()
+
+    def dragLeaveEvent(self, event):
+        self.ui.dropIcon.load(':/gfx/graystar')
         return event.accept()
 
     def dragMoveEvent(self, event):
@@ -102,9 +111,14 @@ class Odometer(Gui.QMainWindow):
 
     def dropEvent(self, event):
         event.acceptProposedAction()
+        self.ui.dropIcon.load(':/gfx/graystar')
         x = xmemlfileFromEvent(event)
         if x:
             self.loadxml(x)
+
+    def resizeEvent(self, event):
+        i = self.ui.dropIcon
+        i.move(self.width()/2-i.width(), self.height()*0.75-i.height())
 
     def showstatus(self, msg):
         #self.ui.statusbar.showMessage(msg, 15000)
@@ -359,7 +373,7 @@ class Odometer(Gui.QMainWindow):
         #ALL  data loaded
         prodno = unicode(self.ui.prodno.text()).strip()
         #ok = self.checkUsage()
-        if not ok:
+        if False: #not ok:
             msg = Gui.QMessageBox.critical(self, "Rights errors", "Not ok according to usage agreement")
         if len(prodno) == 0:
             msg = Gui.QMessageBox.critical(self, "Need production number", 
