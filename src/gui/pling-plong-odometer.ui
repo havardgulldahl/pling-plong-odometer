@@ -129,85 +129,42 @@
          <property name="fieldGrowthPolicy">
           <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
          </property>
-         <item row="1" column="0">
+         <item row="2" column="0">
           <widget class="QLabel" name="label">
            <property name="text">
-            <string>&amp;Title</string>
-           </property>
-           <property name="buddy">
-            <cstring>clipTitle</cstring>
+            <string>&lt;b&gt;Title&lt;/b&gt;</string>
            </property>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QLineEdit" name="clipTitle"/>
-         </item>
-         <item row="2" column="0">
+         <item row="3" column="0">
           <widget class="QLabel" name="label_7">
            <property name="text">
-            <string>A&amp;rtist</string>
-           </property>
-           <property name="buddy">
-            <cstring>clipArtist</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QLineEdit" name="clipArtist"/>
-         </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>&amp;Year</string>
-           </property>
-           <property name="buddy">
-            <cstring>clipYear</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="1">
-          <widget class="QSpinBox" name="clipYear">
-           <property name="statusTip">
-            <string/>
-           </property>
-           <property name="minimum">
-            <number>1900</number>
-           </property>
-           <property name="maximum">
-            <number>2020</number>
-           </property>
-           <property name="value">
-            <number>2001</number>
+            <string>&lt;b&gt;Artist&lt;/b&gt;</string>
            </property>
           </widget>
          </item>
          <item row="7" column="0">
-          <widget class="QLabel" name="label_5">
+          <widget class="QLabel" name="label_2">
            <property name="text">
-            <string>Track &amp;number</string>
-           </property>
-           <property name="buddy">
-            <cstring>clipTracknumber</cstring>
+            <string>&lt;b&gt;Year&lt;/b&gt;</string>
            </property>
           </widget>
-         </item>
-         <item row="7" column="1">
-          <widget class="QLineEdit" name="clipTracknumber"/>
          </item>
          <item row="8" column="0">
-          <widget class="QLabel" name="label_4">
+          <widget class="QLabel" name="label_5">
            <property name="text">
-            <string>Copyri&amp;ght</string>
-           </property>
-           <property name="buddy">
-            <cstring>clipCopyright</cstring>
+            <string>&lt;b&gt;Track number&lt;/b&gt;</string>
            </property>
           </widget>
          </item>
-         <item row="8" column="1">
-          <widget class="QLineEdit" name="clipCopyright"/>
+         <item row="9" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>&lt;b&gt;Copyright&lt;/b&gt;</string>
+           </property>
+          </widget>
          </item>
-         <item row="11" column="1">
+         <item row="12" column="1">
           <widget class="QDialogButtonBox" name="buttonBox">
            <property name="statusTip">
             <string>Close the Details box</string>
@@ -217,41 +174,82 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
+         <item row="4" column="0">
           <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>C&amp;omposer</string>
+            <string>&lt;b&gt;Composer&lt;/b&gt;</string>
            </property>
-           <property name="buddy">
-            <cstring>clipComposer</cstring>
+          </widget>
+         </item>
+         <item row="10" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>&lt;b&gt;Label&lt;/b&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>&lt;b&gt;Writer&lt;/b&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLabel" name="clipTitle">
+           <property name="text">
+            <string/>
            </property>
           </widget>
          </item>
          <item row="3" column="1">
-          <widget class="QLineEdit" name="clipComposer"/>
-         </item>
-         <item row="9" column="0">
-          <widget class="QLabel" name="label_3">
+          <widget class="QLabel" name="clipArtist">
            <property name="text">
-            <string>&amp;Label</string>
-           </property>
-           <property name="buddy">
-            <cstring>clipLabel</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="9" column="1">
-          <widget class="QLineEdit" name="clipLabel"/>
-         </item>
-         <item row="4" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>Writer</string>
+            <string/>
            </property>
           </widget>
          </item>
          <item row="4" column="1">
-          <widget class="QLineEdit" name="clipWriter"/>
+          <widget class="QLabel" name="clipComposer">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLabel" name="clipWriter">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLabel" name="clipYear">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLabel" name="clipTracknumber">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QLabel" name="clipCopyright">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="10" column="1">
+          <widget class="QLabel" name="clipLabel">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>

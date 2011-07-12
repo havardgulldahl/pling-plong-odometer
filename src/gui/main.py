@@ -64,21 +64,11 @@ class Odometer(Gui.QMainWindow):
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         self.ui.DMAButton.clicked.connect(self.gluon)
-        self.ui.AUXButton.clicked.connect(self.echofon)
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
-        self.ui.clips.itemDoubleClicked.connect(self.editDuration)
-        self.ui.clipTitle.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'title', unicode(s)))
-        self.ui.clipArtist.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'artist', unicode(s)))
-        self.ui.clipComposer.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'composer', unicode(s)))
-        self.ui.clipYear.valueChanged.connect(lambda i: setattr(self.ui.detailsBox.currentRow.metadata, 'year', int(i)))
-        self.ui.clipTracknumber.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'tracknumber', unicode(s)))
-        self.ui.clipCopyright.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'copyright', unicode(s)))
-        self.ui.clipLabel.textEdited.connect(lambda s: setattr(self.ui.detailsBox.currentRow.metadata, 'label', unicode(s)))
         self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmeml.Volume(decibel=int(i))))
         self.ui.actionAbout_Odometer.activated.connect(lambda: self.showstatus("About odometer"))
-        self.ui.actionAbout_Echonest.activated.connect(lambda: self.showstatus("About echo nest"))
         self.ui.actionAbout_Qt.activated.connect(lambda: self.showstatus("About Qt"))
         self.ui.actionConfig.activated.connect(lambda: self.showstatus("About Config"))
         self.msg.connect(self.showstatus)
@@ -129,7 +119,6 @@ class Odometer(Gui.QMainWindow):
         s = Gui.QLabel(msg, w)
         layout.addWidget(s)
         def close():
-            print w.windowOpacity()
             w.hide()
             w.deleteLater()
         anim = Core.QPropertyAnimation(w, "windowOpacity", self)
@@ -288,7 +277,7 @@ class Odometer(Gui.QMainWindow):
             self.ui.clipTitle.setText(row.metadata.title or '')
             self.ui.clipArtist.setText(row.metadata.artist or '')
             self.ui.clipComposer.setText(row.metadata.composer or '')
-            self.ui.clipYear.setValue(row.metadata.year or 0)
+            self.ui.clipYear.setText(unicode(row.metadata.year or 0))
             self.ui.clipTracknumber.setText(row.metadata.tracknumber or '')
             self.ui.clipCopyright.setText(row.metadata.copyright or '')
             self.ui.clipLabel.setText(row.metadata.label or '')
@@ -310,19 +299,6 @@ class Odometer(Gui.QMainWindow):
         clips.setCurrentItem(r)
         clips.itemActivated.emit(r, -1)
 
-    def editDuration(self, row, col): # called when double clicked
-        if col != 2: 
-            return False
-        editor = Gui.QDoubleSpinBox(parent=self.ui.clips)
-        editor.setValue(23.2)
-        editor.setSuffix('s')
-        def editingFinished():
-            val = float(editor.value())
-            self.ui.clips.removeItemWidget(row, col)
-            row.setText(2, unicode(val)+'s')
-        editor.editingFinished.connect(editingFinished)
-        self.ui.clips.setItemWidget(row, col, editor)
-
     def creditsToClipboard(self):
         s = ""
         for r in self.rows.values():
@@ -334,9 +310,6 @@ class Odometer(Gui.QMainWindow):
         clipboard = self.app.clipboard()
         clipboard.setText(s)
         self.msg.emit("End credit metadata copied to clipboard.")
-
-    def echofon(self):
-        pass
 
     def checkUsage(self):
         maxArtists = None
