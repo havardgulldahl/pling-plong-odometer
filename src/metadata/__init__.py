@@ -2,9 +2,6 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2011
 
-#__all__ = ['gluon',]
-#__name__ = 'metadata'
-
 import os
 import time
 import cPickle as pickle
@@ -58,7 +55,7 @@ class TrackMetadata(object):
         self.writer = writer
         self.identifier = identifier
         self.productionmusic = False
-        self._created = time.mktime(time.localtime())
+        self._retrieved = time.mktime(time.localtime())
 
     def getmusicid(self):
         "Return a music id (DMA/Sonoton unique key) from filename"
@@ -250,7 +247,7 @@ class ResolverBase(Core.QObject):
             return None
         metadata =  pickle.loads(loc.read())
         loc.close()
-        if metadata._created + self.cacheTimeout < time.mktime(time.localtime()):
+        if metadata._retrieved + self.cacheTimeout < time.mktime(time.localtime()):
             return None
         return metadata
 
