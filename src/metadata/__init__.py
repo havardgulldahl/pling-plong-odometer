@@ -7,7 +7,7 @@
 
 import os
 import time
-import pickle
+import cPickle as pickle
 import sys, os.path, random, time, urllib, urllib2, urlparse, re
 import json, StringIO
 import xml.etree.ElementTree as ET
