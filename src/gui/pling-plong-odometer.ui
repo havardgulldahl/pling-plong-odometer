@@ -396,16 +396,8 @@
     </property>
     <addaction name="actionAbout_Odometer"/>
     <addaction name="actionAbout_Qt"/>
-    <addaction name="actionAbout_Echonest"/>
-   </widget>
-   <widget class="QMenu" name="menuConfig">
-    <property name="title">
-     <string>Config</string>
-    </property>
-    <addaction name="actionConfig"/>
    </widget>
    <addaction name="menu_About"/>
-   <addaction name="menuConfig"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAbout_Odometer">
