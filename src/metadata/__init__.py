@@ -274,12 +274,17 @@ class DMAResolver(ResolverBase):
     # 
     prefixes = ['NRKO_', 'NRKT_', 'NONRO', 'NONRT', 'NONRE' ]
     name = 'DMA'
+    #cacheTimeout = 1
 
     @staticmethod
     def musicid(filename):
-        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}CD\d{4})')
+        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}(CD|CS)\d{4})')
         g = rex.search(filename)
-        return g.group(1)
+        try:
+            return g.group(1)
+        except AttributeError: #no match
+            print "oh noes, could not understand this dma id:",filename
+            return None
 
     def xresolve(self, filename):
         # return placeholder metadata
