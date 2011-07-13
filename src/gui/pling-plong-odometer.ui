@@ -46,11 +46,20 @@
       </item>
       <item>
        <widget class="QTreeWidget" name="clips">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Ignored" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="acceptDrops">
          <bool>true</bool>
         </property>
-        <property name="statusTip">
+        <property name="toolTip">
          <string>Drop a Final Cut Pro sequence (XML export) anywhere to load it.</string>
+        </property>
+        <property name="statusTip">
+         <string/>
         </property>
         <property name="tabKeyNavigation">
          <bool>true</bool>
@@ -296,7 +305,7 @@
       <item>
        <widget class="QLabel" name="metadata">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
@@ -305,6 +314,12 @@
          <size>
           <width>100</width>
           <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
          </size>
         </property>
         <property name="text">
@@ -357,7 +372,7 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeType">
-         <enum>QSizePolicy::Maximum</enum>
+         <enum>QSizePolicy::Fixed</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>

@@ -188,11 +188,10 @@ class Odometer(Gui.QMainWindow):
         self.ui.progress.setMinimum(0)
         self.ui.progress.setMaximum(0) # don't show progress, only "busy" indicator
         def remove():
-            print "removing progressbar"
             self.ui.statusbar.removeWidget(self.ui.progress)
             self.ui.progress.deleteLater()
         self.loaded.connect(remove)
-        self.ui.statusbar.addWidget(self.ui.progress, 50)
+        self.ui.statusbar.addWidget(self.ui.progress, 100)
         self.xmemlthread.load(xmemlfile)
 
     def load(self, xmeml):
@@ -224,48 +223,44 @@ class Odometer(Gui.QMainWindow):
             r.metadata = metadata.TrackMetadata(filename=audioclip.name)
             self.rows[audioclip.name] = r
             w = metadata.findResolver(audioclip.name)
-            if not w:
-                # no resolver found
-                # fast-track to gluon
-                self.trackCompleted(audioclip.name, object())
-                continue
-
-            w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
-            w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
-            w.trackProgress.connect(self.showProgress) 
-            self.workers.append(w) # keep track of the worker
-            w.resolve(audioclip.name) # put the worker to work async
-            #w.testresolve(audioclip.name) # put the worker to work async
+            if w:
+                w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
+                w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
+                w.trackProgress.connect(self.showProgress) 
+                self.workers.append(w) # keep track of the worker
+                w.resolve(audioclip.name) # put the worker to work async
+                #w.testresolve(audioclip.name) # put the worker to work async
             for subclip in pieces:
                 sr = Gui.QTreeWidgetItem(r, ['', subclip.id, "%s" % (subclip.audibleframes(volumethreshold),)])
                 sr.clip = subclip
                 a += subclip.audibleframes(volumethreshold)
                 r.addChild(sr)
             if not len(a):
-                self.msg.emit(u'There are no audible frames at this volume threshold (%s dB)' % volumethreshold.decibel)
-                self.ui.clips.clear()
-                return None # no audible frames at this volume threshold
-            aa = uniqify(a)
-            aa.sort()
-            comp = []
-            start, end = aa[0]
-            for (s, e) in aa[1:]: 
-                if s < end and s > start and e > end:
-                    end = e
-                elif s == end:
-                    end = e
-                elif (s > end or e < start): 
-                    comp.append( (start, end) )
-                    start = s
-                    end = e 
-                elif (e > start and e < end and s < start) or e == start:
-                    start = s
-            comp.append( (start, end) )
-            frames = sum( o-i for (i,o) in comp )
-            secs = frames  / audioclip.timebase
-            #print audioclip.name, a, comp, frames, secs
-            r.setText(2, "%.1fs (%i frames)" % (secs, frames))
-            r.clip.audibleDuration = secs
+                r.clip.audibleDuration = 0
+                r.setText(2, "0s")
+                r.setToolTip(2, u'There are no audible frames at this volume threshold (%s dB)' % volumethreshold.decibel)
+            else:
+                aa = uniqify(a)
+                aa.sort()
+                comp = []
+                start, end = aa[0]
+                for (s, e) in aa[1:]: 
+                    if s < end and s > start and e > end:
+                        end = e
+                    elif s == end:
+                        end = e
+                    elif (s > end or e < start): 
+                        comp.append( (start, end) )
+                        start = s
+                        end = e 
+                    elif (e > start and e < end and s < start) or e == start:
+                        start = s
+                comp.append( (start, end) )
+                frames = sum( o-i for (i,o) in comp )
+                secs = frames  / audioclip.timebase
+                #print audioclip.name, a, comp, frames, secs
+                r.setText(2, "%.1fs (%i frames)" % (secs, frames))
+                r.clip.audibleDuration = secs
 
     def loadMetadata(self, filename, metadata):
         #print "got metadata for %s: %s" % (filename, metadata)
