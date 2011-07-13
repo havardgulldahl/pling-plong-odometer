@@ -4,6 +4,7 @@
 # (C) 2011
 
 import sys, os.path
+import time
 from PyQt4.uic import loadUi
 import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
@@ -33,9 +34,55 @@ class XmemlWorker(Core.QThread):
         self.start()
 
     def run(self):
+        #time.sleep(5) # uncomment to simulate large xmeml file
         x = xmeml.VideoSequence(file=self.xmemlfile)
         #print "thread xmeml loaded"
         self.loaded.emit(x)
+
+class StatusBox(Gui.QWidget):
+    INFO = 1
+    WARNING = 2
+    ERROR = 3
+
+    def __init__(self, msg, autoclose=True, msgtype=None, parent=None):
+        """autoclose may be a boolean (True == autoclose) or a signal that we
+        connect our close() method to"""
+        super(StatusBox, self).__init__(parent)
+        self.parent = parent
+        self.autoclose = autoclose
+        self.setWindowFlags(Core.Qt.Popup)
+        if msgtype in (None, self.INFO):
+            bgcolor = '#ffff7f'
+        elif msgtype == self.WARNING:
+            bgcolor = 'blue'#'#ffff7f'
+        elif msgtype == self.WARNING:
+            bgcolor = 'red'#'#ffff7f'
+
+        self.setStyleSheet(u'QWidget { background-color: %s; }' % bgcolor)
+        layout = Gui.QVBoxLayout(self)
+        s = Gui.QLabel(msg, self)
+        layout.addWidget(s)
+
+    def show_(self):
+        if self.autoclose == True:
+            Core.QTimer.singleShot(1000, self.close)
+        elif hasattr(self.autoclose, 'connect'): # it's a qt/pyqt signal
+            self.autoclose.connect(self.close)
+        self.show()
+
+    def delete_(self):
+        self.hide()
+        self.deleteLater()
+
+    def close(self):
+        #print "closing", id(self)
+        anim = Core.QPropertyAnimation(self, "windowOpacity", self.parent)
+        anim.setDuration(1000)
+        anim.setStartValue(1.0)
+        anim.setEndValue(0.0)
+        anim.finished.connect(self.delete_)
+        self.anim = anim
+        self.anim.start()
 
 class Odometer(Gui.QMainWindow):
     audioclips = {}
@@ -45,11 +92,13 @@ class Odometer(Gui.QMainWindow):
     loaded = Core.pyqtSignal()
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
     metadataloaded = 0
+    statusboxes = []
 
     def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
         self.settings = Core.QSettings('nrk.no', 'Pling Plong Odometer')
         self.volumethreshold = xmeml.Volume(gain=volume)
+        self.xmemlfile = xmemlfile
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
     	self.ui = odometer_ui.Ui_MainWindow()
@@ -77,8 +126,6 @@ class Odometer(Gui.QMainWindow):
         self.ui.dropIcon.setMinimumSize(200,200)
         self.ui.dropIcon.setToolTip('Drop your xml file here')
         #self.metadataLoaded.connect(self.checkUsage)
-        if xmemlfile is not None: # program was started with an xmeml file as argument
-            self.loadxml(xmemlfile)
 
     def keyPressEvent(self, event):
         if event.key() == Core.Qt.Key_Escape:
@@ -110,25 +157,18 @@ class Odometer(Gui.QMainWindow):
         i = self.ui.dropIcon
         i.move(self.width()/2-i.width(), self.height()*0.75-i.height())
 
-    def showstatus(self, msg):
+    def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
         #self.ui.statusbar.showMessage(msg, 15000)
-        w = Gui.QWidget(self)
-        w.setWindowFlags(Core.Qt.Popup)
-        w.setStyleSheet(u'QWidget { background-color: #ffff7f; }')
-        layout = Gui.QVBoxLayout(w)
-        s = Gui.QLabel(msg, w)
-        layout.addWidget(s)
-        def close():
-            w.hide()
-            w.deleteLater()
-        anim = Core.QPropertyAnimation(w, "windowOpacity", self)
-        anim.setDuration(1000)
-        anim.setStartValue(1.0)
-        anim.setEndValue(0.0)
-        anim.finished.connect(close)
-        w.show()
-        Core.QTimer.singleShot(1000, anim.start)
+        b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
+        self.statusboxes.append(b)
+        b.show_()
+        return b
+        # if you don't autoclose, call self.closestatusboxes()
+        # or keep a reference to this box and .close() it yourself
 
+    def closestatusboxes(self):
+        for b in self.statusboxes:
+            b.close()
 
     def clicked(self, qml):
         lastdir = self.settings.value('lastdir', '').toString()
@@ -143,11 +183,10 @@ class Odometer(Gui.QMainWindow):
         self.loadxml(self.xmemlfile)
 
     def loadxml(self, xmemlfile):
-        self.msg.emit("Loading %s..." % xmemlfile)
+        msgbox = self.showstatus("Loading %s..." % xmemlfile, autoclose=self.loaded)
         self.xmemlthread.load(xmemlfile)
 
     def load(self, xmeml):
-        #print "load: got xmeml: ", xmeml 
         self.xmeml = xmeml
         self.audioclips = {}
         for c in xmeml.track_items:
@@ -249,7 +288,6 @@ class Odometer(Gui.QMainWindow):
             self.ui.clips.removeItemWidget(row, 3)
 
     def hilited(self, rows):
-        #print "hilite row: ", rows
         self.ui.metadata.setText('')
         if not len(rows): return
         s = "<b>Metadata:</b><br>"
@@ -367,7 +405,8 @@ class Odometer(Gui.QMainWindow):
     def run(self, app):
         self.app = app
         self.show()
-        #self.raise_()
+        if self.xmemlfile is not None: # program was started with an xmeml file as argument
+            self.loadxml(self.xmemlfile)
         sys.exit(app.exec_())
 
 def uniqify(seq):
