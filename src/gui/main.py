@@ -184,6 +184,15 @@ class Odometer(Gui.QMainWindow):
 
     def loadxml(self, xmemlfile):
         msgbox = self.showstatus("Loading %s..." % xmemlfile, autoclose=self.loaded)
+        self.ui.progress = Gui.QProgressBar(self)
+        self.ui.progress.setMinimum(0)
+        self.ui.progress.setMaximum(0) # don't show progress, only "busy" indicator
+        def remove():
+            print "removing progressbar"
+            self.ui.statusbar.removeWidget(self.ui.progress)
+            self.ui.progress.deleteLater()
+        self.loaded.connect(remove)
+        self.ui.statusbar.addWidget(self.ui.progress, 50)
         self.xmemlthread.load(xmemlfile)
 
     def load(self, xmeml):
