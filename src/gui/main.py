@@ -85,10 +85,10 @@ class StatusBox(Gui.QWidget):
         self.anim.start()
 
 class AudibleClip(object):
-    subcliplist = []
 
     def __init__(self, filename):
         self.filename = filename
+        self.subcliplist = []
 
     def add(self, frames):
         self.subcliplist += frames
