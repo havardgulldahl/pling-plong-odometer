@@ -87,7 +87,7 @@ class GluonBuilder(object):
         return xml
 
 
-class GluonResponseParser(object):
+class GluonMetadataResponseParser(object):
     "Parse a gluon xml response to retrieve metadata for audio clips"
 
     def parse(self, xmlsource, factory=object):

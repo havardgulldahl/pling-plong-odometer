@@ -84,6 +84,36 @@ class StatusBox(Gui.QWidget):
         self.anim = anim
         self.anim.start()
 
+class AudibleClip(object):
+    subcliplist = []
+
+    def __init__(self, filename):
+        self.filename = filename
+
+    def add(self, frames):
+        self.subcliplist += frames
+
+    def compute(self):
+        print "compute: ", self.subcliplist
+        aa = uniqify(self.subcliplist)
+        aa.sort()
+        comp = []
+        start, end = aa[0]
+        for (s, e) in aa[1:]: 
+            if s < end and s > start and e > end:
+                end = e
+            elif s == end:
+                end = e
+            elif (s > end or e < start): 
+                comp.append( (start, end) )
+                start = s
+                end = e 
+            elif (e > start and e < end and s < start) or e == start:
+                start = s
+        comp.append( (start, end) )
+        frames = sum( o-i for (i,o) in comp )
+        return frames
+
 class Odometer(Gui.QMainWindow):
     audioclips = {}
     workers = []
@@ -217,8 +247,8 @@ class Odometer(Gui.QMainWindow):
         print "gain: ", volumethreshold.gain
         self.ui.clips.clear()
         for audioclip, pieces in self.audioclips.iteritems():
-            a = []
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioclip.name, "xx", '...'])
+            r.setCheckState(0, Core.Qt.Checked)
             r.clip = audioclip
             r.metadata = metadata.TrackMetadata(filename=audioclip.name)
             self.rows[audioclip.name] = r
@@ -230,37 +260,21 @@ class Odometer(Gui.QMainWindow):
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioclip.name) # put the worker to work async
                 #w.testresolve(audioclip.name) # put the worker to work async
+
+            # work through all subclips, to get to the total audible frames value
+            a = AudibleClip(audioclip.name)
             for subclip in pieces:
-                sr = Gui.QTreeWidgetItem(r, ['', subclip.id, "%s" % (subclip.audibleframes(volumethreshold),)])
+                sr = Gui.QTreeWidgetItem(r, ['', subclip.id,  "%s" % (subclip.audibleframes(volumethreshold),)])
                 sr.clip = subclip
-                a += subclip.audibleframes(volumethreshold)
                 r.addChild(sr)
-            if not len(a):
-                r.clip.audibleDuration = 0
-                r.setText(2, "0s")
+                a.add(subclip.audibleframes(volumethreshold))
+            total_frames = a.compute()
+            secs = total_frames  / audioclip.timebase
+            print audioclip.name, total_frames, secs
+            r.clip.audibleDuration = secs
+            r.setText(2, "%.1fs (%i frames)" % (secs, total_frames))
+            if total_frames == 0:
                 r.setToolTip(2, u'There are no audible frames at this volume threshold (%s dB)' % volumethreshold.decibel)
-            else:
-                aa = uniqify(a)
-                aa.sort()
-                comp = []
-                start, end = aa[0]
-                for (s, e) in aa[1:]: 
-                    if s < end and s > start and e > end:
-                        end = e
-                    elif s == end:
-                        end = e
-                    elif (s > end or e < start): 
-                        comp.append( (start, end) )
-                        start = s
-                        end = e 
-                    elif (e > start and e < end and s < start) or e == start:
-                        start = s
-                comp.append( (start, end) )
-                frames = sum( o-i for (i,o) in comp )
-                secs = frames  / audioclip.timebase
-                #print audioclip.name, a, comp, frames, secs
-                r.setText(2, "%.1fs (%i frames)" % (secs, frames))
-                r.clip.audibleDuration = secs
 
     def loadMetadata(self, filename, metadata):
         #print "got metadata for %s: %s" % (filename, metadata)
@@ -343,7 +357,7 @@ class Odometer(Gui.QMainWindow):
 
     def creditsToClipboard(self):
         s = ""
-        for r in self.rows.values():
+        for r in [row for row in self.rows.values() if row.checkState(0) == Core.Qt.Checked]:
             if r.metadata.productionmusic:
                 s += u"\u00ab%(title)s\u00bb\r\n\u2117 %(label)s" % vars(r.metadata)
             else:
@@ -397,7 +411,8 @@ class Odometer(Gui.QMainWindow):
             return False
         self.gluon = metadata.Gluon()
         self.gluon.worker.trackResolved.connect(self.gluonFinished)
-        self.gluon.resolve(prodno, self.rows.values())
+        checked = list([r for r in self.rows.values() if r.checkState(0) == Core.Qt.Checked])
+        self.gluon.resolve(prodno, checked)
 
     def gluonFinished(self, trackname, metadata):
         print "gluonFinished: %s -> %s" % (trackname, metadata)
