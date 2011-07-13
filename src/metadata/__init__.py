@@ -5,7 +5,9 @@
 #__all__ = ['gluon',]
 #__name__ = 'metadata'
 
+import os
 import time
+import pickle
 import sys, os.path, random, time, urllib, urllib2, urlparse, re
 import json, StringIO
 import xml.etree.ElementTree as ET
@@ -15,7 +17,6 @@ import PyQt4.QtWebKit as Web
 import PyQt4.Qt as Qt
 
 import gluon
-import echonest
 
 GLUON_HTTP_ENDPOINT="http://localhost:8000/gluon"
 
@@ -57,6 +58,7 @@ class TrackMetadata(object):
         self.writer = writer
         self.identifier = identifier
         self.productionmusic = False
+        self._created = time.mktime(time.localtime())
 
     def getmusicid(self):
         "Return a music id (DMA/Sonoton unique key) from filename"
@@ -175,6 +177,11 @@ class ResolverBase(Core.QObject):
     name = 'general'
     trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
     trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" )
+    cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
+
+    def __init__(self, parent=None):
+        super(ResolverBase, self).__init__(parent)
+        self.trackResolved.connect(lambda f,md: self.cache(md))
 
     def accepts(self, filename): 
         for f in self.prefixes:
@@ -197,6 +204,10 @@ class ResolverBase(Core.QObject):
     
     def resolve(self, filename):
         self.filename = filename
+        md = self.fromcache()
+        if md is not None:
+            self.trackResolved.emit(self.filename, md)
+            return
         self.doc = webdoc(self.filename, self.url(filename), parent=None)
         self.doc.frame.loadFinished.connect(self.parse)
         self.doc.page.loadProgress.connect(self.progress)
@@ -219,6 +230,42 @@ class ResolverBase(Core.QObject):
         "Returns musicid from filename. Reimplement for different resolvers"
         return os.path.splitext(filename)[0]
 
+    def cache(self, metadata):
+        "Add metadata for a filename to a local cache to prevent constant network lookups"
+        loc = self.cachelocation()
+        if self.incache() and self.fromcache() is not None:
+            print "CACHE HIT", loc
+            return False
+        print "caching metadata to ", loc
+        f = open(loc, "wb")
+        f.write(pickle.dumps(metadata))
+        f.close()
+        return True
+
+    def fromcache(self):
+        "Get metadata from local cache, or None if it's not cached or too old"
+        try:
+            loc = open(self.cachelocation(), "rb")
+        except IOError: #file doesn't exist -> not cached
+            return None
+        metadata =  pickle.loads(loc.read())
+        loc.close()
+        if metadata._created + self.cacheTimeout < time.mktime(time.localtime()):
+            return None
+        return metadata
+
+    def incache(self):
+        "Checks to see if the metadata is in cache"
+        return os.path.exists(self.cachelocation())
+
+    def cachelocation(self):
+        "Return a dir suitable for storage"
+        dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
+        ourdir = os.path.join(unicode(dir), 'no.nrk.odometer')
+        if not os.path.exists(ourdir):
+           os.mkdir(ourdir) 
+        return os.path.join(ourdir, self.filename)
+
 class DMAResolver(ResolverBase):
     # Fra gammelt av har vi disse kodene:
     # NRKO_
@@ -237,7 +284,7 @@ class DMAResolver(ResolverBase):
         g = rex.search(filename)
         return g.group(1)
 
-    def resolve(self, filename):
+    def xresolve(self, filename):
         # return placeholder metadata
         # to be replaced by a gluon/DMA lookup later in the process
         self.filename = filename
@@ -251,8 +298,12 @@ class DMAResolver(ResolverBase):
         self.progress(100)
         self.trackResolved.emit(self.filename, dummymetadata)
 
-    def xresolve(self, filename):
+    def resolve(self, filename):
         self.filename = filename
+        md = self.fromcache()
+        if md is not None:
+            self.trackResolved.emit(self.filename, md)
+            return
         self.worker = DMAWorker()
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
@@ -279,6 +330,8 @@ class SonotonResolver(ResolverBase):
     #urlbase = 'http://localhost:8000/sonoton.html?%s'
 
     def parse(self):
+
+        return self.testresolve(self.filename)
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
         metadata = TrackMetadata(filename=self.doc.filename, musiclibrary=self.name)
         try:
@@ -350,10 +403,6 @@ def findResolver(filename):
         if resolver.accepts(filename):
             return resolver
     return False
-    # no resolvers recognise the file name. Try catch-all fingerprinting
-    # using the open source music identification system Echoprint
-    # echoprint.me
-    return EchoprintResolver()
 
 class Gluon(Core.QObject):
     
