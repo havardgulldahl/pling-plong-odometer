@@ -29,9 +29,6 @@ def glsel(parent, tag, *a, **kw):
 
 class GluonBuilder(object):
     "Build a gluon xml tree from a list of audio clips and their length"
-    prodno = ''
-    objects = []
-
     def __init__(self, prodno, metadatalist):
         print "gluonbuilder init"
         self.prodno = prodno
