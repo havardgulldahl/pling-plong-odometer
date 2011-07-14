@@ -95,6 +95,8 @@ class AudibleClip(object):
 
     def compute(self):
         print "compute: ", self.subcliplist
+        if len(self.subcliplist) == 0:
+            return 0
         aa = uniqify(self.subcliplist)
         aa.sort()
         comp = []
@@ -135,7 +137,8 @@ class Odometer(Gui.QMainWindow):
         self.ui.setupUi(self)
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
-        self.ui.volumeThreshold.setValue(self.volumethreshold.decibel)
+        #self.ui.volumeThreshold.setValue(self.volumethreshold.decibel)
+        self.ui.volumeThreshold.setValue(self.volumethreshold.gain)
         self.ui.previousButton = self.ui.buttonBox.addButton(trans('cmd', 'Pre&vious'), Gui.QDialogButtonBox.ActionRole)
         self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
         self.ui.nextButton = self.ui.buttonBox.addButton(trans('cmd', 'Ne&xt'), Gui.QDialogButtonBox.ActionRole)
@@ -146,7 +149,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
-        self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmeml.Volume(decibel=int(i))))
+        self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmeml.Volume(gain=float(i))))
         self.ui.actionAbout_Odometer.activated.connect(lambda: self.showstatus("About odometer"))
         self.ui.actionAbout_Qt.activated.connect(lambda: self.showstatus("About Qt"))
         self.ui.actionConfig.activated.connect(lambda: self.showstatus("About Config"))
@@ -214,15 +217,19 @@ class Odometer(Gui.QMainWindow):
 
     def loadxml(self, xmemlfile):
         msgbox = self.showstatus("Loading %s..." % xmemlfile, autoclose=self.loaded)
+        self.loadingbar()
+        self.loaded.connect(self.removeLoadingbar)
+        self.xmemlthread.load(xmemlfile)
+
+    def loadingbar(self):
         self.ui.progress = Gui.QProgressBar(self)
         self.ui.progress.setMinimum(0)
         self.ui.progress.setMaximum(0) # don't show progress, only "busy" indicator
-        def remove():
-            self.ui.statusbar.removeWidget(self.ui.progress)
-            self.ui.progress.deleteLater()
-        self.loaded.connect(remove)
         self.ui.statusbar.addWidget(self.ui.progress, 100)
-        self.xmemlthread.load(xmemlfile)
+
+    def removeLoadingbar(self):
+        self.ui.statusbar.removeWidget(self.ui.progress)
+        self.ui.progress.deleteLater()
 
     def load(self, xmeml):
         self.xmeml = xmeml
@@ -239,10 +246,11 @@ class Odometer(Gui.QMainWindow):
         self.loaded.emit()
 
     def computeAudibleDuration(self, volumethreshold=None):
+        print "computeAD:",volumethreshold
         if isinstance(volumethreshold, float):
             volumethreshold = xmeml.Volume(gain=volumethreshold)
         elif volumethreshold is None:
-            volumethreshold = xmeml.Volume(decibel=int(self.ui.volumeThreshold.value()))
+            volumethreshold = xmeml.Volume(gain=float(self.ui.volumeThreshold.value()))
         print u'Computing duration of audio above %idB' % volumethreshold.decibel
         print "gain: ", volumethreshold.gain
         self.ui.clips.clear()
@@ -270,7 +278,7 @@ class Odometer(Gui.QMainWindow):
                 a.add(subclip.audibleframes(volumethreshold))
             total_frames = a.compute()
             secs = total_frames  / audioclip.timebase
-            print audioclip.name, total_frames, secs
+            print audioclip.name, total_frames, audioclip.timebase, secs
             r.clip.audibleDuration = secs
             r.setText(2, "%.1fs (%i frames)" % (secs, total_frames))
             if total_frames == 0:
@@ -311,11 +319,13 @@ class Odometer(Gui.QMainWindow):
         s = "<b>Metadata:</b><br>"
         for r in rows:
             #print vars(r.clip)
+            ss = vars(r.clip)
+            ss.update({'secs':r.clip.duration/r.clip.timebase})
             s += """<i>Name:</i><br>%(name)s<br>
-                    <i>Type:</i><br>%(mediatype)s<br>
-                    <i>Length:</i><br>%(duration)sf<br>
+                    <i>Frames:</i><br>%(duration)sf<br>
+                    <i>Seconds:</i><br>%(secs)s<br>
                     <i>Rate:</i><br>%(timebase)sfps<br>
-                    """ % (vars(r.clip))
+                    """ % ss
             if hasattr(r, 'metadata') and r.metadata.musiclibrary is not None:
                 s += """<i>Library</i><br>%s</br>""" % r.metadata.musiclibrary
             if isinstance(r.clip, xmeml.TrackItem):
