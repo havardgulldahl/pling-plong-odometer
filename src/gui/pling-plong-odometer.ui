@@ -15,7 +15,7 @@
    <bool>true</bool>
   </property>
   <property name="windowTitle">
-   <string>♫ ♪ Odometer</string>
+   <string>♫ ♪ MusikkrappTeve</string>
   </property>
   <property name="windowIcon">
    <iconset resource="odometer.qrc">
@@ -414,7 +414,7 @@
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAbout_Odometer">
    <property name="text">
-    <string>About ♫ ♪ Odometer</string>
+    <string>Om ♫ ♪ MusikkrappTeve</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
