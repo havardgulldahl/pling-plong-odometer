@@ -17,6 +17,12 @@ import xmeml
 import metadata
 import odometer_ui
 import odometer_rc 
+try:
+    from gui import audioplayer
+    USE_AUDIOPLAYER=True
+except ImportError:
+    USE_AUDIOPLAYER=False
+
 
 class XmemlWorker(Core.QThread):
     loaded = Core.pyqtSignal([xmeml.VideoSequence], name="loaded")
@@ -37,6 +43,7 @@ class XmemlWorker(Core.QThread):
         #time.sleep(5) # uncomment to simulate large xmeml file
         x = xmeml.VideoSequence(file=self.xmemlfile)
         #print "thread xmeml loaded"
+        x.freemem()
         self.loaded.emit(x)
 
 class StatusBox(Gui.QWidget):
@@ -158,6 +165,8 @@ class Odometer(Gui.QMainWindow):
         self.ui.dropIcon = Svg.QSvgWidget(':/gfx/graystar', self.ui.clips)
         self.ui.dropIcon.setMinimumSize(200,200)
         self.ui.dropIcon.setToolTip('Drop your xml file here')
+        if not USE_AUDIOPLAYER:
+            self.ui.playButton.hide()
         #self.metadataLoaded.connect(self.checkUsage)
 
     def keyPressEvent(self, event):
@@ -232,10 +241,8 @@ class Odometer(Gui.QMainWindow):
         self.ui.progress.deleteLater()
 
     def load(self, xmeml):
-        self.xmeml = xmeml
         self.audioclips = {}
-        for c in xmeml.track_items:
-            if not ( c.type == 'clipitem' and c.file.mediatype == 'audio' ): continue
+        for c in xmeml.get_track_clipitems('audio'):
             if not self.audioclips.has_key(c.file): 
                 self.audioclips[c.file] = [c,]
             else:
@@ -334,6 +341,7 @@ class Odometer(Gui.QMainWindow):
                         """ % (r.clip.start(), r.clip.end(), 
                               '</li><li>'.join([f.name for f in r.clip.filters]))
         self.ui.metadata.setText(s)
+        self.ui.playButton.setEnabled(os.path.exists(r.clip.name))
         if self.ui.detailsBox.isVisible(): # currently editing metadata
             self.showMetadata(r)
 
