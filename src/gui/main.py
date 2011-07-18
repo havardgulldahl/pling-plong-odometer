@@ -94,38 +94,6 @@ class StatusBox(Gui.QWidget):
         self.anim = anim
         self.anim.start()
 
-class AudibleClip(object):
-
-    def __init__(self, filename):
-        self.filename = filename
-        self.subcliplist = []
-
-    def add(self, frames):
-        self.subcliplist += frames
-
-    def compute(self):
-        print "compute: ", self.subcliplist
-        if len(self.subcliplist) == 0:
-            return 0
-        aa = uniqify(self.subcliplist)
-        aa.sort()
-        comp = []
-        start, end = aa[0]
-        for (s, e) in aa[1:]: 
-            if s < end and s > start and e > end:
-                end = e
-            elif s == end:
-                end = e
-            elif (s > end or e < start): 
-                comp.append( (start, end) )
-                start = s
-                end = e 
-            elif (e > start and e < end and s < start) or e == start:
-                start = s
-        comp.append( (start, end) )
-        frames = sum( o-i for (i,o) in comp )
-        return frames
-
 class Odometer(Gui.QMainWindow):
     audioclips = {}
     workers = []
@@ -248,25 +216,25 @@ class Odometer(Gui.QMainWindow):
         self.msg.emit(self.tr(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb." % (numclips, xmemlparser.name)))
         self.loaded.emit()
 
-    def computeAudibleDuration(self, volumethreshold=None):
-        if isinstance(volumethreshold, float):
-            volumethreshold = xmemliter.Volume(gain=volumethreshold)
-        elif volumethreshold is None:
-            volumethreshold = xmemliter.Volume(gain=float(self.ui.volumeThreshold.value()))
+    def computeAudibleDuration(self):
         self.ui.clips.clear()
-        for audioclip, ranges in self.audioclips.iteritems():
-            r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioclip, '%sf' % len(ranges), '...'])
+        for audioname, ranges in self.audioclips.iteritems():
+            frames = len(ranges)
+            fileref = self.audiofiles[audioname]
+            secs = frames / fileref.timebase
+            r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname, 
+                                                    '%ss (%sf)' % (secs, frames)])
             r.setCheckState(0, Core.Qt.Checked)
-            r.metadata = metadata.TrackMetadata(filename=audioclip)
-            r.audioname = audioclip
-            self.rows[audioclip] = r
-            w = metadata.findResolver(audioclip)
+            r.metadata = metadata.TrackMetadata(filename=audioname)
+            r.audioname = audioname
+            self.rows[audioname] = r
+            w = metadata.findResolver(audioname)
             if w:
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress) 
                 self.workers.append(w) # keep track of the worker
-                w.resolve(audioclip) # put the worker to work async
+                w.resolve(audioname) # put the worker to work async
                 #w.testresolve(audioclip.name) # put the worker to work async
 
     def loadMetadata(self, filename, metadata):
