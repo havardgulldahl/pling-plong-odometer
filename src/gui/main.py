@@ -13,7 +13,8 @@ import PyQt4.Qt as Qt
 
 trans = Core.QCoreApplication.translate
 
-import xmeml
+#import xmeml
+from xmeml import iter as xmemliter
 import metadata
 import odometer_ui
 import odometer_rc 
@@ -25,7 +26,8 @@ except ImportError:
 
 
 class XmemlWorker(Core.QThread):
-    loaded = Core.pyqtSignal([xmeml.VideoSequence], name="loaded")
+    #loaded = Core.pyqtSignal([xmeml.VideoSequence], name="loaded")
+    loaded = Core.pyqtSignal(xmemliter.XmemlParser, name="loaded")
 
     def __init__(self, parent=None):
         super(XmemlWorker, self).__init__(parent)
@@ -41,10 +43,11 @@ class XmemlWorker(Core.QThread):
 
     def run(self):
         #time.sleep(5) # uncomment to simulate large xmeml file
-        x = xmeml.VideoSequence(file=self.xmemlfile)
+        #x = xmeml.VideoSequence(file=self.xmemlfile)
         #print "thread xmeml loaded"
-        x.freemem()
-        self.loaded.emit(x)
+        #x.freemem()
+        xmeml = xmemliter.XmemlParser(self.xmemlfile)
+        self.loaded.emit(xmeml)
 
 class StatusBox(Gui.QWidget):
     INFO = 1
@@ -136,7 +139,7 @@ class Odometer(Gui.QMainWindow):
     def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
         self.settings = Core.QSettings('nrk.no', 'Pling Plong Odometer')
-        self.volumethreshold = xmeml.Volume(gain=volume)
+        self.volumethreshold = xmemliter.Volume(gain=volume)
         self.xmemlfile = xmemlfile
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
@@ -144,7 +147,6 @@ class Odometer(Gui.QMainWindow):
         self.ui.setupUi(self)
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
-        #self.ui.volumeThreshold.setValue(self.volumethreshold.decibel)
         self.ui.volumeThreshold.setValue(self.volumethreshold.gain)
         self.ui.previousButton = self.ui.buttonBox.addButton(trans('cmd', 'Pre&vious'), Gui.QDialogButtonBox.ActionRole)
         self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
@@ -156,7 +158,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
-        self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmeml.Volume(gain=float(i))))
+        self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmemliter.Volume(gain=float(i))))
         self.ui.actionAbout_Odometer.activated.connect(lambda: self.showstatus("About odometer"))
         self.ui.actionAbout_Qt.activated.connect(lambda: self.showstatus("About Qt"))
         self.ui.actionConfig.activated.connect(lambda: self.showstatus("About Config"))
@@ -200,13 +202,12 @@ class Odometer(Gui.QMainWindow):
         i.move(self.width()/2-i.width(), self.height()*0.75-i.height())
 
     def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
-        #self.ui.statusbar.showMessage(msg, 15000)
+        # if you don't autoclose, call self.closestatusboxes()
+        # or keep a reference to this box and .close() it yourself
         b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
         self.statusboxes.append(b)
         b.show_()
         return b
-        # if you don't autoclose, call self.closestatusboxes()
-        # or keep a reference to this box and .close() it yourself
 
     def closestatusboxes(self):
         for b in self.statusboxes:
@@ -240,56 +241,33 @@ class Odometer(Gui.QMainWindow):
         self.ui.statusbar.removeWidget(self.ui.progress)
         self.ui.progress.deleteLater()
 
-    def load(self, xmeml):
-        self.audioclips = {}
-        for c in xmeml.get_track_clipitems('audio'):
-            if not self.audioclips.has_key(c.file): 
-                self.audioclips[c.file] = [c,]
-            else:
-                self.audioclips[c.file] += [c,]
+    def load(self, xmemlparser):
+        self.audioclips, self.audiofiles = xmemlparser.audibleranges()
         numclips = len(self.audioclips.keys())
         self.ui.creditsButton.setEnabled(numclips > 0)
-        self.msg.emit(self.tr(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb." % (numclips, xmeml.name)))
+        self.msg.emit(self.tr(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb." % (numclips, xmemlparser.name)))
         self.loaded.emit()
 
     def computeAudibleDuration(self, volumethreshold=None):
-        print "computeAD:",volumethreshold
         if isinstance(volumethreshold, float):
-            volumethreshold = xmeml.Volume(gain=volumethreshold)
+            volumethreshold = xmemliter.Volume(gain=volumethreshold)
         elif volumethreshold is None:
-            volumethreshold = xmeml.Volume(gain=float(self.ui.volumeThreshold.value()))
-        print u'Computing duration of audio above %idB' % volumethreshold.decibel
-        print "gain: ", volumethreshold.gain
+            volumethreshold = xmemliter.Volume(gain=float(self.ui.volumeThreshold.value()))
         self.ui.clips.clear()
-        for audioclip, pieces in self.audioclips.iteritems():
-            r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioclip.name, "xx", '...'])
+        for audioclip, ranges in self.audioclips.iteritems():
+            r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioclip, '%sf' % len(ranges), '...'])
             r.setCheckState(0, Core.Qt.Checked)
-            r.clip = audioclip
-            r.metadata = metadata.TrackMetadata(filename=audioclip.name)
-            self.rows[audioclip.name] = r
-            w = metadata.findResolver(audioclip.name)
+            r.metadata = metadata.TrackMetadata(filename=audioclip)
+            r.audioname = audioclip
+            self.rows[audioclip] = r
+            w = metadata.findResolver(audioclip)
             if w:
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress) 
                 self.workers.append(w) # keep track of the worker
-                w.resolve(audioclip.name) # put the worker to work async
+                w.resolve(audioclip) # put the worker to work async
                 #w.testresolve(audioclip.name) # put the worker to work async
-
-            # work through all subclips, to get to the total audible frames value
-            a = AudibleClip(audioclip.name)
-            for subclip in pieces:
-                sr = Gui.QTreeWidgetItem(r, ['', subclip.id,  "%s" % (subclip.audibleframes(volumethreshold),)])
-                sr.clip = subclip
-                r.addChild(sr)
-                a.add(subclip.audibleframes(volumethreshold))
-            total_frames = a.compute()
-            secs = total_frames  / audioclip.timebase
-            print audioclip.name, total_frames, audioclip.timebase, secs
-            r.clip.audibleDuration = secs
-            r.setText(2, "%.1fs (%i frames)" % (secs, total_frames))
-            if total_frames == 0:
-                r.setToolTip(2, u'There are no audible frames at this volume threshold (%s dB)' % volumethreshold.decibel)
 
     def loadMetadata(self, filename, metadata):
         #print "got metadata for %s: %s" % (filename, metadata)
@@ -325,9 +303,10 @@ class Odometer(Gui.QMainWindow):
         if not len(rows): return
         s = "<b>Metadata:</b><br>"
         for r in rows:
-            #print vars(r.clip)
-            ss = vars(r.clip)
-            ss.update({'secs':r.clip.duration/r.clip.timebase})
+            md = self.audiofiles[r.audioname]
+            print vars(md)
+            ss = vars(md)
+            ss.update({'secs':md.duration/md.timebase})
             s += """<i>Name:</i><br>%(name)s<br>
                     <i>Frames:</i><br>%(duration)sf<br>
                     <i>Seconds:</i><br>%(secs)s<br>
@@ -335,13 +314,8 @@ class Odometer(Gui.QMainWindow):
                     """ % ss
             if hasattr(r, 'metadata') and r.metadata.musiclibrary is not None:
                 s += """<i>Library</i><br>%s</br>""" % r.metadata.musiclibrary
-            if isinstance(r.clip, xmeml.TrackItem):
-                s += """<i>Start/End:</i><br>%.0ff/%.0ff<br>
-                        <i>Filters:</i><br><ul><li>%s</li></ul><br>
-                        """ % (r.clip.start(), r.clip.end(), 
-                              '</li><li>'.join([f.name for f in r.clip.filters]))
         self.ui.metadata.setText(s)
-        self.ui.playButton.setEnabled(os.path.exists(r.clip.name))
+        #self.ui.playButton.setEnabled(os.path.exists(r.clip.name))
         if self.ui.detailsBox.isVisible(): # currently editing metadata
             self.showMetadata(r)
 
@@ -428,13 +402,16 @@ class Odometer(Gui.QMainWindow):
             self.ui.prodno.setFocus()
             return False
         self.gluon = metadata.Gluon()
-        self.gluon.worker.trackResolved.connect(self.gluonFinished)
+        self.gluon.worker.reported.connect(self.gluonFinished)
+        self.gluon.worker.reported.connect(self.removeLoadingbar)
+        self.gluon.worker.error.connect(self.removeLoadingbar)
+        self.gluon.worker.error.connect(self.msg)
         checked = list([r for r in self.rows.values() if r.checkState(0) == Core.Qt.Checked])
         self.gluon.resolve(prodno, checked)
 
     def gluonFinished(self, trackname, metadata):
         print "gluonFinished: %s -> %s" % (trackname, metadata)
-        for nom, row in self.rows.items():
+        for nom, row in self.gluon.currentList:
             print repr(os.path.splitext(nom)[0]), repr(unicode(trackname))
             if os.path.splitext(nom)[0] == unicode(trackname):
                 row.setBackground(0, Gui.QBrush(Gui.QColor("light green")))
