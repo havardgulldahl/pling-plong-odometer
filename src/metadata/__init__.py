@@ -167,36 +167,6 @@ class DMAWorker(Core.QThread):
         self.progress.emit(100)
         self.trackResolved.emit(md)
 
-class EchonestWorker(Core.QThread):
-    trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
-    progress = Core.pyqtSignal(int, name="progress" )
-    finished = Core.pyqtSignal(name='finished')
-
-    def __init__(self, parent=None):
-        super(EchonestWorker, self).__init__(parent)
-
-    def __del__(self):
-        self.wait()
-
-    def load(self, filename):
-        self.filename = filename
-        self.start()
-
-    def run(self):
-        fingerprint = echonest.identify(self.filename)
-        print fingerprint
-        self.finished.emit()
-        if fingerprint['response']['status']['code'] != 0: # errors
-            return False
-        echo = fingerprint['response']['track']
-        md = TrackMetadata(filename=self.filename, musiclibrary='Unknown')
-        md.identifier = echo['id']
-        md.title = echo['title']
-        md.artist = echo['artist']
-        md.album = echo['release']
-        print vars(md)
-        self.trackResolved.emit(md)
-
 class ResolverBase(Core.QObject):
 
     prefixes = [] # a list of file prefixes that this resolver recognizes
@@ -391,45 +361,6 @@ class SonotonResolver(ResolverBase):
         metadata.label = 'Sonoton'
         self.trackResolved.emit(self.filename, metadata)
 
-class EchonestResolver(ResolverBase):
-    "Acoustic fingerprinting using echoprint.me"
-    prefixes = ['*',]
-    name = 'echonest'
-    stop = False
-
-    def accepts(self, filename):
-        return True # echonest is a generic fingerprinter
-
-    def resolve(self, filename, timeout=40):
-        self.filename = filename
-        self.worker = EchonestWorker()
-        #self.worker.progress.connect(self.progress)
-        #self.worker.finished.connect(lambda: self.stop = True)
-        self.worker.finished.connect(self.finished)
-        print self.worker.finished
-        self.worker.trackResolved.connect(self.resolved)
-        self.worker.load(filename)
-        i = 1
-        while not self.stop and i < timeout:
-            print "tick ", i
-            self.progress(i)
-            i += 3
-            time.sleep(3)
-        if i > timeout:
-            self.finished()
-            self.trackResolved.emit(self.filename, TrackMetadata())
-            return False
-
-    def finished(self):
-        print "finished"
-        self.progress(100)
-        self.stop = True
-
-    def resolved(self, metadata):
-        print "resolved"
-        self.stop = True
-        self.trackResolved.emit(self.filename, md)
-
 def findResolver(filename):
     resolvers = [ DMAResolver(), SonotonResolver(), ]
     for resolver in resolvers:
@@ -472,9 +403,4 @@ if __name__ == '__main__':
     #filename = 'SCD082120.wav'
     filename = 'NONRT900497LP0205_xxx.wav'
     app = Gui.QApplication(sys.argv)
-    mq = EchonestResolver()
-    mq.trackResolved.connect(lambda f,m: mdprint)
-    mq.trackResolved.connect(lambda f,m: app.quit())
-    mq.trackResolved.connect(lambda f,m: app.quit())
-    resolve = mq.resolve(sys.argv[1])
     app.exec_()
