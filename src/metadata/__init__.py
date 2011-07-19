@@ -7,6 +7,7 @@ import time
 import cPickle as pickle
 import sys, os.path, random, time, urllib, urllib2, urlparse, re
 import json, StringIO
+import hashlib
 import xml.etree.ElementTree as ET
 import PyQt4.QtCore as Core
 import PyQt4.QtGui as Gui
@@ -67,31 +68,59 @@ class TrackMetadata(object):
         else:
             return ResolverBase.musicid(self.filename)
 
-class GluonWorker(Core.QThread):
-    loaded = Core.pyqtSignal([list], name="loaded")
-    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
+class GluonReportWorker(Core.QThread):
+    reported = Core.pyqtSignal(name="reported")
+    error = Core.pyqtSignal(unicode, name="error")
 
     def __init__(self, parent=None):
         super(GluonWorker, self).__init__(parent)
-        self.exiting = False
 
     def __del__(self):
-        self.exiting = True
         self.wait()
 
-    def load(self, prodno, clipnames):
+    def load(self, prodno, clipids):
         self.prodno = prodno
-        self.clipnames = clipnames
+        self.clipids = clipids
         self.start()
 
     def run(self):
-        gb = gluon.GluonBuilder(self.prodno, self.clipnames)
+        gb = gluon.GluonReportBuilder(self.prodno, self.clipids)
+        xmlreq = gb.toxml()
+        response = StringIO.StringIO(self.request(xmlreq))
+
+        if response.getvalue() == "OK":
+            self.reported.emit()
+        else:
+            self.error.emit("Some error occured")
+
+    def request(self, gluonpayload):
+        "do an http post request with given gluon xml payload"
+        data = urllib.urlencode( {"data":gluonpayload} )
+        req = urllib.urlopen(GLUON_HTTP_ENDPOINT, data)
+        response = req.read()
+        return response
+
+class GluonLookupWorker(Core.QThread):
+    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
+    error = Core.pyqtSignal(unicode, name="error")
+
+    def __init__(self, parent=None):
+        super(GluonWorker, self).__init__(parent)
+
+    def __del__(self):
+        self.wait()
+
+    def load(self, clipid):
+        self.clipid = clipid
+        self.start()
+
+    def run(self):
+        gb = gluon.GluonLookupBuilder(self.clipid)
         xmlreq = gb.toxml()
         gp = gluon.GluonResponseParser()
         response = StringIO.StringIO(self.request(xmlreq))
-
-        for metadata in gp.parse(response, factory=TrackMetadata):
-            self.trackResolved.emit(metadata.identifier, metadata)
+        metadata = gp.parse(response, factory=TrackMetadata)
+        self.trackResolved.emit(metadata.identifier, metadata)
 
     def request(self, gluonpayload):
         "do an http post request with given gluon xml payload"
@@ -261,7 +290,11 @@ class ResolverBase(Core.QObject):
         ourdir = os.path.join(unicode(dir), 'no.nrk.odometer')
         if not os.path.exists(ourdir):
            os.mkdir(ourdir) 
-        return os.path.join(ourdir, self.filename)
+               #return os.path.join(ourdir, self.filename)
+        try:
+            return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
+        except UnicodeEncodeError:
+            print repr(self.filename), type(self.filename)
 
 class DMAResolver(ResolverBase):
     # Fra gammelt av har vi disse kodene:
@@ -332,8 +365,6 @@ class SonotonResolver(ResolverBase):
     #urlbase = 'http://localhost:8000/sonoton.html?%s'
 
     def parse(self):
-
-        return self.testresolve(self.filename)
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
         metadata = TrackMetadata(filename=self.doc.filename, musiclibrary=self.name)
         try:
@@ -413,6 +444,7 @@ class Gluon(Core.QObject):
         self.worker = GluonWorker()
 
     def resolve(self, prodno, clipnames):
+        self.currentList = clipnames
         self.worker.load(prodno, clipnames)
 
 

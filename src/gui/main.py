@@ -85,7 +85,6 @@ class StatusBox(Gui.QWidget):
         self.deleteLater()
 
     def close(self):
-        #print "closing", id(self)
         anim = Core.QPropertyAnimation(self, "windowOpacity", self.parent)
         anim.setDuration(1000)
         anim.setStartValue(1.0)
@@ -272,7 +271,6 @@ class Odometer(Gui.QMainWindow):
         s = "<b>Metadata:</b><br>"
         for r in rows:
             md = self.audiofiles[r.audioname]
-            print vars(md)
             ss = vars(md)
             ss.update({'secs':md.duration/md.timebase})
             s += """<i>Name:</i><br>%(name)s<br>
@@ -346,7 +344,6 @@ class Odometer(Gui.QMainWindow):
                 pass
 
         bads = [ (a,t) for a,t in artists.iteritems() if len(t) > maxTitlePerArtist ]
-        #print bads
         if bads:
             self.ui.errors.show()
             self.ui.errorText.setText("""<h1>Warning</h1><p>Current agreements set a limit of %i titles per artist,
