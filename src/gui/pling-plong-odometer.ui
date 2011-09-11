@@ -15,7 +15,7 @@
    <bool>true</bool>
   </property>
   <property name="windowTitle">
-   <string>♫ ♪ MusikkrappTeve</string>
+   <string>♫ ♪ Odometer</string>
   </property>
   <property name="windowIcon">
    <iconset resource="odometer.qrc">
@@ -274,6 +274,25 @@
         </property>
         <property name="text">
          <string>&amp;Open file...</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="fileInfo">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="textFormat">
+         <enum>Qt::RichText</enum>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
         </property>
        </widget>
       </item>

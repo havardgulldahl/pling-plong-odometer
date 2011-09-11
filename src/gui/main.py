@@ -196,6 +196,8 @@ class Odometer(Gui.QMainWindow):
         msgbox = self.showstatus("Loading %s..." % xmemlfile, autoclose=self.loaded)
         self.loadingbar()
         self.loaded.connect(self.removeLoadingbar)
+        self.loaded.connect(lambda: self.ui.fileInfo.setText("<b>Loaded:</b> %s" % os.path.basename(xmemlfile)))
+        self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(xmemlfile))
         self.xmemlthread.load(xmemlfile)
 
     def loadingbar(self):
@@ -223,11 +225,11 @@ class Odometer(Gui.QMainWindow):
             secs = frames / fileref.timebase
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname, 
                                                     '%ss (%sf)' % (secs, frames)])
-            r.setCheckState(0, Core.Qt.Checked)
             r.metadata = metadata.TrackMetadata(filename=audioname)
             r.audioname = audioname
             self.rows[audioname] = r
             w = metadata.findResolver(audioname)
+            r.setCheckState(0, Core.Qt.Unchecked)
             if w:
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
@@ -239,6 +241,7 @@ class Odometer(Gui.QMainWindow):
     def loadMetadata(self, filename, metadata):
         #print "got metadata for %s: %s" % (filename, metadata)
         row = self.rows[unicode(filename)]
+        row.setCheckState(0, Core.Qt.Checked)
         row.metadata = metadata
         if metadata.productionmusic:
             txt = u"\u00ab%(title)s\u00bb \u2117 %(label)s"
@@ -274,8 +277,7 @@ class Odometer(Gui.QMainWindow):
             ss = vars(md)
             ss.update({'secs':md.duration/md.timebase})
             s += """<i>Name:</i><br>%(name)s<br>
-                    <i>Frames:</i><br>%(duration)sf<br>
-                    <i>Seconds:</i><br>%(secs)s<br>
+                    <i>Total length:</i><br>%(secs)ss<br>
                     <i>Rate:</i><br>%(timebase)sfps<br>
                     """ % ss
             if hasattr(r, 'metadata') and r.metadata.musiclibrary is not None:
