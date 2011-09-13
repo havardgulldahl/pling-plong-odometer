@@ -102,6 +102,7 @@ class Odometer(Gui.QMainWindow):
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
     metadataloaded = 0
     statusboxes = []
+    showsubclips = True
 
     def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
@@ -197,7 +198,7 @@ class Odometer(Gui.QMainWindow):
         self.loadingbar()
         self.loaded.connect(self.removeLoadingbar)
         self.loaded.connect(lambda: self.ui.fileInfo.setText("<b>Loaded:</b> %s" % os.path.basename(xmemlfile)))
-        self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(xmemlfile))
+        self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(os.path.abspath(xmemlfile)))
         self.xmemlthread.load(xmemlfile)
 
     def loadingbar(self):
@@ -236,12 +237,21 @@ class Odometer(Gui.QMainWindow):
                 w.trackProgress.connect(self.showProgress) 
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname) # put the worker to work async
+                r.setCheckState(0, Core.Qt.Checked)
                 #w.testresolve(audioclip.name) # put the worker to work async
+            if self.showsubclips:
+                i = 1
+                for range in ranges:
+                    frames = len(range)
+                    secs = frames / fileref.timebase
+                    sr = Gui.QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
+                                                 '%ss (%sf)' % (secs, frames)])
+                    i = i+1
+
 
     def loadMetadata(self, filename, metadata):
         #print "got metadata for %s: %s" % (filename, metadata)
         row = self.rows[unicode(filename)]
-        row.setCheckState(0, Core.Qt.Checked)
         row.metadata = metadata
         if metadata.productionmusic:
             txt = u"\u00ab%(title)s\u00bb \u2117 %(label)s"
