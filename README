@@ -6,13 +6,12 @@ Pling Plong Odometer
 This tool will analyze your FCP project and tell you what 
 audio clips goes in it and for how long each clip is audible.
 
-You'll need this data if you're lucky enough to have someone
-interested in what music your little masterpiece uses.
-
+Created by havard.gulldahl@nrk.no
 ===
 
 Prerequisites
 
+python-lxml
 python-qt
 https://github.com/havardgulldahl/xmeml
 
