@@ -102,7 +102,7 @@ class Odometer(Gui.QMainWindow):
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
     metadataloaded = 0
     statusboxes = []
-    showsubclips = True
+    showsubclips = False
 
     def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)

@@ -257,9 +257,9 @@ class ResolverBase(Core.QObject):
     def cachelocation(self):
         "Return a dir suitable for storage"
         dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
-        ourdir = os.path.join(unicode(dir), 'no.nrk.odometer')
+        ourdir = os.path.join(os.path.abspath(unicode(dir)), 'no.nrk.odometer')
         if not os.path.exists(ourdir):
-           os.mkdir(ourdir) 
+           os.makedirs(ourdir) 
                #return os.path.join(ourdir, self.filename)
         try:
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
