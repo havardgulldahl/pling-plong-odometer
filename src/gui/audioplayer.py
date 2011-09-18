@@ -45,7 +45,7 @@
 
 import os.path
 import PyQt4.QtCore as Core
-import PyQt4.Phonon as Phonon
+from PyQt4.phonon import Phonon
 
 class AudioPlayer(Core.QObject):
     error = Core.pyqtSignal(unicode, name="error")
