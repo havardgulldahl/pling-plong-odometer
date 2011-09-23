@@ -30,7 +30,8 @@ if sys.platform == 'darwin':
          options=dict(py2app=dict(
              argv_emulation=False,
              iconfile='odometer.icns',
-             includes=['sip','PyQt4', 'PyQt4.QtNetwork'],
+             packages=['lxml'],
+             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'],
              plist=dict(CFBundleIdentifier='no.nrk.odometer',
                         ##CFBundleDisplayName='♫ ♪ Odometer',
                         #CFBundleDisplayName=u'\u266b \u266a Odometer',
