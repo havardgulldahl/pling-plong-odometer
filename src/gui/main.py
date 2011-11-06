@@ -117,6 +117,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         self.ui.DMAButton.clicked.connect(self.gluon)
+        self.ui.AUXButton.clicked.connect(self.auxReport)
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
@@ -222,6 +223,7 @@ class Odometer(Gui.QMainWindow):
                                                     '%ss (%sf)' % (secs, frames)])
             r.metadata = metadata.TrackMetadata(filename=audioname)
             r.audioname = audioname
+            r.clip = {'durationsecs':secs, 'durationframes':frames}
             self.rows[audioname] = r
             w = metadata.findResolver(audioname)
             r.setCheckState(0, Core.Qt.Unchecked)
@@ -318,6 +320,15 @@ class Odometer(Gui.QMainWindow):
         r = clips.itemBelow(self.ui.detailsBox.currentRow)
         clips.setCurrentItem(r)
         clips.itemActivated.emit(r, -1)
+
+    def auxReport(self):
+        s = ""
+        for r in [row for row in self.rows.values() if row.checkState(0) == Core.Qt.Checked]:
+            if r.metadata.label == 'Sonoton':
+                s = s + u"%s x %s \r\n" % (r.metadata.getmusicid(), r.clip['durationsecs'])
+        clipboard = self.app.clipboard()
+        clipboard.setText(s)
+        self.msg.emit("AUX report copied to clipboard.")
 
     def creditsToClipboard(self):
         s = ""
