@@ -96,7 +96,7 @@ class Odometer(Gui.QMainWindow):
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
     metadataloaded = 0
     statusboxes = []
-    showsubclips = False
+    showsubclips = True
 
     def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
@@ -278,16 +278,19 @@ class Odometer(Gui.QMainWindow):
         self.ui.metadata.setText('')
         if not len(rows): return
         s = "<b>Metadata:</b><br>"
-        for r in rows:
+        r = rows[0]
+        try:
             md = self.audiofiles[r.audioname]
-            ss = vars(md)
-            ss.update({'secs':md.duration/md.timebase})
-            s += """<i>Name:</i><br>%(name)s<br>
-                    <i>Total length:</i><br>%(secs)ss<br>
-                    <i>Rate:</i><br>%(timebase)sfps<br>
-                    """ % ss
-            if hasattr(r, 'metadata') and r.metadata.musiclibrary is not None:
-                s += """<i>Library</i><br>%s</br>""" % r.metadata.musiclibrary
+        except AttributeError:
+            return
+        ss = vars(md)
+        ss.update({'secs':md.duration/md.timebase})
+        s += """<i>Name:</i><br>%(name)s<br>
+                <i>Total length:</i><br>%(secs)ss<br>
+                <i>Rate:</i><br>%(timebase)sfps<br>
+                """ % ss
+        if hasattr(r, 'metadata') and r.metadata.musiclibrary is not None:
+            s += """<i>Library</i><br>%s</br>""" % r.metadata.musiclibrary
         self.ui.metadata.setText(s)
         #self.ui.playButton.setEnabled(os.path.exists(r.clip.name))
         if self.ui.detailsBox.isVisible(): # currently editing metadata
