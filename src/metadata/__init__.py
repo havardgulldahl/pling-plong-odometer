@@ -8,6 +8,7 @@ import cPickle as pickle
 import sys, os.path, random, time, urllib, urllib2, urlparse, re
 import json, StringIO
 import hashlib
+import demjson
 import xml.etree.ElementTree as ET
 import PyQt4.QtCore as Core
 import PyQt4.QtGui as Gui
@@ -154,16 +155,33 @@ class DMAWorker(Core.QThread):
         m = rex.search(data)
         muobid = m.group(1)
         self.progress.emit(50)
-        print 'http://dma/playerInformation.do?muobId='+muobid
-        xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
-        tree = ET.parse(StringIO.StringIO(xml.strip()))
-        md = TrackMetadata(filename=self.filename, identifier=self.musicid, musiclibrary='DMA')
-        md.title = tree.find('./track/title').text
-        md.composer = 'Kommer fra DMA'
-        md.label = 'Kommer fra DMA'
-        md.artist = '; '.join([a.text.strip() for a in tree.iterfind('./track/artists/artist/name')])
-        md.composer = 'Kommer fra DMA'
-        md.copyright = 'Kommer fra DMA'
+        try:
+            rexstart = re.search(r'var\ albumRecs\ =\ \[', data).end()
+            rexend = re.compile(r'];\s*trackRecord.albums\ =\ albumRecs;', re.M).search(data).start()
+        except AttributeError:
+            return None
+        metadata = demjson.decode(data[rexstart:rexend])
+        print metadata
+        md = TrackMetadata(filename=self.filename,
+                           identifier=self.musicid,
+                           musiclibrary='DMA',
+                           title=metadata['title'],
+                           artist="; ".join([x.name for x in metadata['artists']]),
+                           year=metadata['releaseYear'][0],
+                           composer='Kommer fra DMA',
+                           label='Kommer fra DMA',
+                           copyright='Kommer fra DMA')
+
+
+        #xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
+        #tree = ET.parse(StringIO.StringIO(xml.strip()))
+        #md = TrackMetadata(filename=self.filename, identifier=self.musicid, musiclibrary='DMA')
+        #md.title = tree.find('./track/title').text
+        #md.composer = 'Kommer fra DMA'
+        #md.label = 'Kommer fra DMA'
+        #md.artist = '; '.join([a.text.strip() for a in tree.iterfind('./track/artists/artist/name')])
+        #md.composer = 'Kommer fra DMA'
+        #md.copyright = 'Kommer fra DMA'
         self.progress.emit(100)
         self.trackResolved.emit(md)
 
