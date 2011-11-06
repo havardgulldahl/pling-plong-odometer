@@ -13,7 +13,6 @@ import PyQt4.Qt as Qt
 
 trans = Core.QCoreApplication.translate
 
-#import xmeml
 from xmeml import iter as xmemliter
 import metadata
 import odometer_ui
@@ -26,7 +25,6 @@ except ImportError:
 
 
 class XmemlWorker(Core.QThread):
-    #loaded = Core.pyqtSignal([xmeml.VideoSequence], name="loaded")
     loaded = Core.pyqtSignal(xmemliter.XmemlParser, name="loaded")
 
     def __init__(self, parent=None):
@@ -42,10 +40,6 @@ class XmemlWorker(Core.QThread):
         self.start()
 
     def run(self):
-        #time.sleep(5) # uncomment to simulate large xmeml file
-        #x = xmeml.VideoSequence(file=self.xmemlfile)
-        #print "thread xmeml loaded"
-        #x.freemem()
         xmeml = xmemliter.XmemlParser(self.xmemlfile)
         self.loaded.emit(xmeml)
 
@@ -412,7 +406,7 @@ def xmemlfileFromEvent(event):
         for f in data.urls():
             fil = unicode(f.toLocalFile())
             if os.path.isfile(fil) and os.path.splitext(fil.upper())[1] == ".XML":
-                # also try to load it with xmeml.Videosequence ?
+                # also try to see if xmemliter accepts it?
                 return fil
     except Exception, (e):
         print e
