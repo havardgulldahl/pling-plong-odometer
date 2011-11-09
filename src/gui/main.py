@@ -351,7 +351,7 @@ class Odometer(Gui.QMainWindow):
             email = html.findFirstElement('input[name="email"]')
             email.setAttribute("value", self.settings.value('AUX/email', "troms@NRK").toString())
             productionname = html.findFirstElement('input[name="produktionsnamn"]')
-            productionname.setAttribute("value", self.settings.value('AUX/produktionsnamn', u"Kråkeklubben").toString())
+            productionname.setAttribute("value", self.ui.prodno.text())
             check_tv = html.findFirstElement('input[name="checkbox2"]')
             check_tv.setAttribute("checked", "checked")
             text = html.findFirstElement("textarea")

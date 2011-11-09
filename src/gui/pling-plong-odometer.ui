@@ -387,8 +387,11 @@
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="toolTip">
+         <string>Open a report form for Sonoton production music</string>
+        </property>
         <property name="text">
-         <string>Til &amp;AUX</string>
+         <string>&amp;Sonoton report</string>
         </property>
        </widget>
       </item>
