@@ -17,6 +17,8 @@ from xmeml import iter as xmemliter
 import metadata
 import odometer_ui
 import odometer_rc 
+import auxreport_ui
+
 try:
     from gui import audioplayer
     USE_AUDIOPLAYER=True
@@ -59,7 +61,7 @@ class StatusBox(Gui.QWidget):
             bgcolor = '#ffff7f'
         elif msgtype == self.WARNING:
             bgcolor = 'blue'#'#ffff7f'
-        elif msgtype == self.WARNING:
+        elif msgtype == self.ERROR:
             bgcolor = 'red'#'#ffff7f'
 
         self.setStyleSheet(u'QWidget { background-color: %s; }' % bgcolor)
@@ -329,9 +331,48 @@ class Odometer(Gui.QMainWindow):
         for r in [row for row in self.rows.values() if row.checkState(0) == Core.Qt.Checked]:
             if r.metadata.label == 'Sonoton':
                 s = s + u"%s x %s \r\n" % (r.metadata.getmusicid(), r.clip['durationsecs'])
-        clipboard = self.app.clipboard()
-        clipboard.setText(s)
-        self.msg.emit("AUX report copied to clipboard.")
+        AUXDialog = Gui.QDialog()
+        ui = auxreport_ui.Ui_PlingPlongAUXDialog()
+        ui.setupUi(AUXDialog)
+        ui.webView.load(Core.QUrl('http://auxlicensing.com/Forms/Express%20Rapportering/index.html'))
+        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        def reportloaded(boolean):
+            print "report loaded: %s" % boolean
+            html = ui.webView.page().mainFrame()
+            submit = html.findFirstElement('input[type=submit]')
+            submit.setAttribute('style', 'visibility:hidden')
+            business = html.findFirstElement('input[name="foretag"]')
+            business.setAttribute("value", self.settings.value('AUX/foretag', "NRK").toString())
+            contact = html.findFirstElement('input[name=kontakt]')
+            contact.setAttribute("value", self.settings.value('AUX/kontakt', "NRK Troms").toString())
+            phone = html.findFirstElement('input[name="telefon"]')
+            phone.setAttribute("value", self.settings.value('AUX/telefon', "776").toString())
+            email = html.findFirstElement('input[name="email"]')
+            email.setAttribute("value", self.settings.value('AUX/email', "troms@NRK").toString())
+            productionname = html.findFirstElement('input[name="produktionsnamn"]')
+            productionname.setAttribute("value", self.settings.value('AUX/produktionsnamn', u"Kråkeklubben").toString())
+            check_tv = html.findFirstElement('input[name="checkbox2"]')
+            check_tv.setAttribute("checked", "checked")
+            text = html.findFirstElement("textarea")
+            text.setPlainText(s)
+        ui.webView.loadFinished.connect(reportloaded)
+        def reportsubmit():
+            print "report submitting"
+            html = ui.webView.page().mainFrame()
+            for el in ['foretag', 'kontakt', 'telefon', 'email', 'produktionsnamn']:
+                htmlel = html.findFirstElement('input[name=%s]' % el)
+                val = htmlel.evaluateJavaScript("this.value").toString()
+                if len(val) == 0:
+                    self.showstatus('"%s" cannot be blank' % el.title(), msgtype=StatusBox.ERROR)
+                    return None
+                self.settings.setValue('AUX/%s' % el, val)
+            submit = html.findFirstElement('input[type=submit]')
+            submit.setAttribute('style', 'visibility:show')
+            #submit.evaluateJavaScript('this.click()')
+            #return AUXDialog.accept()
+        ui.buttonBox.accepted.connect(reportsubmit)
+        return AUXDialog.exec_()
 
     def creditsToClipboard(self):
         s = ""
