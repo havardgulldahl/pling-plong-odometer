@@ -209,7 +209,8 @@ class Odometer(Gui.QMainWindow):
         self.ui.progress.deleteLater()
 
     def load(self, xmemlparser):
-        self.audioclips, self.audiofiles = xmemlparser.audibleranges()
+        self.audioclips, self.audiofiles = xmemlparser.audibleranges(self.volumethreshold)
+        self.ui.volumeInfo.setText("<i>(above %i dB)</i>" % self.volumethreshold.decibel)
         self.xmemlparser = xmemlparser
         numclips = len(self.audioclips.keys())
         self.ui.creditsButton.setEnabled(numclips > 0)
@@ -219,6 +220,7 @@ class Odometer(Gui.QMainWindow):
     def computeAudibleDuration(self, volume=None):
         if isinstance(volume, xmemliter.Volume):
             self.audioclips, self.audiofiles = self.xmemlparser.audibleranges(volume)
+            self.ui.volumeInfo.setText("<i>(above %i dB)</i>" % volume.decibel)
         self.ui.clips.clear()
         for audioname, ranges in self.audioclips.iteritems():
             frames = len(ranges)
