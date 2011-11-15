@@ -248,12 +248,17 @@ class Odometer(Gui.QMainWindow):
                     frames = len(range)
                     secs = frames / fileref.timebase
                     sr = Gui.QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
-                                                 '%ss (%sf)' % (secs, frames)])
+                                                 '%ss (%sf)' % (secs, frames),
+                                                 #u'%ss\u2013%ss (%sf\u2013%sf)' % (range.start / fileref.timebase,
+                                                                                   #range.end / fileref.timebase,
+                                                                                   #range.start,
+                                                                                   #range.end)
+                                                ]
+                                            )
                     i = i+1
 
 
     def loadMetadata(self, filename, metadata):
-        #print "got metadata for %s: %s" % (filename, metadata)
         row = self.rows[unicode(filename)]
         row.metadata = metadata
         if metadata.productionmusic:
@@ -267,7 +272,6 @@ class Odometer(Gui.QMainWindow):
 
     def trackCompleted(self, filename, metadata):
         self.metadataloaded += 1
-        print len(self.audioclips), self.metadataloaded
         if len(self.audioclips)  == self.metadataloaded:
             self.ui.DMAButton.setEnabled(True)
 
