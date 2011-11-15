@@ -96,12 +96,12 @@ class Odometer(Gui.QMainWindow):
 
     def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
-        audioclips = {}
-        workers = []
-        rows = {}
-        metadataloaded = 0
-        statusboxes = []
-        showsubclips = True
+        self.audioclips = {}
+        self.workers = []
+        self.rows = {}
+        self.metadataloaded = 0
+        self.statusboxes = []
+        self.showsubclips = True
         self.settings = Core.QSettings('nrk.no', 'Pling Plong Odometer')
         self.volumethreshold = xmemliter.Volume(gain=volume)
         self.xmemlfile = xmemlfile
@@ -210,12 +210,15 @@ class Odometer(Gui.QMainWindow):
 
     def load(self, xmemlparser):
         self.audioclips, self.audiofiles = xmemlparser.audibleranges()
+        self.xmemlparser = xmemlparser
         numclips = len(self.audioclips.keys())
         self.ui.creditsButton.setEnabled(numclips > 0)
         self.msg.emit(self.tr(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb." % (numclips, xmemlparser.name)))
         self.loaded.emit()
 
-    def computeAudibleDuration(self):
+    def computeAudibleDuration(self, volume=None):
+        if isinstance(volume, xmemliter.Volume):
+            self.audioclips, self.audiofiles = self.xmemlparser.audibleranges(volume)
         self.ui.clips.clear()
         for audioname, ranges in self.audioclips.iteritems():
             frames = len(ranges)
