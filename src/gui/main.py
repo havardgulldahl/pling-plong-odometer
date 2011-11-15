@@ -90,18 +90,18 @@ class StatusBox(Gui.QWidget):
         self.anim.start()
 
 class Odometer(Gui.QMainWindow):
-    audioclips = {}
-    workers = []
-    rows = {}
     msg = Core.pyqtSignal(unicode, name="msg")
     loaded = Core.pyqtSignal()
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
-    metadataloaded = 0
-    statusboxes = []
-    showsubclips = True
 
     def __init__(self, xmemlfile=None, volume=0.05, parent=None):
         super(Odometer, self).__init__(parent)
+        audioclips = {}
+        workers = []
+        rows = {}
+        metadataloaded = 0
+        statusboxes = []
+        showsubclips = True
         self.settings = Core.QSettings('nrk.no', 'Pling Plong Odometer')
         self.volumethreshold = xmemliter.Volume(gain=volume)
         self.xmemlfile = xmemlfile
