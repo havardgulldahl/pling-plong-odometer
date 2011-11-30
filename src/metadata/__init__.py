@@ -231,8 +231,7 @@ class ResolverBase(Core.QObject):
         self.trackProgress.emit(self.filename, i)
 
     def url(self, filename): # return url from filename
-        tracknumber, fileext = os.path.splitext(filename)
-        return self.urlbase % tracknumber
+        return self.urlbase % self.musicid(filename)
 
     def parse(self): 
         # reimplement this to emit a signal with a TrackMetadata object when found
@@ -347,10 +346,21 @@ class DMAResolver(ResolverBase):
         return self.quicklookup('creator', substring)
 
 class SonotonResolver(ResolverBase):
-    prefixes = ['SCD', ]
+    prefixes = ['SCD', 'STT', ]
     name = 'Sonoton'
     urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
     #urlbase = 'http://localhost:8000/sonoton.html?%s'
+
+    @staticmethod
+    def musicid(filename):
+        """Returns musicid from filename. 
+
+        SCD076819.wav -> SCD076819
+        SCD076819.wav -> SCD076819
+        STT002015_NAME_OF_SONG -> STT002015
+
+        """
+        return os.path.splitext(filename)[0].split('_')[0]
 
     def parse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
