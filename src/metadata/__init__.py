@@ -147,31 +147,52 @@ class DMAWorker(Core.QThread):
 
     def run(self):
         #http://dma/trackDetailsPage.do?muobId=NONRT023272CD0010
-        # -> internal muobid
-        # http://dma/playerInformation.do?muobId=592113247
+        # -> internal muobid and track details
+        # http://dma/productDetailsJson.do, POST muobId=592113247
+        # -> album ('product') details
         url = 'http://dma/trackDetailsPage.do?muobId='+self.musicid
         data = urllib.urlopen(url).read(512)
         rex = re.compile(r'NRK.action.onMuobResultClick\((\d+)\);')
         m = rex.search(data)
         muobid = m.group(1)
-        self.progress.emit(50)
+        self.progress.emit(33)
         try:
-            rexstart = re.search(r'var\ albumRecs\ =\ \[', data).end()
-            rexend = re.compile(r'];\s*trackRecord.albums\ =\ albumRecs;', re.M).search(data).start()
+            #rexstart = re.search(r'var\ albumRecs\ =\ \[', data).end()
+            #rexend = re.compile(r'];\s*trackRecord.albums\ =\ albumRecs;', re.M).search(data).start()
+            rexstart = re.search(r"CM.app.cache\('track\.details\.\d+',", data).end()
+            rexend = re.compile(r'\);\s*function\ callAddToWindow\(\){', re.M).search(data).start()
         except AttributeError:
+            self.progress.emit(5)
             return None
         metadata = demjson.decode(data[rexstart:rexend])
         print metadata
+        self.progress.emit(66)
+        _albumname = '; '.join([x.['name'] for x in metadata['albums']])
+        if not _albumname:
+            _albumname = '; '.join([x.['name'] for x in metadata['products']])
         md = TrackMetadata(filename=self.filename,
                            identifier=self.musicid,
                            musiclibrary='DMA',
                            title=metadata['title'],
-                           artist="; ".join([x.name for x in metadata['artists']]),
-                           year=metadata['releaseYear'][0],
-                           composer='Kommer fra DMA',
-                           label='Kommer fra DMA',
-                           copyright='Kommer fra DMA')
+                           artist="; ".join([x['name'] for x in metadata['artists']]),
+                           year=metadata['releaseYear'],
+                           albumname=_albumname,
+                           composer='; '.join([x['name'] for x in metadata['composer']]),
+                           label='Må hentes i DMA',
+                           copyright='Må hentes i DMA')
 
+        try:
+            recordid = metadata['media'][0]['id']
+            recorddetails = urllib.urlopen('http://dma/productDetailsJson.do', 
+                                     {'muobId': recordid})
+            recordmetadata = demjson.decode(details.read())['records'][0]
+            print recordmetadata
+            md.label = recordmetadata['recordLabel'][0]['label']
+            md.lcnumber = recordmetadata['recordLabel'][0]['recordLabelNr']
+        except:
+            # something failed, but we have almost everything we need
+            # TODO: popup an error dialog about this
+            pass
 
         #xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
         #tree = ET.parse(StringIO.StringIO(xml.strip()))
