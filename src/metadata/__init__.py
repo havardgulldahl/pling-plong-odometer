@@ -19,6 +19,8 @@ import gluon
 
 GLUON_HTTP_ENDPOINT="http://localhost:8000/gluon"
 
+
+
 class TrackMetadata(object):
     def __init__(self,
                  filename=None,
@@ -132,7 +134,9 @@ class GluonLookupWorker(Core.QThread):
 
 class DMAWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
+    trackFailed = Core.pyqtSignal(name="trackFailed" ) 
     progress = Core.pyqtSignal(int, name="progress" )
+    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
 
     def __init__(self, parent=None):
         super(DMAWorker, self).__init__(parent)
@@ -151,7 +155,12 @@ class DMAWorker(Core.QThread):
         # http://dma/productDetailsJson.do, POST muobId=592113247
         # -> album ('product') details
         url = 'http://dma/trackDetailsPage.do?muobId='+self.musicid
-        data = urllib.urlopen(url).read(512)
+        try:
+            data = urllib.urlopen(url).read(512)
+        except IOError:
+            self.error.emit(u'Could not open DMA. Not connected to the network?')
+            self.trackFailed.emit()
+            return 
         rex = re.compile(r'NRK.action.onMuobResultClick\((\d+)\);')
         m = rex.search(data)
         muobid = m.group(1)
@@ -167,9 +176,9 @@ class DMAWorker(Core.QThread):
         metadata = demjson.decode(data[rexstart:rexend])
         print metadata
         self.progress.emit(66)
-        _albumname = '; '.join([x.['name'] for x in metadata['albums']])
+        _albumname = '; '.join([x['name'] for x in metadata['albums']])
         if not _albumname:
-            _albumname = '; '.join([x.['name'] for x in metadata['products']])
+            _albumname = '; '.join([x['name'] for x in metadata['products']])
         md = TrackMetadata(filename=self.filename,
                            identifier=self.musicid,
                            musiclibrary='DMA',
@@ -189,10 +198,14 @@ class DMAWorker(Core.QThread):
             print recordmetadata
             md.label = recordmetadata['recordLabel'][0]['label']
             md.lcnumber = recordmetadata['recordLabel'][0]['recordLabelNr']
+        except IOError:
+            self.error.emit(u'Could not open DMA. Sorry. Please look %s up yourself.' % self.musicid)
+            self.trackFailed.emit(self.filename)
         except:
             # something failed, but we have almost everything we need
             # TODO: popup an error dialog about this
-            pass
+            self.error.emit(u'Resolving %s failed because - well, who knows why? Biscuit?' % self.musicid)
+            self.trackFailed.emit(self.filename)
 
         #xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
         #tree = ET.parse(StringIO.StringIO(xml.strip()))
@@ -210,6 +223,8 @@ class ResolverBase(Core.QObject):
 
     prefixes = [] # a list of file prefixes that this resolver recognizes
     name = 'general'
+    error = Core.pyqtSignal(unicode, name="error" )
+    trackFailed = Core.pyqtSignal(unicode, name="trackFailed" )
     trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
     trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" )
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
@@ -350,6 +365,8 @@ class DMAResolver(ResolverBase):
         self.worker = DMAWorker()
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
+        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
+        self.worker.error.connect(lambda msg: self.error.emit(msg))
         self.worker.load(filename)
 
     @staticmethod

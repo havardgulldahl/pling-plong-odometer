@@ -169,10 +169,17 @@ class Odometer(Gui.QMainWindow):
     def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
         # if you don't autoclose, call self.closestatusboxes()
         # or keep a reference to this box and .close() it yourself
+        if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg: 
+            return None
         b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
         self.statusboxes.append(b)
         b.show_()
+        self._laststatusmsg = msg
         return b
+
+    def showError(self, msg):
+        "Show error message"
+        return self.showstatus(msg, msgtype=StatusBox.ERROR)
 
     def closestatusboxes(self):
         for b in self.statusboxes:
@@ -224,6 +231,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.clips.clear()
         for audioname, ranges in self.audioclips.iteritems():
             frames = len(ranges)
+            #print "======= %s: %s -> %s======= " % (audioname, ranges.r, frames)
             fileref = self.audiofiles[audioname]
             secs = frames / fileref.timebase
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname, 
@@ -238,6 +246,8 @@ class Odometer(Gui.QMainWindow):
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress) 
+                #w.trackFailed.connect( ... ?
+                w.error.connect(self.showError) 
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname) # put the worker to work async
                 r.setCheckState(0, Core.Qt.Checked)
@@ -373,7 +383,7 @@ class Odometer(Gui.QMainWindow):
                 htmlel = html.findFirstElement('input[name=%s]' % el)
                 val = htmlel.evaluateJavaScript("this.value").toString()
                 if len(val) == 0:
-                    self.showstatus('"%s" cannot be blank' % el.title(), msgtype=StatusBox.ERROR)
+                    self.showError('"%s" cannot be blank' % el.title())
                     return None
                 self.settings.setValue('AUX/%s' % el, val)
             submit = html.findFirstElement('input[type=submit]')
