@@ -231,7 +231,9 @@ class Odometer(Gui.QMainWindow):
         self.ui.clips.clear()
         for audioname, ranges in self.audioclips.iteritems():
             frames = len(ranges)
-            #print "======= %s: %s -> %s======= " % (audioname, ranges.r, frames)
+            if frames == 0:
+                continue
+            print "======= %s: %s -> %s======= " % (audioname, ranges.r, frames)
             fileref = self.audiofiles[audioname]
             secs = frames / fileref.timebase
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname, 
