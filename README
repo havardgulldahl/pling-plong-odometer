@@ -11,7 +11,10 @@ Created by havard.gulldahl@nrk.no
 
 Prerequisites
 
-python-lxml
-python-qt
+Python with json
+python-demjson
+python-qt (with phonon bindings for prelisten support)
 https://github.com/havardgulldahl/xmeml
+
+
 
