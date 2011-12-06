@@ -63,7 +63,6 @@ class TrackMetadata(object):
 
     def getmusicid(self):
         "Return a music id (DMA/Sonoton unique key) from filename"
-        print repr(self.filename)
         if self.musiclibrary == "DMA":
             return DMAResolver.musicid(self.filename)
         elif self.musiclibrary == "Sonoton":
@@ -283,7 +282,7 @@ class ResolverBase(Core.QObject):
         "Add metadata for a filename to a local cache to prevent constant network lookups"
         loc = self.cachelocation()
         if self.incache() and self.fromcache() is not None:
-            print "CACHE HIT", loc
+            #print "CACHE HIT", loc
             return False
         print "caching metadata to ", loc
         f = open(loc, "wb")

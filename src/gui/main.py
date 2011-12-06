@@ -152,7 +152,7 @@ class Odometer(Gui.QMainWindow):
         if xmemlfileFromEvent(event):
             event.accept()
             return
-        #print "not an xml file, ignoring"
+        self.showError("This does not seem to be a valid FCP XML file. Sorry.")
         event.ignore()
 
     def dropEvent(self, event):
@@ -233,7 +233,7 @@ class Odometer(Gui.QMainWindow):
             frames = len(ranges)
             if frames == 0:
                 continue
-            print "======= %s: %s -> %s======= " % (audioname, ranges.r, frames)
+            #print "======= %s: %s -> %s======= " % (audioname, ranges.r, frames)
             fileref = self.audiofiles[audioname]
             secs = frames / fileref.timebase
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname, 
@@ -261,10 +261,7 @@ class Odometer(Gui.QMainWindow):
                     secs = frames / fileref.timebase
                     sr = Gui.QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
                                                  '%ss (%sf)' % (secs, frames),
-                                                 #u'%ss\u2013%ss (%sf\u2013%sf)' % (range.start / fileref.timebase,
-                                                                                   #range.end / fileref.timebase,
-                                                                                   #range.start,
-                                                                                   #range.end)
+                                                 u'%sf\u2013%sf' % (range.start, range.end)
                                                 ]
                                             )
                     i = i+1
