@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gluon priority="3" artID="odoNONRT048276CD0003" xmlns="http://gluon.nrk.no/gluon2" xmlns:gluonDict="http://gluon.nrk.no/gluonDict" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://gluon.nrk.no/gluon2 http://gluon.nrk.no/gluon2gluon2.xsd">
+  <head>
+    <metadata>
+	  <creators>
+        <creator>
+          <name>gluonDmaServices</name>
+        </creator>
+      </creators>
+    </metadata>
+  </head>
+  <objects>
+    <object objecttype="item">
+      <metadata>
+		<titles>
+		  <title>Midt i trafikken</title>
+          <titleAlternative gluonDict:titlesGroupType="albumTitle"></titleAlternative>
+        </titles>
+        <creators>
+          <creator>
+            <name>Henry Mancini </name>
+            <role link="http://gluon.nrk.no/nrkRoller.xml#V34">Komponist</role>
+          </creator>
+          <creator>
+            <name></name>
+            <role link="http://gluon.nrk.no/nrkRoller.xml#V811">Tekstforfatter</role>
+          </creator>
+        </creators>
+        <contributors>
+          <contributor>
+            <name>Vazelina Bilopphøggers</name>
+            <role link="http://gluon.nrk.no/nrkRoller.xml#V35">Utøver</role>
+          </contributor>
+        </contributors>
+        <dates>
+          <dateAlternative gluonDict:datesGroupType="dateIssued">
+            <start startYear="1983"/>
+          </dateAlternative>
+        </dates>
+        <identifier>NONRT048276CD0003</identifier>
+		<relations>
+			<relationIsReferencedBy label="PLATEMERKE NR" reference="NRK platearkiv" link="http://gluon.nrk.no/dataordbok.xml#recordNumber" xml:lang="nb">Slagerfabriken SCD 99002</relationIsReferencedBy>
+		</relations>
+        </metadata>
+      </object>
+    </objects>
+</gluon>

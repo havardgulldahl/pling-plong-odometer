@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gluon priority="3" artID="odoNONRO162675CD0017" xmlns="http://gluon.nrk.no/gluon2" xmlns:gluonDict="http://gluon.nrk.no/gluonDict" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://gluon.nrk.no/gluon2 http://gluon.nrk.no/gluon2gluon2.xsd">
+  <head>
+    <metadata>
+	  <creators>
+        <creator>
+          <name>gluonDmaServices</name>
+        </creator>
+      </creators>
+    </metadata>
+  </head>
+  <objects>
+    <object objecttype="item">
+      <metadata>
+		<titles>
+		  <title>Wanna Be Startin' Somethin'</title>
+          <titleAlternative gluonDict:titlesGroupType="albumTitle"></titleAlternative>
+        </titles>
+        <creators>
+          <creator>
+            <name>Michael Jackson </name>
+            <role link="http://gluon.nrk.no/nrkRoller.xml#V34">Komponist</role>
+          </creator>
+          <creator>
+            <name>Michael Jackson </name>
+            <role link="http://gluon.nrk.no/nrkRoller.xml#V811">Tekstforfatter</role>
+          </creator>
+        </creators>
+        <contributors>
+          <contributor>
+            <name>Michael Jackson</name>
+            <role link="http://gluon.nrk.no/nrkRoller.xml#V35">Utøver</role>
+          </contributor>
+        </contributors>
+        <dates>
+          <dateAlternative gluonDict:datesGroupType="dateIssued">
+            <start startYear="1982"/>
+          </dateAlternative>
+        </dates>
+        <identifier>NONRO162675CD0017</identifier>
+		<relations>
+			<relationIsReferencedBy label="PLATEMERKE NR" reference="NRK platearkiv" link="http://gluon.nrk.no/dataordbok.xml#recordNumber" xml:lang="nb">Epic; 520422 2 (dob.alb, pl.1)</relationIsReferencedBy>
+		</relations>
+        </metadata>
+      </object>
+    </objects>
+</gluon>
