@@ -112,7 +112,7 @@ class GluonMetadataResponseParser(object):
                 # Utøver
                 _a.append(contributor.find('./'+glns('name')).text)
         md.artist = '; '.join(_a)
-        for date in obj.findall('.//'+glns('date')):
+        for date in obj.findall('.//'+glns('dateAlternative')):
             if date.get('%sdatesGroupType' % GLUONDICT_NAMESPACE) == 'dateIssued':
                 md.year = date.find('./'+glns('start')).get('startYear')
         for ref in obj.findall('.//'+glns('relationIsReferencedBy')):
