@@ -83,32 +83,47 @@ class GluonBuilder(object):
         xml = ET.tostring(self.root, encoding='utf-8')
         return xml
 
+class GluonFactory(object):
+    pass
+
 
 class GluonMetadataResponseParser(object):
     "Parse a gluon xml response to retrieve metadata for audio clips"
 
-    def parse(self, xmlsource, factory=object):
+    def parse(self, xmlsource, factory=GluonFactory):
         self.tree = ET.parse(xmlsource)
-        for obj in self.tree.getiterator(glns('object')):
+        obj = self.tree.find('.//'+glns('object'))
+        #for obj in self.tree.getiterator(glns('object')):
             #md = TrackMetadata()
-            md = factory()
-            md.identifier = obj.find('.//'+glns('identifier')).text
-            md.title = obj.find('.//'+glns('title')).text
-            md.albumname = obj.find('.//'+glns('titleAlternative')).text
-            for creator in obj.findall('.//'+glns('creator')):
-                self.c = creator
-                if creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V34':
-                    # Komponist
-                    md.composer = creator.find('./'+glns('name')).text
-                elif creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V811':
-                    # Tekstforfatter
-                    md.writer = creator.find('./'+glns('name')).text
-            md.artist = obj.find('.//'+glns('contributors')+'/'+glns('contributor')+'/'+glns('name')).text
-            md.year = obj.find('.//'+glns('dates')+'/*/'+glns('start')).get('startYear')
-            yield md
-
-class GluonFactory(object):
-    pass
+        md = factory()
+        md.identifier = obj.find('.//'+glns('identifier')).text
+        md.title = obj.find('.//'+glns('title')).text
+        md.albumname = obj.find('.//'+glns('titleAlternative')).text
+        for creator in obj.findall('.//'+glns('creator')):
+            if creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V34':
+                # Komponist
+                md.composer = creator.find('./'+glns('name')).text
+            elif creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V811':
+                # Tekstforfatter
+                md.writer = creator.find('./'+glns('name')).text
+        _a = []
+        for contributor in obj.findall('.//'+glns('contributor')):
+            if contributor.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V35':
+                # Utøver
+                _a.append(contributor.find('./'+glns('name')).text)
+        md.artist = '; '.join(_a)
+        for date in obj.findall('.//'+glns('date')):
+            if date.get('%sdatesGroupType' % GLUONDICT_NAMESPACE) == 'dateIssued':
+                md.year = date.find('./'+glns('start')).get('startYear')
+        for ref in obj.findall('.//'+glns('relationIsReferencedBy')):
+            if ref.get('link') == 'http://gluon.nrk.no/dataordbok.xml#recordNumber':
+                _recordnumber = ref.text
+                try:
+                    md.label, md.recordnumber = [ x.strip() for x in _recordnumber.split(';')]
+                except ValueError:
+                    md.recordnumber = _recordnumber
+                    md.label = 'Unknown'
+        return md
 
 class GluonRequestParser(object):
     "Parse a gluon xml request to retrieve metadata for audio clips"
@@ -156,9 +171,9 @@ if __name__ == '__main__':
     #gb = GluonBuilder('DNPR630009AA', items)
     #r = gb.build()
     #print r
-    gp = GluonRequestParser()
+    gp = GluonMetadataResponseParser()
     x = gp.parse(sys.argv[1])
-    print [vars(z) for z in list(x)]
+    print vars(x)
             
 
 
