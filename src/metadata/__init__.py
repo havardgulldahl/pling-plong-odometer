@@ -17,7 +17,8 @@ import PyQt4.Qt as Qt
 
 import gluon
 
-GLUON_HTTP_ENDPOINT="http://localhost:8000/gluon"
+GLUON_HTTP_REPORT="http://localhost:8000/gluon"
+GLUON_HTTP_LOOKUP="http://localhost:8000/lookup/"
 
 
 
@@ -30,7 +31,7 @@ class TrackMetadata(object):
                  composer=None,
                  artist=None,
                  year=-1,
-                 tracknumber=None,
+                 recordnumber=None,
                  albumname=None,
                  copyright=None,
                  lcnumber=None,
@@ -38,7 +39,7 @@ class TrackMetadata(object):
                  ean=None,
                  catalogue=None,
                  label=None,
-                 writer=None,
+                 lyricist=None,
                  identifier=None,
                  ):
         self.filename = filename
@@ -48,16 +49,16 @@ class TrackMetadata(object):
         self.composer = composer
         self.artist = artist
         self.year = year
-        self.tracknumber = tracknumber
+        self.recordnumber = recordnumber
         self.albumname = albumname
         self.copyright = copyright
-        self.lcnumber = lcnumber
-        self.isrc = isrc
-        self.ean = ean
+        self.lcnumber = lcnumber # library of congress id
+        self.isrc = isrc # International Standard Recording Code
+        self.ean = ean # ean-13 (barcode)
         self.catalogue = catalogue
         self.label = label
-        self.writer = writer
-        self.identifier = identifier
+        self.lyricist = lyricist
+        self.identifier = identifier # system-specific identifier
         self.productionmusic = False
         self._retrieved = time.mktime(time.localtime())
 
@@ -75,7 +76,7 @@ class GluonReportWorker(Core.QThread):
     error = Core.pyqtSignal(unicode, name="error")
 
     def __init__(self, parent=None):
-        super(GluonWorker, self).__init__(parent)
+        super(GluonReportWorker, self).__init__(parent)
 
     def __del__(self):
         self.wait()
@@ -98,36 +99,44 @@ class GluonReportWorker(Core.QThread):
     def request(self, gluonpayload):
         "do an http post request with given gluon xml payload"
         data = urllib.urlencode( {"data":gluonpayload} )
-        req = urllib.urlopen(GLUON_HTTP_ENDPOINT, data)
+        req = urllib.urlopen(GLUON_HTTP_REPORT, data)
         response = req.read()
         return response
 
 class GluonLookupWorker(Core.QThread):
-    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
+    trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
+    trackFailed = Core.pyqtSignal(name="trackFailed" )
+    progress = Core.pyqtSignal(int, name="progress")
     error = Core.pyqtSignal(unicode, name="error")
 
     def __init__(self, parent=None):
-        super(GluonWorker, self).__init__(parent)
+        super(GluonLookupWorker, self).__init__(parent)
 
     def __del__(self):
         self.wait()
 
-    def load(self, clipid):
-        self.clipid = clipid
+    def load(self, filename):
+        self.filename = filename
+        self.musicid = DMAResolver.musicid(filename)
         self.start()
 
     def run(self):
-        gb = gluon.GluonLookupBuilder(self.clipid)
-        xmlreq = gb.toxml()
-        gp = gluon.GluonResponseParser()
-        response = StringIO.StringIO(self.request(xmlreq))
-        metadata = gp.parse(response, factory=TrackMetadata)
-        self.trackResolved.emit(metadata.identifier, metadata)
+        response = self.request(self.musicid)
+        if response is None:
+            return 
+        self.progress.emit(50)
+        gp = gluon.GluonMetadataResponseParser()
+        metadata = gp.parse(StringIO.StringIO(response), factory=TrackMetadata)
+        self.progress.emit(70)
+        self.trackResolved.emit(metadata)
 
-    def request(self, gluonpayload):
+    def request(self, musicid):
         "do an http post request with given gluon xml payload"
-        data = urllib.urlencode( {"data":gluonpayload} )
-        req = urllib.urlopen(GLUON_HTTP_ENDPOINT, data)
+        req = urllib.urlopen(GLUON_HTTP_LOOKUP +  musicid + '.xml')
+        if req.getcode() in (404, 403, 401, 400, 500):
+            self.trackFailed.emit()
+            self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
+            return None
         response = req.read()
         return response
 
@@ -361,7 +370,8 @@ class DMAResolver(ResolverBase):
         if md is not None:
             self.trackResolved.emit(self.filename, md)
             return
-        self.worker = DMAWorker()
+        #self.worker = DMAWorker()
+        self.worker = GluonLookupWorker()
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
@@ -409,7 +419,7 @@ class SonotonResolver(ResolverBase):
         except:
             pass
         mapping = { 'Track Name': 'title', #REMEMBER LAST SUMMER
-                    'Track Number': 'tracknumber', #SCD 821 20.0
+                    'Track Number': 'recordnumber', #SCD 821 20.0
                     'Composer': 'composer', #Mladen Franko
                     'Artist': 'artist', #(N/A for production music)
                     'Album Name': 'albumname',#ORCHESTRAL LANDSCAPES 2

@@ -6,6 +6,8 @@ import BaseHTTPServer, urlparse
 import SocketServer
 import StringIO
 import random
+import re
+import os.path
 
 from metadata.gluon import GluonRequestParser
 
@@ -98,6 +100,24 @@ class GluonHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             parsed = parser.parse(f)
             self.wfile.write(xml(list(parsed)))
             return 
+
+    def do_GET(self):
+        if self.path.startswith('/lookup/'):
+            try:
+                dmaid = re.match(r'^/lookup/([-A-Z0-9]+\.xml)$', self.path).group(1)
+                print os.path.join('.', 'dmalookup', dmaid)
+                xmlresponse = file(os.path.join('.', 'dmalookup', dmaid), 'rb').read()
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(xmlresponse)
+            except Exception, (e):
+                self.send_response(404)
+                self.end_headers()
+                self.wfile.write(e)
+
+            return
+
+
 
 
 if __name__ == '__main__':

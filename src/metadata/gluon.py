@@ -105,7 +105,7 @@ class GluonMetadataResponseParser(object):
                 md.composer = creator.find('./'+glns('name')).text
             elif creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V811':
                 # Tekstforfatter
-                md.writer = creator.find('./'+glns('name')).text
+                md.lyricist = creator.find('./'+glns('name')).text
         _a = []
         for contributor in obj.findall('.//'+glns('contributor')):
             if contributor.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V35':

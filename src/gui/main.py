@@ -119,6 +119,9 @@ class Odometer(Gui.QMainWindow):
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         self.ui.DMAButton.clicked.connect(self.gluon)
+        # making a temporary solution to pull up a report
+        #self.ui.DMAButton.clicked.connect(self.manualReport)
+        self.ui.DMAButton.setEnabled(True)
         self.ui.AUXButton.clicked.connect(self.auxReport)
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
@@ -320,14 +323,17 @@ class Odometer(Gui.QMainWindow):
         try:
             self.ui.detailsBox.currentRow = row
             self.ui.clipTitle.setText(row.metadata.title or '')
+            self.ui.clipAlbum.setText(row.metadata.albumname or '')
             self.ui.clipArtist.setText(row.metadata.artist or '')
             self.ui.clipComposer.setText(row.metadata.composer or '')
+            self.ui.clipLyricist.setText(row.metadata.lyricist or '')
             self.ui.clipYear.setText(unicode(row.metadata.year or 0))
-            self.ui.clipTracknumber.setText(row.metadata.tracknumber or '')
+            self.ui.clipRecordnumber.setText(row.metadata.recordnumber or '')
             self.ui.clipCopyright.setText(row.metadata.copyright or '')
             self.ui.clipLabel.setText(row.metadata.label or '')
             self.ui.detailsBox.show()
-        except AttributeError:
+        except AttributeError, (e):
+            print e
             self.ui.detailsBox.hide()
         self.ui.previousButton.setEnabled(self.ui.clips.itemAbove(row) is not None)
         self.ui.nextButton.setEnabled(self.ui.clips.itemBelow(row) is not None)
