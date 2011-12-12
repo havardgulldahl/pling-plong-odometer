@@ -283,6 +283,7 @@ class Odometer(Gui.QMainWindow):
         self.metadataLoaded.emit(row)
 
     def trackCompleted(self, filename, metadata):
+        #print "got metadata (%s): %s" % (filename, metadata)
         self.metadataloaded += 1
         if len(self.audioclips)  == self.metadataloaded:
             self.ui.DMAButton.setEnabled(True)

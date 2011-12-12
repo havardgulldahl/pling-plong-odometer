@@ -18,7 +18,8 @@ import PyQt4.Qt as Qt
 import gluon
 
 GLUON_HTTP_REPORT="http://localhost:8000/gluon"
-GLUON_HTTP_LOOKUP="http://localhost:8000/lookup/"
+#GLUON_HTTP_LOOKUP="http://localhost:8000/lookup/"
+GLUON_HTTP_LOOKUP="http://mamcdma02/DMA/"
 
 
 
@@ -72,8 +73,8 @@ class TrackMetadata(object):
             return ResolverBase.musicid(self.filename)
 
 class GluonReportWorker(Core.QThread):
-    reported = Core.pyqtSignal(name="reported")
-    error = Core.pyqtSignal(unicode, name="error")
+    reported = Core.pyqtSignal(name="reported") # success
+    error = Core.pyqtSignal(unicode, name="error") # failure, with error message
 
     def __init__(self, parent=None):
         super(GluonReportWorker, self).__init__(parent)
@@ -81,15 +82,17 @@ class GluonReportWorker(Core.QThread):
     def __del__(self):
         self.wait()
 
-    def load(self, prodno, clipids):
+    def load(self, prodno, clips):
         self.prodno = prodno
-        self.clipids = clipids
+        self.clips = clips
         self.start()
 
     def run(self):
-        gb = gluon.GluonReportBuilder(self.prodno, self.clipids)
+        gb = gluon.GluonReportBuilder(self.prodno, self.clips)
         xmlreq = gb.toxml()
-        response = StringIO.StringIO(self.request(xmlreq))
+        response = self.request(xmlreq)
+        if response is None:
+            self.error('Could not report to Gluon. Are you connected to the network?')
 
         if response.getvalue() == "OK":
             self.reported.emit()
@@ -99,7 +102,14 @@ class GluonReportWorker(Core.QThread):
     def request(self, gluonpayload):
         "do an http post request with given gluon xml payload"
         data = urllib.urlencode( {"data":gluonpayload} )
-        req = urllib.urlopen(GLUON_HTTP_REPORT, data)
+        try:
+            req = urllib.urlopen(GLUON_HTTP_REPORT, data)
+        except Exception, (e):
+            self.error.emit(e)
+        if req.getcode() in (400, 401, 403, 404, 500):
+            self.error.emit('Got error message %s from Gluon server when reporting' % req.getcode())
+            return None
+
         response = req.read()
         return response
 
@@ -129,6 +139,7 @@ class GluonLookupWorker(Core.QThread):
         metadata = gp.parse(StringIO.StringIO(response), factory=TrackMetadata)
         self.progress.emit(70)
         self.trackResolved.emit(metadata)
+        self.progress.emit(100)
 
     def request(self, musicid):
         "do an http post request with given gluon xml payload"
@@ -426,7 +437,7 @@ class SonotonResolver(ResolverBase):
                     'Catalogue number': 'catalogue', #821
                     'Label': 'label', #SCD
                     'Copyright Owner': 'copyright', #(This information requires login)
-                    'LC Number': 'lcdnumber', #07573
+                    'LC Number': 'lcnumber', #07573 - Library of Congress id
                   }
         for l in metadatabox.split('\n'):
             if not len(l.strip()): continue
@@ -447,7 +458,7 @@ class Gluon(Core.QObject):
     
     def __init__(self, parent=None):
         super(Gluon, self).__init__(parent)
-        self.worker = GluonWorker()
+        self.worker = GluonReportWorker()
 
     def resolve(self, prodno, clipnames):
         self.currentList = clipnames
