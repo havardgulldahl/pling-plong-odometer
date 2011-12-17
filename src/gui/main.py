@@ -18,6 +18,7 @@ import metadata
 import odometer_ui
 import odometer_rc 
 import auxreport_ui
+import prfreport_ui
 
 try:
     from gui import audioplayer
@@ -119,8 +120,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         self.ui.DMAButton.clicked.connect(self.gluon)
-        # making a temporary solution to pull up a report
-        #self.ui.DMAButton.clicked.connect(self.manualReport)
+        self.ui.DMAButton.clicked.connect(self.prfReport)
         self.ui.DMAButton.setEnabled(True)
         self.ui.AUXButton.clicked.connect(self.auxReport)
         self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
@@ -244,6 +244,7 @@ class Odometer(Gui.QMainWindow):
             r.metadata = metadata.TrackMetadata(filename=audioname)
             r.audioname = audioname
             r.clip = {'durationsecs':secs, 'durationframes':frames}
+            r.subclips = []
             self.rows[audioname] = r
             w = metadata.findResolver(audioname)
             r.setCheckState(0, Core.Qt.Unchecked)
@@ -262,6 +263,7 @@ class Odometer(Gui.QMainWindow):
                 for range in ranges:
                     frames = len(range)
                     secs = frames / fileref.timebase
+                    r.subclips.append( {'durationsecs':secs, 'durationframes':frames} )
                     sr = Gui.QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
                                                  '%ss (%sf)' % (secs, frames),
                                                  u'%sf\u2013%sf' % (range.start, range.end)
@@ -274,9 +276,15 @@ class Odometer(Gui.QMainWindow):
         row = self.rows[unicode(filename)]
         row.metadata = metadata
         if metadata.productionmusic:
-            txt = u"\u00ab%(title)s\u00bb \u2117 %(label)s"
+            if metadata.title is None and metadata.label is None:
+                txt = "Incomplete metadata. Please update manually"
+            else:
+                txt = u"\u00ab%(title)s\u00bb \u2117 %(label)s"
         else:
-            txt = u"%(artist)s: \u00ab%(title)s\u00bb \u2117 %(label)s %(year)s" 
+            if metadata.title is None and metadata.artist is None:
+                txt = "Incomplete metadata. Please update manually"
+            else:
+                txt = u"%(artist)s: \u00ab%(title)s\u00bb \u2117 %(label)s %(year)s" 
         row.setText(3, txt % vars(metadata))
         if metadata.musiclibrary == "Sonoton":
             self.ui.AUXButton.setEnabled(True)
@@ -323,15 +331,15 @@ class Odometer(Gui.QMainWindow):
     def showMetadata(self, row, col=None):
         try:
             self.ui.detailsBox.currentRow = row
-            self.ui.clipTitle.setText(row.metadata.title or '')
-            self.ui.clipAlbum.setText(row.metadata.albumname or '')
-            self.ui.clipArtist.setText(row.metadata.artist or '')
-            self.ui.clipComposer.setText(row.metadata.composer or '')
-            self.ui.clipLyricist.setText(row.metadata.lyricist or '')
+            self.ui.clipTitle.setText(row.metadata.title or 'Unknown')
+            self.ui.clipAlbum.setText(row.metadata.albumname or 'Unknown')
+            self.ui.clipArtist.setText(row.metadata.artist or 'Unknown')
+            self.ui.clipComposer.setText(row.metadata.composer or 'Unknown')
+            self.ui.clipLyricist.setText(row.metadata.lyricist or 'Unknown')
             self.ui.clipYear.setText(unicode(row.metadata.year or 0))
-            self.ui.clipRecordnumber.setText(row.metadata.recordnumber or '')
-            self.ui.clipCopyright.setText(row.metadata.copyright or '')
-            self.ui.clipLabel.setText(row.metadata.label or '')
+            self.ui.clipRecordnumber.setText(row.metadata.recordnumber or 'Unknown')
+            self.ui.clipCopyright.setText(row.metadata.copyright or 'Unknown')
+            self.ui.clipLabel.setText(row.metadata.label or 'Unknown')
             self.ui.detailsBox.show()
         except AttributeError, (e):
             print e
@@ -350,6 +358,33 @@ class Odometer(Gui.QMainWindow):
         r = clips.itemBelow(self.ui.detailsBox.currentRow)
         clips.setCurrentItem(r)
         clips.itemActivated.emit(r, -1)
+
+    def prfReport(self):
+        PRFDialog = Gui.QDialog()
+        ui = prfreport_ui.Ui_PlingPlongPRFDialog()
+        ui.setupUi(PRFDialog)
+        s = ""
+        for r in [row for row in self.rows.values() if row.checkState(0) == Core.Qt.Checked]:
+            s += u"""<dl>
+            <dt>Title:</dt><dd>%(title)s</dd>
+            <dt>Artist:</dt><dd>%(artist)s</dd>
+            <dt>Album name:</dt><dd>%(albumname)s</dd>
+            <dt>Lyricist:</dt><dd>%(lyricist)s</dd>
+            <dt>Composer:</dt><dd>%(composer)s</dd>
+            <dt>Label:</dt><dd>%(label)s</dd>
+            <dt>Recordnumber:</dt><dd>%(recordnumber)s</dd>
+            <dt>Copyright owner:</dt><dd>%(copyright)s</dd>
+            <dt>Released year:</dt><dd>%(year)s</dd>
+            </dl>""" % vars(r.metadata)
+            s += u"<p><b>Seconds in total</b>: %s" % r.clip['durationsecs']
+            if len(r.subclips):
+                s += ", where: <ol>"
+                for sc in r.subclips:
+                    s += "<li>%s</li>" % sc['durationsecs']
+                s += "</ol>"
+            s += "</p><hr>"
+        ui.textBrowser.setText(s)
+        return PRFDialog.exec_()
 
     def auxReport(self):
         s = ""
@@ -403,9 +438,9 @@ class Odometer(Gui.QMainWindow):
         s = ""
         for r in [row for row in self.rows.values() if row.checkState(0) == Core.Qt.Checked]:
             if r.metadata.productionmusic:
-                s += u"\u00ab%(title)s\u00bb\r\n\u2117 %(label)s" % vars(r.metadata)
+                s += u"%(title)s\r\n\u2117 %(label)s" % vars(r.metadata)
             else:
-                s += u"\u00ab%(title)s\u00bb\r\n%(artist)s\r\n \u2117 %(label)s %(year)s" % vars(r.metadata)
+                s += u"%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s" % vars(r.metadata)
             s += u"\r\n\r\n\r\n" 
         clipboard = self.app.clipboard()
         clipboard.setText(s)
