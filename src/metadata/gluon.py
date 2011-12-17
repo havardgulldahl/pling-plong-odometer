@@ -27,7 +27,7 @@ class glel(ET._ElementInterface):
 def glsel(parent, tag, *a, **kw):
     return ET.SubElement(parent, glns(tag), *a, **kw)
 
-class GluonBuilder(object):
+class GluonReportBuilder(object):
     "Build a gluon xml tree from a list of audio clips and their length"
     def __init__(self, prodno, metadatalist):
         print "gluonbuilder init"
