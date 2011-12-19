@@ -119,7 +119,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.nextButton.clicked.connect(self.showNextMetadata)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
-        self.ui.DMAButton.clicked.connect(self.gluon)
+        #self.ui.DMAButton.clicked.connect(self.gluon)
         self.ui.DMAButton.clicked.connect(self.prfReport)
         self.ui.DMAButton.setEnabled(True)
         self.ui.AUXButton.clicked.connect(self.auxReport)
@@ -383,7 +383,14 @@ class Odometer(Gui.QMainWindow):
                     s += "<li>%s</li>" % sc['durationsecs']
                 s += "</ol>"
             s += "</p><hr>"
-        ui.textBrowser.setText(s)
+        ui.textBrowser.setHtml(s)
+        def _save():
+            print "saving report for prf"
+            loc = Gui.QFileDialog.getSaveFileName(PRFDialog, "Save prf report")
+            f = open(unicode(loc), "wb")
+            f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
+            f.close()
+        ui.buttonBox.accepted.connect(_save)
         return PRFDialog.exec_()
 
     def auxReport(self):
