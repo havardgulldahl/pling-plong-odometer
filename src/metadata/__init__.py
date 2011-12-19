@@ -353,7 +353,7 @@ class DMAResolver(ResolverBase):
 
     @staticmethod
     def musicid(filename):
-        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}(CD|CS)\d{4})')
+        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}(CD|CS|HD|LP)\d{4})')
         g = rex.search(filename)
         try:
             return g.group(1)
@@ -381,7 +381,6 @@ class DMAResolver(ResolverBase):
         if md is not None:
             self.trackResolved.emit(self.filename, md)
             return
-        #self.worker = DMAWorker()
         self.worker = GluonLookupWorker()
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
