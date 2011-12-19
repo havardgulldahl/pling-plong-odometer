@@ -155,7 +155,7 @@ class Odometer(Gui.QMainWindow):
         if xmemlfileFromEvent(event):
             event.accept()
             return
-        self.showError("This does not seem to be a valid FCP XML file. Sorry.")
+        self.showerror("This does not seem to be a valid FCP XML file. Sorry.")
         event.ignore()
 
     def dropEvent(self, event):
@@ -180,7 +180,7 @@ class Odometer(Gui.QMainWindow):
         self._laststatusmsg = msg
         return b
 
-    def showError(self, msg):
+    def showerror(self, msg):
         "Show error message"
         return self.showstatus(msg, msgtype=StatusBox.ERROR)
 
@@ -232,6 +232,7 @@ class Odometer(Gui.QMainWindow):
             self.audioclips, self.audiofiles = self.xmemlparser.audibleranges(volume)
             self.ui.volumeInfo.setText("<i>(above %i dB)</i>" % volume.decibel)
         self.ui.clips.clear()
+        self.rows = {}
         for audioname, ranges in self.audioclips.iteritems():
             frames = len(ranges)
             if frames == 0:
@@ -253,7 +254,7 @@ class Odometer(Gui.QMainWindow):
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress) 
                 #w.trackFailed.connect( ... ?
-                w.error.connect(self.showError) 
+                w.error.connect(self.showerror) 
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname) # put the worker to work async
                 r.setCheckState(0, Core.Qt.Checked)
@@ -359,12 +360,19 @@ class Odometer(Gui.QMainWindow):
         clips.setCurrentItem(r)
         clips.itemActivated.emit(r, -1)
 
+    def itercheckedrows(self):
+        for row in self.rows.values():
+            #print row
+            if row.checkState(0) == Core.Qt.Checked: 
+                yield row
+
+
     def prfReport(self):
         PRFDialog = Gui.QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(PRFDialog)
         s = ""
-        for r in [row for row in self.rows.values() if row.checkState(0) == Core.Qt.Checked]:
+        for r in self.itercheckedrows():
             s += u"""<dl>
             <dt>Title:</dt><dd>%(title)s</dd>
             <dt>Artist:</dt><dd>%(artist)s</dd>
@@ -386,16 +394,20 @@ class Odometer(Gui.QMainWindow):
         ui.textBrowser.setHtml(s)
         def _save():
             print "saving report for prf"
-            loc = Gui.QFileDialog.getSaveFileName(PRFDialog, "Save prf report")
-            f = open(unicode(loc), "wb")
-            f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
-            f.close()
+            try:
+                loc = Gui.QFileDialog.getSaveFileName(PRFDialog, "Save prf report")
+                f = open(unicode(loc), "wb")
+                f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
+                f.close()
+                self.showstatus('Prf report saved')
+            except IOError, (e):
+                self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
         return PRFDialog.exec_()
 
     def auxReport(self):
         s = ""
-        for r in [row for row in self.rows.values() if row.checkState(0) == Core.Qt.Checked]:
+        for r in self.itercheckedrows():
             if r.metadata.label == 'Sonoton':
                 s = s + u"%s x %s \r\n" % (r.metadata.getmusicid(), r.clip['durationsecs'])
         AUXDialog = Gui.QDialog()
@@ -431,7 +443,7 @@ class Odometer(Gui.QMainWindow):
                 htmlel = html.findFirstElement('input[name=%s]' % el)
                 val = htmlel.evaluateJavaScript("this.value").toString()
                 if len(val) == 0:
-                    self.showError('"%s" cannot be blank' % el.title())
+                    self.showerror('"%s" cannot be blank' % el.title())
                     return None
                 self.settings.setValue('AUX/%s' % el, val)
             submit = html.findFirstElement('input[type=submit]')
@@ -443,7 +455,7 @@ class Odometer(Gui.QMainWindow):
 
     def creditsToClipboard(self):
         s = ""
-        for r in [row for row in self.rows.values() if row.checkState(0) == Core.Qt.Checked]:
+        for r in self.itercheckedrows():
             if r.metadata.productionmusic:
                 s += u"%(title)s\r\n\u2117 %(label)s" % vars(r.metadata)
             else:
