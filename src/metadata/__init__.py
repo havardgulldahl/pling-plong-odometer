@@ -403,7 +403,7 @@ class DMAResolver(ResolverBase):
         return self.quicklookup('creator', substring)
 
 class SonotonResolver(ResolverBase):
-    prefixes = ['SCD', 'STT', ] # TODO: add AD CNS FWM ISCD SAS SCD SCDC SCDV STT
+    prefixes = ['SCD', 'STT', 'AUXMP'] # TODO: add AD CNS FWM ISCD SAS SCD SCDC SCDV STT
     name = 'Sonoton'
     urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
     #urlbase = 'http://localhost:8000/sonoton.html?%s'
