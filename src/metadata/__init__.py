@@ -403,10 +403,19 @@ class DMAResolver(ResolverBase):
         return self.quicklookup('creator', substring)
 
 class SonotonResolver(ResolverBase):
-    prefixes = ['SCD', 'STT', ] # TODO: add AD CNS FWM ISCD SAS SCD SCDC SCDV STT
+    prefixes = ['SCD', 'STT', 'AD', 'CNS', 'FWM', 'ISCD', 'SAS', 'SCDC', 'SCDV',]
     name = 'Sonoton'
     urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
     #urlbase = 'http://localhost:8000/sonoton.html?%s'
+
+    def __propermusicid(filename):
+        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}(CD|CS|HD|LP)\d{4})')
+        g = rex.search(filename)
+        try:
+            return g.group(1)
+        except AttributeError: #no match
+            print "oh noes, could not understand this dma id:",filename
+            return None
 
     @staticmethod
     def musicid(filename):
@@ -418,6 +427,13 @@ class SonotonResolver(ResolverBase):
 
         """
         return os.path.splitext(filename)[0].split('_')[0]
+
+    def getlabel(self, hint):
+        "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
+        labelmap = {'SCD':'Sonoton catalogue',
+                    'STT':'Sonoton again',
+                   }
+        return labelmap.get(hint, hint) # return hint verbatim if it's not in map
 
     def parse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
@@ -434,7 +450,7 @@ class SonotonResolver(ResolverBase):
                     'Artist': 'artist', #(N/A for production music)
                     'Album Name': 'albumname',#ORCHESTRAL LANDSCAPES 2
                     'Catalogue number': 'catalogue', #821
-                    'Label': 'label', #SCD
+                    'Label': '_label', #SCD
                     'Copyright Owner': 'copyright', #(This information requires login)
                     'LC Number': 'lcnumber', #07573 - Library of Congress id
                   }
@@ -443,8 +459,13 @@ class SonotonResolver(ResolverBase):
             meta, data = [s.strip() for s in l.split(':')]
             setattr(metadata, mapping[meta], data)
         metadata.productionmusic = True
-        metadata.label = 'Sonoton'
+        metadata.label = self.getlabel(metadata._label)
         self.trackResolved.emit(self.filename, metadata)
+
+class AUXResolver(SonotonResolver):
+    prefixes = ['AUXMP_',] 
+    name = 'AUX Publishing'
+    urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
 
 def findResolver(filename):
     resolvers = [ DMAResolver(), SonotonResolver(), ]
