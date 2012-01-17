@@ -1,6 +1,6 @@
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011
+# (C) 2011-2012
 
 import os
 import time
@@ -14,6 +14,7 @@ import PyQt4.QtCore as Core
 import PyQt4.QtGui as Gui
 import PyQt4.QtWebKit as Web
 import PyQt4.Qt as Qt
+import mutagen
 
 import gluon
 
@@ -403,19 +404,16 @@ class DMAResolver(ResolverBase):
         return self.quicklookup('creator', substring)
 
 class SonotonResolver(ResolverBase):
-    prefixes = ['SCD', 'STT', 'AD', 'CNS', 'FWM', 'ISCD', 'SAS', 'SCDC', 'SCDV',]
+    prefixes = [ 'SCD', 'SAS', 'STT', 'SDCV',]
     name = 'Sonoton'
     urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
     #urlbase = 'http://localhost:8000/sonoton.html?%s'
-
-    def __propermusicid(filename):
-        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}(CD|CS|HD|LP)\d{4})')
-        g = rex.search(filename)
-        try:
-            return g.group(1)
-        except AttributeError: #no match
-            print "oh noes, could not understand this dma id:",filename
-            return None
+    labelmap = {
+                'SCD':'Sonoton',
+                'SAS':'Sonoton Authentic Series',
+                'STT':'Sonoton Trailer Tracks',
+                'SDCV':'Sonoton Virtual CDs',
+               }
 
     @staticmethod
     def musicid(filename):
@@ -426,14 +424,17 @@ class SonotonResolver(ResolverBase):
         STT002015_NAME_OF_SONG -> STT002015
 
         """
-        return os.path.splitext(filename)[0].split('_')[0]
+        rex = re.compile(r'^((%s)\d{6})' % '|'.join(self.prefixes))
+        g = rex.search(filename)
+        try:
+            return g.group(1)
+        except AttributeError: #no match
+            print "oh noes, could not understand this Sonoton id:",filename
+            return None
 
     def getlabel(self, hint):
         "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
-        labelmap = {'SCD':'Sonoton catalogue',
-                    'STT':'Sonoton again',
-                   }
-        return labelmap.get(hint, hint) # return hint verbatim if it's not in map
+        return self.labelmap.get(hint, hint) # return hint verbatim if it's not in map
 
     def parse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
@@ -463,12 +464,64 @@ class SonotonResolver(ResolverBase):
         self.trackResolved.emit(self.filename, metadata)
 
 class AUXResolver(SonotonResolver):
-    prefixes = ['AUXMP_',] 
+    prefixes = ['AUXMP_', 'CNS', 'DK', 'ECM', 'FWM', 'HGR', 'ISCD', 'JW', 'CANDY', 'PPM', 'SONIA',
+        'SCD', 'SAS', 'STT', 'SDCV', 'STRIP', 'TM', 'TREDE', 'TSU', 'AD', 'BAC',
+        'BM', 'CCS', 'CCCD', 'CAVCD', 'CAVT', 'CLC', 'CNS',]
+    labelmap = {
+                'AD':'Adapt',
+                'BAC':'Big and Clever Music',
+                'BM':'Brilliant Music',
+                'CCS':'Cavendish Classic Series',
+                'CCCD':'Cavendish Classic',
+                'CAVCD':'Cavendish Music',
+                'CAVT':'Cavendish Trailers',
+                'CLC':'Commercial Length Cuts',
+                'CNS':'Commercials Non Stop',
+                'DK':'DramaKing',
+                'ECM':'Extra Chilli Music',
+                'FWM':'Frameworks',
+                'HGR':'Hella Good Records',
+                'ISCD':'Intersound',
+                'JW':'JW Media Music',
+                'CANDY':'Music Candy',
+                'PPM':'Post Production Music',
+                'SONIA':'Sonia Classics',
+                'SCD':'Sonoton',
+                'SAS':'Sonoton Authentic Series',
+                'STT':'Sonoton Trailer Tracks',
+                'SDCV':'Sonoton Virtual CDs',
+                'STRIP':'Strip Sounds',
+                'TM':'Telemusic',
+                'TREDE':'Trede Collection',
+                'TSU':'Tsunami Sounds',
+                'UBMM':'UBM Media',
+                
+               }
     name = 'AUX Publishing'
     urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
 
+    @staticmethod
+    def musicid(filename):
+        """Returns musicid from filename.  """
+        rex = re.compile(r'^AUXMP_((%s)\d{6})' % '|'.join(self.prefixes))
+        g = rex.search(filename)
+        try:
+            return g.group(1)
+        except AttributeError: #no match
+            print "oh noes, could not understand this AUX id:",filename
+            return None
+
+    def resolve(self, filename):
+        taggedmd = taggedfileparser(filename) # try to read embedded metadata, e.g. id3 tags
+        if taggedmd is None:
+            self.trackResolved.emit(self.filename, taggedmd)
+            return
+        else:
+            super(AUXResolver, self).resolve(filename) # fall back to network lookup
+
+
 def findResolver(filename):
-    resolvers = [ DMAResolver(), SonotonResolver(), ]
+    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), ]
     for resolver in resolvers:
         if resolver.accepts(filename):
             return resolver
@@ -500,6 +553,27 @@ class webdoc(Core.QObject):
     def load(self):
         print "loading url: ", self.url
         self.frame.load(Core.QUrl(self.url))
+
+def taggedfileparser(filename):
+    """Extract embedded tags/metadata from the audio file. Requires that the file is accessible"""
+    _filemd = mutagen.File(filename, easy=True)
+    if _filemd is None or _filemd['title'] is None or _filemd['composer'] is None:
+        return None
+    _map = {'album': 'album',
+            'organization':'musiclibrary',
+            'copyright':'copyright',
+            'artist':'artist',
+            'title':'title',
+            'composer':'composer',
+            'isrc':'isrc',
+            'tracknumber':'tracknumber',
+            'date','year',
+           }
+    md = TrackMetadata(filename=filename)
+    for fromfield, tofield in _map.iteritems():
+        if _filemd.haskey(fromfield):
+            md.setattr(tofield) = _filemd[fromfield]
+    return md
 
 def mdprint(f,m):
     print "filename: ",f
