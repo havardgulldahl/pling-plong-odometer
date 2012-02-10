@@ -123,7 +123,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.DMAButton.clicked.connect(self.prfReport)
         self.ui.DMAButton.setEnabled(True)
         self.ui.AUXButton.clicked.connect(self.auxReport)
-        self.ui.creditsButton.clicked.connect(self.creditsToClipboard)
+        self.ui.creditsButton.clicked.connect(self.credits)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
         self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmemliter.Volume(gain=float(i))))
@@ -287,7 +287,7 @@ class Odometer(Gui.QMainWindow):
             else:
                 txt = u"%(artist)s: \u00ab%(title)s\u00bb \u2117 %(label)s %(year)s" 
         row.setText(3, txt % vars(metadata))
-        if metadata.musiclibrary == "Sonoton":
+        if metadata.musiclibrary in("Sonoton", 'AUX Publishing'):
             self.ui.AUXButton.setEnabled(True)
         self.metadataLoaded.emit(row)
 
@@ -386,7 +386,7 @@ class Odometer(Gui.QMainWindow):
             </dl>""" % vars(r.metadata)
             s += u"<p><b>Seconds in total</b>: %s" % r.clip['durationsecs']
             if len(r.subclips):
-                s += ", where: <ol>"
+                s += ", in these subclips: <ol>"
                 for sc in r.subclips:
                     s += "<li>%s</li>" % sc['durationsecs']
                 s += "</ol>"
@@ -453,47 +453,37 @@ class Odometer(Gui.QMainWindow):
         ui.buttonBox.accepted.connect(reportsubmit)
         return AUXDialog.exec_()
 
-    def creditsToClipboard(self):
+    def credits(self):
+        _labels_seen = []
         s = ""
         for r in self.itercheckedrows():
             if r.metadata.productionmusic:
-                s += u"%(title)s\r\n\u2117 %(label)s" % vars(r.metadata)
+                if not r.metadata.label in _labels_seen:
+                    s += u'%(musiclibrary)s\r\n\u2117 %(label)s' % vars(r.metadata)
+                    _labels_seen.append(r.metadata.label)
             else:
                 s += u"%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s" % vars(r.metadata)
             s += u"\r\n\r\n\r\n" 
-        clipboard = self.app.clipboard()
-        clipboard.setText(s)
-        self.msg.emit("End credit metadata copied to clipboard.")
+        PRFDialog = Gui.QDialog()
+        ui = prfreport_ui.Ui_PlingPlongPRFDialog()
+        ui.setupUi(PRFDialog)
+        ui.textBrowser.setText(s)
+        def _save():
+            print "saving credits"
+            try:
+                loc = Gui.QFileDialog.getSaveFileName(PRFDialog, "Save credits")
+                f = open(unicode(loc), "wb")
+                f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
+                f.close()
+                self.showstatus('End credits saved')
+            except IOError, (e):
+                self.showerror(e)
+        ui.buttonBox.accepted.connect(_save)
+        return PRFDialog.exec_()
 
     def checkUsage(self):
-        maxArtists = None
-        maxTitlePerArtist = 3
-        maxTitleLength = 30
-        artists = {}
-        icon = Gui.QIcon(':/gfx/warn')
-        for filename, row in self.rows.iteritems():
-            try:
-                md = row.metadata
-                if row.clip.audibleDuration > maxTitleLength:
-                    row.setIcon(2, icon)
-                    row.setToolTip(2, "You're currently not allowed to peruse more than %s secs from each clip" % maxTitleLength)
-                if not artists.has_key(md.artist):
-                    artists[md.artist] = []
-                artists[md.artist].append(md.title)
-            except AttributeError:
-                pass
-
-        bads = [ (a,t) for a,t in artists.iteritems() if len(t) > maxTitlePerArtist ]
-        if bads:
-            self.ui.errors.show()
-            self.ui.errorText.setText("""<h1>Warning</h1><p>Current agreements set a limit of %i titles per artist,
-                    but in this sequence:</p><ul>%s<ul>""" % (maxTitlePerArtist, 
-                        "".join(["<li>%s: %s times</li>" % (a,len(t)) for a,t in bads])))
-            return False
-        else:
-            self.ui.errors.hide()
-            return True
-
+        "To be reimplemented whenever there usage agreements change"
+        return True # TODO: check FONO status, calculate Apollo pricing
             
     def gluon(self):
         #ALL  data loaded
