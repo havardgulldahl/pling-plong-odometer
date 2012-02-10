@@ -409,8 +409,8 @@ class Odometer(Gui.QMainWindow):
     def auxReport(self):
         s = ""
         for r in self.itercheckedrows():
-            if r.metadata.label == 'Sonoton':
-                s = s + u"%s x %s \r\n" % (r.metadata.getmusicid(), r.clip['durationsecs'])
+            if r.metadata.musiclibrary == "AUX Publishing":
+                s = s + u"%s x %s sek \r\n" % (r.metadata.getmusicid(), r.clip['durationsecs'])
         AUXDialog = Gui.QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(AUXDialog)
@@ -487,6 +487,7 @@ class Odometer(Gui.QMainWindow):
         if col != 2: 
             return False
         editor = Gui.QDoubleSpinBox(parent=self.ui.clips)
+        editor.setMaxiumum(10000.0)
         editor.setValue(row.clip['durationsecs'])
         editor.setSuffix('s')
         def editingFinished():
