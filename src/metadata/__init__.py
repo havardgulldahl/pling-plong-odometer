@@ -243,10 +243,10 @@ class ResolverBase(Core.QObject):
 
     prefixes = [] # a list of file prefixes that this resolver recognizes
     name = 'general'
-    error = Core.pyqtSignal(unicode, name="error" )
-    trackFailed = Core.pyqtSignal(unicode, name="trackFailed" )
-    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" )
-    trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" )
+    error = Core.pyqtSignal(unicode, name="error" ) # error message
+    trackFailed = Core.pyqtSignal(unicode, name="trackFailed" ) # filename
+    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" ) # filename, metadataobj
+    trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" ) # filename, progress 0-100
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
     def __init__(self, parent=None):
@@ -272,12 +272,13 @@ class ResolverBase(Core.QObject):
         #time.sleep(random.random() * 4)
         self.trackResolved.emit(self.filename, md)
     
-    def resolve(self, filename):
+    def resolve(self, filename, fromcache=True):
         self.filename = filename
-        md = self.fromcache()
-        if md is not None:
-            self.trackResolved.emit(self.filename, md)
-            return
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                self.trackResolved.emit(self.filename, md)
+                return
         self.doc = webdoc(self.filename, self.url(filename), parent=None)
         self.doc.frame.loadFinished.connect(self.parse)
         self.doc.page.loadProgress.connect(self.progress)
@@ -376,12 +377,13 @@ class DMAResolver(ResolverBase):
         self.progress(100)
         self.trackResolved.emit(self.filename, dummymetadata)
 
-    def resolve(self, filename):
+    def resolve(self, filename, fromcache=True):
         self.filename = filename
-        md = self.fromcache()
-        if md is not None:
-            self.trackResolved.emit(self.filename, md)
-            return
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                self.trackResolved.emit(self.filename, md)
+                return
         self.worker = GluonLookupWorker()
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
@@ -438,6 +440,10 @@ class SonotonResolver(ResolverBase):
 
     def parse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
+        if len(metadatabox.strip()) == 0:
+            self.trackFailed.emit(self.filename)
+            self.error.emit("Could not get info on %s. Lookup failed" % self.filename)
+            return
         metadata = TrackMetadata(filename=self.doc.filename, musiclibrary=self.name)
         try:
             duration = unicode(self.doc.frame.findAllElements("div[style='top:177px;']")[1].toInnerXml())
@@ -498,26 +504,27 @@ class AUXResolver(SonotonResolver):
                 
                }
     name = 'AUX Publishing'
-    urlbase = 'http://www.sonofind.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr'
+    urlbase = 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr&lyr=0'
 
     @staticmethod
     def musicid(filename):
         """Returns musicid from filename.  """
-        rex = re.compile(r'^AUXMP_((%s)\d{6})' % '|'.join(self.prefixes))
+        rex = re.compile(r'^((AUXMP_)?((%s)\d{6}))' % '|'.join(AUXResolver.prefixes))
         g = rex.search(filename)
         try:
-            return g.group(1)
+            print g.group(3)
+            return g.group(3)
         except AttributeError: #no match
             print "oh noes, could not understand this AUX id:",filename
             return None
 
-    def resolve(self, filename):
+    def resolve(self, filename, fromcache=True):
         taggedmd = taggedfileparser(filename) # try to read embedded metadata, e.g. id3 tags
-        if taggedmd is None:
-            self.trackResolved.emit(self.filename, taggedmd)
+        if taggedmd is not None:
+            self.trackResolved.emit(filename, taggedmd)
             return
         else:
-            super(AUXResolver, self).resolve(filename) # fall back to network lookup
+            super(AUXResolver, self).resolve(filename, fromcache) # fall back to network lookup
 
 
 def findResolver(filename):
@@ -556,7 +563,10 @@ class webdoc(Core.QObject):
 
 def taggedfileparser(filename):
     """Extract embedded tags/metadata from the audio file. Requires that the file is accessible"""
-    _filemd = mutagen.File(filename, easy=True)
+    try:
+        _filemd = mutagen.File(filename, easy=True)
+    except IOError: # file isn't accessible on this system
+        return None
     if _filemd is None or _filemd['title'] is None or _filemd['composer'] is None:
         return None
     _map = {'album': 'album',
@@ -567,12 +577,12 @@ def taggedfileparser(filename):
             'composer':'composer',
             'isrc':'isrc',
             'tracknumber':'tracknumber',
-            'date','year',
+            'date':'year',
            }
     md = TrackMetadata(filename=filename)
     for fromfield, tofield in _map.iteritems():
         if _filemd.haskey(fromfield):
-            md.setattr(tofield) = _filemd[fromfield]
+            md.setattr(tofield, _filemd[fromfield])
     return md
 
 def mdprint(f,m):
@@ -580,7 +590,22 @@ def mdprint(f,m):
     print "metadata: ", vars(m)
 
 if __name__ == '__main__':
+    import signal
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     #filename = 'SCD082120.wav'
-    filename = 'NONRT900497LP0205_xxx.wav'
+    filename = 'AUXMP_SCD082120.wav'
+    filename = 'AUXMP_AD002306.mp3'
+    #filename = 'NONRT900497LP0205_xxx.wav'
+    metadata = None
+    def mymeta(filename, _metadata):
+        metadata = _metadata
+        print "mymeta:", vars(metadata)
+
     app = Gui.QApplication(sys.argv)
-    app.exec_()
+    resolver = findResolver(filename)
+    resolver.trackResolved.connect(mymeta)
+    resolver.resolve(filename, fromcache=False)
+    #doc = webdoc(filename, 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=SCD082120&w=tr&lyr=0')
+    #doc.load()
+    sys.exit(app.exec_())
