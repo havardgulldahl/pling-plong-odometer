@@ -126,6 +126,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.creditsButton.clicked.connect(self.credits)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
+        self.ui.clips.itemDoubleClicked.connect(self.editDuration) # manually override duration column
         self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmemliter.Volume(gain=float(i))))
         self.ui.actionAbout_Odometer.triggered.connect(lambda: self.showstatus("About odometer"))
         self.ui.actionAbout_Qt.triggered.connect(lambda: self.showstatus("About Qt"))
@@ -480,6 +481,21 @@ class Odometer(Gui.QMainWindow):
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
         return PRFDialog.exec_()
+
+    def editDuration(self, row, col): # called when double clicked
+        "Replace duration column with a spinbox to manually change value"
+        if col != 2: 
+            return False
+        editor = Gui.QDoubleSpinBox(parent=self.ui.clips)
+        editor.setValue(row.clip['durationsecs'])
+        editor.setSuffix('s')
+        def editingFinished():
+            val = float(editor.value())
+            row.clip['durationsecs'] = val
+            self.ui.clips.removeItemWidget(row, col)
+            row.setText(2, unicode(val)+'s')
+        editor.editingFinished.connect(editingFinished)
+        self.ui.clips.setItemWidget(row, col, editor)
 
     def checkUsage(self):
         "To be reimplemented whenever there usage agreements change"
