@@ -14,6 +14,7 @@
     <file alias="notes">../../NOTES</file>
     <file alias="readme">../../README</file>
     <file alias="usage">../../USAGE.html</file>
+    <file alias="version">../../VERSION</file>
   </qresource>
   <qresource prefix="data"/>
 </RCC>

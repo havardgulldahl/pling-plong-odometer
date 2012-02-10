@@ -512,7 +512,6 @@ class AUXResolver(SonotonResolver):
         rex = re.compile(r'^((AUXMP_)?((%s)\d{6}))' % '|'.join(AUXResolver.prefixes))
         g = rex.search(filename)
         try:
-            print g.group(3)
             return g.group(3)
         except AttributeError: #no match
             print "oh noes, could not understand this AUX id:",filename
