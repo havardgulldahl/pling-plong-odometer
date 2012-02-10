@@ -95,7 +95,7 @@ class Odometer(Gui.QMainWindow):
     loaded = Core.pyqtSignal()
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
 
-    def __init__(self, xmemlfile=None, volume=0.05, parent=None):
+    def __init__(self, xmemlfile=None, volume=0.01, parent=None):
         super(Odometer, self).__init__(parent)
         self.audioclips = {}
         self.workers = []
