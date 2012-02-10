@@ -444,7 +444,7 @@ p, li { white-space: pre-wrap; }
          <bool>false</bool>
         </property>
         <property name="text">
-         <string>Til &amp;PRF</string>
+         <string>&amp;PRF report</string>
         </property>
        </widget>
       </item>
@@ -454,10 +454,20 @@ p, li { white-space: pre-wrap; }
          <bool>false</bool>
         </property>
         <property name="toolTip">
-         <string>Open a report form for Sonoton production music</string>
+         <string>Open a report form for AUX production music</string>
         </property>
         <property name="text">
-         <string>&amp;Sonoton report</string>
+         <string>&amp;AUX report</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="ApolloButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Apollo report</string>
         </property>
        </widget>
       </item>
@@ -482,8 +492,11 @@ p, li { white-space: pre-wrap; }
         <property name="enabled">
          <bool>false</bool>
         </property>
+        <property name="toolTip">
+         <string>Create a list that is suitable for end credits.</string>
+        </property>
         <property name="text">
-         <string>&amp;Rulletekst</string>
+         <string>Credits</string>
         </property>
        </widget>
       </item>
