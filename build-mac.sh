@@ -10,11 +10,20 @@ function error {
 
 # building pling plong odometer for mac os x
 
+# some settings
+
+DROPBOXURL=http://dl.dropbox.com/u/12128173;
+VERSION=$(date +"%Y-%m-%d");
+
 # update all generated code 
 
 echo "Generating code for UX"
 pyuic4-2.7 -o src/gui/odometer_ui.py src/gui/pling-plong-odometer.ui || error "pyuic failed"
-pyrcc4-2.7 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyuic failed"
+
+# store settings in files, to be picked up by pyqt resource system
+echo "$DROPBOXURL" > ./DROPBOXURL;
+echo "$VERSION" > ./VERSION;
+pyrcc4-2.7 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
 # something for translations?
 
@@ -36,15 +45,14 @@ mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
 
 # create dmg images since all mac heads like to mount archives
 echo "Creating dmg image"
-VERSION=$(cat VERSION);
 DMGNAME=pling-plong-odometer-$VERSION.dmg 
 hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer" -fs "HFS+" -srcfolder "dist/" || error "Failed to create dmg"
 
 # publish to dropbox
 echo "Publishing to dropbox"
-DROPBOXURL=http://dl.dropbox.com/u/12128173/$DMGNAME;
+DMGURL=$DROPBOXURL/$DMGNAME;
 cp "$DMGNAME" $HOME/Dropbox/Public/"$DMGNAME" || error "Copying to dropbox failed"
-echo "$VERSION:$DROPBOXURL" > $HOME/Dropbox/Public/odometerversion.txt
+echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/odometerversion.txt
 
 echo "Finished. Take a look at $DMGNAME"
-echo "Online: $DROPBOXURL"; 
+echo "Online: $DMGURL"; 

@@ -5,6 +5,8 @@
 
 import sys, os.path
 import time
+import datetime
+import urllib
 from PyQt4.uic import loadUi
 import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
@@ -90,6 +92,20 @@ class StatusBox(Gui.QWidget):
         self.anim = anim
         self.anim.start()
 
+def readResourceFile(qrcPath):
+    """Read qrc file and return QString.
+
+    'qrcPath' is ':/path/name', for example ':/txt/about.html'
+    """
+    f = Core.QFile(qrcPath)
+    if not f.open(Core.QIODevice.ReadOnly | Core.QIODevice.Text):
+        raise IOError(u"Could not read resource '%s'" % qrcPath)
+    t = Core.QTextStream(f)
+    t.setCodec("UTF-8")
+    s = Core.QString(t.readAll())
+    f.close()
+    return s
+
 class Odometer(Gui.QMainWindow):
     msg = Core.pyqtSignal(unicode, name="msg")
     loaded = Core.pyqtSignal()
@@ -128,9 +144,11 @@ class Odometer(Gui.QMainWindow):
         self.ui.clips.itemActivated.connect(self.showMetadata)
         self.ui.clips.itemDoubleClicked.connect(self.editDuration) # manually override duration column
         self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmemliter.Volume(gain=float(i))))
-        self.ui.actionAbout_Odometer.triggered.connect(lambda: self.showstatus("About odometer"))
-        self.ui.actionAbout_Qt.triggered.connect(lambda: self.showstatus("About Qt"))
-        self.ui.actionConfig.triggered.connect(lambda: self.showstatus("About Config"))
+        self.ui.actionAbout_Odometer.triggered.connect(self.showAbout)
+        self.ui.actionHelp.triggered.connect(self.showHelp)
+        self.ui.actionLicenses.triggered.connect(self.showLicenses)
+        self.ui.actionCheck_for_updates.triggered.connect(self.showCheckForUpdates)
+        #self.ui.actionConfig.triggered.connect(lambda: self.showstatus("About Config"))
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
         self.ui.dropIcon = Svg.QSvgWidget(':/gfx/graystar', self.ui.clips)
@@ -188,6 +206,42 @@ class Odometer(Gui.QMainWindow):
     def closestatusboxes(self):
         for b in self.statusboxes:
             b.close()
+
+    def showAbout(self):
+        _aboutText = readResourceFile(':/txt/about')
+        _version = readResourceFile(':/txt/version')
+        _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', _version))
+
+    def showHelp(self):
+        HelpDialog = Gui.QDialog()
+        ui = prfreport_ui.Ui_PlingPlongPRFDialog()
+        ui.setupUi(HelpDialog)
+        _helpText = readResourceFile(':/txt/help_no')
+        ui.textBrowser.setHtml(_helpText)
+        HelpDialog.setWindowTitle('Help')
+        return HelpDialog.exec_()
+
+    def showLicenses(self):
+        _licenseText = readResourceFile(':/txt/license')
+        _box = Gui.QMessageBox(self)
+        _box.setText(u'This project is free software')
+        _box.setInformativeText('You may use and redistribute it according to the GPL license, version 3')
+        _box.setDetailedText(_licenseText)
+        return _box.exec_()
+
+    def showCheckForUpdates(self):
+        _dropboxUrl = unicode(readResourceFile(':/txt/dropbox_url'))
+        _versionFile = urllib.urlopen('%s/odometerversion.txt' % _dropboxUrl).read()
+        _ver, _url = _versionFile.split('|')
+        def _date(s):
+            return datetime.datetime.strptime(s.strip(), "%Y-%m-%d").date()
+        _currentVersion = _date(unicode(readResourceFile(':/txt/version')))
+        _onlineVersion = _date(_ver)
+        if _currentVersion < _onlineVersion:
+            # out of date
+            _box = Gui.QMessageBox.warning(self, 'Oooooo!', 'Odometer is out of date. \nGet the new version: %s' % _url)
+        else:
+            _box = Gui.QMessageBox.information(self, 'Relax', 'Odometer is up to date')
 
     def clicked(self, qml):
         lastdir = self.settings.value('lastdir', '').toString()
@@ -480,6 +534,7 @@ class Odometer(Gui.QMainWindow):
             except IOError, (e):
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
+        PRFDialog.setWindowTitle('Credits')
         return PRFDialog.exec_()
 
     def editDuration(self, row, col): # called when double clicked
