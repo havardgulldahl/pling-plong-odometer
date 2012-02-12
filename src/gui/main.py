@@ -231,11 +231,15 @@ class Odometer(Gui.QMainWindow):
 
     def showCheckForUpdates(self):
         _dropboxUrl = unicode(readResourceFile(':/txt/dropbox_url'))
-        _versionFile = urllib.urlopen('%s/odometerversion.txt' % _dropboxUrl).read()
+        if sys.platform == 'darwin':
+            _platform = 'mac'
+        else:
+            _platform = 'win'
+        _versionFile = urllib.urlopen('%s/odometerversion_%s.txt' % (_dropboxUrl, _platform)).read()
         _ver, _url = _versionFile.split('|')
         def _date(s):
             return datetime.datetime.strptime(s.strip(), "%Y-%m-%d").date()
-        _currentVersion = _date(unicode(readResourceFile(':/txt/version')))
+        _currentVersion = _date(unicode(readResourceFile(':/txt/version_%s' % _platform)))
         _onlineVersion = _date(_ver)
         if _currentVersion < _onlineVersion:
             # out of date

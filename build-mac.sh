@@ -52,7 +52,7 @@ hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer" -fs "HFS+" -srcfolder "dis
 echo "Publishing to dropbox"
 DMGURL=$DROPBOXURL/$DMGNAME;
 cp "$DMGNAME" $HOME/Dropbox/Public/"$DMGNAME" || error "Copying to dropbox failed"
-echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/odometerversion-mac.txt
+echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/odometerversion_mac.txt
 
 echo "Finished. Take a look at $DMGNAME"
 echo "Online: $DMGURL"; 
