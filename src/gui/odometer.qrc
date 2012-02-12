@@ -13,8 +13,10 @@
     <file alias="license">../../LICENSE</file>
     <file alias="notes">../../NOTES</file>
     <file alias="readme">../../README</file>
-    <file alias="usage">../../USAGE.html</file>
+    <file alias="help_no">../../HELP.no.html</file>
     <file alias="version">../../VERSION</file>
+    <file alias="about">../../ABOUT</file>
+    <file alias="dropbox_url">../../DROPBOXURL</file>
   </qresource>
   <qresource prefix="data"/>
 </RCC>

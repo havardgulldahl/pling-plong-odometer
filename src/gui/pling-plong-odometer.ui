@@ -517,10 +517,10 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>About</string>
     </property>
-    <addaction name="actionAbout_Qt_2"/>
     <addaction name="actionAbout_Odometer"/>
-    <addaction name="actionUsage"/>
+    <addaction name="actionHelp"/>
     <addaction name="actionLicenses"/>
+    <addaction name="actionCheck_for_updates"/>
    </widget>
    <addaction name="menu_About"/>
   </widget>
@@ -530,34 +530,25 @@ p, li { white-space: pre-wrap; }
     <string>About ♫ ♪ Odometer</string>
    </property>
   </action>
-  <action name="actionAbout_Qt">
-   <property name="text">
-    <string>About Qt</string>
-   </property>
-  </action>
-  <action name="actionAbout_Echonest">
-   <property name="text">
-    <string>About Echo Nest</string>
-   </property>
-  </action>
-  <action name="actionConfig">
-   <property name="text">
-    <string>Setup...</string>
-   </property>
-  </action>
   <action name="actionLicenses">
    <property name="text">
     <string>Licenses</string>
    </property>
   </action>
-  <action name="actionUsage">
+  <action name="actionHelp">
    <property name="text">
-    <string>Usage</string>
+    <string>Help</string>
+   </property>
+   <property name="toolTip">
+    <string>Show a help document</string>
    </property>
   </action>
-  <action name="actionAbout_Qt_2">
+  <action name="actionCheck_for_updates">
    <property name="text">
-    <string>About Qt</string>
+    <string>Check for updates...</string>
+   </property>
+   <property name="toolTip">
+    <string>Check for updates online</string>
    </property>
   </action>
  </widget>
