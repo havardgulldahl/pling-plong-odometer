@@ -14,7 +14,8 @@
     <file alias="notes">../../NOTES</file>
     <file alias="readme">../../README</file>
     <file alias="help_no">../../HELP.no.html</file>
-    <file alias="version">../../VERSION</file>
+    <file alias="version_mac">../../VERSIONMAC</file>
+    <file alias="version_win">../../VERSIONWIN</file>
     <file alias="about">../../ABOUT</file>
     <file alias="dropbox_url">../../DROPBOXURL</file>
   </qresource>
