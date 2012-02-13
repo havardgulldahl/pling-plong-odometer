@@ -518,14 +518,13 @@ class Odometer(Gui.QMainWindow):
         for r in self.itercheckedrows():
             if r.metadata.productionmusic:
                 if not r.metadata.label in _labels_seen:
-                    s += u'%(musiclibrary)s\r\n\u2117 %(label)s' % vars(r.metadata)
+                    s += u'%(musiclibrary)s\r\n\u2117 %(label)s\r\n\r\n' % vars(r.metadata)
                     _labels_seen.append(r.metadata.label)
             else:
-                s += u"%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s" % vars(r.metadata)
-            s += u"\r\n\r\n\r\n" 
-        PRFDialog = Gui.QDialog()
+                s += u'%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s\r\n\r\n' % vars(r.metadata)
+        CreditsDialog = Gui.QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
-        ui.setupUi(PRFDialog)
+        ui.setupUi(CreditsDialog)
         ui.textBrowser.setText(s)
         def _save():
             print "saving credits"
@@ -538,8 +537,8 @@ class Odometer(Gui.QMainWindow):
             except IOError, (e):
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
-        PRFDialog.setWindowTitle('Credits')
-        return PRFDialog.exec_()
+        CreditsDialog.setWindowTitle('Credits')
+        return CreditsDialog.exec_()
 
     def editDuration(self, row, col): # called when double clicked
         "Replace duration column with a spinbox to manually change value"
