@@ -470,8 +470,8 @@ class SonotonResolver(ResolverBase):
         self.trackResolved.emit(self.filename, metadata)
 
 class AUXResolver(SonotonResolver):
-    prefixes = ['AUXMP_', 'CNS', 'DK', 'ECM', 'FWM', 'HGR', 'ISCD', 'JW', 'CANDY', 'PPM', 'SONIA',
-        'SCD', 'SAS', 'STT', 'SDCV', 'STRIP', 'TM', 'TREDE', 'TSU', 'AD', 'BAC',
+    prefixes = ['AUXMP_', 'CNS', 'DK', 'ECM', 'FWM', 'HGR', 'ISCD', 'JW', 'CAND', 'PPM', 'SONIA',
+        'SCD', 'SCDC', 'SAS', 'STT', 'STTV', 'SCDV', 'STRIP', 'TM', 'TREDE', 'TSU', 'AD', 'BAC',
         'BM', 'CCS', 'CCCD', 'CAVCD', 'CAVT', 'CLC', 'CNS',]
     labelmap = {
                 'AD':'Adapt',
@@ -489,13 +489,15 @@ class AUXResolver(SonotonResolver):
                 'HGR':'Hella Good Records',
                 'ISCD':'Intersound',
                 'JW':'JW Media Music',
-                'CANDY':'Music Candy',
+                'CAND':'Music Candy',
                 'PPM':'Post Production Music',
                 'SONIA':'Sonia Classics',
                 'SCD':'Sonoton',
+                'SCDC':'Sonoton Classical',
                 'SAS':'Sonoton Authentic Series',
                 'STT':'Sonoton Trailer Tracks',
-                'SDCV':'Sonoton Virtual CDs',
+                'STTV':'Sonoton Trailer Tracks V',
+                'SCDV':'Sonoton Virtual CDs',
                 'STRIP':'Strip Sounds',
                 'TM':'Telemusic',
                 'TREDE':'Trede Collection',
@@ -593,8 +595,9 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     #filename = 'SCD082120.wav'
-    filename = 'AUXMP_SCD082120.wav'
-    filename = 'AUXMP_AD002306.mp3'
+    #filename = 'AUXMP_SCD082120.wav'
+    #filename = 'AUXMP_AD002306.mp3'
+    filename = 'SCDV020016_WARMING SUN A_SONOTON.wav'
     #filename = 'NONRT900497LP0205_xxx.wav'
     metadata = None
     def mymeta(filename, _metadata):
