@@ -20,9 +20,15 @@ import sys
 from setuptools import setup
 
 def getversion():
+    if sys.platform == 'darwin':
+        _p = 'MAC'
+    elif sys.platform == 'win32':
+        _p = 'WIN'
+    else:
+        _p = 'x'
     try:
-        _ver = open('VERSION').readline().split(':')[0]
-        return _ver
+        _ver = open('VERSION%s' % _p).readline().split('|')[0]
+        return _ver.strip().replace('-', '.')
     except:
         raise
 
