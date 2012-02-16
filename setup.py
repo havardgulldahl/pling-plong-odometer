@@ -27,8 +27,8 @@ def getversion():
     else:
         _p = 'x'
     try:
-        _ver = open('VERSION%s' % _p).readline().split('|')[0]
-        return _ver.strip().replace('-', '.')
+        _ver = open('VERSION%s' % _p).readline().strip()
+        return _ver.replace('-', '.')
     except:
         raise
 

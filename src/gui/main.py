@@ -211,7 +211,12 @@ class Odometer(Gui.QMainWindow):
 
     def showAbout(self):
         _aboutText = readResourceFile(':/txt/about')
-        _version = readResourceFile(':/txt/version')
+        if sys.platform == 'darwin':
+            _version = readResourceFile(':/txt/version_mac')
+        elif sys.platform == 'win32':
+            _version = readResourceFile(':/txt/version_win')
+        else: # unknown platform
+            _version = ''
         _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', _version))
 
     def showHelp(self):
