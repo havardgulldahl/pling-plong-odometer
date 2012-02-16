@@ -279,7 +279,12 @@ class ResolverBase(Core.QObject):
             if md is not None:
                 self.trackResolved.emit(self.filename, md)
                 return
-        self.doc = webdoc(self.filename, self.url(filename), parent=None)
+        url = self.url(filename)
+        if not url: # invalid url, dont load it
+            self.error.emit('Invalid url for filename %s' % filename)
+            self.trackFailed.emit(filename)
+            return
+        self.doc = webdoc(self.filename, url, parent=None)
         self.doc.frame.loadFinished.connect(self.parse)
         self.doc.page.loadProgress.connect(self.progress)
         self.doc.load()
@@ -288,7 +293,10 @@ class ResolverBase(Core.QObject):
         self.trackProgress.emit(self.filename, i)
 
     def url(self, filename): # return url from filename
-        return self.urlbase % self.musicid(filename)
+        _id = self.musicid(filename)
+        if _id is None:
+            return False
+        return self.urlbase % _id
 
     def parse(self): 
         # reimplement this to emit a signal with a TrackMetadata object when found
@@ -302,6 +310,9 @@ class ResolverBase(Core.QObject):
 
     def cache(self, metadata):
         "Add metadata for a filename to a local cache to prevent constant network lookups"
+        if None in [metadata.title, metadata.recordnumber]:
+            # invalid cached object, we dont cache it
+            return False
         loc = self.cachelocation()
         if self.incache() and self.fromcache() is not None:
             #print "CACHE HIT", loc
@@ -318,8 +329,16 @@ class ResolverBase(Core.QObject):
             loc = open(self.cachelocation(), "rb")
         except IOError: #file doesn't exist -> not cached
             return None
-        metadata =  pickle.loads(loc.read())
-        loc.close()
+        try:
+            metadata =  pickle.loads(loc.read())
+            loc.close()
+        except Exception, (e):
+            # something went wrong, cache invalid
+            print e
+            return None
+        if None in [metadata.title, metadata.recordnumber]:
+            # invalid cached object:
+            return None
         if metadata._retrieved + self.cacheTimeout < time.mktime(time.localtime()):
             return None
         return metadata
@@ -472,7 +491,7 @@ class SonotonResolver(ResolverBase):
 class AUXResolver(SonotonResolver):
     prefixes = ['AUXMP_', 'CNS', 'DK', 'ECM', 'FWM', 'HGR', 'ISCD', 'JW', 'CAND', 'PPM', 'SONIA',
         'SCD', 'SCDC', 'SAS', 'STT', 'STTV', 'SCDV', 'STRIP', 'TM', 'TREDE', 'TSU', 'AD', 'BAC',
-        'BM', 'CCS', 'CCCD', 'CAVCD', 'CAVT', 'CLC', 'CNS',]
+        'BM', 'CCS', 'CCCD', 'CAVCD', 'CAVT', 'CLC', 'CNS','UBMM','WD', 'WDA']
     labelmap = {
                 'AD':'Adapt',
                 'BAC':'Big and Clever Music',
@@ -503,6 +522,8 @@ class AUXResolver(SonotonResolver):
                 'TREDE':'Trede Collection',
                 'TSU':'Tsunami Sounds',
                 'UBMM':'UBM Media',
+                'WD':'Wild Diesel', 
+                'WDA':'Wild Diesel Artist', 
                 
                }
     name = 'AUX Publishing'
@@ -511,9 +532,10 @@ class AUXResolver(SonotonResolver):
     @staticmethod
     def musicid(filename):
         """Returns musicid from filename.  """
-        rex = re.compile(r'^((AUXMP_)?((%s)\d{6}))' % '|'.join(AUXResolver.prefixes))
+        rex = re.compile(r'^((AUXMP_)?([A-Z]+\d{6}))')
         g = rex.search(filename)
         try:
+            print g.groups()
             return g.group(3)
         except AttributeError: #no match
             print "oh noes, could not understand this AUX id:",filename
@@ -598,6 +620,9 @@ if __name__ == '__main__':
     #filename = 'AUXMP_SCD082120.wav'
     #filename = 'AUXMP_AD002306.mp3'
     filename = 'SCDV020016_WARMING SUN A_SONOTON.wav'
+    filename = 'AUXMP_WD303822-TENSE FEELING.aiff'
+    filename = 'AUXMP_UBMM211517_DESIERTO-AIFF 48/24.aiff'
+    filename = 'SCD0694 track11_Fill it up A_J.D.Trigger / DJ Chunk / R Pick.wav'
     #filename = 'NONRT900497LP0205_xxx.wav'
     metadata = None
     def mymeta(filename, _metadata):

@@ -59,6 +59,7 @@ class StatusBox(Gui.QWidget):
         super(StatusBox, self).__init__(parent)
         self.parent = parent
         self.autoclose = autoclose
+        self.autoclosetimeout = 1000
         self.setWindowFlags(Core.Qt.Popup)
         if msgtype in (None, self.INFO):
             bgcolor = '#ffff7f'
@@ -66,6 +67,7 @@ class StatusBox(Gui.QWidget):
             bgcolor = 'blue'#'#ffff7f'
         elif msgtype == self.ERROR:
             bgcolor = 'red'#'#ffff7f'
+            self.autoclosetimeout = 3000
 
         self.setStyleSheet(u'QWidget { background-color: %s; }' % bgcolor)
         layout = Gui.QVBoxLayout(self)
@@ -74,7 +76,7 @@ class StatusBox(Gui.QWidget):
 
     def show_(self):
         if self.autoclose == True:
-            Core.QTimer.singleShot(1000, self.close)
+            Core.QTimer.singleShot(self.autoclosetimeout, self.close)
         elif hasattr(self.autoclose, 'connect'): # it's a qt/pyqt signal
             self.autoclose.connect(self.close)
         self.show()
@@ -529,7 +531,7 @@ class Odometer(Gui.QMainWindow):
         def _save():
             print "saving credits"
             try:
-                loc = Gui.QFileDialog.getSaveFileName(PRFDialog, "Save credits")
+                loc = Gui.QFileDialog.getSaveFileName(CreditsDialog, "Save credits")
                 f = open(unicode(loc), "wb")
                 f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
@@ -542,10 +544,11 @@ class Odometer(Gui.QMainWindow):
 
     def editDuration(self, row, col): # called when double clicked
         "Replace duration column with a spinbox to manually change value"
+        #print "editDuration:", row, col
         if col != 2: 
             return False
         editor = Gui.QDoubleSpinBox(parent=self.ui.clips)
-        editor.setMaxiumum(10000.0)
+        editor.setMaximum(10000.0)
         editor.setValue(row.clip['durationsecs'])
         editor.setSuffix('s')
         def editingFinished():

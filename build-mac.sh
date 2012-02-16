@@ -23,6 +23,7 @@ pyuic4-2.7 -o src/gui/odometer_ui.py src/gui/pling-plong-odometer.ui || error "p
 # store settings in files, to be picked up by pyqt resource system
 echo "$DROPBOXURL" > ./DROPBOXURL;
 echo "$VERSION" > ./VERSIONMAC;
+git commit ./VERSIONMAC -m "build-mac.sh: commiting new version $VERSION"
 pyrcc4-2.7 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
 # something for translations?
@@ -53,6 +54,8 @@ echo "Publishing to dropbox"
 DMGURL=$DROPBOXURL/$DMGNAME;
 cp "$DMGNAME" $HOME/Dropbox/Public/"$DMGNAME" || error "Copying to dropbox failed"
 echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/odometerversion_mac.txt
+
+
 
 echo "Finished. Take a look at $DMGNAME"
 echo "Online: $DMGURL"; 
