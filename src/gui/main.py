@@ -115,6 +115,7 @@ class Odometer(Gui.QMainWindow):
 
     def __init__(self, xmemlfile=None, volume=0.01, parent=None):
         super(Odometer, self).__init__(parent)
+        self.log = []
         self.audioclips = {}
         self.workers = []
         self.rows = {}
@@ -149,6 +150,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.actionAbout_Odometer.triggered.connect(self.showAbout)
         self.ui.actionHelp.triggered.connect(self.showHelp)
         self.ui.actionLicenses.triggered.connect(self.showLicenses)
+        self.ui.actionLogs.triggered.connect(self.showLogs)
         self.ui.actionCheck_for_updates.triggered.connect(self.showCheckForUpdates)
         #self.ui.actionConfig.triggered.connect(lambda: self.showstatus("About Config"))
         self.msg.connect(self.showstatus)
@@ -190,15 +192,29 @@ class Odometer(Gui.QMainWindow):
         i = self.ui.dropIcon
         i.move(self.width()/2-i.width(), self.height()*0.75-i.height())
 
+    def logMessage(self, msg, msgtype):
+        if msgtype == StatusBox.ERROR:
+            color = 'red'
+        elif msgtype == StatusBox.INFO:
+            color = '#390'
+        elif msgtype == StatusBox.WARNING:
+            color = 'blue'
+        self.log.append('<div style="color:%s">[%s - %s]: %s</div>' % (color, 
+                                                               os.path.basename(self.xmemlfile), 
+                                                               datetime.datetime.now().time().isoformat(),
+                                                               msg))
+
     def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
         # if you don't autoclose, call self.closestatusboxes()
         # or keep a reference to this box and .close() it yourself
         if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg: 
+            # don't repeat yourself
             return None
         b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
         self.statusboxes.append(b)
         b.show_()
         self._laststatusmsg = msg
+        self.logMessage(msg, msgtype)
         return b
 
     def showerror(self, msg):
@@ -253,6 +269,14 @@ class Odometer(Gui.QMainWindow):
             _box = Gui.QMessageBox.warning(self, 'Oooooo!', 'Odometer is out of date. \nGet the new version: %s' % _url)
         else:
             _box = Gui.QMessageBox.information(self, 'Relax', 'Odometer is up to date')
+
+    def showLogs(self):
+        LogDialog = Gui.QDialog()
+        ui = prfreport_ui.Ui_PlingPlongPRFDialog()
+        ui.setupUi(LogDialog)
+        ui.textBrowser.setHtml(''.join(self.log))
+        LogDialog.setWindowTitle('Help')
+        return LogDialog.exec_()
 
     def clicked(self, qml):
         lastdir = self.settings.value('lastdir', '').toString()

@@ -521,6 +521,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionHelp"/>
     <addaction name="actionLicenses"/>
     <addaction name="actionCheck_for_updates"/>
+    <addaction name="actionLogs"/>
    </widget>
    <addaction name="menu_About"/>
   </widget>
@@ -549,6 +550,11 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="toolTip">
     <string>Check for updates online</string>
+   </property>
+  </action>
+  <action name="actionLogs">
+   <property name="text">
+    <string>Logs...</string>
    </property>
   </action>
  </widget>
