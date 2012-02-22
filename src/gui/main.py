@@ -250,7 +250,7 @@ class Odometer(Gui.QMainWindow):
         _onlineVersion = _date(_ver)
         if _currentVersion < _onlineVersion:
             # out of date
-            _box = Gui.QMessageBox.warning(self, self.tr('Oooooo!'), self.tr('Odometer is out of date. \nGet the new version: %s') % _url)
+            _box = Gui.QMessageBox.warning(self, self.tr('Oooooo!'), unicode(self.tr('Odometer is out of date. \nGet the new version: %s')) % _url)
         else:
             _box = Gui.QMessageBox.information(self, self.tr('Relax'), self.tr('Odometer is up to date'))
 
@@ -267,10 +267,10 @@ class Odometer(Gui.QMainWindow):
         self.loadxml(self.xmemlfile)
 
     def loadxml(self, xmemlfile):
-        msgbox = self.showstatus(self.tr("Loading %s...") % xmemlfile, autoclose=self.loaded)
+        msgbox = self.showstatus(unicode(self.tr("Loading %s...")) % xmemlfile, autoclose=self.loaded)
         self.loadingbar()
         self.loaded.connect(self.removeLoadingbar)
-        self.loaded.connect(lambda: self.ui.fileInfo.setText(self.tr("<b>Loaded:</b> %s") % os.path.basename(xmemlfile)))
+        self.loaded.connect(lambda: self.ui.fileInfo.setText(unicode(self.tr("<b>Loaded:</b> %s")) % os.path.basename(xmemlfile)))
         self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(os.path.abspath(xmemlfile)))
         self.xmemlthread.load(xmemlfile)
 
@@ -286,17 +286,17 @@ class Odometer(Gui.QMainWindow):
 
     def load(self, xmemlparser):
         self.audioclips, self.audiofiles = xmemlparser.audibleranges(self.volumethreshold)
-        self.ui.volumeInfo.setText(self.tr("<i>(above %i dB)</i>") % self.volumethreshold.decibel)
+        self.ui.volumeInfo.setText(unicode(self.tr("<i>(above %i dB)</i>")) % self.volumethreshold.decibel)
         self.xmemlparser = xmemlparser
         numclips = len(self.audioclips.keys())
         self.ui.creditsButton.setEnabled(numclips > 0)
-        self.msg.emit(self.tr(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb." % (numclips, xmemlparser.name)))
+        self.msg.emit(unicode(self.tr(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb.")) % (numclips, xmemlparser.name))
         self.loaded.emit()
 
     def computeAudibleDuration(self, volume=None):
         if isinstance(volume, xmemliter.Volume):
             self.audioclips, self.audiofiles = self.xmemlparser.audibleranges(volume)
-            self.ui.volumeInfo.setText(self.tr("<i>(above %i dB)</i>") % volume.decibel)
+            self.ui.volumeInfo.setText(unicode(self.tr("<i>(above %i dB)</i>")) % volume.decibel)
         self.ui.clips.clear()
         self.rows = {}
         for audioname, ranges in self.audioclips.iteritems():
@@ -384,12 +384,12 @@ class Odometer(Gui.QMainWindow):
             return
         ss = vars(md)
         ss.update({'secs':md.duration/md.timebase})
-        s += self.tr("""<i>Name:</i><br>%(name)s<br>
+        s += unicode(self.tr("""<i>Name:</i><br>%(name)s<br>
                 <i>Total length:</i><br>%(secs)ss<br>
                 <i>Rate:</i><br>%(timebase)sfps<br>
-                """) % ss
+                """)) % ss
         if hasattr(r, 'metadata') and r.metadata.musiclibrary is not None:
-            s += self.tr("<i>Library</i><br>%s</br>") % r.metadata.musiclibrary
+            s += unicode(self.tr("<i>Library</i><br>%s<br>")) % r.metadata.musiclibrary
         self.ui.metadata.setText(s)
         #self.ui.playButton.setEnabled(os.path.exists(r.clip.name))
         if self.ui.detailsBox.isVisible(): # currently editing metadata
@@ -510,7 +510,7 @@ class Odometer(Gui.QMainWindow):
                 htmlel = html.findFirstElement('input[name=%s]' % el)
                 val = htmlel.evaluateJavaScript("this.value").toString()
                 if len(val) == 0:
-                    self.showerror(self.tr('"%s" cannot be blank') % el.title())
+                    self.showerror(unicode(self.tr('"%s" cannot be blank')) % el.title())
                     return None
                 self.settings.setValue('AUX/%s' % el, val)
             submit = html.findFirstElement('input[type=submit]')
