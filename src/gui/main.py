@@ -113,20 +113,23 @@ class Odometer(Gui.QMainWindow):
     loaded = Core.pyqtSignal()
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
 
-    def __init__(self, xmemlfile=None, volume=0.01, parent=None):
+    def __init__(self, app, xmemlfile=None, volume=0.01, language='no', parent=None):
         super(Odometer, self).__init__(parent)
+        self.app = app
         self.audioclips = {}
         self.workers = []
         self.rows = {}
         self.metadataloaded = 0
         self.statusboxes = []
         self.showsubclips = True
+        self.translator = None
         self.settings = Core.QSettings('nrk.no', 'Pling Plong Odometer')
         self.volumethreshold = xmemliter.Volume(gain=volume)
         self.xmemlfile = xmemlfile
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
     	self.ui = odometer_ui.Ui_MainWindow()
+        self.setLanguage(language)
         self.ui.setupUi(self)
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
@@ -595,11 +598,20 @@ class Odometer(Gui.QMainWindow):
                 row.setBackground(0, Gui.QBrush(Gui.QColor("light green")))
 
     def run(self, app):
-        self.app = app
         self.show()
         if self.xmemlfile is not None: # program was started with an xmeml file as argument
             self.loadxml(self.xmemlfile)
         sys.exit(app.exec_())
+
+    def setLanguage(self, language):
+        if self.translator is not None:
+            self.app.removeTranslator(self.translator)
+        else:
+            self.translator = Core.QTranslator(self.app)
+        print "loading translation: odometer_%s" % language
+        print self.translator.load(':data/translation_%s' % language)
+        self.app.installTranslator(self.translator)
+        #self.ui.retranslateUi(self)
 
 def uniqify(seq):
     keys = {} 
@@ -628,8 +640,8 @@ def rungui(argv):
     except IndexError:
         pass
     app = Gui.QApplication(argv)
-    if f is not None: o = Odometer(f)
-    else: o = Odometer()
+    if f is not None: o = Odometer(app, f)
+    else: o = Odometer(app)
     o.run(app)
 
 if __name__ == '__main__':

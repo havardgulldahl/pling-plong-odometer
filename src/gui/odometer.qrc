@@ -19,5 +19,7 @@
     <file alias="about">../../ABOUT</file>
     <file alias="dropbox_url">../../DROPBOXURL</file>
   </qresource>
-  <qresource prefix="data"/>
+  <qresource prefix="data">
+    <file alias="translation_no.qm">odometer_no.qm</file>
+  </qresource>
 </RCC>
