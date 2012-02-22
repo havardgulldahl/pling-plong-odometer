@@ -17,6 +17,8 @@ VERSION=$(date +"%Y-%m-%d");
 
 # update all generated code 
 
+echo "Generating translations for UX"
+#pylupdate4-2.7 
 echo "Generating code for UX"
 pyuic4-2.7 -o src/gui/odometer_ui.py src/gui/pling-plong-odometer.ui || error "pyuic failed"
 
