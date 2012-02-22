@@ -26,7 +26,7 @@
     <message utf8="true">
         <location filename="pling-plong-odometer.ui" line="77"/>
         <source>♫</source>
-        <translation></translation>
+        <translation>♫</translation>
     </message>
     <message>
         <location filename="pling-plong-odometer.ui" line="82"/>
@@ -76,7 +76,7 @@
     <message>
         <location filename="pling-plong-odometer.ui" line="187"/>
         <source>Track &amp;number</source>
-        <translation>&amp;Spor</translation>
+        <translation>&amp;Spornummer</translation>
     </message>
     <message>
         <location filename="pling-plong-odometer.ui" line="200"/>
@@ -121,7 +121,7 @@
     <message>
         <location filename="pling-plong-odometer.ui" line="262"/>
         <source>&gt; </source>
-        <translation></translation>
+        <translation>&gt; </translation>
     </message>
     <message>
         <location filename="pling-plong-odometer.ui" line="319"/>
