@@ -193,7 +193,7 @@ p, li { white-space: pre-wrap; }
     <message>
         <location filename="pling-plong-odometer.ui" line="447"/>
         <source>&amp;PRF report</source>
-        <translation type="unfinished"></translation>
+        <translation>PRF-rapport</translation>
     </message>
     <message>
         <location filename="pling-plong-odometer.ui" line="457"/>
@@ -262,6 +262,149 @@ p, li { white-space: pre-wrap; }
         <location filename="main.py" line="293"/>
         <source>%i audio clips loaded from xmeml sequence u00ab%su00bb.</source>
         <translation>%i lydklipp lastet inn fra xmeml-sekvensen u00ab%su00bb.</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="134"/>
+        <source>Pre&amp;vious</source>
+        <translation>Fo&amp;rrige</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="136"/>
+        <source>Ne&amp;xt</source>
+        <translation>Ne&amp;ste</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="158"/>
+        <source>Drop your xml file here</source>
+        <translation>Slipp xml-fila di her</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="179"/>
+        <source>This does not seem to be a valid FCP XML file. Sorry.</source>
+        <translation>Dette ser ikke ut som en gyldig FCP XML-fil. Beklager.</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="234"/>
+        <source>This project is free software</source>
+        <translation>Dette programmet er fri og åpen programvare</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="235"/>
+        <source>You may use and redistribute it according to the GPL license, version 3</source>
+        <translation>Du kan bruke og redistribuere det i henhold til GPL-lisensen, versjon 3</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="253"/>
+        <source>Oooooo!</source>
+        <translation></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="253"/>
+        <source>Odometer is out of date. 
+Get the new version: %s</source>
+        <translation>Odometer har gått ut på dato.
+Hent den nye versjonen: %s</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="255"/>
+        <source>Relax</source>
+        <translation>Ta en pille</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="255"/>
+        <source>Odometer is up to date</source>
+        <translation>Odometer er oppdatert</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="259"/>
+        <source>Open an xmeml file (FCP export)</source>
+        <translation>Åpne en xmeml-fil (eksportert fra FCP)</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="259"/>
+        <source>Xmeml files (*.xml)</source>
+        <translation>Xmeml-filer (*.xml)</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="270"/>
+        <source>Loading %s...</source>
+        <translation>Leser %s...</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="273"/>
+        <source>&lt;b&gt;Loaded:&lt;/b&gt; %s</source>
+        <translation>&lt;b&gt;Leste:&lt;/b&gt; %s</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="299"/>
+        <source>&lt;i&gt;(above %i dB)&lt;/i&gt;</source>
+        <translation>&lt;i&gt;(over %i dB)&lt;/i&gt;</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="352"/>
+        <source>Incomplete metadata. Please update manually</source>
+        <translation>Ukomplette metadata. Vennligst oppdatert manuelt</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="379"/>
+        <source>Metadata</source>
+        <translation>Metadata</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="387"/>
+        <source>&lt;i&gt;Name:&lt;/i&gt;&lt;br&gt;%(name)s&lt;br&gt;
+                &lt;i&gt;Total length:&lt;/i&gt;&lt;br&gt;%(secs)ss&lt;br&gt;
+                &lt;i&gt;Rate:&lt;/i&gt;&lt;br&gt;%(timebase)sfps&lt;br&gt;
+                </source>
+        <translation>&lt;i&gt;Navn:&lt;/i&gt;&lt;br&gt;%(name)s&lt;br&gt;
+&lt;i&gt;Total lengde:&lt;/i&gt;&lt;br&gt;%(secs)ss&lt;br&gt;
+&lt;i&gt;Rammerate:&lt;/i&gt;&lt;br&gt;%(timebase)sfps&lt;br&gt;
+</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="392"/>
+        <source>&lt;i&gt;Library&lt;/i&gt;&lt;br&gt;%s&lt;/br&gt;</source>
+        <translation>&lt;i&gt;Bibliotek&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="409"/>
+        <source>Unknown</source>
+        <translation>Ukjent</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="465"/>
+        <source>Save prf report</source>
+        <translation>Lagre prf-rapporten</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="469"/>
+        <source>Prf report saved</source>
+        <translation>Prf-rapporten lagret</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="513"/>
+        <source>&quot;%s&quot; cannot be blank</source>
+        <translation>&quot;%s&quot; kan ikke være tom</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="540"/>
+        <source>Save credits</source>
+        <translation>Lagre rulletekst</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="544"/>
+        <source>End credits saved</source>
+        <translation>Rulleteksten er lagret</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="579"/>
+        <source>Need production number</source>
+        <translation>Prodnummer behøves</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="579"/>
+        <source>You must enter the production number</source>
+        <translation>Du må skrive inn prodnummeret</translation>
     </message>
 </context>
 <context>

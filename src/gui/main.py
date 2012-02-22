@@ -1,19 +1,16 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011
+# (C) 2011-2012
 
 import sys, os.path
 import time
 import datetime
 import urllib
-from PyQt4.uic import loadUi
 import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
 import PyQt4.QtSvg as Svg
 import PyQt4.Qt as Qt
-
-trans = Core.QCoreApplication.translate
 
 from xmeml import iter as xmemliter
 import metadata
@@ -134,9 +131,9 @@ class Odometer(Gui.QMainWindow):
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.gain)
-        self.ui.previousButton = self.ui.buttonBox.addButton(trans('cmd', 'Pre&vious'), Gui.QDialogButtonBox.ActionRole)
+        self.ui.previousButton = self.ui.buttonBox.addButton(self.tr('Pre&vious'), Gui.QDialogButtonBox.ActionRole)
         self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
-        self.ui.nextButton = self.ui.buttonBox.addButton(trans('cmd', 'Ne&xt'), Gui.QDialogButtonBox.ActionRole)
+        self.ui.nextButton = self.ui.buttonBox.addButton(self.tr('Ne&xt'), Gui.QDialogButtonBox.ActionRole)
         self.ui.nextButton.clicked.connect(self.showNextMetadata)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
@@ -158,7 +155,7 @@ class Odometer(Gui.QMainWindow):
         self.loaded.connect(self.computeAudibleDuration)
         self.ui.dropIcon = Svg.QSvgWidget(':/gfx/graystar', self.ui.clips)
         self.ui.dropIcon.setMinimumSize(200,200)
-        self.ui.dropIcon.setToolTip('Drop your xml file here')
+        self.ui.dropIcon.setToolTip(self.tr('Drop your xml file here'))
         if not USE_AUDIOPLAYER:
             self.ui.playButton.hide()
         #self.metadataLoaded.connect(self.checkUsage)
@@ -179,7 +176,7 @@ class Odometer(Gui.QMainWindow):
         if xmemlfileFromEvent(event):
             event.accept()
             return
-        self.showerror("This does not seem to be a valid FCP XML file. Sorry.")
+        self.showerror(self.tr("This does not seem to be a valid FCP XML file. Sorry."))
         event.ignore()
 
     def dropEvent(self, event):
@@ -234,8 +231,8 @@ class Odometer(Gui.QMainWindow):
     def showLicenses(self):
         _licenseText = readResourceFile(':/txt/license')
         _box = Gui.QMessageBox(self)
-        _box.setText(u'This project is free software')
-        _box.setInformativeText('You may use and redistribute it according to the GPL license, version 3')
+        _box.setText(self.tr('This project is free software'))
+        _box.setInformativeText(self.tr('You may use and redistribute it according to the GPL license, version 3'))
         _box.setDetailedText(_licenseText)
         return _box.exec_()
 
@@ -253,16 +250,16 @@ class Odometer(Gui.QMainWindow):
         _onlineVersion = _date(_ver)
         if _currentVersion < _onlineVersion:
             # out of date
-            _box = Gui.QMessageBox.warning(self, 'Oooooo!', 'Odometer is out of date. \nGet the new version: %s' % _url)
+            _box = Gui.QMessageBox.warning(self, self.tr('Oooooo!'), self.tr('Odometer is out of date. \nGet the new version: %s') % _url)
         else:
-            _box = Gui.QMessageBox.information(self, 'Relax', 'Odometer is up to date')
+            _box = Gui.QMessageBox.information(self, self.tr('Relax'), self.tr('Odometer is up to date'))
 
     def clicked(self, qml):
         lastdir = self.settings.value('lastdir', '').toString()
         xf = Gui.QFileDialog.getOpenFileName(self,
-            trans('dialog', 'Open an xmeml file (FCP export)'),
+            self.tr('Open an xmeml file (FCP export)'),
             lastdir,
-            'Xmeml files (*.xml)')
+            self.tr('Xmeml files (*.xml)'))
         self.xmemlfile = unicode(xf)
         if not os.path.exists(self.xmemlfile):
             return False
@@ -270,10 +267,10 @@ class Odometer(Gui.QMainWindow):
         self.loadxml(self.xmemlfile)
 
     def loadxml(self, xmemlfile):
-        msgbox = self.showstatus("Loading %s..." % xmemlfile, autoclose=self.loaded)
+        msgbox = self.showstatus(self.tr("Loading %s...") % xmemlfile, autoclose=self.loaded)
         self.loadingbar()
         self.loaded.connect(self.removeLoadingbar)
-        self.loaded.connect(lambda: self.ui.fileInfo.setText("<b>Loaded:</b> %s" % os.path.basename(xmemlfile)))
+        self.loaded.connect(lambda: self.ui.fileInfo.setText(self.tr("<b>Loaded:</b> %s") % os.path.basename(xmemlfile)))
         self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(os.path.abspath(xmemlfile)))
         self.xmemlthread.load(xmemlfile)
 
@@ -289,7 +286,7 @@ class Odometer(Gui.QMainWindow):
 
     def load(self, xmemlparser):
         self.audioclips, self.audiofiles = xmemlparser.audibleranges(self.volumethreshold)
-        self.ui.volumeInfo.setText("<i>(above %i dB)</i>" % self.volumethreshold.decibel)
+        self.ui.volumeInfo.setText(self.tr("<i>(above %i dB)</i>") % self.volumethreshold.decibel)
         self.xmemlparser = xmemlparser
         numclips = len(self.audioclips.keys())
         self.ui.creditsButton.setEnabled(numclips > 0)
@@ -299,7 +296,7 @@ class Odometer(Gui.QMainWindow):
     def computeAudibleDuration(self, volume=None):
         if isinstance(volume, xmemliter.Volume):
             self.audioclips, self.audiofiles = self.xmemlparser.audibleranges(volume)
-            self.ui.volumeInfo.setText("<i>(above %i dB)</i>" % volume.decibel)
+            self.ui.volumeInfo.setText(self.tr("<i>(above %i dB)</i>") % volume.decibel)
         self.ui.clips.clear()
         self.rows = {}
         for audioname, ranges in self.audioclips.iteritems():
@@ -347,12 +344,12 @@ class Odometer(Gui.QMainWindow):
         row.metadata = metadata
         if metadata.productionmusic:
             if metadata.title is None and metadata.label is None:
-                txt = "Incomplete metadata. Please update manually"
+                txt = self.tr("Incomplete metadata. Please update manually")
             else:
                 txt = u"\u00ab%(title)s\u00bb \u2117 %(label)s"
         else:
             if metadata.title is None and metadata.artist is None:
-                txt = "Incomplete metadata. Please update manually"
+                txt = self.tr("Incomplete metadata. Please update manually")
             else:
                 txt = u"%(artist)s: \u00ab%(title)s\u00bb \u2117 %(label)s %(year)s" 
         row.setText(3, txt % vars(metadata))
@@ -379,7 +376,7 @@ class Odometer(Gui.QMainWindow):
     def hilited(self, rows):
         self.ui.metadata.setText('')
         if not len(rows): return
-        s = "<b>Metadata:</b><br>"
+        s = "<b>%s:</b><br>" % self.tr('Metadata')
         r = rows[0]
         try:
             md = self.audiofiles[r.audioname]
@@ -387,12 +384,12 @@ class Odometer(Gui.QMainWindow):
             return
         ss = vars(md)
         ss.update({'secs':md.duration/md.timebase})
-        s += """<i>Name:</i><br>%(name)s<br>
+        s += self.tr("""<i>Name:</i><br>%(name)s<br>
                 <i>Total length:</i><br>%(secs)ss<br>
                 <i>Rate:</i><br>%(timebase)sfps<br>
-                """ % ss
+                """) % ss
         if hasattr(r, 'metadata') and r.metadata.musiclibrary is not None:
-            s += """<i>Library</i><br>%s</br>""" % r.metadata.musiclibrary
+            s += self.tr("<i>Library</i><br>%s</br>") % r.metadata.musiclibrary
         self.ui.metadata.setText(s)
         #self.ui.playButton.setEnabled(os.path.exists(r.clip.name))
         if self.ui.detailsBox.isVisible(): # currently editing metadata
@@ -401,15 +398,15 @@ class Odometer(Gui.QMainWindow):
     def showMetadata(self, row, col=None):
         try:
             self.ui.detailsBox.currentRow = row
-            self.ui.clipTitle.setText(row.metadata.title or 'Unknown')
-            self.ui.clipAlbum.setText(row.metadata.albumname or 'Unknown')
-            self.ui.clipArtist.setText(row.metadata.artist or 'Unknown')
-            self.ui.clipComposer.setText(row.metadata.composer or 'Unknown')
-            self.ui.clipLyricist.setText(row.metadata.lyricist or 'Unknown')
+            self.ui.clipTitle.setText(row.metadata.title or self.tr('Unknown'))
+            self.ui.clipAlbum.setText(row.metadata.albumname or self.tr('Unknown'))
+            self.ui.clipArtist.setText(row.metadata.artist or self.tr('Unknown'))
+            self.ui.clipComposer.setText(row.metadata.composer or self.tr('Unknown'))
+            self.ui.clipLyricist.setText(row.metadata.lyricist or self.tr('Unknown'))
             self.ui.clipYear.setText(unicode(row.metadata.year or 0))
-            self.ui.clipRecordnumber.setText(row.metadata.recordnumber or 'Unknown')
-            self.ui.clipCopyright.setText(row.metadata.copyright or 'Unknown')
-            self.ui.clipLabel.setText(row.metadata.label or 'Unknown')
+            self.ui.clipRecordnumber.setText(row.metadata.recordnumber or self.tr('Unknown'))
+            self.ui.clipCopyright.setText(row.metadata.copyright or self.tr('Unknown'))
+            self.ui.clipLabel.setText(row.metadata.label or self.tr('Unknown'))
             self.ui.detailsBox.show()
         except AttributeError, (e):
             print e
@@ -441,6 +438,7 @@ class Odometer(Gui.QMainWindow):
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(PRFDialog)
         s = ""
+        # TODO: TRANSLATE
         for r in self.itercheckedrows():
             s += u"""<dl>
             <dt>Title:</dt><dd>%(title)s</dd>
@@ -464,11 +462,11 @@ class Odometer(Gui.QMainWindow):
         def _save():
             print "saving report for prf"
             try:
-                loc = Gui.QFileDialog.getSaveFileName(PRFDialog, "Save prf report")
+                loc = Gui.QFileDialog.getSaveFileName(PRFDialog, self.tr("Save prf report"))
                 f = open(unicode(loc), "wb")
                 f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
-                self.showstatus('Prf report saved')
+                self.showstatus(self.tr('Prf report saved'))
             except IOError, (e):
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
@@ -512,7 +510,7 @@ class Odometer(Gui.QMainWindow):
                 htmlel = html.findFirstElement('input[name=%s]' % el)
                 val = htmlel.evaluateJavaScript("this.value").toString()
                 if len(val) == 0:
-                    self.showerror('"%s" cannot be blank' % el.title())
+                    self.showerror(self.tr('"%s" cannot be blank') % el.title())
                     return None
                 self.settings.setValue('AUX/%s' % el, val)
             submit = html.findFirstElement('input[type=submit]')
@@ -539,11 +537,11 @@ class Odometer(Gui.QMainWindow):
         def _save():
             print "saving credits"
             try:
-                loc = Gui.QFileDialog.getSaveFileName(CreditsDialog, "Save credits")
+                loc = Gui.QFileDialog.getSaveFileName(CreditsDialog, self.tr("Save credits"))
                 f = open(unicode(loc), "wb")
                 f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
-                self.showstatus('End credits saved')
+                self.showstatus(self.tr('End credits saved'))
             except IOError, (e):
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
@@ -578,8 +576,8 @@ class Odometer(Gui.QMainWindow):
         if False: #not ok:
             msg = Gui.QMessageBox.critical(self, "Rights errors", "Not ok according to usage agreement")
         if len(prodno) == 0:
-            msg = Gui.QMessageBox.critical(self, "Need production number", 
-                                           "You must enter the production number")
+            msg = Gui.QMessageBox.critical(self, self.tr("Need production number"), 
+                                           self.tr("You must enter the production number"))
             self.ui.prodno.setFocus()
             return False
         self.gluon = metadata.Gluon()
@@ -609,9 +607,8 @@ class Odometer(Gui.QMainWindow):
         else:
             self.translator = Core.QTranslator(self.app)
         print "loading translation: odometer_%s" % language
-        print self.translator.load(':data/translation_%s' % language)
+        self.translator.load(':data/translation_%s' % language)
         self.app.installTranslator(self.translator)
-        #self.ui.retranslateUi(self)
 
 def uniqify(seq):
     keys = {} 
