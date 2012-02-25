@@ -34,11 +34,9 @@ echo "$VERSION" > ./VERSIONWIN;
 git commit ./VERSIONWIN -m "build-win.sh: commiting new version $VERSION"
 $PYQTPATH/pyrcc4.exe -py2 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
-
-
 # clean up old cruft
 echo "Removing old code"
-rm -rf ./build ./dist ./pling-plong-odometer.dmg || error "cleanup failed"
+rm -rf ./build ./dist || error "cleanup failed"
 
 # build the castle
 echo "Building the app (see build.log)"
