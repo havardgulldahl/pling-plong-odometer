@@ -25,6 +25,8 @@ $PYQTPATH/pylupdate4.exe src/gui/gui.pro || error "pylupdate failed";
 $PYQTPATH/lrelease.exe src/gui/gui.pro || error "lrelease failed";
 echo "Generating code for UX"
 $PYTHON $PYQTPATH/uic/pyuic.py -o src/gui/odometer_ui.py src/gui/pling-plong-odometer.ui || error "pyuic failed"
+$PYTHON $PYQTPATH/uic/pyuic.py -o src/gui/auxreport_ui.py src/gui/pling-plong-auxreport.ui || error "pyuic auxreport failed"
+$PYTHON $PYQTPATH/uic/pyuic.py -o src/gui/prfreport_ui.py src/gui/pling-plong-prfreport.ui || error "pyuic prfreport failed"
 
 # store settings in files, to be picked up by pyqt resource system
 echo "$DROPBOXURL" > ./DROPBOXURL;

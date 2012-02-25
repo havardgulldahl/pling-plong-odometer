@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="nb_NO" sourcelanguage="en">
+<!DOCTYPE TS><TS version="2.0" language="nb_NO" sourcelanguage="en">
 <context>
     <name>MainWindow</name>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="pling-plong-odometer.ui" line="18"/>
         <source>♫ ♪ Odometer</source>
         <translation></translation>
@@ -23,7 +22,7 @@
         <source>Drop a Final Cut Pro sequence (XML export) anywhere to load it.</source>
         <translation>Slipp en Final Cut Pro-sekvens (XML-eksport) på et vilkårlig sted for å laste den inn.</translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="pling-plong-odometer.ui" line="90"/>
         <source>♫</source>
         <translation></translation>
@@ -225,7 +224,7 @@ p, li { white-space: pre-wrap; }
         <source>About</source>
         <translation>Om</translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="pling-plong-odometer.ui" line="530"/>
         <source>About ♫ ♪ Odometer</source>
         <translation>Om ♫ ♪ Odometer</translation>
@@ -364,7 +363,7 @@ Hent den nye versjonen: %s</translation>
     <message>
         <location filename="main.py" line="392"/>
         <source>&lt;i&gt;Library&lt;/i&gt;&lt;br&gt;%s&lt;/br&gt;</source>
-        <translation>&lt;i&gt;Bibliotek&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</translation>
+        <translation type="obsolete">&lt;i&gt;Bibliotek&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="main.py" line="409"/>
@@ -405,6 +404,11 @@ Hent den nye versjonen: %s</translation>
         <location filename="main.py" line="579"/>
         <source>You must enter the production number</source>
         <translation>Du må skrive inn prodnummeret</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="392"/>
+        <source>&lt;i&gt;Library&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
