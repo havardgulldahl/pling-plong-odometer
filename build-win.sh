@@ -42,28 +42,17 @@ rm -rf ./build ./dist || error "cleanup failed"
 echo "Building the app (see build.log)"
 $PYTHON setup.py py2exe > build.log || error "py2exe failed"
 
-exit;
-
-# add some missing pieces
-#echo "Adding some extra resources"
-#cp -r /opt/local/lib/Resources/qt_menu.nib dist/Pling\ Plong\ Odometer.app/Contents/Resources/ || error "Could not copy crucial qt resource"
-#echo -e "[Paths]\nPlugins = plugins" > dist/Pling\ Plong\ Odometer.app/Contents/Resources/qt.conf
-
-# rename to maximase brand name exposure (badges to come!)
-mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
-
-# create dmg images since all mac heads like to mount archives
-echo "Creating dmg image"
-DMGNAME=pling-plong-odometer-$VERSION.dmg 
-hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer" -fs "HFS+" -srcfolder "dist/" || error "Failed to create dmg"
+# create neat package
+BUNDLE=Pling-Plong-Odometer-$VERSION;
+SHORTNAME=odometer-$VERSION;
+mv dist $BUNDLE;
+/c/Programfiler/7-Zip/7z.exe a -r -sfx7z.sfx $SHORTNAME $BUNDLE || error "creating sfx bundle failed";
 
 # publish to dropbox
 echo "Publishing to dropbox"
-DMGURL=$DROPBOXURL/$DMGNAME;
-cp "$DMGNAME" $HOME/Dropbox/Public/"$DMGNAME" || error "Copying to dropbox failed"
-echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/odometerversion_mac.txt
+DBURL=$DROPBOXURL/$SHORTNAME;
+cp "$SHORTNAME" $HOME/Dropbox/Public/"$SHORTNAME" || error "Copying to dropbox failed"
+echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/odometerversion_win.txt
 
-
-
-echo "Finished. Take a look at $DMGNAME"
-echo "Online: $DMGURL"; 
+echo "Finished. Take a look at $SHORTNAME"
+echo "Online: $DBURL"; 
