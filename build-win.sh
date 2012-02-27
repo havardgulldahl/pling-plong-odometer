@@ -44,7 +44,7 @@ $PYTHON setup.py py2exe > build.log || error "py2exe failed"
 
 # create neat package
 BUNDLE=Pling-Plong-Odometer-$VERSION;
-SHORTNAME=odometer-$VERSION;
+SHORTNAME=odometer-$VERSION.exe;
 mv dist $BUNDLE;
 /c/Programfiler/7-Zip/7z.exe a -r -sfx7z.sfx $SHORTNAME $BUNDLE || error "creating sfx bundle failed";
 
@@ -52,7 +52,9 @@ mv dist $BUNDLE;
 echo "Publishing to dropbox"
 DBURL=$DROPBOXURL/$SHORTNAME;
 cp "$SHORTNAME" $HOME/Dropbox/Public/"$SHORTNAME" || error "Copying to dropbox failed"
-echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/odometerversion_win.txt
+echo "$VERSION|$DBURL" > $HOME/Dropbox/Public/odometerversion_win.txt
+
+rm -rf ./$BUNDLE;
 
 echo "Finished. Take a look at $SHORTNAME"
 echo "Online: $DBURL"; 
