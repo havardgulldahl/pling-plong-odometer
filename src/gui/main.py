@@ -636,9 +636,18 @@ def rungui(argv):
             #argv = argv[0:-1]
     except IndexError:
         pass
-	if sys.platform == 'win32':
-		Gui.QApplication.setStyle("plastique") # default win32 looks awful
+    if sys.platform == 'win32':
+        # default win32 looks awful, make it pretty
+        # docs advise to do this before QApplication() is started
+        Gui.QApplication.setStyle("cleanlooks") 
     app = Gui.QApplication(argv)
+    if sys.platform == 'win32':
+        def setfont(fontname):
+            app.setFont(Gui.QFont(fontname, 9))
+            return unicode(app.font().toString()).split(',')[0] == fontname
+        # default win32 looks awful, make it pretty
+        for z in ['Lucida Sans Unicode', 'Arial Unicode MS', 'Verdana']:
+            if setfont(z): break
     if f is not None: o = Odometer(app, f)
     else: o = Odometer(app)
     o.run(app)
