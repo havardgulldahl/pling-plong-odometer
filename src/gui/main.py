@@ -636,6 +636,8 @@ def rungui(argv):
             #argv = argv[0:-1]
     except IndexError:
         pass
+	if sys.platform == 'win32':
+		Gui.QApplication.setStyle("plastique") # default win32 looks awful
     app = Gui.QApplication(argv)
     if f is not None: o = Odometer(app, f)
     else: o = Odometer(app)
