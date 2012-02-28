@@ -54,74 +54,19 @@
         <translation>Detaljer</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="122"/>
-        <source>&amp;Title</source>
-        <translation type="obsolete">&amp;Tittel</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="135"/>
-        <source>A&amp;rtist</source>
-        <translation type="obsolete">A&amp;rtist</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="148"/>
-        <source>C&amp;omposer</source>
-        <translation type="obsolete">&amp;Forfatter</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="161"/>
-        <source>&amp;Year</source>
-        <translation type="obsolete">&amp;År</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="187"/>
-        <source>Track &amp;number</source>
-        <translation type="obsolete">&amp;Spornummer</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="200"/>
-        <source>Copyri&amp;ght</source>
-        <translation type="obsolete">Copyri&amp;ght</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="213"/>
-        <source>&amp;Label</source>
-        <translation type="obsolete">&amp;Plateselskap</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="169"/>
+        <location filename="pling-plong-odometer.ui" line="165"/>
         <source>Close the Details box</source>
         <translation>Lukk Detaljer</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="326"/>
+        <location filename="pling-plong-odometer.ui" line="314"/>
         <source>Locate a Final Cut Pro sequence (XML export) and load it.</source>
         <translation>Finn en Final Cut Pro-sekvens (XML-eksport) og last den inn.</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="329"/>
+        <location filename="pling-plong-odometer.ui" line="317"/>
         <source>&amp;Open file...</source>
         <translation>Å&amp;pne fil...</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="253"/>
-        <source>Select a threshold in dB</source>
-        <translation type="obsolete">Velg et grensenivå i dB</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="256"/>
-        <source>All audio below this value is left out when the total duration of each clip is computed.</source>
-        <translation type="obsolete">All lyd under denne verdien utelates når den totale klipplengden regnes ut.</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="259"/>
-        <source> dB</source>
-        <translation type="obsolete">dB</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="262"/>
-        <source>&gt; </source>
-        <translation type="obsolete">&gt; </translation>
     </message>
     <message>
         <location filename="pling-plong-odometer.ui" line="144"/>
@@ -134,126 +79,114 @@
         <translation>&lt;b&gt;Artist&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="158"/>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Lucida Grande&apos;; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Record Number&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="179"/>
+        <location filename="pling-plong-odometer.ui" line="175"/>
         <source>&lt;b&gt;Composer&lt;/b&gt;</source>
         <translation>&lt;b&gt;Komponist&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="216"/>
+        <location filename="pling-plong-odometer.ui" line="212"/>
         <source>&lt;b&gt;Album&lt;/b&gt;</source>
         <translation>&lt;b&gt;Album&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="233"/>
+        <location filename="pling-plong-odometer.ui" line="229"/>
         <source>&lt;b&gt;Year&lt;/b&gt;</source>
         <translation>&lt;b&gt;År&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="240"/>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Lucida Grande&apos;; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Lyricist&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="251"/>
+        <location filename="pling-plong-odometer.ui" line="243"/>
         <source>&lt;b&gt;Label&lt;/b&gt;</source>
         <translation>&lt;b&gt;Platemerke&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="278"/>
-        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
-&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
-p, li { white-space: pre-wrap; }
-&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Lucida Grande&apos;; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Copyright Owner&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="pling-plong-odometer.ui" line="355"/>
+        <location filename="pling-plong-odometer.ui" line="343"/>
         <source>gain &gt; </source>
         <translation></translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="424"/>
+        <location filename="pling-plong-odometer.ui" line="412"/>
         <source>Play extract</source>
         <translation>Spill utdrag</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="447"/>
+        <location filename="pling-plong-odometer.ui" line="435"/>
         <source>&amp;PRF report</source>
         <translation>PRF-rapport</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="457"/>
+        <location filename="pling-plong-odometer.ui" line="445"/>
         <source>Open a report form for AUX production music</source>
         <translation>Åpne et rapportskjema for AUX produksjonsmusikk</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="460"/>
+        <location filename="pling-plong-odometer.ui" line="448"/>
         <source>&amp;AUX report</source>
         <translation>AUX-rapport</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="470"/>
+        <location filename="pling-plong-odometer.ui" line="458"/>
         <source>Apollo report</source>
         <translation>Apollo-rapport</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="496"/>
+        <location filename="pling-plong-odometer.ui" line="484"/>
         <source>Create a list that is suitable for end credits.</source>
         <translation>Lag en liste som passer som rulletekst</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="499"/>
+        <location filename="pling-plong-odometer.ui" line="487"/>
         <source>Credits</source>
         <translation>Rulletekst</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="518"/>
+        <location filename="pling-plong-odometer.ui" line="506"/>
         <source>About</source>
         <translation>Om</translation>
     </message>
     <message utf8="true">
-        <location filename="pling-plong-odometer.ui" line="530"/>
+        <location filename="pling-plong-odometer.ui" line="518"/>
         <source>About ♫ ♪ Odometer</source>
         <translation>Om ♫ ♪ Odometer</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="535"/>
+        <location filename="pling-plong-odometer.ui" line="523"/>
         <source>Licenses</source>
         <translation>Lisenser</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="540"/>
+        <location filename="pling-plong-odometer.ui" line="528"/>
         <source>Help</source>
         <translation>Hjelp</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="543"/>
+        <location filename="pling-plong-odometer.ui" line="531"/>
         <source>Show a help document</source>
         <translation>Vis et hjelpedokument</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="548"/>
+        <location filename="pling-plong-odometer.ui" line="536"/>
         <source>Check for updates...</source>
         <translation>Sjekk etter oppdateringer</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="551"/>
+        <location filename="pling-plong-odometer.ui" line="539"/>
         <source>Check for updates online</source>
         <translation>Sjekk etter oppdateringer på nettet</translation>
+    </message>
+    <message>
+        <location filename="pling-plong-odometer.ui" line="158"/>
+        <source>&lt;b&gt;Record Number&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Platenummer&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="pling-plong-odometer.ui" line="236"/>
+        <source>&lt;b&gt;Lyricist&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Tekstforfatter&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <location filename="pling-plong-odometer.ui" line="270"/>
+        <source>&lt;b&gt;Copyright Owner&lt;/b&gt;</source>
+        <translation>&lt;b&gt;Copyrightinnehaver&lt;/b&gt;</translation>
     </message>
 </context>
 <context>
@@ -362,11 +295,6 @@ Hent den nye versjonen: %s</translation>
 </translation>
     </message>
     <message>
-        <location filename="main.py" line="392"/>
-        <source>&lt;i&gt;Library&lt;/i&gt;&lt;br&gt;%s&lt;/br&gt;</source>
-        <translation>&lt;i&gt;Bibliotek&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</translation>
-    </message>
-    <message>
         <location filename="main.py" line="409"/>
         <source>Unknown</source>
         <translation>Ukjent</translation>
@@ -406,6 +334,11 @@ Hent den nye versjonen: %s</translation>
         <source>You must enter the production number</source>
         <translation>Du må skrive inn prodnummeret</translation>
     </message>
+    <message>
+        <location filename="main.py" line="392"/>
+        <source>&lt;i&gt;Library&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</source>
+        <translation>&lt;i&gt;Bibliotek&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</translation>
+    </message>
 </context>
 <context>
     <name>PlingPlongAUXDialog</name>
@@ -415,14 +348,14 @@ Hent den nye versjonen: %s</translation>
         <translation>Sonoton(AUX)-rapport</translation>
     </message>
     <message>
-        <location filename="pling-plong-auxreport.ui" line="20"/>
-        <source>This is an embedded view of the online report form for Sonoton, via AUX publishing</source>
-        <translation>Dette er et rapportskjema til Sonoton, via AUX Publishing</translation>
-    </message>
-    <message>
         <location filename="pling-plong-auxreport.ui" line="30"/>
         <source>about:blank</source>
         <translation></translation>
+    </message>
+    <message>
+        <location filename="pling-plong-auxreport.ui" line="20"/>
+        <source>This is an embedded view of the online report form for AUX publishing</source>
+        <translation>Dette er en innkapslet visning av nett-skjemaet til AUX Publishing</translation>
     </message>
 </context>
 <context>
