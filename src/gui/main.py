@@ -120,6 +120,7 @@ class Odometer(Gui.QMainWindow):
         self.statusboxes = []
         self.showsubclips = True
         self.translator = None
+        self.translatorQt = None
         self.settings = Core.QSettings('nrk.no', 'Pling Plong Odometer')
         self.volumethreshold = xmemliter.Volume(gain=volume)
         self.xmemlfile = xmemlfile
@@ -609,6 +610,14 @@ class Odometer(Gui.QMainWindow):
         print "loading translation: odometer_%s" % language
         self.translator.load(':data/translation_%s' % language)
         self.app.installTranslator(self.translator)
+        # also for qt strings
+        if self.translatorQt is not None:
+            self.app.removeTranslator(self.translatorQt)
+        else:
+            self.translatorQt = Core.QTranslator(self.app)
+        print "loading Qttranslation: qt_%s" % language
+        self.translatorQt.load(':data/qt_%s' % language)
+        self.app.installTranslator(self.translatorQt)
 
 def uniqify(seq):
     keys = {} 
@@ -636,7 +645,18 @@ def rungui(argv):
             #argv = argv[0:-1]
     except IndexError:
         pass
+    if sys.platform == 'win32':
+        # default win32 looks awful, make it pretty
+        # docs advise to do this before QApplication() is started
+        Gui.QApplication.setStyle("cleanlooks") 
     app = Gui.QApplication(argv)
+    if sys.platform == 'win32':
+        def setfont(fontname):
+            app.setFont(Gui.QFont(fontname, 9))
+            return unicode(app.font().toString()).split(',')[0] == fontname
+        # default win32 looks awful, make it pretty
+        for z in ['Lucida Sans Unicode', 'Arial Unicode MS', 'Verdana']:
+            if setfont(z): break
     if f is not None: o = Odometer(app, f)
     else: o = Odometer(app)
     o.run(app)
