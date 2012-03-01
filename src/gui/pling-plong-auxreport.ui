@@ -17,7 +17,7 @@
    <string>Sonoton (AUX) Report</string>
   </property>
   <property name="toolTip">
-   <string>This is an embedded view of the online report form for Sonoton, via AUX publishing</string>
+   <string>This is an embedded view of the online report form for AUX publishing</string>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>

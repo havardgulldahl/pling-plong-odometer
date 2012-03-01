@@ -1,6 +1,6 @@
 #-*- encoding: utf-8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011
+# (C) 2011-2012
 """
 py2app/py2exe build script for odometer.
 
@@ -16,8 +16,11 @@ Usage (Windows):
 #import ez_setup
 #ez_setup.use_setuptools()
 
-import sys
+import sys, os.path
 from setuptools import setup
+
+if sys.platform == 'win32':
+	import py2exe
 
 def getversion():
     if sys.platform == 'darwin':
@@ -32,7 +35,7 @@ def getversion():
     except:
         raise
 
-mainscript = 'src/pling-plong-odometer.py'
+mainscript = os.path.join('src', 'pling-plong-odometer.py')
 
 if sys.platform == 'darwin':
      extra_options = dict(
@@ -48,7 +51,7 @@ if sys.platform == 'darwin':
              plist=dict(CFBundleIdentifier='no.nrk.odometer',
                         ##CFBundleDisplayName='♫ ♪ Odometer',
                         #CFBundleDisplayName=u'\u266b \u266a Odometer',
-                        CFBundleShortVersionString='Odometer, version x.x',
+                        CFBundleShortVersionString='Odometer, version %s' % getversion(),
                         NSSupportsSuddenTermination=True,
                         NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011-2012')
              )
@@ -57,8 +60,17 @@ if sys.platform == 'darwin':
 elif sys.platform == 'win32':
      extra_options = dict(
          setup_requires=['py2exe'],
-         app=[mainscript],
-     )
+         windows=[mainscript],
+		 packages=['gui','metadata','xmeml'],
+		 package_dir={'metadata':'src/metadata',
+		              'gui':'src/gui',
+		              'xmeml':'src/xmeml'
+					  },
+		 options=dict(py2exe=dict(
+             packages=['lxml'],
+             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'])
+		)
+    )
 else:
      extra_options = dict(
          # Normally unix-like platforms will use "setup.py install"
@@ -74,4 +86,3 @@ setup(
     description='Pling Plong Odometer is a tool to automatically calculate audio usage in an fcp project',
     **extra_options
 )
-
