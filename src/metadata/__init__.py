@@ -66,10 +66,12 @@ class TrackMetadata(object):
 
     def getmusicid(self):
         "Return a music id (DMA/Sonoton unique key) from filename"
-        if self.musiclibrary == "DMA":
+        if self.musiclibrary == DMAResolver.name:
             return DMAResolver.musicid(self.filename)
-        elif self.musiclibrary == "Sonoton":
+        elif self.musiclibrary == SonotonResolver.name:
             return SonotonResolver.musicid(self.filename)
+        elif self.musiclibrary == AUXResolver.name:
+            return AUXResolver.musicid(self.filename)
         else:
             return ResolverBase.musicid(self.filename)
 

@@ -137,8 +137,8 @@ class Odometer(Gui.QMainWindow):
         self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
         self.ui.nextButton = self.ui.buttonBox.addButton(self.tr('Ne&xt'), Gui.QDialogButtonBox.ActionRole)
         self.ui.nextButton.clicked.connect(self.showNextMetadata)
-        self.ui.manualAuxButton = self.ui.buttonBox.addButton(self.tr('AUX lookup'), Gui.QDialogButtonBox.ActionRole)
-        self.ui.manualAuxButton.clicked.connect(self.auxResolve)
+        self.ui.resolveAUXButton = self.ui.buttonBox.addButton(self.tr('AUX lookup'), Gui.QDialogButtonBox.ActionRole)
+        self.ui.resolveAUXButton.clicked.connect(self.auxResolve)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         #self.ui.DMAButton.clicked.connect(self.gluon)
@@ -440,6 +440,7 @@ class Odometer(Gui.QMainWindow):
             self.ui.detailsBox.hide()
         self.ui.previousButton.setEnabled(self.ui.clips.itemAbove(row) is not None)
         self.ui.nextButton.setEnabled(self.ui.clips.itemBelow(row) is not None)
+        self.ui.resolveAUXButton.setEnabled(row.metadata.title is None)
 
     def showPreviousMetadata(self, b):
         clips = self.ui.clips
@@ -559,14 +560,31 @@ class Odometer(Gui.QMainWindow):
         resolver = metadata.AUXResolver()
         resolver.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
         resolver.trackResolved.connect(updateMetadata)
+        resolver.trackResolved.connect(self.submitMissingFilename)
         resolver.trackProgress.connect(self.showProgress) 
         resolver.error.connect(self.showerror) 
         self.workers.append(resolver) # keep track of the worker
         resolver.resolve(row.audioname) # put the worker to work async
 
-    def submitMissingFilename(self, filename, metadata):
-        pass
-
+    def submitMissingFilename(self, filename, resolvedmetadata):
+        'Add filename and metadata to a public spreadsheet'
+        _url = 'https://docs.google.com/spreadsheet/embeddedform?formkey=dEx0Z2xIWWJncHFxLVBQVWd2aW9xSUE6MQ'
+        GdocsDialog = Gui.QDialog()
+        ui = auxreport_ui.Ui_PlingPlongAUXDialog()
+        ui.setupUi(GdocsDialog)
+        ui.buttonBox.hide()
+        ui.webView.load(Core.QUrl(_url))
+        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        def reportloaded(boolean):
+            print "report loaded: %s" % boolean
+            html = ui.webView.page().mainFrame()
+            fn = html.findFirstElement('input[id="entry_0"]')
+            fn.setAttribute("value", filename)
+            text = html.findFirstElement("textarea")
+            text.setPlainText(unicode(vars(resolvedmetadata)))
+        ui.webView.loadFinished.connect(reportloaded)
+        return GdocsDialog.exec_()
 
     def credits(self):
         _labels_seen = []
