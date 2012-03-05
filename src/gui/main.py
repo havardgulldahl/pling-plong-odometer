@@ -137,6 +137,8 @@ class Odometer(Gui.QMainWindow):
         self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
         self.ui.nextButton = self.ui.buttonBox.addButton(self.tr('Ne&xt'), Gui.QDialogButtonBox.ActionRole)
         self.ui.nextButton.clicked.connect(self.showNextMetadata)
+        self.ui.manualAuxButton = self.ui.buttonBox.addButton(self.tr('AUX lookup'), Gui.QDialogButtonBox.ActionRole)
+        self.ui.manualAuxButton.clicked.connect(self.auxResolve)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         #self.ui.DMAButton.clicked.connect(self.gluon)
@@ -544,6 +546,27 @@ class Odometer(Gui.QMainWindow):
             #return AUXDialog.accept()
         ui.buttonBox.accepted.connect(reportsubmit)
         return AUXDialog.exec_()
+
+    def auxResolve(self):
+        'Manually submit selected tracks to aux for resolving'
+        row = self.ui.detailsBox.currentRow
+        print 'manually resolving ', row.audioname, row.metadata
+        def updateMetadata(filename, md):
+            row.metadata = md
+            self.showMetadata(row)
+            row.setCheckState(0, Core.Qt.Checked)
+
+        resolver = metadata.AUXResolver()
+        resolver.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
+        resolver.trackResolved.connect(updateMetadata)
+        resolver.trackProgress.connect(self.showProgress) 
+        resolver.error.connect(self.showerror) 
+        self.workers.append(resolver) # keep track of the worker
+        resolver.resolve(row.audioname) # put the worker to work async
+
+    def submitMissingFilename(self, filename, metadata):
+        pass
+
 
     def credits(self):
         _labels_seen = []

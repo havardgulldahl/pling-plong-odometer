@@ -142,7 +142,7 @@ class GluonLookupWorker(Core.QThread):
         self.trackResolved.emit(metadata)
         self.progress.emit(100)
         #self.terminate()
-        self.deleteLater()
+        #self.deleteLater()
 
     def request(self, musicid):
         "do an http post request with given gluon xml payload"
