@@ -495,7 +495,7 @@ class SonotonResolver(ResolverBase):
         self.trackResolved.emit(self.filename, metadata)
 
 class AUXResolver(SonotonResolver):
-    prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD, SPOTS', 'JW', 'CANDY', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONIA', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TREDE', 'TSU', 'UBMM', 'WDA', 'WD']
+    prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD']
 
     labelmap = {
                 'AD': 'Adapt', 
@@ -507,16 +507,17 @@ class AUXResolver(SonotonResolver):
                 'ECM': 'Extra Chilli Music', 
                 'FWM': 'Frameworks', 
                 'IPX': 'Impax Music', 
-                'ISCD, SPOTS': 'Intersound', 
+                'ISCD': 'Intersound', 
+                'SPOT': 'Intersound', 
                 'JW': 'JW Media Music', 
-                'CANDY': 'Music Candy', 
+                'CAND': 'Music Candy', 
                 'MMIT': 'MUSICA IT', 
                 'KOK': 'Pacifica Artist', 
                 'PMA': 'Pacifica Music Artist', 
                 'ISPV': 'Pro Viva', 
                 'RSM': 'Reliable Source Music', 
                 'RSMV': 'Reliable Source Music Virtual', 
-                'SONIA': 'Sonia Classics', 
+                'SONI': 'Sonia Classics', 
                 'SCD': 'Sonoton', 
                 'SAS': 'Sonoton Authentic Series', 
                 'SCDC': 'Sonoton Classical', 
@@ -524,7 +525,7 @@ class AUXResolver(SonotonResolver):
                 'STTV': 'Sonoton Trailer Tracks V', 
                 'SCDV': 'Sonoton Virtual CDs', 
                 'TM': 'Telemusic', 
-                'TREDE': 'Trede Collection', 
+                'TRED': 'Trede Collection', 
                 'TSU': 'Tsunami Sounds', 
                 'UBMM': 'UBM Media', 
                 'WDA': 'Wild Diesel Artist', 
