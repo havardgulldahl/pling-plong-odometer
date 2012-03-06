@@ -20,8 +20,9 @@ def iterReportoire():
 if __name__ == '__main__':
     _short = []
     for _rep, _sh in iterReportoire():
-        _short.append(_sh)
-        print """'%s': '%s', """ % (_sh, _rep)
+        for _prefix in [x.strip()[:4] for x in _sh.split(',')]:
+            _short.append(_prefix)
+            print """'%s': '%s', """ % (_prefix, _rep)
 
     print '\n\n%s' % _short
 
