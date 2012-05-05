@@ -140,6 +140,8 @@ class GluonLookupWorker(Core.QThread):
         self.progress.emit(70)
         self.trackResolved.emit(metadata)
         self.progress.emit(100)
+        #self.terminate()
+        #self.deleteLater()
 
     def request(self, musicid):
         "do an http post request with given gluon xml payload"
@@ -237,6 +239,8 @@ class DMAWorker(Core.QThread):
         #md.copyright = 'Kommer fra DMA'
         self.progress.emit(100)
         self.trackResolved.emit(md)
+        #self.terminate()
+        self.deleteLater()
 
 class ResolverBase(Core.QObject):
 
@@ -545,42 +549,41 @@ class SonotonResolver(ResolverBase):
         self.trackResolved.emit(self.filename, metadata)
 
 class AUXResolver(SonotonResolver):
-    prefixes = ['AUXMP_', 'CNS', 'DK', 'ECM', 'FWM', 'HGR', 'ISCD', 'JW', 'CAND', 'PPM', 'SONIA',
-        'SCD', 'SCDC', 'SAS', 'STT', 'STTV', 'SCDV', 'STRIP', 'TM', 'TREDE', 'TSU', 'AD', 'BAC',
-        'BM', 'CCS', 'CCCD', 'CAVCD', 'CAVT', 'CLC', 'CNS','UBMM','WD', 'WDA']
+    prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD']
+
     labelmap = {
-                'AD':'Adapt',
-                'BAC':'Big and Clever Music',
-                'BM':'Brilliant Music',
-                'CCS':'Cavendish Classic Series',
-                'CCCD':'Cavendish Classic',
-                'CAVCD':'Cavendish Music',
-                'CAVT':'Cavendish Trailers',
-                'CLC':'Commercial Length Cuts',
-                'CNS':'Commercials Non Stop',
-                'DK':'DramaKing',
-                'ECM':'Extra Chilli Music',
-                'FWM':'Frameworks',
-                'HGR':'Hella Good Records',
-                'ISCD':'Intersound',
-                'JW':'JW Media Music',
-                'CAND':'Music Candy',
-                'PPM':'Post Production Music',
-                'SONIA':'Sonia Classics',
-                'SCD':'Sonoton',
-                'SCDC':'Sonoton Classical',
-                'SAS':'Sonoton Authentic Series',
-                'STT':'Sonoton Trailer Tracks',
-                'STTV':'Sonoton Trailer Tracks V',
-                'SCDV':'Sonoton Virtual CDs',
-                'STRIP':'Strip Sounds',
-                'TM':'Telemusic',
-                'TREDE':'Trede Collection',
-                'TSU':'Tsunami Sounds',
-                'UBMM':'UBM Media',
-                'WD':'Wild Diesel', 
-                'WDA':'Wild Diesel Artist', 
-                
+                'AD': 'Adapt', 
+                'AFRO': 'AFRO Musique', 
+                'BAC': 'Big and Clever Music', 
+                'BL': 'Bleach', 
+                'BM': 'Brilliant Music', 
+                'CNS': 'Commercials Non Stop', 
+                'ECM': 'Extra Chilli Music', 
+                'FWM': 'Frameworks', 
+                'IPX': 'Impax Music', 
+                'ISCD': 'Intersound', 
+                'SPOT': 'Intersound', 
+                'JW': 'JW Media Music', 
+                'CAND': 'Music Candy', 
+                'MMIT': 'MUSICA IT', 
+                'KOK': 'Pacifica Artist', 
+                'PMA': 'Pacifica Music Artist', 
+                'ISPV': 'Pro Viva', 
+                'RSM': 'Reliable Source Music', 
+                'RSMV': 'Reliable Source Music Virtual', 
+                'SONI': 'Sonia Classics', 
+                'SCD': 'Sonoton', 
+                'SAS': 'Sonoton Authentic Series', 
+                'SCDC': 'Sonoton Classical', 
+                'STT': 'Sonoton Trailer Tracks', 
+                'STTV': 'Sonoton Trailer Tracks V', 
+                'SCDV': 'Sonoton Virtual CDs', 
+                'TM': 'Telemusic', 
+                'TRED': 'Trede Collection', 
+                'TSU': 'Tsunami Sounds', 
+                'UBMM': 'UBM Media', 
+                'WDA': 'Wild Diesel Artist', 
+                'WD': 'Wild Diesel',
                }
     name = 'AUX Publishing'
     urlbase = 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr&lyr=0'
