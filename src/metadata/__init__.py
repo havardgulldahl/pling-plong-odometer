@@ -15,6 +15,7 @@ import PyQt4.QtGui as Gui
 import PyQt4.QtWebKit as Web
 import PyQt4.Qt as Qt
 import mutagen
+import tagger
 
 import gluon
 
@@ -66,12 +67,10 @@ class TrackMetadata(object):
 
     def getmusicid(self):
         "Return a music id (DMA/Sonoton unique key) from filename"
-        if self.musiclibrary == "DMA":
-            return DMAResolver.musicid(self.filename)
-        elif self.musiclibrary == "Sonoton":
-            return SonotonResolver.musicid(self.filename)
-        else:
-            return ResolverBase.musicid(self.filename)
+        for res in (DMAResolver, AUXResolver, SonotonResolver):
+            if self.musiclibrary == res.name:
+                return res.musicid(self.filename)
+        return ResolverBase.musicid(self.filename)
 
 class GluonReportWorker(Core.QThread):
     reported = Core.pyqtSignal(name="reported") # success
@@ -359,6 +358,63 @@ class ResolverBase(Core.QObject):
         except UnicodeEncodeError:
             print repr(self.filename), type(self.filename)
 
+class GenericMP3Resolver(ResolverBase):
+    'Resolve file based on embedded metadata, i.e. id3 tags'
+    name = 'MP3'
+    
+    def accepts(self, filename):
+        return filename.lower().endswith('mp3')
+    
+    def resolve(self, filename, fromcache=True):
+        self.filename = filename
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                self.trackResolved.emit(self.filename, md)
+                return
+        parsed = self.id3parse(filename)
+        if not parsed:
+            self.error.emit(u'Could not parse %s' % filename)
+            self.trackFailed.emit(filename)
+        else:
+            self.trackResolved.emit(self.filename, parsed)
+    
+    def id3parse(self, filename):
+        'Parse metadata from id3 tags and return TrackMetadata object or False'
+        try:
+            _filev1 = tagger.ID3v1(filename)
+            _filev2 = tagger.ID3v2(filename)
+        except Exception as e:
+            #file is not available or is corrupt
+            if hasattr(e, 'msg'):
+                self.error.emit(e.msg)
+            return False
+            
+        md = TrackMetadata(filename)
+
+        if _filev1.album.decode('latin1') == u'NRK P3 Urørt':
+            md.musiclibrary = u'Urørt'
+        md.title = _filev1.songname.decode('latin1')
+        md.year = int(_filev1.year, 10)
+        md.tracknumber = _filev1.track
+        md.artist = _filev1.artist.decode('latin1')
+        # see http://en.wikipedia.org/wiki/ID3
+        _map = {'TEXT': 'lyricist',
+                'TCOM':'composer',
+                'TCOP':'copyright',
+                'TPUB':'catalogue',
+                'TIM':'length',
+                'TSRC':'isrc',
+               }
+        for _frame in _filev2.frames:
+            if _frame.fid in _map.keys():
+                _toattr = _map[_frame.fid]
+                _value = ','.join( s.decode(_frame.encoding) for s in _frame.strings )
+                setattr(md, _toattr, _value)
+        print vars(md)
+        return md
+            
+            
 class DMAResolver(ResolverBase):
     # Fra gammelt av har vi disse kodene:
     # NRKO_
@@ -535,7 +591,6 @@ class AUXResolver(SonotonResolver):
         rex = re.compile(r'^((AUXMP_)?([A-Z]+\d{6}))')
         g = rex.search(filename)
         try:
-            print g.groups()
             return g.group(3)
         except AttributeError: #no match
             print "oh noes, could not understand this AUX id:",filename
@@ -551,7 +606,7 @@ class AUXResolver(SonotonResolver):
 
 
 def findResolver(filename):
-    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), ]
+    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), GenericMP3Resolver()]
     for resolver in resolvers:
         if resolver.accepts(filename):
             return resolver
@@ -624,6 +679,7 @@ if __name__ == '__main__':
     filename = 'AUXMP_UBMM211517_DESIERTO-AIFF 48/24.aiff'
     filename = 'SCD0694 track11_Fill it up A_J.D.Trigger / DJ Chunk / R Pick.wav'
     #filename = 'NONRT900497LP0205_xxx.wav'
+    filename = 'rykta.mp3'
     metadata = None
     def mymeta(filename, _metadata):
         metadata = _metadata
@@ -631,6 +687,7 @@ if __name__ == '__main__':
 
     app = Gui.QApplication(sys.argv)
     resolver = findResolver(filename)
+    print resolver
     resolver.trackResolved.connect(mymeta)
     resolver.resolve(filename, fromcache=False)
     #doc = webdoc(filename, 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=SCD082120&w=tr&lyr=0')
