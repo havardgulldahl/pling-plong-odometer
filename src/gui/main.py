@@ -176,6 +176,7 @@ class Odometer(Gui.QMainWindow):
             self.ui.actionCheck_for_updates.setEnabled(False)
         if not self.buildflags.getboolean('ui', 'volumeThreshold'):
             self.ui.volumeThreshold.hide()
+            self.ui.volumeInfo.hide()
         if not self.buildflags.getboolean('ui', 'prfbutton'):
             self.ui.DMAButton.hide()
         if not self.buildflags.getboolean('ui', 'auxbutton'):
@@ -505,9 +506,12 @@ class Odometer(Gui.QMainWindow):
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(PRFDialog)
         s = ""
-        # TODO: TRANSLATE
         for r in self.itercheckedrows():
-            s += u"""<dl>
+            if r.metadata.artist == u'(N/A for production music)':
+                r.metadata.artist = unicode(self.tr('Not applicable'))
+            if r.metadata.copyright == u'(This information requires login)':
+                r.metadata.copyright = unicode(self.tr('Not applicable'))
+            s += unicode(self.tr(u"""<dl>
             <dt>Title:</dt><dd>%(title)s</dd>
             <dt>Artist:</dt><dd>%(artist)s</dd>
             <dt>Album name:</dt><dd>%(albumname)s</dd>
@@ -517,17 +521,17 @@ class Odometer(Gui.QMainWindow):
             <dt>Recordnumber:</dt><dd>%(recordnumber)s</dd>
             <dt>Copyright owner:</dt><dd>%(copyright)s</dd>
             <dt>Released year:</dt><dd>%(year)s</dd>
-            </dl>""" % vars(r.metadata)
-            s += u"<p><b>Seconds in total</b>: %s" % r.clip['durationsecs']
+            </dl>""")) % vars(r.metadata)
+            s += "<p><b>" + unicode(self.tr(u"Seconds in total</b>: %s")) % r.clip['durationsecs']
             if len(r.subclips):
-                s += ", in these subclips: <ol>"
+                s += unicode(self.tr(", in these subclips:")) + "<ol>"
                 for sc in r.subclips:
                     s += "<li>%s</li>" % sc['durationsecs']
                 s += "</ol>"
             s += "</p><hr>"
         ui.textBrowser.setHtml(s)
         def _save():
-            print "saving report for prf"
+            # print "saving report for prf"
             try:
                 loc = Gui.QFileDialog.getSaveFileName(PRFDialog, self.tr("Save prf report"))
                 f = open(unicode(loc), "wb")
