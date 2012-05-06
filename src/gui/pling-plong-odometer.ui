@@ -134,49 +134,15 @@
         <property name="title">
          <string>Details</string>
         </property>
-        <layout class="QFormLayout" name="formLayout">
-         <property name="fieldGrowthPolicy">
-          <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
-         </property>
-         <item row="2" column="0">
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0">
           <widget class="QLabel" name="label">
            <property name="text">
             <string>&lt;b&gt;Title&lt;/b&gt;</string>
            </property>
           </widget>
          </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>&lt;b&gt;Artist&lt;/b&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item row="11" column="0">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>&lt;b&gt;Record Number&lt;/b&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item row="18" column="1">
-          <widget class="QDialogButtonBox" name="buttonBox">
-           <property name="statusTip">
-            <string>Close the Details box</string>
-           </property>
-           <property name="standardButtons">
-            <set>QDialogButtonBox::Close</set>
-           </property>
-          </widget>
-         </item>
-         <item row="6" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>&lt;b&gt;Composer&lt;/b&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
+         <item row="0" column="1">
           <widget class="QLabel" name="clipTitle">
            <property name="text">
             <string/>
@@ -186,7 +152,14 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="1">
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>&lt;b&gt;Artist&lt;/b&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
           <widget class="QLabel" name="clipArtist">
            <property name="text">
             <string/>
@@ -196,65 +169,14 @@
            </property>
           </widget>
          </item>
-         <item row="6" column="1">
-          <widget class="QLabel" name="clipComposer">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="textInteractionFlags">
-            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-           </property>
-          </widget>
-         </item>
-         <item row="14" column="0">
-          <widget class="QLabel" name="label_10">
-           <property name="text">
-            <string>&lt;b&gt;Album&lt;/b&gt;</string>
-           </property>
-           <property name="textFormat">
-            <enum>Qt::RichText</enum>
-           </property>
-          </widget>
-         </item>
-         <item row="14" column="1">
-          <widget class="QLabel" name="clipAlbum">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
-         </item>
-         <item row="17" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>&lt;b&gt;Year&lt;/b&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="0">
+         <item row="2" column="0">
           <widget class="QLabel" name="label_9">
            <property name="text">
             <string>&lt;b&gt;Lyricist&lt;/b&gt;</string>
            </property>
           </widget>
          </item>
-         <item row="15" column="0">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>&lt;b&gt;Label&lt;/b&gt;</string>
-           </property>
-          </widget>
-         </item>
-         <item row="15" column="1">
-          <widget class="QLabel" name="clipLabel">
-           <property name="text">
-            <string/>
-           </property>
-           <property name="textInteractionFlags">
-            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
+         <item row="2" column="1">
           <widget class="QLabel" name="clipLyricist">
            <property name="text">
             <string/>
@@ -264,15 +186,15 @@
            </property>
           </widget>
          </item>
-         <item row="8" column="0">
-          <widget class="QLabel" name="label_4">
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_6">
            <property name="text">
-            <string>&lt;b&gt;Copyright Owner&lt;/b&gt;</string>
+            <string>&lt;b&gt;Composer&lt;/b&gt;</string>
            </property>
           </widget>
          </item>
-         <item row="17" column="1">
-          <widget class="QLabel" name="clipYear">
+         <item row="3" column="1">
+          <widget class="QLabel" name="clipComposer">
            <property name="text">
             <string/>
            </property>
@@ -281,7 +203,14 @@
            </property>
           </widget>
          </item>
-         <item row="8" column="1">
+         <item row="4" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>&lt;b&gt;Copyright Owner&lt;/b&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
           <widget class="QLabel" name="clipCopyright">
            <property name="text">
             <string/>
@@ -291,13 +220,81 @@
            </property>
           </widget>
          </item>
-         <item row="11" column="1">
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>&lt;b&gt;Record Number&lt;/b&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
           <widget class="QLabel" name="clipRecordnumber">
            <property name="text">
             <string/>
            </property>
            <property name="textInteractionFlags">
             <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_10">
+           <property name="text">
+            <string>&lt;b&gt;Album&lt;/b&gt;</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::RichText</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLabel" name="clipAlbum">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>&lt;b&gt;Label&lt;/b&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLabel" name="clipLabel">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="0">
+          <widget class="QLabel" name="label_2">
+           <property name="text">
+            <string>&lt;b&gt;Year&lt;/b&gt;</string>
+           </property>
+          </widget>
+         </item>
+         <item row="8" column="1">
+          <widget class="QLabel" name="clipYear">
+           <property name="text">
+            <string/>
+           </property>
+           <property name="textInteractionFlags">
+            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+           </property>
+          </widget>
+         </item>
+         <item row="9" column="1">
+          <widget class="QDialogButtonBox" name="buttonBox">
+           <property name="statusTip">
+            <string>Close the Details box</string>
+           </property>
+           <property name="standardButtons">
+            <set>QDialogButtonBox::Close</set>
            </property>
           </widget>
          </item>
@@ -498,7 +495,7 @@
      <x>0</x>
      <y>0</y>
      <width>900</width>
-     <height>25</height>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_About">

@@ -142,8 +142,12 @@ class Odometer(Gui.QMainWindow):
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.gain)
-        self.ui.resolveAUXButton = self.ui.buttonBox.addButton(self.tr('AUX lookup'), Gui.QDialogButtonBox.ActionRole)
-        self.ui.resolveAUXButton.clicked.connect(self.auxResolve)
+        if self.buildflags.getboolean('ui', 'editbutton'):
+            self.ui.editMetadataButton = self.ui.buttonBox.addButton(self.tr('Edit'), Gui.QDialogButtonBox.ActionRole)
+            self.ui.editMetadataButton.clicked.connect(self.editMetadata)
+        if self.buildflags.getboolean('ui', 'auxlookupbutton'):
+            self.ui.resolveAUXButton = self.ui.buttonBox.addButton(self.tr('AUX lookup'), Gui.QDialogButtonBox.ActionRole)
+            self.ui.resolveAUXButton.clicked.connect(self.auxResolve)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         #self.ui.DMAButton.clicked.connect(self.gluon)
@@ -460,24 +464,41 @@ class Odometer(Gui.QMainWindow):
             self.ui.detailsBox.hide()
         self.ui.resolveAUXButton.setEnabled(row.metadata.title is None)
 
-    # def showPreviousMetadata(self, b):
-        # clips = self.ui.clips
-        # r = clips.itemAbove(self.ui.detailsBox.currentRow)
-        # clips.setCurrentItem(r)
-        # clips.itemActivated.emit(r, -1)
-
-    # def showNextMetadata(self, b):
-        # clips = self.ui.clips
-        # r = clips.itemBelow(self.ui.detailsBox.currentRow)
-        # clips.setCurrentItem(r)
-        # clips.itemActivated.emit(r, -1)
-
+    def editMetadata(self):
+        detailsLayout = self.ui.detailsBox.layout()
+        def editable(widget):
+            def close(editWidget, labelWidget, r, c):
+                labelWidget.setText(editWidget.text())
+                i = detailsLayout.indexOf(editWidget)
+                detailsLayout.takeAt(i)
+                editWidget.deleteLater()
+                detailsLayout.addWidget(labelWidget, r, c)
+                labelWidget.show()
+            index = detailsLayout.indexOf(widget)
+            row, column, cols, rows = detailsLayout.getItemPosition(index)
+            print "poss: ",index, row, column, cols, rows
+            text = widget.text()
+            widget.hide()
+            detailsLayout.takeAt(index)
+            _edit = Gui.QLineEdit(text, self.ui.detailsBox)
+            detailsLayout.addWidget(_edit, row, column)
+            _edit.editingFinished.connect(lambda: close(_edit, widget, row, column))
+        for x in (self.ui.clipTitle,
+                  self.ui.clipAlbum,
+                  self.ui.clipArtist,
+                  self.ui.clipComposer,
+                  self.ui.clipLyricist,
+                  # self.ui.clipYear,
+                  self.ui.clipRecordnumber,
+                  self.ui.clipCopyright,
+                  self.ui.clipLabel):
+            editable(x)
+        
     def itercheckedrows(self):
         for row in self.rows.values():
             #print row
             if row.checkState(0) == Core.Qt.Checked: 
                 yield row
-
 
     def prfReport(self):
         PRFDialog = Gui.QDialog()
