@@ -142,10 +142,6 @@ class Odometer(Gui.QMainWindow):
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.gain)
-        # self.ui.previousButton = self.ui.buttonBox.addButton(self.tr('Pre&vious'), Gui.QDialogButtonBox.ActionRole)
-        # self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
-        # self.ui.nextButton = self.ui.buttonBox.addButton(self.tr('Ne&xt'), Gui.QDialogButtonBox.ActionRole)
-        # self.ui.nextButton.clicked.connect(self.showNextMetadata)
         self.ui.resolveAUXButton = self.ui.buttonBox.addButton(self.tr('AUX lookup'), Gui.QDialogButtonBox.ActionRole)
         self.ui.resolveAUXButton.clicked.connect(self.auxResolve)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
@@ -462,21 +458,19 @@ class Odometer(Gui.QMainWindow):
         except AttributeError, (e):
             print e
             self.ui.detailsBox.hide()
-        self.ui.previousButton.setEnabled(self.ui.clips.itemAbove(row) is not None)
-        self.ui.nextButton.setEnabled(self.ui.clips.itemBelow(row) is not None)
         self.ui.resolveAUXButton.setEnabled(row.metadata.title is None)
 
-    def showPreviousMetadata(self, b):
-        clips = self.ui.clips
-        r = clips.itemAbove(self.ui.detailsBox.currentRow)
-        clips.setCurrentItem(r)
-        clips.itemActivated.emit(r, -1)
+    # def showPreviousMetadata(self, b):
+        # clips = self.ui.clips
+        # r = clips.itemAbove(self.ui.detailsBox.currentRow)
+        # clips.setCurrentItem(r)
+        # clips.itemActivated.emit(r, -1)
 
-    def showNextMetadata(self, b):
-        clips = self.ui.clips
-        r = clips.itemBelow(self.ui.detailsBox.currentRow)
-        clips.setCurrentItem(r)
-        clips.itemActivated.emit(r, -1)
+    # def showNextMetadata(self, b):
+        # clips = self.ui.clips
+        # r = clips.itemBelow(self.ui.detailsBox.currentRow)
+        # clips.setCurrentItem(r)
+        # clips.itemActivated.emit(r, -1)
 
     def itercheckedrows(self):
         for row in self.rows.values():
