@@ -22,5 +22,6 @@
   <qresource prefix="data">
     <file alias="translation_no.qm">odometer_no.qm</file>
     <file alias="qt_no.qm">qt_no.qm</file>
+    <file alias="buildflags">../../BUILDFLAGS</file>
   </qresource>
 </RCC>

@@ -7,6 +7,8 @@ import sys, os.path
 import time
 import datetime
 import urllib
+import StringIO
+import ConfigParser
 import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
 import PyQt4.QtSvg as Svg
@@ -105,6 +107,12 @@ def readResourceFile(qrcPath):
     f.close()
     return s
 
+def readBuildflags():
+    "Read build flags from builtin resource file"
+    cp = ConfigParser.ConfigParser()
+    cp.readfp(StringIO.StringIO(unicode(readResourceFile(':/data/buildflags'))))
+    return cp
+    
 class Odometer(Gui.QMainWindow):
     msg = Core.pyqtSignal(unicode, name="msg")
     loaded = Core.pyqtSignal()
@@ -122,6 +130,7 @@ class Odometer(Gui.QMainWindow):
         self.showsubclips = True
         self.translator = None
         self.translatorQt = None
+        self.buildflags = readBuildflags()
         self.settings = Core.QSettings('nrk.no', 'Pling Plong Odometer')
         self.volumethreshold = xmemliter.Volume(gain=volume)
         self.xmemlfile = xmemlfile
@@ -133,10 +142,10 @@ class Odometer(Gui.QMainWindow):
         self.ui.detailsBox.hide()
         self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.gain)
-        self.ui.previousButton = self.ui.buttonBox.addButton(self.tr('Pre&vious'), Gui.QDialogButtonBox.ActionRole)
-        self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
-        self.ui.nextButton = self.ui.buttonBox.addButton(self.tr('Ne&xt'), Gui.QDialogButtonBox.ActionRole)
-        self.ui.nextButton.clicked.connect(self.showNextMetadata)
+        # self.ui.previousButton = self.ui.buttonBox.addButton(self.tr('Pre&vious'), Gui.QDialogButtonBox.ActionRole)
+        # self.ui.previousButton.clicked.connect(self.showPreviousMetadata)
+        # self.ui.nextButton = self.ui.buttonBox.addButton(self.tr('Ne&xt'), Gui.QDialogButtonBox.ActionRole)
+        # self.ui.nextButton.clicked.connect(self.showNextMetadata)
         self.ui.resolveAUXButton = self.ui.buttonBox.addButton(self.tr('AUX lookup'), Gui.QDialogButtonBox.ActionRole)
         self.ui.resolveAUXButton.clicked.connect(self.auxResolve)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
@@ -161,9 +170,22 @@ class Odometer(Gui.QMainWindow):
         self.ui.dropIcon = Svg.QSvgWidget(':/gfx/graystar', self.ui.clips)
         self.ui.dropIcon.setMinimumSize(200,200)
         self.ui.dropIcon.setToolTip(self.tr('Drop your xml file here'))
-        if not USE_AUDIOPLAYER:
+        if not (USE_AUDIOPLAYER and self.buildflags.getboolean('ui', 'playbutton')):
             self.ui.playButton.hide()
-        #self.metadataLoaded.connect(self.checkUsage)
+        if not self.buildflags.getboolean('release', 'releasecheck'):
+            self.ui.actionCheck_for_updates.setEnabled(False)
+        if not self.buildflags.getboolean('ui', 'volumeThreshold'):
+            self.ui.volumeThreshold.hide()
+        if not self.buildflags.getboolean('ui', 'prfbutton'):
+            self.ui.DMAButton.hide()
+        if not self.buildflags.getboolean('ui', 'auxbutton'):
+            self.ui.AUXButton.hide()
+        if not self.buildflags.getboolean('ui', 'apollobutton'):
+            self.ui.ApolloButton.hide()
+        if not self.buildflags.getboolean('ui', 'creditsbutton'):
+            self.ui.creditsButton.hide()
+
+       #self.metadataLoaded.connect(self.checkUsage)
 
     def keyPressEvent(self, event):
         if event.key() == Core.Qt.Key_Escape:
@@ -236,6 +258,8 @@ class Odometer(Gui.QMainWindow):
             _version = readResourceFile(':/txt/version_win')
         else: # unknown platform
             _version = ''
+        if self.buildflags.getboolean('release', 'beta'):
+            _version += ' NEXT'
         _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', _version))
 
     def showHelp(self):
@@ -551,7 +575,6 @@ class Odometer(Gui.QMainWindow):
     def auxResolve(self):
         'Manually submit selected tracks to aux for resolving'
         row = self.ui.detailsBox.currentRow
-        print 'manually resolving ', row.audioname, row.metadata
         def updateMetadata(filename, md):
             row.metadata = md
             self.showMetadata(row)

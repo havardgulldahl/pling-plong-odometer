@@ -1,0 +1,10 @@
+[release]
+beta=1
+releaseCheck=0
+[ui]
+volumeThreshold=0
+prfbutton=1
+auxbutton=1
+apollobutton=0
+creditsbutton=1
+playbutton=0
