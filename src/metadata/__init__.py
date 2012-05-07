@@ -380,7 +380,7 @@ class GenericMP3Resolver(ResolverBase):
                 return
         parsed = self.id3parse(fullpath)
         if not parsed:
-            self.error.emit(u'Could not parse %s' % filename)
+            self.error.emit(u'Could not parse %s' % fullpath)
             self.trackFailed.emit(filename)
         else:
             self.trackResolved.emit(self.filename, parsed)
@@ -392,8 +392,8 @@ class GenericMP3Resolver(ResolverBase):
             _filev2 = tagger.ID3v2(filename)
         except Exception as e:
             #file is not available or is corrupt
-            if hasattr(e, 'msg'):
-                self.error.emit(e.msg)
+            if hasattr(e, 'message'):
+                self.error.emit(e.message)
             return False
             
         md = TrackMetadata(filename)

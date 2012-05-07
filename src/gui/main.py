@@ -190,7 +190,8 @@ class Odometer(Gui.QMainWindow):
 
     def keyPressEvent(self, event):
         if event.key() == Core.Qt.Key_Escape:
-            self.close()
+            # self.close()
+            self.deleteLater()
 
     def dragEnterEvent(self, event):
         self.ui.dropIcon.load(':/gfx/star')
@@ -375,7 +376,6 @@ class Odometer(Gui.QMainWindow):
                 w.error.connect(self.showerror) 
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname, fileref.pathurl) # put the worker to work async
-                # w.resolve(fileref.pathurl) # put the worker to work async
                 r.setCheckState(0, Core.Qt.Checked)
             if self.showsubclips:
                 i = 1
