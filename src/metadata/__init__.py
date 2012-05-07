@@ -275,8 +275,9 @@ class ResolverBase(Core.QObject):
         #time.sleep(random.random() * 4)
         self.trackResolved.emit(self.filename, md)
     
-    def resolve(self, filename, fromcache=True):
+    def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
+        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
@@ -369,14 +370,15 @@ class GenericMP3Resolver(ResolverBase):
     def accepts(self, filename):
         return filename.lower().endswith('mp3')
     
-    def resolve(self, filename, fromcache=True):
+    def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
+        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
                 self.trackResolved.emit(self.filename, md)
                 return
-        parsed = self.id3parse(filename)
+        parsed = self.id3parse(fullpath)
         if not parsed:
             self.error.emit(u'Could not parse %s' % filename)
             self.trackFailed.emit(filename)
@@ -456,8 +458,9 @@ class DMAResolver(ResolverBase):
         self.progress(100)
         self.trackResolved.emit(self.filename, dummymetadata)
 
-    def resolve(self, filename, fromcache=True):
+    def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
+        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
@@ -599,13 +602,13 @@ class AUXResolver(SonotonResolver):
             print "oh noes, could not understand this AUX id:",filename
             return None
 
-    def resolve(self, filename, fromcache=True):
-        taggedmd = taggedfileparser(filename) # try to read embedded metadata, e.g. id3 tags
+    def resolve(self, filename, fullpath, fromcache=True):
+        taggedmd = taggedfileparser(fullpath) # try to read embedded metadata, e.g. id3 tags
         if taggedmd is not None:
             self.trackResolved.emit(filename, taggedmd)
             return
         else:
-            super(AUXResolver, self).resolve(filename, fromcache) # fall back to network lookup
+            super(AUXResolver, self).resolve(filename, fullpath, fromcache) # fall back to network lookup
 
 
 def findResolver(filename):

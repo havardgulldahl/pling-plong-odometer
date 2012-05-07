@@ -260,7 +260,7 @@ class Odometer(Gui.QMainWindow):
         else: # unknown platform
             _version = ''
         if self.buildflags.getboolean('release', 'beta'):
-            _version += ' NEXT'
+            _version = _version.strip() + ' NEXT'
         _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', _version))
 
     def showHelp(self):
@@ -374,9 +374,9 @@ class Odometer(Gui.QMainWindow):
                 #w.trackFailed.connect( ... ?
                 w.error.connect(self.showerror) 
                 self.workers.append(w) # keep track of the worker
-                w.resolve(audioname) # put the worker to work async
+                w.resolve(audioname, fileref.pathurl) # put the worker to work async
+                # w.resolve(fileref.pathurl) # put the worker to work async
                 r.setCheckState(0, Core.Qt.Checked)
-                #w.testresolve(audioclip.name) # put the worker to work async
             if self.showsubclips:
                 i = 1
                 for range in ranges:
