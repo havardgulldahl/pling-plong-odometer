@@ -1,26 +1,93 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>Odometer — Hjelp</title>
-        <style type="text/css">
-            h1 { color: green };
-        </style>
-    </head>
-    <body>
-        <nav id="index">
-            <h1>Innhold</h1>
-            <div id="chapters">
+<h1>Hva er Odometer og hvorfor trenger jeg det?</h1>
+<div>
+<p><em>Pling Plong Odometer</em> er et program som forenkler <b>rapportering av musikkbruk på TV</b>.</p>
 
-            </div>
+<ol>
+<li>Programmet analyserer innholdet i et videoprosjekt fra Final Cut Pro, og regner ut den <b>hørbare varigheten for hvert musikkspor</b>.</li>
+<li>For hvert musikkspor <b>innhentes den info (<em>metadata</em>) som behøves</b> for musikkrapportering.</li>
+<li>Musikkrapporter <b>sendes med ett klikk</b>.</li>
+<li>Tekst til <b>rulletekst</b> kan også lages.</li>
+</ol>
 
-        </nav>
+<p>På denne måten vil du <b>spare enormt med tid</b>, tid som du kan bruke til å lage innhold. Det vil også gi en <b>konsekvent musikkrapportering</b>, 
+siden programmets algoritmer sørger for at alt rapporteres på lik måte. Og <b>musikken vil følge programmet</b> i Programbanken, som gjør at det 
+blir <b>lettere for andre å bruke deler av programmet</b>.</p>
 
-        <section id="installation">
-        <h1>Installasjon</h1>
+<p>Så la oss sette datamaskinene til å gjøre det datamaskinene kan best, så kan vi mennesker heller lage TV enn timesvis med utregning og repetetivt arbeid!</p>
+
+</div>
+<h1>Starte programmet</h1>
+<div>
+Det kan være greit å starte Odometer først, for å sjekke at du virkelig har programmet installert. Det finnes for både Windows og Mac OS X, 
+og program-ikonet ser slik ut:
+</div>
+<h1>Klargjøre XML fra Final Cut Pro</h1>
+<div>
+<p>Den aktuelle tidslinja (<em>sequence</em>) i Final Cut Pro må eksporteres i XML-format for at Odometer skal kunne jobbe med det. </p>
 
 
-        </section>
+<p>Det er tilstrekkelig med <em>XMEML version 1</em>, det går betydelig raskere for kompliserte tidslinjer.</p>
 
-    </body>
-</html>
+
+<p>XML-fila må lagres på et sted du finner den igjen.</p>
+</div>
+<h1>Importere XML</h1>
+<div>
+<p>Du kan fôre Odometer med XML-fila på to måter:
+<ol>
+<li>Ved å dra-og-slippe fila inn i programmet</li>
+<li>Ved å finne den med programmets <em>Åpne...</em>-knapp
+</ol>
+
+<p>Åkke som vil Odometer starte å tygge seg gjennom tidslinja, finne fram til det som er importert lyd, og starte å slå opp <b>metadata for de spor som programmet
+kjenner igjen</b>. Det siste må forklares nærmere:</p>
+
+<h2>Automatisk innhenting av metadata</h2>
+<p>Til musikkrapporteringa behøves <em>metadata</em> om hvert spor, det vil si info som <em>tittel</em>, <em>artist</em>, <em>plateselskap</em> etc. 
+Dette innhentes automatisk på internett for de musikk-kutt som har filnavn som kan utledes til en identifiserende adresse. </p>
+
+<p>Det er to ting som må til for at magien skal virke.
+<ol>
+<li>Datamaskinen som du kjører programmet på <b>må være tilkoblet internett.</b></li>
+<li>Alle musikk-kutt som er lastet ned fra DMA eller AUX <b>må beholde de originale filnavnene</b>. (Hvis noen har byttet format på lyden, 
+for eksempel fra .wav til .mp3, for å gjøre Final Cut Pro lykkelig, må det nye filnavnet starte med samme filnavn)</li>
+</ol>
+
+<p>Når du ser at metadata har blitt funnet i alle linjene, kan du gå videre.</p>
+
+</div>
+<h1>PRF-rapportering</h1>
+<div>
+<p>All musikk vi bruker skal rapporteres til TONO, og for TV-produksjoner gjøres det gjennom <em>PRF</em>. Ett trykk på <em>PRF-rapport</em>-knappen gir et nytt vindu med en <b>oversikt over all musikkbruk</b>, i et format som kan sendes videre til den personen
+som faktisk skal punche infoen inn i PRF.</p>
+
+<p>Hvis du nå ble skuffet over at dette ikke går automatisk, men at man selv med Odometer må rote rundt med PRF, kan jeg tilby min sympati, og samtidig 
+forhåpentligvis roe gemyttene: Vi jobber med å gjøre dette helautomatisk, men inntil vi får lagt alle rørene og klinket alle skjøtene er denne 
+mellomløsningen det beste vi har</p> 
+
+</div>
+<h1>AUX-rapportering</h1>
+<div>
+<p>Som du kanskje vet, skal musikk fra produksjonsmusikkselskapet AUX rapporteres direkte til dem, i tillegg til at det skal inn til TONO. 
+Ett trykk på <em>AUX-rapport</em> åpner et nytt vindu hvor AUX-sporene legges inn i et web-skjema. Det skal bare fylles ut med kontaktinfo, så 
+kan du sende rapporten av gårde. (Trykk <em>OK</em>, og deretter <em>Skicka</em>.)</p>
+</div>
+<h1>Lage rulletekst</h1>
+<div>
+<p>Som en ekstra bonus for at du har vært så flink å rapportere musikken, kan programmet lage en oversikt over musikkbruken som egner seg til bruk 
+i rulletekst.</p>
+</div>
+<h1>Oppdatert AUX-katalog</h1>
+<div>
+<p>For å kunne kjenne igjen låter som kommer fra AUX, har Odometer en <em>innebygget liste over kataloger hos AUX</em>. Katalogen oppdateres jevnlig, 
+og da må også Odometer oppdatere sin interne katalog. Det skjer automatisk, ved at Odometer med passe jevne mellomrom sjekker katalogen på <em>auxmp.com</em>.</p>
+<p>Hvis du har kommet over et spor som ikke Odometer kjenner igjen (men som kommer fra AUX), kan du tvinge programmet til å slå opp dette sporet. 
+Dersom dette fører fram, kommer det opp et vindu for å sende inn den nødvendige infoen til utviklerne av Odometer. 
+Dette vil gjøre det lettere for oss å oppdatere katalogen og pushe det ut til alle odometerbrukere.</p>
+</div>
+<h1>Hva hvis jeg lurer på noe?</h1>
+<div>
+<p>Enn så lenge er Odometer under utvikling, og alle henvendelser kan rettes direkte til Håvard Gulldahl (<em>havard.gulldahl@nrk.no</em>), 
+som har utviklet programmet. Alt av kommentarer og spørsmål mottas med stor takk &mdash; det vil gjøre programmet bedre :)</p>
+
+</div>
