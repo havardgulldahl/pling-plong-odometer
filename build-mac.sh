@@ -60,7 +60,13 @@ DMGURL=$DROPBOXURL/$DMGNAME;
 cp "$DMGNAME" $HOME/Dropbox/Public/"$DMGNAME" || error "Copying to dropbox failed"
 echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/odometerversion_mac.txt
 
-
+# create pkg
+echo "Creating .pkg installer";
+/Developer/usr/bin/packagemaker --doc macpkg.pmdoc \
+                                --version "$VERSION" \
+                                --title "♫ ♪ Odometer versjon $VERSION" \
+                                --verbose || error "Packagemaker failed";
 
 echo "Finished. Take a look at $DMGNAME"
 echo "Online: $DMGURL"; 
+echo "Installer in dist/";
