@@ -19,6 +19,7 @@ VERSION=$(date +"%Y-%m-%d");
 
 # change bulid defaults
 sed -i "s/beta=.*/beta=0/" BUILDFLAGS
+sed -i "s/releaseCheck=.*/releaseCheck=1/" BUILDFLAGS
 
 # update all generated code 
 

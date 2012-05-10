@@ -15,6 +15,10 @@ function error {
 DROPBOXURL=http://dl.dropbox.com/u/12128173;
 VERSION=$(date +"%Y-%m-%d");
 
+# change bulid defaults
+sed -i "s/beta=.*/beta=0/" BUILDFLAGS
+sed -i "s/releaseCheck=.*/releaseCheck=0/" BUILDFLAGS
+
 # update all generated code 
 
 echo "Generating translations for UX"
@@ -67,6 +71,10 @@ echo "Creating .pkg installer";
                                 --title "♫ ♪ Odometer versjon $VERSION" \
                                 --verbose || error "Packagemaker failed";
 
+# changing back defaults
+sed -i "s/beta=.*/beta=1/" BUILDFLAGS
+$PYQTPATH/pyrcc4.exe -py2 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
+                                
 echo "Finished. Take a look at $DMGNAME"
 echo "Online: $DMGURL"; 
 echo "Installer in dist/";
