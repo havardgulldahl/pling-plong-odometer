@@ -1,6 +1,6 @@
 #!/bin/bash
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011
+# (C) 2011-2012
 
 function error {
     echo "Plonk! Something went wrong:";
@@ -18,7 +18,10 @@ VERSION=$(date +"%Y-%m-%d");
 # update all generated code 
 
 echo "Generating translations for UX"
-#pylupdate4-2.7 
+#pylupdate4-2.7r 
+pylupdate4-2.7 src/gui/gui.pro || error "pylupdate failed";
+lrelease src/gui/gui.pro || error "lrelease failed";
+
 echo "Generating code for UX"
 pyuic4-2.7 -o src/gui/odometer_ui.py src/gui/pling-plong-odometer.ui || error "pyuic failed"
 pyuic4-2.7 -o src/gui/auxreport_ui.py src/gui/pling-plong-auxreport.ui || error "pyuic failed"
@@ -29,8 +32,6 @@ echo "$DROPBOXURL" > ./DROPBOXURL;
 echo "$VERSION" > ./VERSIONMAC;
 git commit ./VERSIONMAC -m "build-mac.sh: commiting new version $VERSION"
 pyrcc4-2.7 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
-
-# something for translations?
 
 # clean up old cruft
 echo "Removing old code"
