@@ -9,6 +9,7 @@ import datetime
 import urllib
 import StringIO
 import ConfigParser
+import traceback
 import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
 import PyQt4.QtSvg as Svg
@@ -230,6 +231,20 @@ class Odometer(Gui.QMainWindow):
                                                                datetime.datetime.now().time().isoformat(),
                                                                msg))
 
+    def logException(self, e):
+        if hasattr(e, 'msg'):
+            msg = e.msg
+        elif hasattr(e, 'message'):
+            msg = e.message
+        else:
+            msg = unicode(e)
+        self.showerror(unicode(self.tr('Unexpected error: %s')) % msg)
+        self.log.append('<div style="color:red">')
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        for line in traceback.format_exception(exc_type, exc_value, exc_traceback):
+            self.log.append(line)
+        self.log.append('</div>')
+
     def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
         # if you don't autoclose, call self.closestatusboxes()
         # or keep a reference to this box and .close() it yourself
@@ -337,7 +352,13 @@ class Odometer(Gui.QMainWindow):
         self.ui.progress.deleteLater()
 
     def load(self, xmemlparser):
-        self.audioclips, self.audiofiles = xmemlparser.audibleranges(self.volumethreshold)
+        try:
+            self.audioclips, self.audiofiles = xmemlparser.audibleranges(self.volumethreshold)
+        except Exception as e:
+            self.removeLoadingbar()
+            self.logException(e)
+            return False
+
         self.ui.volumeInfo.setText(unicode(self.tr("<i>(above %i dB)</i>")) % self.volumethreshold.decibel)
         self.xmemlparser = xmemlparser
         numclips = len(self.audioclips.keys())
@@ -653,7 +674,7 @@ class Odometer(Gui.QMainWindow):
             except IOError, (e):
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
-        CreditsDialog.setWindowTitle('Credits')
+        CreditsDialog.setWindowTitle(self.tr('Credits'))
         return CreditsDialog.exec_()
 
     def editDuration(self, row, col): # called when double clicked
