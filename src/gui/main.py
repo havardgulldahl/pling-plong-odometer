@@ -302,10 +302,10 @@ class Odometer(Gui.QMainWindow):
         ui.webView.load(Core.QUrl(self.buildflags.get('release', 'helpUrl')))
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
-        def reportloaded(boolean):
-            # print "help doc loaded: %s" % boolean
-            # TODO: Add offline fallback or error message
-        ui.webView.loadFinished.connect(reportloaded)
+        def helpdocloaded(success):
+            # print "help doc loaded: %s" % success
+            # TODO: Add offline fallback or error message if success == False
+        ui.webView.loadFinished.connect(helpdocloaded)
         return HelpDialog.exec_()     
 
     def showLicenses(self):
