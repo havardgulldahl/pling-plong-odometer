@@ -156,7 +156,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.DMAButton.setEnabled(True)
         self.ui.AUXButton.clicked.connect(self.auxReport)
         self.ui.creditsButton.clicked.connect(self.credits)
-        self.ui.errorButton.clicked.connect(self.errorReport)
+        self.ui.errorButton.clicked.connect(self.reportError)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
         self.ui.clips.itemDoubleClicked.connect(self.editDuration) # manually override duration column
@@ -691,10 +691,10 @@ class Odometer(Gui.QMainWindow):
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def reportloaded(boolean):
-            print "report loaded: %s" % boolean
+            # print "reporterror loaded: %s" % boolean
             html = ui.webView.page().mainFrame()
-            fn = html.findFirstElement('input[id="entry_5"]')
-            text.setPlainText(''.join(self.log))
+            log = html.findFirstElement('textarea[id="entry_5"]')
+            log.setPlainText(''.join(self.log))
         ui.webView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()     
         
