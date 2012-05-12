@@ -283,13 +283,19 @@ class Odometer(Gui.QMainWindow):
         _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', _version))
 
     def showHelp(self):
+        'Show help document from online resource'
         HelpDialog = Gui.QDialog()
-        ui = prfreport_ui.Ui_PlingPlongPRFDialog()
+        ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(HelpDialog)
-        _helpText = readResourceFile(':/txt/help_no')
-        ui.textBrowser.setHtml(_helpText)
-        HelpDialog.setWindowTitle('Help')
-        return HelpDialog.exec_()
+        ui.buttonBox.hide()
+        ui.webView.load(Core.QUrl(self.buildflags.get('release', 'helpUrl')))
+        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        def reportloaded(boolean):
+            # print "help doc loaded: %s" % boolean
+            # TODO: Add offline fallback or error message
+        ui.webView.loadFinished.connect(reportloaded)
+        return HelpDialog.exec_()     
 
     def showLicenses(self):
         _licenseText = readResourceFile(':/txt/license')
@@ -681,7 +687,7 @@ class Odometer(Gui.QMainWindow):
         return CreditsDialog.exec_()
 
     def reportError(self):
-        'Report program error'
+        'Report program error to an online form'
         _url = 'https://docs.google.com/a/lurtgjort.no/spreadsheet/viewform?formkey=dHFtZHFFMlkydmRPTnFNM2l3SHZFcFE6MQ'
         GdocsDialog = Gui.QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
