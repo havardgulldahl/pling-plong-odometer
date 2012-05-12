@@ -156,6 +156,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.DMAButton.setEnabled(True)
         self.ui.AUXButton.clicked.connect(self.auxReport)
         self.ui.creditsButton.clicked.connect(self.credits)
+        self.ui.errorButton.clicked.connect(self.errorReport)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
         self.ui.clips.itemDoubleClicked.connect(self.editDuration) # manually override duration column
@@ -186,6 +187,8 @@ class Odometer(Gui.QMainWindow):
             self.ui.ApolloButton.hide()
         if not self.buildflags.getboolean('ui', 'creditsbutton'):
             self.ui.creditsButton.hide()
+        if not self.buildflags.getboolean('ui', 'errorbutton'):
+            self.ui.errorButton.hide()
 
        #self.metadataLoaded.connect(self.checkUsage)
 
@@ -677,6 +680,24 @@ class Odometer(Gui.QMainWindow):
         CreditsDialog.setWindowTitle(self.tr('Credits'))
         return CreditsDialog.exec_()
 
+    def reportError(self):
+        'Report program error'
+        _url = 'https://docs.google.com/a/lurtgjort.no/spreadsheet/viewform?formkey=dHFtZHFFMlkydmRPTnFNM2l3SHZFcFE6MQ'
+        GdocsDialog = Gui.QDialog()
+        ui = auxreport_ui.Ui_PlingPlongAUXDialog()
+        ui.setupUi(GdocsDialog)
+        ui.buttonBox.hide()
+        ui.webView.load(Core.QUrl(_url))
+        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        def reportloaded(boolean):
+            print "report loaded: %s" % boolean
+            html = ui.webView.page().mainFrame()
+            fn = html.findFirstElement('input[id="entry_5"]')
+            text.setPlainText(''.join(self.log))
+        ui.webView.loadFinished.connect(reportloaded)
+        return GdocsDialog.exec_()     
+        
     def editDuration(self, row, col): # called when double clicked
         "Replace duration column with a spinbox to manually change value"
         #print "editDuration:", row, col
