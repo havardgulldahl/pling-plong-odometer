@@ -14,7 +14,7 @@ function error {
 
 PYTHON="/c/Python27/python.exe"
 PYQTPATH="/c/Python27/Lib/site-packages/PyQt4"
-DROPBOXURL=http://dl.dropbox.com/u/12128173;
+DROPBOXURL=http://dl.dropbox.com/u/12128173/Odometer;
 VERSION=$(date +"%Y-%m-%d");
 
 # change bulid defaults
@@ -55,8 +55,8 @@ mv dist $BUNDLE;
 # publish to dropbox
 echo "Publishing to dropbox"
 DBURL=$DROPBOXURL/$SHORTNAME;
-cp "$SHORTNAME" /c/tmp/Dropbox/Public/"$SHORTNAME" || error "Copying to dropbox failed"
-echo "$VERSION|$DBURL" > /c/tmp/Dropbox/Public/odometerversion_win.txt
+cp "$SHORTNAME" /c/tmp/Dropbox/Public/Odometer/"$SHORTNAME" || error "Copying to dropbox failed"
+echo "$VERSION|$DBURL" > /c/tmp/Dropbox/Public/Odometer/odometerversion_win.txt
 
 rm -rf ./$BUNDLE;
 

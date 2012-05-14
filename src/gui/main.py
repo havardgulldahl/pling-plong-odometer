@@ -319,7 +319,7 @@ class Odometer(Gui.QMainWindow):
 
     def showCheckForUpdates(self):
         'Check online for updates'
-        _dropboxUrl = unicode(readResourceFile(':/txt/dropbox_url'))
+        _dropboxUrl = self.buildflags.get('release', 'dropboxUrl')
         if sys.platform == 'darwin':
             _platform = 'mac'
         else:

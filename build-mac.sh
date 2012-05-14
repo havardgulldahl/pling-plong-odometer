@@ -12,7 +12,7 @@ function error {
 
 # some settings
 
-DROPBOXURL=http://dl.dropbox.com/u/12128173;
+DROPBOXURL=http://dl.dropbox.com/u/12128173/Odometer;
 VERSION=$(date +"%Y-%m-%d");
 
 # change bulid defaults
@@ -61,8 +61,8 @@ hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer" -fs "HFS+" -srcfolder "dis
 # publish to dropbox
 echo "Publishing to dropbox"
 DMGURL=$DROPBOXURL/$DMGNAME;
-cp "$DMGNAME" $HOME/Dropbox/Public/"$DMGNAME" || error "Copying to dropbox failed"
-echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/odometerversion_mac.txt
+cp "$DMGNAME" $HOME/Dropbox/Public/Odometer/"$DMGNAME" || error "Copying to dropbox failed"
+echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/Odometer/odometerversion_mac.txt
 
 # create pkg
 echo "Creating .pkg installer";
