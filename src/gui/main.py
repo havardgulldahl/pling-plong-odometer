@@ -156,6 +156,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.DMAButton.setEnabled(True)
         self.ui.AUXButton.clicked.connect(self.auxReport)
         self.ui.creditsButton.clicked.connect(self.credits)
+        self.ui.errorButton.clicked.connect(self.reportError)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
         self.ui.clips.itemDoubleClicked.connect(self.editDuration) # manually override duration column
@@ -186,23 +187,29 @@ class Odometer(Gui.QMainWindow):
             self.ui.ApolloButton.hide()
         if not self.buildflags.getboolean('ui', 'creditsbutton'):
             self.ui.creditsButton.hide()
+        if not self.buildflags.getboolean('ui', 'errorbutton'):
+            self.ui.errorButton.hide()
 
        #self.metadataLoaded.connect(self.checkUsage)
 
     def keyPressEvent(self, event):
+        'React to keyboard keys being pressed'
         if event.key() == Core.Qt.Key_Escape:
             # self.close()
             self.deleteLater()
 
     def dragEnterEvent(self, event):
+        'React to file being dragged inside gui'
         self.ui.dropIcon.load(':/gfx/star')
         return event.accept()
 
     def dragLeaveEvent(self, event):
+        'React to file being dragged outside gui'
         self.ui.dropIcon.load(':/gfx/graystar')
         return event.accept()
 
     def dragMoveEvent(self, event):
+        'React to file being moved over gui'
         if xmemlfileFromEvent(event):
             event.accept()
             return
@@ -210,6 +217,7 @@ class Odometer(Gui.QMainWindow):
         event.ignore()
 
     def dropEvent(self, event):
+        'React to file being dropped (if it looks like an xmeml file, load it)'
         event.acceptProposedAction()
         self.ui.dropIcon.load(':/gfx/graystar')
         x = xmemlfileFromEvent(event)
@@ -217,10 +225,12 @@ class Odometer(Gui.QMainWindow):
             self.loadxml(x)
 
     def resizeEvent(self, event):
+        'React to main gui being resized'
         i = self.ui.dropIcon
         i.move(self.width()/2-i.width(), self.height()*0.75-i.height())
 
     def logMessage(self, msg, msgtype):
+        'Add a message to the log'
         if msgtype == StatusBox.ERROR:
             color = 'red'
         elif msgtype == StatusBox.INFO:
@@ -233,6 +243,7 @@ class Odometer(Gui.QMainWindow):
                                                                msg))
 
     def logException(self, e):
+        'Add an exception to the log'
         if hasattr(e, 'msg'):
             msg = e.msg
         elif hasattr(e, 'message'):
@@ -247,6 +258,7 @@ class Odometer(Gui.QMainWindow):
         self.log.append('</div>')
 
     def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
+        'Show floating status box'
         # if you don't autoclose, call self.closestatusboxes()
         # or keep a reference to this box and .close() it yourself
         if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg: 
@@ -260,14 +272,16 @@ class Odometer(Gui.QMainWindow):
         return b
 
     def showerror(self, msg):
-        "Show error message"
+        'Show error message'
         return self.showstatus(msg, msgtype=StatusBox.ERROR)
 
     def closestatusboxes(self):
+        'Close all statusboxes'
         for b in self.statusboxes:
             b.close()
 
     def showAbout(self):
+        'Show "About" text'
         _aboutText = readResourceFile(':/txt/about')
         if sys.platform == 'darwin':
             _version = readResourceFile(':/txt/version_mac')
@@ -280,15 +294,22 @@ class Odometer(Gui.QMainWindow):
         _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', _version))
 
     def showHelp(self):
+        'Show help document from online resource'
         HelpDialog = Gui.QDialog()
-        ui = prfreport_ui.Ui_PlingPlongPRFDialog()
+        ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(HelpDialog)
-        _helpText = readResourceFile(':/txt/help_no')
-        ui.textBrowser.setHtml(_helpText)
-        HelpDialog.setWindowTitle('Help')
-        return HelpDialog.exec_()
+        ui.buttonBox.hide()
+        ui.webView.load(Core.QUrl(self.buildflags.get('release', 'helpUrl')))
+        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        def helpdocloaded(success):
+            # print "help doc loaded: %s" % success
+            # TODO: Add offline fallback or error message if success == False
+        ui.webView.loadFinished.connect(helpdocloaded)
+        return HelpDialog.exec_()     
 
     def showLicenses(self):
+        'Show a dialog to display licenses and terms'
         _licenseText = readResourceFile(':/txt/license')
         _box = Gui.QMessageBox(self)
         _box.setText(self.tr('This project is free software'))
@@ -297,6 +318,7 @@ class Odometer(Gui.QMainWindow):
         return _box.exec_()
 
     def showCheckForUpdates(self):
+        'Check online for updates'
         _dropboxUrl = unicode(readResourceFile(':/txt/dropbox_url'))
         if sys.platform == 'darwin':
             _platform = 'mac'
@@ -315,6 +337,7 @@ class Odometer(Gui.QMainWindow):
             _box = Gui.QMessageBox.information(self, self.tr('Relax'), self.tr('Odometer is up to date'))
 
     def showLogs(self):
+        'Pop up a dialog to show internal log'
         LogDialog = Gui.QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(LogDialog)
@@ -323,6 +346,7 @@ class Odometer(Gui.QMainWindow):
         return LogDialog.exec_()
 
     def clicked(self, qml):
+        'Open file dialog to get xmeml file name'
         lastdir = self.settings.value('lastdir', '').toString()
         xf = Gui.QFileDialog.getOpenFileName(self,
             self.tr('Open an xmeml file (FCP export)'),
@@ -335,6 +359,7 @@ class Odometer(Gui.QMainWindow):
         self.loadxml(self.xmemlfile)
 
     def loadxml(self, xmemlfile):
+        'Start loading xmeml file, start xmeml parser'
         msgbox = self.showstatus(unicode(self.tr("Loading %s...")) % xmemlfile, autoclose=self.loaded)
         self.loadingbar()
         self.loaded.connect(self.removeLoadingbar)
@@ -343,16 +368,19 @@ class Odometer(Gui.QMainWindow):
         self.xmemlthread.load(xmemlfile)
 
     def loadingbar(self):
+        'Add global progress bar'
         self.ui.progress = Gui.QProgressBar(self)
         self.ui.progress.setMinimum(0)
         self.ui.progress.setMaximum(0) # don't show progress, only "busy" indicator
         self.ui.statusbar.addWidget(self.ui.progress, 100)
 
     def removeLoadingbar(self):
+        'Remove global progress bar'
         self.ui.statusbar.removeWidget(self.ui.progress)
         self.ui.progress.deleteLater()
 
     def load(self, xmemlparser):
+        'Load audio clips from xmeml parser into the gui'
         try:
             self.audioclips, self.audiofiles = xmemlparser.audibleranges(self.volumethreshold)
         except Exception as e:
@@ -368,6 +396,7 @@ class Odometer(Gui.QMainWindow):
         self.loaded.emit()
 
     def computeAudibleDuration(self, volume=None):
+        'Loop through all audio clips and start the metadata workers'
         if isinstance(volume, xmemliter.Volume):
             self.audioclips, self.audiofiles = self.xmemlparser.audibleranges(volume)
             self.ui.volumeInfo.setText(unicode(self.tr("<i>(above %i dB)</i>")) % volume.decibel)
@@ -413,6 +442,7 @@ class Odometer(Gui.QMainWindow):
 
 
     def loadMetadata(self, filename, metadata):
+        'Handle metadata for a specific clip'
         row = self.rows[unicode(filename)]
         row.metadata = metadata
         if metadata.productionmusic:
@@ -431,13 +461,15 @@ class Odometer(Gui.QMainWindow):
         self.metadataLoaded.emit(row)
 
     def trackCompleted(self, filename, metadata):
+        'React to metadata finished loading for a specific clip'
         #print "got metadata (%s): %s" % (filename, metadata)
         self.metadataloaded += 1
         if len(self.audioclips)  == self.metadataloaded:
             self.ui.DMAButton.setEnabled(True)
 
     def showProgress(self, filename, progress):
-        print "got progress for %s: %s" % (filename, progress)
+        'Show progress bar for a specific clip, e.g. when metadata is loading'
+        # print "got progress for %s: %s" % (filename, progress)
         row = self.rows[unicode(filename)]
         if progress < 100: # not yet reached 100%
             p = Gui.QProgressBar(parent=self.ui.clips)
@@ -447,6 +479,7 @@ class Odometer(Gui.QMainWindow):
             self.ui.clips.removeItemWidget(row, 3)
 
     def hilited(self, rows):
+        'React to rows being highlighted. E.g. show some info in a sidebar'
         self.ui.metadata.setText('')
         if not len(rows): return
         s = "<b>%s:</b><br>" % self.tr('Metadata')
@@ -469,6 +502,7 @@ class Odometer(Gui.QMainWindow):
             self.showMetadata(r)
 
     def showMetadata(self, row, col=None):
+        'Show a list of all (most) known metadata'
         try:
             self.ui.detailsBox.currentRow = row
             self.ui.clipTitle.setText(row.metadata.title or self.tr('Unknown'))
@@ -487,6 +521,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.resolveAUXButton.setEnabled(row.metadata.title is None)
 
     def editMetadata(self):
+        'Show fields to edit metadata for a specific track'
         detailsLayout = self.ui.detailsBox.layout()
         def editable(widget):
             def close(editWidget, labelWidget, r, c):
@@ -517,6 +552,7 @@ class Odometer(Gui.QMainWindow):
             editable(x)
         
     def itercheckedrows(self):
+        'iterate through rows that are checked'
         for row in self.rows.values():
             #print row
             if row.checkState(0) == Core.Qt.Checked: 
@@ -565,6 +601,7 @@ class Odometer(Gui.QMainWindow):
         return PRFDialog.exec_()
 
     def auxReport(self):
+        'Load the online AUX report form in a dialog'
         s = ""
         for r in self.itercheckedrows():
             if r.metadata.musiclibrary == "AUX Publishing":
@@ -581,13 +618,13 @@ class Odometer(Gui.QMainWindow):
             submit = html.findFirstElement('input[type=submit]')
             submit.setAttribute('style', 'visibility:hidden')
             business = html.findFirstElement('input[name="foretag"]')
-            business.setAttribute("value", self.settings.value('AUX/foretag', "NRK").toString())
+            business.setAttribute("value", self.settings.value('AUX/foretag', "NRK <avdeling>").toString())
             contact = html.findFirstElement('input[name=kontakt]')
-            contact.setAttribute("value", self.settings.value('AUX/kontakt', "NRK Troms").toString())
+            contact.setAttribute("value", self.settings.value('AUX/kontakt', "<ditt eller prosjektleders navn>").toString())
             phone = html.findFirstElement('input[name="telefon"]')
-            phone.setAttribute("value", self.settings.value('AUX/telefon', "776").toString())
+            phone.setAttribute("value", self.settings.value('AUX/telefon', "<ditt eller prosjektleders telefonnummer>").toString())
             email = html.findFirstElement('input[name="email"]')
-            email.setAttribute("value", self.settings.value('AUX/email', "troms@NRK").toString())
+            email.setAttribute("value", self.settings.value('AUX/email', "<ditt eller prosjektleders epostadresse>").toString())
             productionname = html.findFirstElement('input[name="produktionsnamn"]')
             productionname.setAttribute("value", self.ui.prodno.text())
             check_tv = html.findFirstElement('input[name="checkbox2"]')
@@ -650,6 +687,7 @@ class Odometer(Gui.QMainWindow):
         return GdocsDialog.exec_()
 
     def credits(self):
+        'Show text dialog with a list of track metadata suitable for end credits'
         _labels_seen = []
         s = ""
         for r in self.itercheckedrows():
@@ -677,6 +715,24 @@ class Odometer(Gui.QMainWindow):
         CreditsDialog.setWindowTitle(self.tr('Credits'))
         return CreditsDialog.exec_()
 
+    def reportError(self):
+        'Report program error to an online form'
+        _url = 'https://docs.google.com/a/lurtgjort.no/spreadsheet/viewform?formkey=dHFtZHFFMlkydmRPTnFNM2l3SHZFcFE6MQ'
+        GdocsDialog = Gui.QDialog()
+        ui = auxreport_ui.Ui_PlingPlongAUXDialog()
+        ui.setupUi(GdocsDialog)
+        ui.buttonBox.hide()
+        ui.webView.load(Core.QUrl(_url))
+        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        def reportloaded(boolean):
+            # print "reporterror loaded: %s" % boolean
+            html = ui.webView.page().mainFrame()
+            log = html.findFirstElement('textarea[id="entry_5"]')
+            log.setPlainText(''.join(self.log))
+        ui.webView.loadFinished.connect(reportloaded)
+        return GdocsDialog.exec_()     
+        
     def editDuration(self, row, col): # called when double clicked
         "Replace duration column with a spinbox to manually change value"
         #print "editDuration:", row, col
@@ -731,11 +787,12 @@ class Odometer(Gui.QMainWindow):
         sys.exit(app.exec_())
 
     def setLanguage(self, language):
+        'Load translations for language'
         if self.translator is not None:
             self.app.removeTranslator(self.translator)
         else:
             self.translator = Core.QTranslator(self.app)
-        print "loading translation: odometer_%s" % language
+        # print "loading translation: odometer_%s" % language
         self.translator.load(':data/translation_%s' % language)
         self.app.installTranslator(self.translator)
         # also for qt strings
@@ -743,17 +800,19 @@ class Odometer(Gui.QMainWindow):
             self.app.removeTranslator(self.translatorQt)
         else:
             self.translatorQt = Core.QTranslator(self.app)
-        print "loading Qttranslation: qt_%s" % language
+        # print "loading Qttranslation: qt_%s" % language
         self.translatorQt.load(':data/qt_%s' % language)
         self.app.installTranslator(self.translatorQt)
 
 def uniqify(seq):
+    'Return list of unique items in a sequence'
     keys = {} 
     for e in seq: 
         keys[e] = 1 
     return keys.keys()
 
 def xmemlfileFromEvent(event):
+    'Return first xmeml file from a (e.g. dropped) Qt event'
     data = event.mimeData()
     try:
         for f in data.urls():

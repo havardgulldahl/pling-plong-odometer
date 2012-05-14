@@ -7,8 +7,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>900</width>
-    <height>710</height>
+    <width>872</width>
+    <height>679</height>
    </rect>
   </property>
   <property name="acceptDrops">
@@ -457,6 +457,19 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="creditsButton">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="toolTip">
+         <string>Create a list that is suitable for end credits.</string>
+        </property>
+        <property name="text">
+         <string>Credits</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
@@ -473,15 +486,12 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="creditsButton">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="toolTip">
-         <string>Create a list that is suitable for end credits.</string>
+       <widget class="QPushButton" name="errorButton">
+        <property name="statusTip">
+         <string>Experiencing errors or glitches? Report it!</string>
         </property>
         <property name="text">
-         <string>Credits</string>
+         <string>Report error</string>
         </property>
        </widget>
       </item>
@@ -494,7 +504,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>900</width>
+     <width>872</width>
      <height>18</height>
     </rect>
    </property>
