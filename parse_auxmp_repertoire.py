@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 #-*- encoding: utf-8 -*-
 
-# snippet to fetch all catalogues and their prefixes from auxmp.com
+# snippet to fetch help text online
 
 import urllib
 import sys
