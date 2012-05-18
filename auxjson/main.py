@@ -11,7 +11,7 @@ import lib
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.out.write('Hello world!')
+        self.response.headers["Content-Type"] = "text/json;encoding=utf-8"
         repertoire = models.Catalogue.all()
         self.response.out.write(json.dumps( dict( { x.shortname: x.name for x in repertoire } ) ))
 
