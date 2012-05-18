@@ -15,3 +15,6 @@ handlers:
 libraries:
 - name: webapp2
   version: "2.5.1"
+- name: lxml
+  version: "2.3"
+
