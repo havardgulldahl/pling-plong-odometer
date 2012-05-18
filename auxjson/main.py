@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2011-2012
@@ -17,7 +17,7 @@ class MainHandler(webapp2.RequestHandler):
 
 class UpdateHandler(webapp2.RequestHandler):
     def get(self):
-        for catalogue, shortname in lib.iterRepertoire():
+        for shortname, catalogue in lib.iterRepertoire():
             models.Catalogue.get_or_insert(shortname, name=catalogue, shortname=shortname)
         self.response.out.write('updated!')
 
