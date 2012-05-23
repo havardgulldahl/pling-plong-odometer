@@ -78,6 +78,7 @@ class GluonReportWorker(Core.QThread):
 
     def __init__(self, parent=None):
         super(GluonReportWorker, self).__init__(parent)
+        self.finished.connect(self.deleteLater)
 
     def __del__(self):
         self.wait()
@@ -121,6 +122,7 @@ class GluonLookupWorker(Core.QThread):
 
     def __init__(self, parent=None):
         super(GluonLookupWorker, self).__init__(parent)
+        self.finished.connect(self.deleteLater)
 
     def __del__(self):
         self.wait()
@@ -161,6 +163,7 @@ class DMAWorker(Core.QThread):
 
     def __init__(self, parent=None):
         super(DMAWorker, self).__init__(parent)
+        self.finished.connect(self.deleteLater)
 
     def __del__(self):
         self.wait()

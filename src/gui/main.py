@@ -40,6 +40,7 @@ class UrlWorker(Core.QThread):
     def __init__(self, parent=None):
         super(UrlWorker, self).__init__(parent)
         self.exiting = False
+        self.finished.connect(self.deleteLater)
 
     def __del__(self):
         self.exiting = True
@@ -62,6 +63,7 @@ class XmemlWorker(Core.QThread):
 
     def __init__(self, parent=None):
         super(XmemlWorker, self).__init__(parent)
+        self.finished.connect(self.deleteLater)
         self.exiting = False
 
     def __del__(self):
@@ -75,6 +77,7 @@ class XmemlWorker(Core.QThread):
     def run(self):
         xmeml = xmemliter.XmemlParser(self.xmemlfile)
         self.loaded.emit(xmeml)
+        return self.exec_()
 
 class StatusBox(Gui.QWidget):
     INFO = 1
