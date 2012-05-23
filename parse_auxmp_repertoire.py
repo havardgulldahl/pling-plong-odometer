@@ -14,9 +14,6 @@ def iterReportoire():
     for row in html.getroot().find_class('s_t'):
         yield (x.strip() for x in row.text.split('-'))
 
-
-
-
 if __name__ == '__main__':
     _short = []
     for _rep, _sh in iterReportoire():

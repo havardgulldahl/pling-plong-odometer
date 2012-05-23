@@ -7,9 +7,14 @@ import sys, os.path
 import time
 import datetime
 import urllib
+import json
 import StringIO
 import ConfigParser
 import traceback
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
 import PyQt4.QtSvg as Svg
@@ -126,6 +131,7 @@ class Odometer(Gui.QMainWindow):
         self.audioclips = {}
         self.workers = []
         self.rows = {}
+        self.AUXRepertoire = {}
         self.metadataloaded = 0
         self.statusboxes = []
         self.showsubclips = True
@@ -190,7 +196,8 @@ class Odometer(Gui.QMainWindow):
         if not self.buildflags.getboolean('ui', 'errorbutton'):
             self.ui.errorButton.hide()
 
-       #self.metadataLoaded.connect(self.checkUsage)
+        #self.metadataLoaded.connect(self.checkUsage)
+        Core.QTimer.singleShot(5, self.updateAUXRepertoire)
 
     def keyPressEvent(self, event):
         'React to keyboard keys being pressed'
@@ -229,7 +236,7 @@ class Odometer(Gui.QMainWindow):
         i = self.ui.dropIcon
         i.move(self.width()/2-i.width(), self.height()*0.75-i.height())
 
-    def logMessage(self, msg, msgtype):
+    def logMessage(self, msg, msgtype=StatusBox.INFO):
         'Add a message to the log'
         if msgtype == StatusBox.ERROR:
             color = 'red'
@@ -237,10 +244,14 @@ class Odometer(Gui.QMainWindow):
             color = '#390'
         elif msgtype == StatusBox.WARNING:
             color = 'blue'
+        try:
+            name = os.path.basename(self.xmemlfile)
+        except AttributeError:
+            name = self.tr('No XMEML loaded')
         self.log.append('<div style="color:%s">[%s - %s]: %s</div>' % (color, 
-                                                               os.path.basename(self.xmemlfile), 
-                                                               datetime.datetime.now().time().isoformat(),
-                                                               msg))
+                                                                       name,
+                                                                       datetime.datetime.now().time().isoformat(),
+                                                                       msg))
 
     def logException(self, e):
         'Add an exception to the log'
@@ -280,9 +291,7 @@ class Odometer(Gui.QMainWindow):
         for b in self.statusboxes:
             b.close()
 
-    def showAbout(self):
-        'Show "About" text'
-        _aboutText = readResourceFile(':/txt/about')
+    def getVersion(self):
         if sys.platform == 'darwin':
             _version = readResourceFile(':/txt/version_mac')
         elif sys.platform == 'win32':
@@ -290,8 +299,14 @@ class Odometer(Gui.QMainWindow):
         else: # unknown platform
             _version = ''
         if self.buildflags.getboolean('release', 'beta'):
-            _version = _version.strip() + ' NEXT'
-        _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', _version))
+            _version = unicode(_version).strip() + ' NEXT'
+        print "---%s---" % _version
+        return _version
+
+    def showAbout(self):
+        'Show "About" text'
+        _aboutText = readResourceFile(':/txt/about')
+        _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', self.getVersion()))
 
     def showHelp(self):
         'Show help document from online resource'
@@ -305,6 +320,7 @@ class Odometer(Gui.QMainWindow):
         def helpdocloaded(success):
             # print "help doc loaded: %s" % success
             # TODO: Add offline fallback or error message if success == False
+            pass
         ui.webView.loadFinished.connect(helpdocloaded)
         return HelpDialog.exec_()     
 
@@ -344,6 +360,27 @@ class Odometer(Gui.QMainWindow):
         ui.textBrowser.setHtml(''.join(self.log))
         LogDialog.setWindowTitle('Help')
         return LogDialog.exec_()
+
+    def updateAUXRepertoire(self):
+        self.logMessage('updating AUX repertoire')
+        try:
+            repertoire = pickle.loads(str(self.settings.value('auxrepertoire', None).toString()))
+        except Exception as e:
+            print e
+            repertoire = None
+        print "found repertoire:", repertoire
+        def age(dt):
+            return (datetime.datetime.now() - dt).days
+        if repertoire is None or age(repertoire['timestamp']) > 7:
+            # get new data online
+            self.logMessage('cache is too old, fetch online')
+            _url = 'http://auxjson.appspot.com/' #self.buildflags.get('release', 'AUXRepertoireUrl')
+            data =  urllib.urlopen(_url)
+            repertoire = json.loads(data.read())
+            print "got repertoire:", repertoire
+            repertoire['timestamp'] = datetime.datetime.now()
+            self.settings.setValue('auxrepertoire', pickle.dumps(repertoire))
+        self.AUXRepertoire = repertoire
 
     def clicked(self, qml):
         'Open file dialog to get xmeml file name'
@@ -419,6 +456,8 @@ class Odometer(Gui.QMainWindow):
             w = metadata.findResolver(audioname)
             r.setCheckState(0, Core.Qt.Unchecked)
             if w:
+                if w.name == 'AUX Publishing': # make sure repertoire is current
+                    w.updateRepertoire(self.AUXRepertoire)
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress) 
@@ -664,7 +703,8 @@ class Odometer(Gui.QMainWindow):
         resolver.trackProgress.connect(self.showProgress) 
         resolver.error.connect(self.showerror) 
         self.workers.append(resolver) # keep track of the worker
-        resolver.resolve(row.audioname) # put the worker to work async
+        fileref = self.audiofiles[row.audioname]
+        resolver.resolve(row.audioname, fileref.pathurl) # put the worker to work async
 
     def submitMissingFilename(self, filename, resolvedmetadata):
         'Add filename and metadata to a public spreadsheet'
@@ -730,6 +770,8 @@ class Odometer(Gui.QMainWindow):
             html = ui.webView.page().mainFrame()
             log = html.findFirstElement('textarea[id="entry_5"]')
             log.setPlainText(''.join(self.log))
+            log = html.findFirstElement('input[id="entry_7"]')
+            log.setAttribute('value', self.getVersion())
         ui.webView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()     
         

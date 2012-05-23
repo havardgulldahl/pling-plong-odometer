@@ -554,7 +554,7 @@ class SonotonResolver(ResolverBase):
 class AUXResolver(SonotonResolver):
     prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD']
 
-    labelmap = {
+    labelmap = { # static label map. See .updateReportoire()
                 'AD': 'Adapt', 
                 'AFRO': 'AFRO Musique', 
                 'BAC': 'Big and Clever Music', 
@@ -603,12 +603,23 @@ class AUXResolver(SonotonResolver):
             return None
 
     def resolve(self, filename, fullpath, fromcache=True):
-        taggedmd = taggedfileparser(fullpath) # try to read embedded metadata, e.g. id3 tags
-        if taggedmd is not None:
-            self.trackResolved.emit(filename, taggedmd)
-            return
-        else:
+        try:
+            taggedmd = taggedfileparser(fullpath) # try to read embedded metadata, e.g. id3 tags
+        except Exception as e:
+            print 'taggedfileparser failed: %s' % e
             super(AUXResolver, self).resolve(filename, fullpath, fromcache) # fall back to network lookup
+        else:
+            if taggedmd is not None:
+                self.trackResolved.emit(filename, taggedmd)
+            else:
+                super(AUXResolver, self).resolve(filename, fullpath, fromcache) # fall back to network lookup
+
+    def updateRepertoire(self, labelmap):
+        """Takes an updated label map, e.g. from auxjson.appspot.com, and updates the internal list"""
+        self.labelmap.update(labelmap)
+        for prefix in labelmap.keys():
+            if not prefix in self.prefixes:
+                self.prefixes.append(prefix)
 
 
 def findResolver(filename):
