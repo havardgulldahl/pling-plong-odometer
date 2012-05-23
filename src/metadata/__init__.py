@@ -78,7 +78,6 @@ class GluonReportWorker(Core.QThread):
 
     def __init__(self, parent=None):
         super(GluonReportWorker, self).__init__(parent)
-        self.finished.connect(self.deleteLater)
 
     def __del__(self):
         self.wait()
@@ -122,7 +121,6 @@ class GluonLookupWorker(Core.QThread):
 
     def __init__(self, parent=None):
         super(GluonLookupWorker, self).__init__(parent)
-        self.finished.connect(self.deleteLater)
 
     def __del__(self):
         self.wait()
@@ -163,7 +161,6 @@ class DMAWorker(Core.QThread):
 
     def __init__(self, parent=None):
         super(DMAWorker, self).__init__(parent)
-        self.finished.connect(self.deleteLater)
 
     def __del__(self):
         self.wait()
@@ -258,6 +255,8 @@ class ResolverBase(Core.QObject):
     def __init__(self, parent=None):
         super(ResolverBase, self).__init__(parent)
         self.trackResolved.connect(lambda f,md: self.cache(md))
+        self.trackResolved.connect(self.cleanup)
+        self.trackFailed.connect(self.cleanup)
 
     def accepts(self, filename): 
         for f in self.prefixes:
@@ -365,6 +364,14 @@ class ResolverBase(Core.QObject):
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
         except UnicodeEncodeError:
             print repr(self.filename), type(self.filename)
+
+    def cleanup(self, filename, *args):
+        "Remove objects to prevent hanging threads"
+        try:
+            self.doc.deleteLater()
+        except Exception as e:
+            print e
+            pass
 
 class GenericMP3Resolver(ResolverBase):
     'Resolve file based on embedded metadata, i.e. id3 tags'
