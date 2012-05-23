@@ -6,7 +6,7 @@
 import sys, os.path
 import time
 import datetime
-import urllib
+import urllib2
 import json
 import StringIO
 import ConfigParser
@@ -33,6 +33,29 @@ try:
 except ImportError:
     USE_AUDIOPLAYER=False
 
+class UrlWorker(Core.QThread):
+    finished = Core.pyqtSignal(object)
+    failed = Core.pyqtSignal(tuple)
+
+    def __init__(self, parent=None):
+        super(UrlWorker, self).__init__(parent)
+        self.exiting = False
+
+    def __del__(self):
+        self.exiting = True
+        self.wait()
+
+    def load(self, url, timeout=10):
+        self.url = url
+        self.timeout = timeout
+        self.start()
+
+    def run(self):
+        try:
+            con = urllib2.urlopen(self.url, timeout=self.timeout)
+            self.finished.emit(con)
+        except Exception as e:
+            self.failed.emit(tuple(sys.exc_info()))
 
 class XmemlWorker(Core.QThread):
     loaded = Core.pyqtSignal(xmemliter.XmemlParser, name="loaded")
@@ -255,16 +278,21 @@ class Odometer(Gui.QMainWindow):
 
     def logException(self, e):
         'Add an exception to the log'
+        if isinstance(e, tuple):
+            etype, e, tb = e
+        else:
+            etype, exc_value, tb = sys.exc_info()
         if hasattr(e, 'msg'):
             msg = e.msg
+        elif hasattr(e, 'reason'):
+            msg = e.reason
         elif hasattr(e, 'message'):
             msg = e.message
         else:
             msg = unicode(e)
-        self.showerror(unicode(self.tr('Unexpected error: %s')) % msg)
+        #self.showerror(unicode(self.tr('Unexpected error: %s')) % msg)
         self.log.append('<div style="color:red">')
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        for line in traceback.format_exception(exc_type, exc_value, exc_traceback):
+        for line in traceback.format_exception(etype, e, tb):
             self.log.append(line)
         self.log.append('</div>')
 
@@ -300,7 +328,7 @@ class Odometer(Gui.QMainWindow):
             _version = ''
         if self.buildflags.getboolean('release', 'beta'):
             _version = unicode(_version).strip() + ' NEXT'
-        print "---%s---" % _version
+        #print "---%s---" % _version
         return _version
 
     def showAbout(self):
@@ -319,8 +347,9 @@ class Odometer(Gui.QMainWindow):
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def helpdocloaded(success):
             # print "help doc loaded: %s" % success
-            # TODO: Add offline fallback or error message if success == False
-            pass
+            # TODO: Add offline fallback 
+            if not success:
+                self.showerror(self.tr("Could not load help document, sorry. :("))
         ui.webView.loadFinished.connect(helpdocloaded)
         return HelpDialog.exec_()     
 
@@ -340,17 +369,32 @@ class Odometer(Gui.QMainWindow):
             _platform = 'mac'
         else:
             _platform = 'win'
-        _versionFile = urllib.urlopen('%s/odometerversion_%s.txt' % (_dropboxUrl, _platform)).read()
-        _ver, _url = _versionFile.split('|')
-        def _date(s):
-            return datetime.datetime.strptime(s.strip(), "%Y-%m-%d").date()
-        _currentVersion = _date(unicode(readResourceFile(':/txt/version_%s' % _platform)))
-        _onlineVersion = _date(_ver)
-        if _currentVersion < _onlineVersion:
-            # out of date
-            _box = Gui.QMessageBox.warning(self, self.tr('Oooooo!'), unicode(self.tr('Odometer is out of date. \nGet the new version: %s')) % _url)
-        else:
-            _box = Gui.QMessageBox.information(self, self.tr('Relax'), self.tr('Odometer is up to date'))
+        #try:
+            #_versionFile = urllib2.urlopen('%s/odometerversion_%s.txt' % (_dropboxUrl, _platform), timeout=7).read()
+        #except Exception as e:
+            #self.logException(e)
+            #self.showerror(self.tr('Could not look up the most recent version online. Check your internet connection'))
+            #return 
+        def failed(ex):
+            #print "faile!", ex
+            self.showerror(self.tr('Could not look up the most recent version online. Check your internet connection'))
+            self.logException(ex)
+        def compare(data):
+            _ver, _url = data.read().split('|')
+            def _date(s):
+                return datetime.datetime.strptime(s.strip(), "%Y-%m-%d").date()
+            _currentVersion = _date(unicode(readResourceFile(':/txt/version_%s' % _platform)))
+            _onlineVersion = _date(_ver)
+            if _currentVersion < _onlineVersion:
+                # out of date
+                _box = Gui.QMessageBox.warning(self, self.tr('Oooooo!'), unicode(self.tr('Odometer is out of date. \nGet the new version: %s')) % _url)
+            else:
+                _box = Gui.QMessageBox.information(self, self.tr('Relax'), self.tr('Odometer is up to date'))
+        async = UrlWorker()
+        _url = '%s/odometerversion_%s.txt' % (_dropboxUrl, _platform)
+        async.load(_url, timeout=7)
+        async.finished.connect(compare)
+        async.failed.connect(failed)
 
     def showLogs(self):
         'Pop up a dialog to show internal log'
@@ -366,21 +410,39 @@ class Odometer(Gui.QMainWindow):
         try:
             repertoire = pickle.loads(str(self.settings.value('auxrepertoire', None).toString()))
         except Exception as e:
-            print e
+            self.logException(e)
             repertoire = None
-        print "found repertoire:", repertoire
+        #print "found repertoire:", repertoire
         def age(dt):
             return (datetime.datetime.now() - dt).days
-        if repertoire is None or age(repertoire['timestamp']) > 7:
-            # get new data online
-            self.logMessage('cache is too old, fetch online')
-            _url = 'http://auxjson.appspot.com/' #self.buildflags.get('release', 'AUXRepertoireUrl')
-            data =  urllib.urlopen(_url)
+        if False: #repertoire is not None or age(repertoire['timestamp']) < 7:
+            self.AUXRepertoire = repertoire
+            return
+
+        # get new data online
+        self.logMessage('AUX repertoire cache is too old, fetch online')
+        _url = 'http://auxjson.appspot.com/' #self.buildflags.get('release', 'AUXRepertoireUrl')
+        #try:
+            ##TODO: Run in thread
+            #data =  urllib2.urlopen(_url, timeout=4)
+        #except Exception as e:
+            #self.logMessage(self.tr('AUX repertoire lookup failed'), StatusBox.ERROR)
+            #self.logException(e)
+            #return
+
+        def store(data):
             repertoire = json.loads(data.read())
-            print "got repertoire:", repertoire
+            #print "got repertoire:", repertoire
             repertoire['timestamp'] = datetime.datetime.now()
             self.settings.setValue('auxrepertoire', pickle.dumps(repertoire))
-        self.AUXRepertoire = repertoire
+            self.AUXRepertoire = repertoire
+        def failed(ex):
+            #print "faile!", ex
+            self.logException(ex)
+        async = UrlWorker()
+        async.load(_url, timeout=7)
+        async.finished.connect(store)
+        async.failed.connect(failed)
 
     def clicked(self, qml):
         'Open file dialog to get xmeml file name'
@@ -555,7 +617,7 @@ class Odometer(Gui.QMainWindow):
             self.ui.clipLabel.setText(row.metadata.label or self.tr('Unknown'))
             self.ui.detailsBox.show()
         except AttributeError, (e):
-            print e
+            self.logException(e)
             self.ui.detailsBox.hide()
         self.ui.resolveAUXButton.setEnabled(row.metadata.title is None)
 
@@ -652,7 +714,7 @@ class Odometer(Gui.QMainWindow):
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def reportloaded(boolean):
-            print "report loaded: %s" % boolean
+            #print "report loaded: %s" % boolean
             html = ui.webView.page().mainFrame()
             submit = html.findFirstElement('input[type=submit]')
             submit.setAttribute('style', 'visibility:hidden')
@@ -672,7 +734,7 @@ class Odometer(Gui.QMainWindow):
             text.setPlainText(s)
         ui.webView.loadFinished.connect(reportloaded)
         def reportsubmit():
-            print "report submitting"
+            #print "report submitting"
             html = ui.webView.page().mainFrame()
             for el in ['foretag', 'kontakt', 'telefon', 'email', 'produktionsnamn']:
                 htmlel = html.findFirstElement('input[name=%s]' % el)
@@ -717,7 +779,7 @@ class Odometer(Gui.QMainWindow):
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def reportloaded(boolean):
-            print "report loaded: %s" % boolean
+            #print "report loaded: %s" % boolean
             html = ui.webView.page().mainFrame()
             fn = html.findFirstElement('input[id="entry_0"]')
             fn.setAttribute("value", filename)
@@ -742,7 +804,7 @@ class Odometer(Gui.QMainWindow):
         ui.setupUi(CreditsDialog)
         ui.textBrowser.setText(s)
         def _save():
-            print "saving credits"
+            #print "saving credits"
             try:
                 loc = Gui.QFileDialog.getSaveFileName(CreditsDialog, self.tr("Save credits"))
                 f = open(unicode(loc), "wb")
