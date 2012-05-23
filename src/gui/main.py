@@ -422,7 +422,7 @@ class Odometer(Gui.QMainWindow):
 
         # get new data online
         self.logMessage(self.tr('AUX repertoire cache is too old, fetch new online'))
-        _url = 'http://auxjson.appspot.com/' #self.buildflags.get('release', 'AUXRepertoireUrl')
+        _url = self.buildflags.get('release', 'AUXRepertoireUrl')
 
         def store(data):
             repertoire = json.loads(data.read())
