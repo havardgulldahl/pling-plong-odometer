@@ -406,7 +406,7 @@ class Odometer(Gui.QMainWindow):
         return LogDialog.exec_()
 
     def updateAUXRepertoire(self):
-        self.logMessage('updating AUX repertoire')
+        self.logMessage(self.tr('Updating AUX repertoire'))
         try:
             repertoire = pickle.loads(str(self.settings.value('auxrepertoire', None).toString()))
         except Exception as e:
@@ -416,19 +416,13 @@ class Odometer(Gui.QMainWindow):
         def age(dt):
             return (datetime.datetime.now() - dt).days
         if repertoire is not None or age(repertoire['timestamp']) < 7:
+            self.logMessage(self.tr('Found fresh AUX repertoire list in cache'))
             self.AUXRepertoire = repertoire
             return
 
         # get new data online
-        self.logMessage('AUX repertoire cache is too old, fetch online')
+        self.logMessage(self.tr('AUX repertoire cache is too old, fetch new online'))
         _url = 'http://auxjson.appspot.com/' #self.buildflags.get('release', 'AUXRepertoireUrl')
-        #try:
-            ##TODO: Run in thread
-            #data =  urllib2.urlopen(_url, timeout=4)
-        #except Exception as e:
-            #self.logMessage(self.tr('AUX repertoire lookup failed'), StatusBox.ERROR)
-            #self.logException(e)
-            #return
 
         def store(data):
             repertoire = json.loads(data.read())
