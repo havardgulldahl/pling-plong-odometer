@@ -523,11 +523,10 @@ class Odometer(Gui.QMainWindow):
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress) 
-                #w.trackFailed.connect( ... ?
+                #w.trackFailed.connect(lambda x: r.setCheckState(0, Core.Qt.Unchecked))
                 w.error.connect(self.showerror) 
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname, fileref.pathurl) # put the worker to work async
-                r.setCheckState(0, Core.Qt.Checked)
             if self.showsubclips:
                 i = 1
                 for range in ranges:
@@ -564,6 +563,7 @@ class Odometer(Gui.QMainWindow):
     def trackCompleted(self, filename, metadata):
         'React to metadata finished loading for a specific clip'
         #print "got metadata (%s): %s" % (filename, metadata)
+        self.rows[unicode(filename)].setCheckState(0, Core.Qt.Checked)
         self.metadataloaded += 1
         if len(self.audioclips)  == self.metadataloaded:
             self.ui.DMAButton.setEnabled(True)
