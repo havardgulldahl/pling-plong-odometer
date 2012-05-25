@@ -1,7 +1,5 @@
 ♫ ♪ Odometer ✪
 
-Laget av Håvard Gulldahl <havard.gulldahl@nrk.no> 2011-2012.
-
 Et program for å telle varigheten av lydspor i et Final Cut Pro-prosjekt, slå opp nødvendig metadata og rapportere alt til riktige tellekontor.
 
 Sjekk ut de innebygde hjelpesidene for fremgangsmåte.
@@ -11,4 +9,7 @@ Denne versjonen av programmet kjenner igjen følgende musikk-kilder:
  ☆ AUX Publishing
  ☆ Sonoton
 
+Laget av Håvard Gulldahl <havard.gulldahl@nrk.no> 2011-2012.
+
+Programmet kommuniserer med NRKs servere gjennom en løsning laget av Tormod Værvågen <tormod.varvagen@nrk.no>.
 
