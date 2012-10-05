@@ -59,6 +59,7 @@ class UrlWorker(Core.QThread):
 
 class XmemlWorker(Core.QThread):
     loaded = Core.pyqtSignal(xmemliter.XmemlParser, name="loaded")
+    failed = Core.pyqtSignal(BaseException)
 
     def __init__(self, parent=None):
         super(XmemlWorker, self).__init__(parent)
@@ -73,8 +74,12 @@ class XmemlWorker(Core.QThread):
         self.start()
 
     def run(self):
-        xmeml = xmemliter.XmemlParser(self.xmemlfile)
-        self.loaded.emit(xmeml)
+        try:
+            xmeml = xmemliter.XmemlParser(self.xmemlfile)
+            self.loaded.emit(xmeml)
+        except BaseException as e:
+            print "beep"
+            self.failed.emit(e)
 
 class StatusBox(Gui.QWidget):
     INFO = 1
@@ -166,6 +171,7 @@ class Odometer(Gui.QMainWindow):
         self.xmemlfile = xmemlfile
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
+        self.xmemlthread.failed.connect(self.showException)
     	self.ui = odometer_ui.Ui_MainWindow()
         self.setLanguage(language)
         self.ui.setupUi(self)
@@ -269,7 +275,7 @@ class Odometer(Gui.QMainWindow):
             color = 'blue'
         try:
             name = os.path.basename(self.xmemlfile)
-        except AttributeError:
+        except (AttributeError, TypeError):
             name = self.tr('No XMEML loaded')
         self.log.append('<div style="color:%s">[%s - %s]: %s</div>' % (color, 
                                                                        name,
@@ -290,12 +296,15 @@ class Odometer(Gui.QMainWindow):
             msg = e.message
         else:
             msg = unicode(e)
-        #self.showerror(unicode(self.tr('Unexpected error: %s')) % msg)
         self.log.append('<div style="color:red">')
         for line in traceback.format_exception(etype, e, tb):
             self.log.append(line)
         self.log.append('</div>')
 
+    def showException(self, e):
+        self.logException(e)
+        self.showerror(unicode(self.tr('Unexpected error: %s')) % e)
+        
     def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
         'Show floating status box'
         # if you don't autoclose, call self.closestatusboxes()
