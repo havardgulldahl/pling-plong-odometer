@@ -196,7 +196,6 @@
         <location filename="pling-plong-odometer.ui" line="491"/>
         <source>Experiencing errors or glitches? Report it!</source>
         <translation>Finner du feil eller bommerter? Send en rapport!</translation>
-    </message>
     <message>
         <location filename="pling-plong-odometer.ui" line="494"/>
         <source>Report error</source>
