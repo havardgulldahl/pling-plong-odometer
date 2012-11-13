@@ -427,7 +427,7 @@ class Odometer(Gui.QMainWindow):
         #print "found repertoire:", repertoire
         def age(dt):
             return (datetime.datetime.now() - dt).days
-        if repertoire is not None or age(repertoire['timestamp']) < 7:
+        if repertoire is not None and age(repertoire['timestamp']) < 7:
             self.logMessage(self.tr('Found fresh AUX repertoire list in cache'))
             self.AUXRepertoire = repertoire
             return
