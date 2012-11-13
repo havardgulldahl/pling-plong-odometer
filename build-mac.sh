@@ -12,6 +12,7 @@ function error {
 
 # some settings
 
+DROPBOXPATH=/Volumes/Media/dropbox/Dropbox;
 DROPBOXURL=http://dl.dropbox.com/u/12128173/Odometer;
 VERSION=$(date +"%Y-%m-%d");
 
@@ -61,8 +62,8 @@ hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer" -fs "HFS+" -srcfolder "dis
 # publish to dropbox
 echo "Publishing to dropbox"
 DMGURL=$DROPBOXURL/$DMGNAME;
-cp "$DMGNAME" $HOME/Dropbox/Public/Odometer/"$DMGNAME" || error "Copying to dropbox failed"
-echo "$VERSION|$DMGURL" > $HOME/Dropbox/Public/Odometer/odometerversion_mac.txt
+cp "$DMGNAME" $DROPBOXPATH/Public/Odometer/"$DMGNAME" || error "Copying to dropbox failed"
+echo "$VERSION|$DMGURL" > $DROPBOXPATH/Public/Odometer/odometerversion_mac.txt
 
 # create pkg
 echo "Creating .pkg installer";
