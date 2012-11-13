@@ -195,12 +195,11 @@
     <message>
         <location filename="pling-plong-odometer.ui" line="491"/>
         <source>Experiencing errors or glitches? Report it!</source>
-        <translation type="unfinished"></translation>
-    </message>
+        <translation>Finner du feil eller bommerter? Send en rapport!</translation>
     <message>
         <location filename="pling-plong-odometer.ui" line="494"/>
         <source>Report error</source>
-        <translation type="unfinished"></translation>
+        <translation>Rapporter feil</translation>
     </message>
 </context>
 <context>
@@ -406,37 +405,37 @@ Hent den nye versjonen: %s</translation>
     <message>
         <location filename="main.py" line="273"/>
         <source>No XMEML loaded</source>
-        <translation type="unfinished"></translation>
+        <translation>Har ikke lest XMEML</translation>
     </message>
     <message>
         <location filename="main.py" line="352"/>
         <source>Could not load help document, sorry. :(</source>
-        <translation type="unfinished"></translation>
+        <translation>Beklager, Hjelp-dokumentet kunne ikke leses inn. :(</translation>
     </message>
     <message>
         <location filename="main.py" line="380"/>
         <source>Could not look up the most recent version online. Check your internet connection</source>
-        <translation type="unfinished"></translation>
+        <translation>Klarte ikke å slå opp siste versjon online. Sjekk internettforbindelsen din</translation>
     </message>
     <message>
         <location filename="main.py" line="409"/>
         <source>Updating AUX repertoire</source>
-        <translation type="unfinished"></translation>
+        <translation>Oppdaterer AUX&apos; repertoar</translation>
     </message>
     <message>
         <location filename="main.py" line="419"/>
         <source>Found fresh AUX repertoire list in cache</source>
-        <translation type="unfinished"></translation>
+        <translation>Fant oppdatert AUX-repertoar-liste i cache</translation>
     </message>
     <message>
         <location filename="main.py" line="424"/>
         <source>AUX repertoire cache is too old, fetch new online</source>
-        <translation type="unfinished"></translation>
+        <translation>Cachen av AUX-repertoaret er for gammel, henter ny fra nett</translation>
     </message>
     <message>
         <location filename="main.py" line="811"/>
         <source>Credits</source>
-        <translation type="unfinished">Rulletekst</translation>
+        <translation>Rulletekst</translation>
     </message>
 </context>
 <context>
