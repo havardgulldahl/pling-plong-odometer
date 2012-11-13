@@ -268,7 +268,10 @@ class Odometer(Gui.QMainWindow):
         elif msgtype == StatusBox.WARNING:
             color = 'blue'
         try:
-            name = os.path.basename(self.xmemlfile)
+            if isinstance(self.xmemlfile, unicode):
+                name = os.path.basename(self.xmemlfile)
+            else:
+                name = os.path.basename(self.xmemlfile.decode(sys.getfilesystemencoding()))
         except AttributeError:
             name = self.tr('No XMEML loaded')
         self.log.append('<div style="color:%s">[%s - %s]: %s</div>' % (color, 
@@ -453,11 +456,15 @@ class Odometer(Gui.QMainWindow):
 
     def loadxml(self, xmemlfile):
         'Start loading xmeml file, start xmeml parser'
-        msgbox = self.showstatus(unicode(self.tr("Loading %s...")) % xmemlfile, autoclose=self.loaded)
+        if isinstance(xmemlfile, unicode):
+            unicxmemlfile = xmemlfile
+        else:
+            unicxmemlfile = xmemlfile.decode(sys.getfilesystemencoding())
+        msgbox = self.showstatus(unicode(self.tr("Loading %s...")) % unicxmemlfile, autoclose=self.loaded)
         self.loadingbar()
         self.loaded.connect(self.removeLoadingbar)
-        self.loaded.connect(lambda: self.ui.fileInfo.setText(unicode(self.tr("<b>Loaded:</b> %s")) % os.path.basename(xmemlfile)))
-        self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(os.path.abspath(xmemlfile)))
+        self.loaded.connect(lambda: self.ui.fileInfo.setText(unicode(self.tr("<b>Loaded:</b> %s")) % os.path.basename(unicxmemlfile)))
+        self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(os.path.abspath(unicxmemlfile)))
         self.xmemlthread.load(xmemlfile)
 
     def loadingbar(self):
