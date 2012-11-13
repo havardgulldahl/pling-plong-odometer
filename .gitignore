@@ -51,3 +51,7 @@ src/gui/odometer_no.qm
 # Imported projects #
 #####################
 src/xmeml/
+
+# Stuff #
+#########
+data/
