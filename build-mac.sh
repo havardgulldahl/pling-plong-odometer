@@ -38,7 +38,7 @@ exit
 echo "$DROPBOXURL" > ./DROPBOXURL;
 echo "$VERSION" > ./VERSIONMAC;
 git commit ./VERSIONMAC -m "build-mac.sh: commiting new version $VERSION"
-pyrcc4-2.7 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
+pyrcc4 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
 # clean up old cruft
 echo "Removing old code"
@@ -77,7 +77,7 @@ echo "Creating .pkg installer";
 
 # changing back defaults
 sed -i .bk "s/beta=.*/beta=1/" BUILDFLAGS
-pyrcc4-2.7 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
+pyrcc4 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
                                 
 echo "Finished. Take a look at $DMGNAME"
 echo "Online: $DMGURL"; 

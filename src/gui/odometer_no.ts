@@ -193,177 +193,169 @@
         <translation>Logg...</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="491"/>
-        <source>Experiencing errors or glitches? Report it!</source>
-        <translation>Finner du feil eller bommerter? Send en rapport!</translation>
-    <message>
         <location filename="pling-plong-odometer.ui" line="494"/>
         <source>Report error</source>
         <translation>Rapporter feil</translation>
+    </message>
+    <message>
+        <location filename="pling-plong-odometer.ui" line="491"/>
+        <source>Experiencing errors or glitches? Report it!</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
     <name>Odometer</name>
     <message>
-        <location filename="main.py" line="488"/>
-        <source>%i audio clips loaded from xmeml sequence u00ab%su00bb.</source>
-        <translation>%i lydklipp lastet inn fra xmeml-sekvensen u00ab%su00bb.</translation>
+        <location filename="main.py" line="182"/>
+        <source>Edit</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="134"/>
-        <source>Pre&amp;vious</source>
-        <translation type="obsolete">Fo&amp;rrige</translation>
+        <location filename="main.py" line="185"/>
+        <source>AUX lookup</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="136"/>
-        <source>Ne&amp;xt</source>
-        <translation type="obsolete">Ne&amp;ste</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="203"/>
+        <location filename="main.py" line="209"/>
         <source>Drop your xml file here</source>
-        <translation>Slipp xml-fila di her</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="246"/>
+        <location filename="main.py" line="252"/>
         <source>This does not seem to be a valid FCP XML file. Sorry.</source>
-        <translation>Dette ser ikke ut som en gyldig FCP XML-fil. Beklager.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="360"/>
+        <location filename="main.py" line="282"/>
+        <source>No XMEML loaded</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="309"/>
+        <source>Unexpected error: %s</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="364"/>
+        <source>Could not load help document, sorry. :(</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="372"/>
         <source>This project is free software</source>
-        <translation>Dette programmet er fri og åpen programvare</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="361"/>
+        <location filename="main.py" line="373"/>
         <source>You may use and redistribute it according to the GPL license, version 3</source>
-        <translation>Du kan bruke og redistribuere det i henhold til GPL-lisensen, versjon 3</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="390"/>
+        <location filename="main.py" line="392"/>
+        <source>Could not look up the most recent version online. Check your internet connection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="402"/>
         <source>Oooooo!</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="390"/>
+        <location filename="main.py" line="402"/>
         <source>Odometer is out of date. 
 Get the new version: %s</source>
-        <translation>Odometer har gått ut på dato.
-Hent den nye versjonen: %s</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="392"/>
+        <location filename="main.py" line="404"/>
         <source>Relax</source>
-        <translation>Ta en pille</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="392"/>
+        <location filename="main.py" line="404"/>
         <source>Odometer is up to date</source>
-        <translation>Odometer er allerede siste versjon</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="444"/>
-        <source>Open an xmeml file (FCP export)</source>
-        <translation>Åpne en xmeml-fil (eksportert fra FCP)</translation>
+        <location filename="main.py" line="421"/>
+        <source>Updating AUX repertoire</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="444"/>
-        <source>Xmeml files (*.xml)</source>
-        <translation>Xmeml-filer (*.xml)</translation>
+        <location filename="main.py" line="431"/>
+        <source>Found fresh AUX repertoire list in cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="436"/>
+        <source>AUX repertoire cache is too old, fetch new online</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="main.py" line="456"/>
+        <source>Open an xmeml file (FCP export)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="456"/>
+        <source>Xmeml files (*.xml)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="472"/>
         <source>Loading %s...</source>
-        <translation>Leser %s...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="459"/>
+        <location filename="main.py" line="475"/>
         <source>&lt;b&gt;Loaded:&lt;/b&gt; %s</source>
-        <translation>&lt;b&gt;Leste:&lt;/b&gt; %s</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="495"/>
+        <location filename="main.py" line="511"/>
         <source>&lt;i&gt;(above %i dB)&lt;/i&gt;</source>
-        <translation>&lt;i&gt;(over %i dB)&lt;/i&gt;</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="549"/>
+        <location filename="main.py" line="504"/>
+        <source>%i audio clips loaded from xmeml sequence u00ab%su00bb.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="565"/>
         <source>Incomplete metadata. Please update manually</source>
-        <translation>Ukomplette metadata. Vennligst oppdatert manuelt</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="580"/>
+        <location filename="main.py" line="596"/>
         <source>Metadata</source>
-        <translation>Metadata</translation>
+        <translation type="unfinished">Metadata</translation>
     </message>
     <message>
-        <location filename="main.py" line="588"/>
+        <location filename="main.py" line="604"/>
         <source>&lt;i&gt;Name:&lt;/i&gt;&lt;br&gt;%(name)s&lt;br&gt;
                 &lt;i&gt;Total length:&lt;/i&gt;&lt;br&gt;%(secs)ss&lt;br&gt;
                 &lt;i&gt;Rate:&lt;/i&gt;&lt;br&gt;%(timebase)sfps&lt;br&gt;
                 </source>
-        <translation>&lt;i&gt;Navn:&lt;/i&gt;&lt;br&gt;%(name)s&lt;br&gt;
-&lt;i&gt;Total lengde:&lt;/i&gt;&lt;br&gt;%(secs)ss&lt;br&gt;
-&lt;i&gt;Rammerate:&lt;/i&gt;&lt;br&gt;%(timebase)sfps&lt;br&gt;
-</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="611"/>
-        <source>Unknown</source>
-        <translation>Ukjent</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="688"/>
-        <source>Save prf report</source>
-        <translation>Lagre prf-rapporten</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="692"/>
-        <source>Prf report saved</source>
-        <translation>Prf-rapporten lagret</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="737"/>
-        <source>&quot;%s&quot; cannot be blank</source>
-        <translation>&quot;%s&quot; kan ikke være tom</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="803"/>
-        <source>Save credits</source>
-        <translation>Lagre rulletekst</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="807"/>
-        <source>End credits saved</source>
-        <translation>Rulleteksten er lagret</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="862"/>
-        <source>Need production number</source>
-        <translation>Prodnummer behøves</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="862"/>
-        <source>You must enter the production number</source>
-        <translation>Du må skrive inn prodnummeret</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="593"/>
+        <location filename="main.py" line="609"/>
         <source>&lt;i&gt;Library&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</source>
-        <translation>&lt;i&gt;Bibliotek&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="176"/>
-        <source>Edit</source>
-        <translation>Rediger</translation>
+        <location filename="main.py" line="627"/>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="179"/>
-        <source>AUX lookup</source>
-        <translation>AUX-oppslag</translation>
+        <location filename="main.py" line="681"/>
+        <source>Not applicable</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="666"/>
+        <location filename="main.py" line="682"/>
         <source>&lt;dl&gt;
             &lt;dt&gt;Title:&lt;/dt&gt;&lt;dd&gt;%(title)s&lt;/dd&gt;
             &lt;dt&gt;Artist:&lt;/dt&gt;&lt;dd&gt;%(artist)s&lt;/dd&gt;
@@ -375,67 +367,57 @@ Hent den nye versjonen: %s</translation>
             &lt;dt&gt;Copyright owner:&lt;/dt&gt;&lt;dd&gt;%(copyright)s&lt;/dd&gt;
             &lt;dt&gt;Released year:&lt;/dt&gt;&lt;dd&gt;%(year)s&lt;/dd&gt;
             &lt;/dl&gt;</source>
-        <translation>&lt;dl&gt;
-            &lt;dt&gt;Tittel:&lt;/dt&gt;&lt;dd&gt;%(title)s&lt;/dd&gt;
-            &lt;dt&gt;Artist:&lt;/dt&gt;&lt;dd&gt;%(artist)s&lt;/dd&gt;
-            &lt;dt&gt;Albumnavn:&lt;/dt&gt;&lt;dd&gt;%(albumname)s&lt;/dd&gt;
-            &lt;dt&gt;Tekstforfatter:&lt;/dt&gt;&lt;dd&gt;%(lyricist)s&lt;/dd&gt;
-            &lt;dt&gt;Komponist:&lt;/dt&gt;&lt;dd&gt;%(composer)s&lt;/dd&gt;
-            &lt;dt&gt;Plateselskap:&lt;/dt&gt;&lt;dd&gt;%(label)s&lt;/dd&gt;
-            &lt;dt&gt;Platenummer:&lt;/dt&gt;&lt;dd&gt;%(recordnumber)s&lt;/dd&gt;
-            &lt;dt&gt;Copyright-eier:&lt;/dt&gt;&lt;dd&gt;%(copyright)s&lt;/dd&gt;
-            &lt;dt&gt;Utgitt år:&lt;/dt&gt;&lt;dd&gt;%(year)s&lt;/dd&gt;
-            &lt;/dl&gt;</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="677"/>
+        <location filename="main.py" line="693"/>
         <source>Seconds in total&lt;/b&gt;: %s</source>
-        <translation>Sekunder totalt&lt;/b&gt;: %s</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="679"/>
+        <location filename="main.py" line="695"/>
         <source>, in these subclips:</source>
-        <translation>, i følgende subklipp:</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="665"/>
-        <source>Not applicable</source>
-        <translation>Ikke aktuelt</translation>
+        <location filename="main.py" line="704"/>
+        <source>Save prf report</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="273"/>
-        <source>No XMEML loaded</source>
-        <translation>Har ikke lest XMEML</translation>
+        <location filename="main.py" line="708"/>
+        <source>Prf report saved</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="352"/>
-        <source>Could not load help document, sorry. :(</source>
-        <translation>Beklager, Hjelp-dokumentet kunne ikke leses inn. :(</translation>
+        <location filename="main.py" line="753"/>
+        <source>&quot;%s&quot; cannot be blank</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="380"/>
-        <source>Could not look up the most recent version online. Check your internet connection</source>
-        <translation>Klarte ikke å slå opp siste versjon online. Sjekk internettforbindelsen din</translation>
+        <location filename="main.py" line="819"/>
+        <source>Save credits</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="409"/>
-        <source>Updating AUX repertoire</source>
-        <translation>Oppdaterer AUX&apos; repertoar</translation>
+        <location filename="main.py" line="823"/>
+        <source>End credits saved</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="419"/>
-        <source>Found fresh AUX repertoire list in cache</source>
-        <translation>Fant oppdatert AUX-repertoar-liste i cache</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="424"/>
-        <source>AUX repertoire cache is too old, fetch new online</source>
-        <translation>Cachen av AUX-repertoaret er for gammel, henter ny fra nett</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="811"/>
+        <location filename="main.py" line="827"/>
         <source>Credits</source>
-        <translation>Rulletekst</translation>
+        <translation type="unfinished">Rulletekst</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="878"/>
+        <source>Need production number</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="main.py" line="878"/>
+        <source>You must enter the production number</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -443,17 +425,17 @@ Hent den nye versjonen: %s</translation>
     <message>
         <location filename="pling-plong-auxreport.ui" line="17"/>
         <source>Sonoton (AUX) Report</source>
-        <translation>Sonoton(AUX)-rapport</translation>
-    </message>
-    <message>
-        <location filename="pling-plong-auxreport.ui" line="30"/>
-        <source>about:blank</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="pling-plong-auxreport.ui" line="20"/>
         <source>This is an embedded view of the online report form for AUX publishing</source>
-        <translation>Dette er en innkapslet visning av nett-skjemaet til AUX Publishing</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="pling-plong-auxreport.ui" line="30"/>
+        <source>about:blank</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -461,12 +443,12 @@ Hent den nye versjonen: %s</translation>
     <message>
         <location filename="pling-plong-prfreport.ui" line="17"/>
         <source>PRF Report</source>
-        <translation>PRF-rapport</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="pling-plong-prfreport.ui" line="20"/>
         <source>Report all music to PRF</source>
-        <translation>Rapporter all musikk til PRF</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>
