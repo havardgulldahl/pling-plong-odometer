@@ -201,6 +201,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.actionLicenses.triggered.connect(self.showLicenses)
         self.ui.actionLogs.triggered.connect(self.showLogs)
         self.ui.actionCheck_for_updates.triggered.connect(self.showCheckForUpdates)
+        self.ui.actionShowPatterns.triggered.connect(self.showShowPatterns)
         #self.ui.actionConfig.triggered.connect(lambda: self.showstatus("About Config"))
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
@@ -407,6 +408,24 @@ class Odometer(Gui.QMainWindow):
         async.load(_url, timeout=7)
         async.finished.connect(compare)
         async.failed.connect(failed)
+
+    def showShowPatterns(self):
+        'Show a list of recognised Patternes'
+        PatternDialog = Gui.QDialog()
+        ui = prfreport_ui.Ui_PlingPlongPRFDialog()
+        ui.setupUi(PatternDialog)
+        ui.buttonBox.removeButton(ui.buttonBox.button(Gui.QDialogButtonBox.Save))
+        r = []
+        for catalog, patterns in metadata.getResolverPatterns().iteritems():
+            r.append('<h1>%s</h1><ul>' % catalog)
+            for tok in patterns['prefixes']:
+                r.append('<li>%s...</li>' % tok)
+            for tok in patterns['postfixes']:
+                r.append('<li>...%s</li>' % tok)
+            r.append('</ul><hr>')
+        ui.textBrowser.setHtml('\n'.join(r))
+        PatternDialog.setWindowTitle('Recognised patterns')
+        return PatternDialog.exec_()
 
     def showLogs(self):
         'Pop up a dialog to show internal log'
