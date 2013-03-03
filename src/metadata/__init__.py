@@ -245,6 +245,7 @@ class DMAWorker(Core.QThread):
 class ResolverBase(Core.QObject):
 
     prefixes = [] # a list of file prefixes that this resolver recognizes
+    postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     name = 'general'
     error = Core.pyqtSignal(unicode, name="error" ) # error message
     trackFailed = Core.pyqtSignal(unicode, name="trackFailed" ) # filename
@@ -260,7 +261,10 @@ class ResolverBase(Core.QObject):
 
     def accepts(self, filename): 
         for f in self.prefixes:
-            if unicode(filename).startswith(f):
+            if unicode(filename).upper().startswith(f):
+                return True
+        for f in self.postfixes:
+            if unicode(filename).upper().endswith(f):
                 return True
         return False
 
@@ -376,9 +380,7 @@ class ResolverBase(Core.QObject):
 class GenericMP3Resolver(ResolverBase):
     'Resolve file based on embedded metadata, i.e. id3 tags'
     name = 'MP3'
-    
-    def accepts(self, filename):
-        return filename.lower().endswith('mp3')
+    postfixes = ['mp3',]
     
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
@@ -638,6 +640,13 @@ def findResolver(filename):
         if resolver.accepts(filename):
             return resolver
     return False
+
+def getResolverPatterns():
+    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), GenericMP3Resolver()]
+    r = {}
+    for resolver in resolvers:
+        r[resolver.name] = {'prefixes':resolver.prefixes, 'postfixes':resolver.postfixes}
+    return r
 
 class Gluon(Core.QObject):
     
