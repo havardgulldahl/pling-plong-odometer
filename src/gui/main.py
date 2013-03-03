@@ -181,9 +181,9 @@ class Odometer(Gui.QMainWindow):
         if self.buildflags.getboolean('ui', 'editbutton'):
             self.ui.editMetadataButton = self.ui.buttonBox.addButton(self.tr('Edit'), Gui.QDialogButtonBox.ActionRole)
             self.ui.editMetadataButton.clicked.connect(self.editMetadata)
-        if self.buildflags.getboolean('ui', 'auxlookupbutton'):
-            self.ui.resolveAUXButton = self.ui.buttonBox.addButton(self.tr('AUX lookup'), Gui.QDialogButtonBox.ActionRole)
-            self.ui.resolveAUXButton.clicked.connect(self.auxResolve)
+        if self.buildflags.getboolean('ui', 'manuallookupbutton'):
+            self.ui.resolveManualButton = self.ui.buttonBox.addButton(self.tr('Manual lookup'), Gui.QDialogButtonBox.ActionRole)
+            self.ui.resolveManualButton.clicked.connect(self.manualResolve)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         #self.ui.DMAButton.clicked.connect(self.gluon)
@@ -648,7 +648,7 @@ class Odometer(Gui.QMainWindow):
         except AttributeError, (e):
             self.logException(e)
             self.ui.detailsBox.hide()
-        self.ui.resolveAUXButton.setEnabled(row.metadata.title is None)
+        self.ui.resolveManualButton.setEnabled(row.metadata.title is None)
 
     def editMetadata(self):
         'Show fields to edit metadata for a specific track'
@@ -663,7 +663,7 @@ class Odometer(Gui.QMainWindow):
                 labelWidget.show()
             index = detailsLayout.indexOf(widget)
             row, column, cols, rows = detailsLayout.getItemPosition(index)
-            print "poss: ",index, row, column, cols, rows
+            #print "poss: ",index, row, column, cols, rows
             text = widget.text()
             widget.hide()
             detailsLayout.takeAt(index)
@@ -779,7 +779,7 @@ class Odometer(Gui.QMainWindow):
         ui.buttonBox.accepted.connect(reportsubmit)
         return AUXDialog.exec_()
 
-    def auxResolve(self):
+    def manualResolve(self):
         'Manually submit selected tracks to aux for resolving'
         row = self.ui.detailsBox.currentRow
         def updateMetadata(filename, md):
@@ -787,15 +787,19 @@ class Odometer(Gui.QMainWindow):
             self.showMetadata(row)
             row.setCheckState(0, Core.Qt.Checked)
 
-        resolver = metadata.AUXResolver()
+        filepath = self.audiofiles[row.audioname]
+        manualPattern, result = Gui.QInputDialog.getText(self, self.tr('Music ID'), 
+            self.tr('Enter the correct music ID:'), Gui.QLineEdit.Normal, filepath.name)
+
+        #resolver = metadata.AUXResolver()
+        resolver = metadata.findResolver(unicode(manualPattern))
         resolver.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
         resolver.trackResolved.connect(updateMetadata)
         resolver.trackResolved.connect(self.submitMissingFilename)
         resolver.trackProgress.connect(self.showProgress) 
         resolver.error.connect(self.showerror) 
         self.workers.append(resolver) # keep track of the worker
-        fileref = self.audiofiles[row.audioname]
-        resolver.resolve(row.audioname, fileref.pathurl) # put the worker to work async
+        resolver.resolve(unicode(manualPattern), filepath.pathurl) # put the worker to work async
 
     def submitMissingFilename(self, filename, resolvedmetadata):
         'Add filename and metadata to a public spreadsheet'
@@ -909,7 +913,7 @@ class Odometer(Gui.QMainWindow):
     def gluonFinished(self, trackname, metadata):
         print "gluonFinished: %s -> %s" % (trackname, metadata)
         for nom, row in self.gluon.currentList:
-            print repr(os.path.splitext(nom)[0]), repr(unicode(trackname))
+            #print repr(os.path.splitext(nom)[0]), repr(unicode(trackname))
             if os.path.splitext(nom)[0] == unicode(trackname):
                 row.setBackground(0, Gui.QBrush(Gui.QColor("light green")))
 

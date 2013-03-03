@@ -372,9 +372,10 @@ class ResolverBase(Core.QObject):
     def cleanup(self, filename, *args):
         "Remove objects to prevent hanging threads"
         try:
-            self.doc.deleteLater()
+            if hasattr(self, 'doc'):
+                self.doc.deleteLater()
         except Exception as e:
-            print e
+            print "cleanup failed:", e
             pass
 
 class GenericMP3Resolver(ResolverBase):
