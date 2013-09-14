@@ -986,4 +986,9 @@ def rungui(argv):
     o.run(app)
 
 if __name__ == '__main__':
+    # suppress error on win
+    if hasattr(sys, 'frozen') and sys.frozen == 'windows_exe':
+        import StringIO
+        sys.stderr = StringIO.StringIO()
+        sys.stdout = StringIO.StringIO()
     rungui(sys.argv)
