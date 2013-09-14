@@ -558,7 +558,8 @@ class SonotonResolver(ResolverBase):
                   }
         for l in metadatabox.split('\n'):
             if not len(l.strip()): continue
-            meta, data = [s.strip() for s in l.split(':')]
+            #print "!!", l
+            meta, data = [s.strip() for s in l.split(':', 1)]
             setattr(metadata, mapping[meta], data)
         metadata.productionmusic = True
         metadata.label = self.getlabel(metadata._label)
