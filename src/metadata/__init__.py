@@ -195,7 +195,6 @@ class DMAWorker(Core.QThread):
             self.progress.emit(5)
             return None
         metadata = demjson.decode(data[rexstart:rexend])
-        print metadata
         self.progress.emit(66)
         _albumname = '; '.join([x['name'] for x in metadata['albums']])
         if not _albumname:
@@ -216,7 +215,7 @@ class DMAWorker(Core.QThread):
             recorddetails = urllib.urlopen('http://dma/productDetailsJson.do', 
                                      {'muobId': recordid})
             recordmetadata = demjson.decode(details.read())['records'][0]
-            print recordmetadata
+            #print recordmetadata
             md.label = recordmetadata['recordLabel'][0]['label']
             md.lcnumber = recordmetadata['recordLabel'][0]['recordLabelNr']
         except IOError:
@@ -327,7 +326,7 @@ class ResolverBase(Core.QObject):
         if self.incache() and self.fromcache() is not None:
             #print "CACHE HIT", loc
             return False
-        print "caching metadata to ", loc
+        #print "caching metadata to ", loc
         f = open(loc, "wb")
         f.write(pickle.dumps(metadata))
         f.close()
