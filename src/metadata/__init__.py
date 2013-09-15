@@ -454,7 +454,7 @@ class DMAResolver(ResolverBase):
         try:
             return g.group(1)
         except AttributeError: #no match
-            print "oh noes, could not understand this dma id:",filename
+            print "oh noes, could not understand this dma id:",repr(filename)
             return None
 
     def xresolve(self, filename):
@@ -526,7 +526,7 @@ class SonotonResolver(ResolverBase):
         try:
             return g.group(1)
         except AttributeError: #no match
-            print "oh noes, could not understand this Sonoton id:",filename
+            print "oh noes, could not understand this Sonoton id:",repr(filename)
             return None
 
     def getlabel(self, hint):
@@ -613,7 +613,7 @@ class AUXResolver(SonotonResolver):
         try:
             return g.group(3)
         except AttributeError: #no match
-            print "oh noes, could not understand this AUX id:",filename
+            print "oh noes, could not understand this AUX id:",repr(filename)
             return None
 
     def resolve(self, filename, fullpath, fromcache=True):
