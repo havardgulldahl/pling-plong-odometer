@@ -692,30 +692,34 @@ class Odometer(Gui.QMainWindow):
         PRFDialog = Gui.QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(PRFDialog)
-        s = ""
+        s = unicode(self.tr('<h1>Track metadata sheet for PRF</h1>'))
         for r in self.itercheckedrows():
-            if r.metadata.artist == u'(N/A for production music)':
-                r.metadata.artist = unicode(self.tr('Not applicable'))
-            if r.metadata.copyright == u'(This information requires login)':
-                r.metadata.copyright = unicode(self.tr('Not applicable'))
-            s += unicode(self.tr(u"""<dl>
-            <dt>Title:</dt><dd>%(title)s</dd>
-            <dt>Artist:</dt><dd>%(artist)s</dd>
-            <dt>Album name:</dt><dd>%(albumname)s</dd>
-            <dt>Lyricist:</dt><dd>%(lyricist)s</dd>
-            <dt>Composer:</dt><dd>%(composer)s</dd>
-            <dt>Label:</dt><dd>%(label)s</dd>
-            <dt>Recordnumber:</dt><dd>%(recordnumber)s</dd>
-            <dt>Copyright owner:</dt><dd>%(copyright)s</dd>
-            <dt>Released year:</dt><dd>%(year)s</dd>
-            </dl>""")) % vars(r.metadata)
+            _t = r.metadata.title if r.metadata.title else repr(r.audioname)
+            s += unicode(self.tr('<div><dt>Title:</dt><dd>%s</dd>' % _t))
+            if r.metadata.artist not in (None, u'(N/A for production music)'):
+                s += unicode(self.tr('<dt>Artist:</dt><dd>%s</dd>' % r.metadata.artist))
+            if r.metadata.albumname is not None:
+                s += unicode(self.tr('<dt>Album name:</dt><dd>%s</dd>' % r.metadata.albumname))
+            if r.metadata.lyricist is not None:
+                s += unicode(self.tr('<dt>Lyricist:</dt><dd>%s</dd>' % r.metadata.lyricist))
+            if r.metadata.composer is not None:
+                s += unicode(self.tr('<dt>Composer:</dt><dd>%s</dd>' % r.metadata.composer))
+            if r.metadata.label is not None:
+                s += unicode(self.tr('<dt>Label:</dt><dd>%s</dd>' % r.metadata.label))
+            if r.metadata.recordnumber is not None:
+                s += unicode(self.tr('<dt>Recordnumber:</dt><dd>%s</dd>' % r.metadata.recordnumber))
+            if r.metadata.copyright is not None and r.metadata.copyright != u'(This information requires login)':
+                s += unicode(self.tr('<dt>Copyright owner:</dt><dd>%s</dd>' % r.metadata.copyright))
+            if r.metadata.year != -1:
+                s += unicode(self.tr('<dt>Released year:</dt><dd>%s</dd>' % r.metadata.year))
+
             s += "<p><b>" + unicode(self.tr(u"Seconds in total</b>: %s")) % r.clip['durationsecs']
             if len(r.subclips):
                 s += unicode(self.tr(", in these subclips:")) + "<ol>"
                 for sc in r.subclips:
                     s += "<li>%s</li>" % sc['durationsecs']
                 s += "</ol>"
-            s += "</p><hr>"
+            s += "</p></div><hr>"
         ui.textBrowser.setHtml(s)
         def _save():
             # print "saving report for prf"
