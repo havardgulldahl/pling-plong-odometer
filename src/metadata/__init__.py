@@ -344,7 +344,7 @@ class ResolverBase(Core.QObject):
             loc.close()
         except Exception, (e):
             # something went wrong, cache invalid
-            print e
+            self.warning.emit('fromcache error: %s' % e, e)
             return None
         if None in [metadata.title, metadata.recordnumber]:
             # invalid cached object:
@@ -454,7 +454,7 @@ class DMAResolver(ResolverBase):
         try:
             return g.group(1)
         except AttributeError: #no match
-            print "oh noes, could not understand this dma id:",repr(filename)
+            self.warning.emit("could not understand this dma id: %s",repr(filename))
             return None
 
     def xresolve(self, filename):
@@ -526,7 +526,7 @@ class SonotonResolver(ResolverBase):
         try:
             return g.group(1)
         except AttributeError: #no match
-            print "oh noes, could not understand this Sonoton id:",repr(filename)
+            self.emit("Could not understand this Sonoton id: %s",repr(filename))
             return None
 
     def getlabel(self, hint):
@@ -613,7 +613,7 @@ class AUXResolver(SonotonResolver):
         try:
             return g.group(3)
         except AttributeError: #no match
-            print "oh noes, could not understand this AUX id:",repr(filename)
+            self.emit("Could not understand this AUX id: %s",repr(filename))
             return None
 
     def resolve(self, filename, fullpath, fromcache=True):
@@ -675,13 +675,13 @@ class webdoc(Core.QObject):
         self.settings.setAttribute(Web.QWebSettings.AutoLoadImages, False)
 
     def load(self):
-        print "loading url: ", self.url
+        #print "loading url: ", self.url
         self.frame.load(Core.QUrl(self.url))
 
 def taggedfileparser(filename):
     """Extract embedded tags/metadata from the audio file. Requires that the file is accessible"""
     try:
-        print "taggefileparser parsing %s" % repr(filename)
+        #print "taggefileparser parsing %s" % repr(filename)
         _filemd = mutagen.File(filename, easy=True)
     except IOError: # file isn't accessible on this system
         return None
@@ -723,7 +723,7 @@ if __name__ == '__main__':
     metadata = None
     def mymeta(filename, _metadata):
         metadata = _metadata
-        print "mymeta:", vars(metadata)
+        #print "mymeta:", vars(metadata)
 
     app = Gui.QApplication(sys.argv)
     resolver = findResolver(filename)
