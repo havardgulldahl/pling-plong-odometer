@@ -830,6 +830,7 @@ class Odometer(Gui.QMainWindow):
         _labels_seen = []
         s = ""
         for r in self.itercheckedrows():
+            if r.metadata.title is None: continue
             if r.metadata.productionmusic:
                 if not r.metadata.label in _labels_seen:
                     s += u'%(musiclibrary)s\r\n\u2117 %(label)s\r\n\r\n' % vars(r.metadata)
