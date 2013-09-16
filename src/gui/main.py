@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011-2012
+# (C) 2011-2013
 
 import sys, os.path
 import time
@@ -637,13 +637,16 @@ class Odometer(Gui.QMainWindow):
             self.ui.detailsBox.currentRow = row
             self.ui.clipTitle.setText(row.metadata.title or self.tr('Unknown'))
             self.ui.clipAlbum.setText(row.metadata.albumname or self.tr('Unknown'))
-            self.ui.clipArtist.setText(row.metadata.artist or self.tr('Unknown'))
+            _a = row.metadata.artist if row.metadata.artist != '(N/A for production music)' else None
+            self.ui.clipArtist.setText(_a or self.tr('Unknown'))
             self.ui.clipComposer.setText(row.metadata.composer or self.tr('Unknown'))
             self.ui.clipLyricist.setText(row.metadata.lyricist or self.tr('Unknown'))
-            self.ui.clipYear.setText(unicode(row.metadata.year or 0))
             self.ui.clipRecordnumber.setText(row.metadata.recordnumber or self.tr('Unknown'))
-            self.ui.clipCopyright.setText(row.metadata.copyright or self.tr('Unknown'))
+            _c = row.metadata.copyright if row.metadata.copyright != '(This information requires login)' else None
+            self.ui.clipCopyright.setText(_c or self.tr('Unknown'))
             self.ui.clipLabel.setText(row.metadata.label or self.tr('Unknown'))
+            _y = row.metadata.year if row.metadata.year != -1 else None
+            self.ui.clipYear.setText(unicode(row.metadata.year or 0))
             self.ui.detailsBox.show()
         except AttributeError, (e):
             self.logException(e)
