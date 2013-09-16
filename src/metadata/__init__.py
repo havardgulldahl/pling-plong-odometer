@@ -1,6 +1,6 @@
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011-2012
+# (C) 2011-2013
 
 import os
 import time
@@ -454,7 +454,6 @@ class DMAResolver(ResolverBase):
         try:
             return g.group(1)
         except AttributeError: #no match
-            self.warning.emit("could not understand this dma id: %s",repr(filename))
             return None
 
     def xresolve(self, filename):
@@ -526,7 +525,6 @@ class SonotonResolver(ResolverBase):
         try:
             return g.group(1)
         except AttributeError: #no match
-            self.emit("Could not understand this Sonoton id: %s",repr(filename))
             return None
 
     def getlabel(self, hint):
@@ -613,7 +611,6 @@ class AUXResolver(SonotonResolver):
         try:
             return g.group(3)
         except AttributeError: #no match
-            self.emit("Could not understand this AUX id: %s",repr(filename))
             return None
 
     def resolve(self, filename, fullpath, fromcache=True):
