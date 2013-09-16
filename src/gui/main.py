@@ -78,7 +78,7 @@ class XmemlWorker(Core.QThread):
             xmeml = xmemliter.XmemlParser(self.xmemlfile)
             self.loaded.emit(xmeml)
         except BaseException as e:
-            print "beep"
+            #print "beep"
             self.failed.emit(e)
 
 class StatusBox(Gui.QWidget):
@@ -535,7 +535,7 @@ class Odometer(Gui.QMainWindow):
             if frames == 0:
                 continue
             #print "======= %s: %s -> %s======= " % (audioname, ranges.r, frames)
-            fileref = self.audiofiles[audioname]
+            fileref = self.audiofiles[audioname] # might be None, if clip is offline
             secs = frames / fileref.timebase
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname, 
                                                     '%ss (%sf)' % (secs, frames)])
@@ -916,7 +916,7 @@ class Odometer(Gui.QMainWindow):
         self.gluon.resolve(prodno, checked)
 
     def gluonFinished(self, trackname, metadata):
-        print "gluonFinished: %s -> %s" % (trackname, metadata)
+        #print "gluonFinished: %s -> %s" % (trackname, metadata)
         for nom, row in self.gluon.currentList:
             #print repr(os.path.splitext(nom)[0]), repr(unicode(trackname))
             if os.path.splitext(nom)[0] == unicode(trackname):

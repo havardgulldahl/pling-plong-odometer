@@ -250,6 +250,7 @@ class ResolverBase(Core.QObject):
     trackFailed = Core.pyqtSignal(unicode, name="trackFailed" ) # filename
     trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" ) # filename, metadataobj
     trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" ) # filename, progress 0-100
+    warning = Core.pyqtSignal(unicode, object, name="warning") # warning message, with exception object
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
     def __init__(self, parent=None):
@@ -616,16 +617,17 @@ class AUXResolver(SonotonResolver):
             return None
 
     def resolve(self, filename, fullpath, fromcache=True):
+        # first try to read id3 data from mp3 file, if we have a path
+        # (if the clip is offline, there won't be a path available)
         try:
-            taggedmd = taggedfileparser(fullpath) # try to read embedded metadata, e.g. id3 tags
-        except Exception as e:
-            print 'taggedfileparser failed: %s' % e
-            super(AUXResolver, self).resolve(filename, fullpath, fromcache) # fall back to network lookup
-        else:
-            if taggedmd is not None:
-                self.trackResolved.emit(filename, taggedmd)
-            else:
+            taggedmd = taggedfileparser(fullpath) if fullpath is not None else None
+            if taggedmd is None:
                 super(AUXResolver, self).resolve(filename, fullpath, fromcache) # fall back to network lookup
+            else:
+                self.trackResolved.emit(filename, taggedmd)
+        except Exception as e:
+            self.warning.emit('taggedfileparser failed: %s' % e, e)
+            super(AUXResolver, self).resolve(filename, fullpath, fromcache) # fall back to network lookup
 
     def updateRepertoire(self, labelmap):
         """Takes an updated label map, e.g. from auxjson.appspot.com, and updates the internal list"""
@@ -679,6 +681,7 @@ class webdoc(Core.QObject):
 def taggedfileparser(filename):
     """Extract embedded tags/metadata from the audio file. Requires that the file is accessible"""
     try:
+        print "taggefileparser parsing %s" % repr(filename)
         _filemd = mutagen.File(filename, easy=True)
     except IOError: # file isn't accessible on this system
         return None
