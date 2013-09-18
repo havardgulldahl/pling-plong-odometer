@@ -5,7 +5,7 @@
 import os
 import time
 import cPickle as pickle
-import sys, os.path, random, time, urllib, urllib2, urlparse, re
+import sys, os.path, random, time, urllib, urllib2, urlparse, re, datetime
 import json, StringIO
 import hashlib
 import demjson
@@ -15,7 +15,7 @@ import PyQt4.QtGui as Gui
 import PyQt4.QtWebKit as Web
 import PyQt4.Qt as Qt
 import mutagen
-import tagger
+import tagger # unfortunately, we need tagger also, to read id3v1 frames, since mutagen skips past them
 
 import gluon
 
@@ -378,10 +378,10 @@ class ResolverBase(Core.QObject):
             print "cleanup failed:", e
             pass
 
-class GenericMP3Resolver(ResolverBase):
-    'Resolve file based on embedded metadata, i.e. id3 tags'
-    name = 'MP3'
-    postfixes = ['mp3',]
+class GenericFileResolver(ResolverBase):
+    'Resolve file based on embedded metadata, i.e. id3 tags, vorbis tags, bwf'
+    name = 'file'
+    postfixes = ['MP3','WAV']
     
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
@@ -390,14 +390,26 @@ class GenericMP3Resolver(ResolverBase):
             md = self.fromcache()
             if md is not None:
                 self.trackResolved.emit(self.filename, md)
-                return
-        parsed = self.id3parse(fullpath)
+                return True
+        parsed = False
+        if fullpath.upper().endswith('.MP3'):
+            parsed = self.id3parse(fullpath)
+        elif fullpath.upper().endswith('.WAV'):
+            parsed = self.wavparse(fullpath)
         if not parsed:
             self.error.emit(u'Could not parse %s' % fullpath)
             self.trackFailed.emit(filename)
+            return False
         else:
             self.trackResolved.emit(self.filename, parsed)
+            return True
     
+    def wavparse(self, filename):
+        'Parse metadata from wav and return TrackMetadata object or False'
+        #TODO: implement this
+        md = TrackMetadata(filename)
+        return False
+
     def id3parse(self, filename):
         'Parse metadata from id3 tags and return TrackMetadata object or False'
         try:
@@ -411,8 +423,6 @@ class GenericMP3Resolver(ResolverBase):
             
         md = TrackMetadata(filename)
 
-        if _filev1.album.decode('latin1') == u'NRK P3 Urørt':
-            md.musiclibrary = u'Urørt'
         md.title = _filev1.songname.decode('latin1')
         md.year = int(_filev1.year, 10)
         md.tracknumber = _filev1.track
@@ -424,13 +434,30 @@ class GenericMP3Resolver(ResolverBase):
                 'TPUB':'catalogue',
                 'TIM':'length',
                 'TSRC':'isrc',
+                'TALB':'album',
+                'TIT2':'title',
+                'TPE1':'artist',
+                #'TPUB':'musiclibrary',
+                'MCDI':'tracknumber',
+                'TRCK':'tracknumber',
+                'TYER':'year', # replaced by TDRC in v2.4
+                'TDRC':'year',
                }
         for _frame in _filev2.frames:
             if _frame.fid in _map.keys():
                 _toattr = _map[_frame.fid]
                 _value = ','.join( s.decode(_frame.encoding) for s in _frame.strings )
                 setattr(md, _toattr, _value)
-        print vars(md)
+        # these id3v1 values take precedence
+        if _filev1.album.decode('latin1') == u'NRK P3 Urørt':
+            md.musiclibrary = u'Urørt'
+        # try to fix things
+        if isinstance(md.year, basestring):
+            try:
+                _y = md.year
+                md.year = datetime.datetime.strptime(_y, '%Y-%m-%dT%H:%M:%SZ').year
+            except ValueError:
+                pass
         return md
             
             
@@ -616,14 +643,11 @@ class AUXResolver(SonotonResolver):
     def resolve(self, filename, fullpath, fromcache=True):
         # first try to read id3 data from mp3 file, if we have a path
         # (if the clip is offline, there won't be a path available)
-        try:
-            taggedmd = taggedfileparser(fullpath) if fullpath is not None else None
-            if taggedmd is None:
-                super(AUXResolver, self).resolve(filename, fullpath, fromcache) # fall back to network lookup
-            else:
-                self.trackResolved.emit(filename, taggedmd)
-        except Exception as e:
-            self.warning.emit('taggedfileparser failed: %s' % e, e)
+        success = None
+        if fullpath is not None:
+            _mp3 = GenericFileResolver()
+            success = _mp3.resolve(filename, fullpath)
+        if not success:
             super(AUXResolver, self).resolve(filename, fullpath, fromcache) # fall back to network lookup
 
     def updateRepertoire(self, labelmap):
@@ -635,14 +659,14 @@ class AUXResolver(SonotonResolver):
 
 
 def findResolver(filename):
-    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), GenericMP3Resolver()]
+    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), GenericFileResolver()]
     for resolver in resolvers:
         if resolver.accepts(filename):
             return resolver
     return False
 
 def getResolverPatterns():
-    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), GenericMP3Resolver()]
+    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), GenericFileResolver()]
     r = {}
     for resolver in resolvers:
         r[resolver.name] = {'prefixes':resolver.prefixes, 'postfixes':resolver.postfixes}
@@ -675,31 +699,6 @@ class webdoc(Core.QObject):
         #print "loading url: ", self.url
         self.frame.load(Core.QUrl(self.url))
 
-def taggedfileparser(filename):
-    """Extract embedded tags/metadata from the audio file. Requires that the file is accessible"""
-    try:
-        #print "taggefileparser parsing %s" % repr(filename)
-        _filemd = mutagen.File(filename, easy=True)
-    except IOError: # file isn't accessible on this system
-        return None
-    if _filemd is None or _filemd['title'] is None or _filemd['composer'] is None:
-        return None
-    _map = {'album': 'album',
-            'organization':'musiclibrary',
-            'copyright':'copyright',
-            'artist':'artist',
-            'title':'title',
-            'composer':'composer',
-            'isrc':'isrc',
-            'tracknumber':'tracknumber',
-            'date':'year',
-           }
-    md = TrackMetadata(filename=filename)
-    for fromfield, tofield in _map.iteritems():
-        if _filemd.haskey(fromfield):
-            md.setattr(tofield, _filemd[fromfield])
-    return md
-
 def mdprint(f,m):
     print "filename: ",f
     print "metadata: ", vars(m)
@@ -707,6 +706,7 @@ def mdprint(f,m):
 if __name__ == '__main__':
     import signal
     signal.signal(signal.SIGINT, signal.SIG_DFL)
+    import os.path
 
     #filename = 'SCD082120.wav'
     #filename = 'AUXMP_SCD082120.wav'
@@ -717,16 +717,20 @@ if __name__ == '__main__':
     filename = 'SCD0694 track11_Fill it up A_J.D.Trigger / DJ Chunk / R Pick.wav'
     #filename = 'NONRT900497LP0205_xxx.wav'
     filename = 'rykta.mp3'
-    metadata = None
+    try:
+        filename = sys.argv[1]
+    except IndexError:
+        filename = 'test.mp3'
+        
     def mymeta(filename, _metadata):
         metadata = _metadata
-        #print "mymeta:", vars(metadata)
+        print "mymeta:", vars(metadata)
 
     app = Gui.QApplication(sys.argv)
     resolver = findResolver(filename)
-    print resolver
+    print 'resolver:', resolver
     resolver.trackResolved.connect(mymeta)
-    resolver.resolve(filename, fromcache=False)
+    resolver.resolve(filename, os.path.abspath(filename), fromcache=False)
     #doc = webdoc(filename, 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=SCD082120&w=tr&lyr=0')
     #doc.load()
     sys.exit(app.exec_())
