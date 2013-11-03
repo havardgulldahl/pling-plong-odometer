@@ -536,7 +536,7 @@ class Odometer(Gui.QMainWindow):
                 continue
             #print "======= %s: %s -> %s======= " % (audioname, ranges.r, frames)
             fileref = self.audiofiles[audioname] # might be None, if clip is offline
-            secs = frames / fileref.timebase
+            secs = ranges.seconds()
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname, 
                                                     '%ss (%sf)' % (secs, frames)])
             r.metadata = metadata.TrackMetadata(filename=audioname)
@@ -560,7 +560,7 @@ class Odometer(Gui.QMainWindow):
                 i = 1
                 for range in ranges:
                     frames = len(range)
-                    secs = frames / fileref.timebase
+                    secs = frames / ranges.framerate
                     r.subclips.append( {'durationsecs':secs, 'durationframes':frames} )
                     sr = Gui.QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
                                                  '%ss (%sf)' % (secs, frames),
@@ -619,7 +619,7 @@ class Odometer(Gui.QMainWindow):
         except AttributeError:
             return
         ss = vars(md)
-        ss.update({'secs':md.duration/md.timebase})
+        ss.update({'secs':md.duration/25}) # TODO: FIXME: Dont hardcode framerate
         s += unicode(self.tr("""<i>Name:</i><br>%(name)s<br>
                 <i>Total length:</i><br>%(secs)ss<br>
                 <i>Rate:</i><br>%(timebase)sfps<br>
