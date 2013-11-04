@@ -86,6 +86,8 @@ class StatusBox(Gui.QWidget):
     WARNING = 2
     ERROR = 3
 
+    closing = Core.pyqtSignal()
+
     def __init__(self, msg, autoclose=True, msgtype=None, parent=None):
         """autoclose may be a boolean (True == autoclose) or a signal that we
         connect our close() method to"""
@@ -119,6 +121,7 @@ class StatusBox(Gui.QWidget):
         self.deleteLater()
 
     def close(self):
+        self.closing.emit()
         anim = Core.QPropertyAnimation(self, "windowOpacity", self.parent)
         anim.setDuration(1000)
         anim.setStartValue(1.0)
@@ -316,16 +319,22 @@ class Odometer(Gui.QMainWindow):
         'Show floating status box'
         # if you don't autoclose, call self.closestatusboxes()
         # or keep a reference to this box and .close() it yourself
-        #if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg: 
-            ## don't repeat yourself
-            #return None
-        if len(self.statusboxes): return None
-        b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
-        self.statusboxes.append(b)
-        b.show_()
-        self._laststatusmsg = msg
-        self.logMessage(msg, msgtype)
-        return b
+
+        if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg: 
+            # don't repeat yourself
+            return None
+
+        if len(self.statusboxes):
+            b = self.statusboxes[-1]
+            b.addMessage(msg)
+        else:
+            b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
+            b.closing.connect(lambda: self.statusboxes.remove(b))
+            self.statusboxes.append(b)
+            b.show_()
+            self._laststatusmsg = unicode(msg)
+            self.logMessage(msg, msgtype)
+            return b
 
     def showerror(self, msg):
         'Show error message'
