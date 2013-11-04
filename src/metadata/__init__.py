@@ -250,12 +250,15 @@ class ResolverBase(Core.QObject):
     trackFailed = Core.pyqtSignal(unicode, name="trackFailed" ) # filename
     trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" ) # filename, metadataobj
     trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" ) # filename, progress 0-100
-    warning = Core.pyqtSignal(unicode, object, name="warning") # warning message, with exception object
+    warning = Core.pyqtSignal(unicode, name="warning") # warning message
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
     def __init__(self, parent=None):
         super(ResolverBase, self).__init__(parent)
         self.trackResolved.connect(lambda f,md: self.cache(md))
+        def dbgresolved(f, md):
+            print "trakresolved:", f, md
+        self.trackResolved.connect(dbgresolved)
         self.trackResolved.connect(self.cleanup)
         self.trackFailed.connect(self.cleanup)
 
@@ -288,16 +291,17 @@ class ResolverBase(Core.QObject):
             md = self.fromcache()
             if md is not None:
                 self.trackResolved.emit(self.filename, md)
-                return
+                return False
         url = self.url(filename)
         if not url: # invalid url, dont load it
             self.error.emit('Invalid url for filename %s' % filename)
             self.trackFailed.emit(filename)
-            return
+            return False
         self.doc = webdoc(self.filename, url, parent=None)
         self.doc.frame.loadFinished.connect(self.parse)
         self.doc.page.loadProgress.connect(self.progress)
         self.doc.load()
+        return True
 
     def progress(self, i):
         self.trackProgress.emit(self.filename, i)
@@ -344,7 +348,7 @@ class ResolverBase(Core.QObject):
             loc.close()
         except Exception, (e):
             # something went wrong, cache invalid
-            self.warning.emit('fromcache error: %s' % e, e)
+            self.warning.emit('fromcache error: %s' % e)
             return None
         if None in [metadata.title, metadata.recordnumber]:
             # invalid cached object:
@@ -392,12 +396,12 @@ class GenericFileResolver(ResolverBase):
                 self.trackResolved.emit(self.filename, md)
                 return True
         parsed = False
-        if fullpath.upper().endswith('.MP3'):
+        if os.path.exists(fullpath) and fullpath.upper().endswith('.MP3'):
             parsed = self.id3parse(fullpath)
-        elif fullpath.upper().endswith('.WAV'):
+        elif os.path.exists(fullpath) and fullpath.upper().endswith('.WAV'):
             parsed = self.wavparse(fullpath)
         if not parsed:
-            self.error.emit(u'Could not parse %s' % fullpath)
+            self.warning.emit(u'Could not parse %s' % fullpath)
             self.trackFailed.emit(filename)
             return False
         else:
@@ -563,7 +567,7 @@ class SonotonResolver(ResolverBase):
         if len(metadatabox.strip()) == 0:
             self.trackFailed.emit(self.filename)
             self.error.emit("Could not get info on %s. Lookup failed" % self.filename)
-            return
+            return None
         metadata = TrackMetadata(filename=self.doc.filename, musiclibrary=self.name)
         try:
             duration = unicode(self.doc.frame.findAllElements("div[style='top:177px;']")[1].toInnerXml())
@@ -641,14 +645,15 @@ class AUXResolver(SonotonResolver):
             return None
 
     def resolve(self, filename, fullpath, fromcache=True):
-        # first try to read id3 data from mp3 file, if we have a path
+        # first try to get metadata from online sources.
+        if super(AUXResolver, self).resolve(filename, fullpath, fromcache):
+            return True
+        # then try to read id3 data from mp3 file, if we have a path
         # (if the clip is offline, there won't be a path available)
-        success = None
         if fullpath is not None:
             _mp3 = GenericFileResolver()
-            success = _mp3.resolve(filename, fullpath)
-        if not success:
-            super(AUXResolver, self).resolve(filename, fullpath, fromcache) # fall back to network lookup
+            return _mp3.resolve(filename, fullpath)
+        return False
 
     def updateRepertoire(self, labelmap):
         """Takes an updated label map, e.g. from auxjson.appspot.com, and updates the internal list"""

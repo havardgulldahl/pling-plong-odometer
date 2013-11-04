@@ -104,8 +104,8 @@ class StatusBox(Gui.QWidget):
 
         self.setStyleSheet(u'QWidget { background-color: %s; }' % bgcolor)
         layout = Gui.QVBoxLayout(self)
-        s = Gui.QLabel(msg, self)
-        layout.addWidget(s)
+        self.s = Gui.QLabel(msg, self)
+        layout.addWidget(self.s)
 
     def show_(self):
         if self.autoclose == True:
@@ -126,6 +126,9 @@ class StatusBox(Gui.QWidget):
         anim.finished.connect(self.delete_)
         self.anim = anim
         self.anim.start()
+
+    def addMessage(self, s):
+        self.s.setText(unicode(self.s.text()) + "<br>" + s)
 
 def readResourceFile(qrcPath):
     """Read qrc file and return QString.
@@ -313,9 +316,10 @@ class Odometer(Gui.QMainWindow):
         'Show floating status box'
         # if you don't autoclose, call self.closestatusboxes()
         # or keep a reference to this box and .close() it yourself
-        if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg: 
-            # don't repeat yourself
-            return None
+        #if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg: 
+            ## don't repeat yourself
+            #return None
+        if len(self.statusboxes): return None
         b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
         self.statusboxes.append(b)
         b.show_()
@@ -331,6 +335,7 @@ class Odometer(Gui.QMainWindow):
         'Close all statusboxes'
         for b in self.statusboxes:
             b.close()
+        self.statusboxes = []
 
     def getVersion(self):
         if sys.platform == 'darwin':
@@ -545,22 +550,24 @@ class Odometer(Gui.QMainWindow):
             r.subclips = []
             self.rows[audioname] = r
             w = metadata.findResolver(audioname)
+            print "w:",audioname.encode('utf-8'), w
             r.setCheckState(0, Core.Qt.Unchecked)
             if w:
-                if w.name == 'AUX Publishing': # make sure repertoire is current
+                if isinstance(w, metadata.AUXResolver): # make sure repertoire is current
                     w.updateRepertoire(self.AUXRepertoire)
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress) 
                 #w.trackFailed.connect(lambda x: r.setCheckState(0, Core.Qt.Unchecked))
                 w.error.connect(self.showerror) 
+                w.warning.connect(lambda s: self.logMessage(s, msgtype=StatusBox.WARNING))
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname, fileref.pathurl) # put the worker to work async
             if self.showsubclips:
                 i = 1
                 for range in ranges:
                     frames = len(range)
-                    secs = frames / ranges.framerate
+                    secs = float(frames) / ranges.framerate
                     r.subclips.append( {'durationsecs':secs, 'durationframes':frames} )
                     sr = Gui.QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
                                                  '%ss (%sf)' % (secs, frames),
@@ -573,6 +580,7 @@ class Odometer(Gui.QMainWindow):
     def loadMetadata(self, filename, metadata):
         'Handle metadata for a specific clip'
         row = self.rows[unicode(filename)]
+        print "loadMetadata: %s - %s" % (filename, metadata)
         row.metadata = metadata
         if metadata.productionmusic:
             if metadata.title is None and metadata.label is None:
@@ -591,7 +599,7 @@ class Odometer(Gui.QMainWindow):
 
     def trackCompleted(self, filename, metadata):
         'React to metadata finished loading for a specific clip'
-        #print "got metadata (%s): %s" % (filename, metadata)
+        print "got metadata (%s): %s" % (filename, metadata)
         self.rows[unicode(filename)].setCheckState(0, Core.Qt.Checked)
         self.metadataloaded += 1
         if len(self.audioclips)  == self.metadataloaded:
@@ -599,7 +607,7 @@ class Odometer(Gui.QMainWindow):
 
     def showProgress(self, filename, progress):
         'Show progress bar for a specific clip, e.g. when metadata is loading'
-        # print "got progress for %s: %s" % (filename, progress)
+        print "got progress for %s: %s" % (filename, progress)
         row = self.rows[unicode(filename)]
         if progress < 100: # not yet reached 100%
             p = Gui.QProgressBar(parent=self.ui.clips)
