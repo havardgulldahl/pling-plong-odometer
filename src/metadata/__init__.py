@@ -396,19 +396,24 @@ class GenericFileResolver(ResolverBase):
     
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
+        self.fullpath = fullpath  # may be None, on offline clips
         if fromcache:
             md = self.fromcache()
             if md is not None:
                 self.trackResolved.emit(self.filename, md)
                 return True
         parsed = False
-        if os.path.exists(fullpath) and fullpath.upper().endswith('.MP3'):
+        if isinstance(fullpath, basestring) and os.path.exists(fullpath) and fullpath.upper().endswith('.MP3'):
             parsed = self.id3parse(fullpath)
-        elif os.path.exists(fullpath) and fullpath.upper().endswith('.WAV'):
+        elif isinstance(fullpath, basestring) and os.path.exists(fullpath) and fullpath.upper().endswith('.WAV'):
             parsed = self.wavparse(fullpath)
         if not parsed:
-            self.warning.emit(u'Could not parse %s' % fullpath)
+            if fullpath is None: # clip is offline
+                self.warning.emit(u"Could not parse '%s', clip is offline" % filename)
+            elif not os.path.exists(fullpath):
+                self.warning.emit(u"Could not parse '%s', file not found" % filename)
+            else:
+                self.warning.emit(u'Could not parse %s' % fullpath)
             self.trackFailed.emit(filename)
             return False
         else:

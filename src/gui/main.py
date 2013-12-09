@@ -599,7 +599,7 @@ class Odometer(Gui.QMainWindow):
                 w.error.connect(self.showerror) 
                 w.warning.connect(lambda s: self.logMessage(s, msgtype=StatusBox.WARNING))
                 self.workers.append(w) # keep track of the worker
-                w.resolve(audioname, fileref.pathurl) # put the worker to work async
+                w.resolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
             if self.showsubclips:
                 i = 1
                 for range in ranges:
