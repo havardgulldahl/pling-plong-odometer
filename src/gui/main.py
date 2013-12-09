@@ -86,51 +86,69 @@ class StatusBox(Gui.QWidget):
     WARNING = 2
     ERROR = 3
 
-    closing = Core.pyqtSignal()
+    class Emitter(Core.QObject):
+
+        closing = Core.pyqtSignal()
+        def __init__(self):
+            super(StatusBox.Emitter, self).__init__()
+
 
     def __init__(self, msg, autoclose=True, msgtype=None, parent=None):
         """autoclose may be a boolean (True == autoclose) or a signal that we
         connect our close() method to"""
         super(StatusBox, self).__init__(parent)
+        self.emitter = StatusBox.Emitter()
         self.parent = parent
         self.autoclose = autoclose
-        self.autoclosetimeout = 1000
+        self.stopped = False
+        self.timer = Core.QTimer(parent=self)
+        self.timer.timeout.connect(self.close)
+        self.timer.timeout.connect(self.timer.stop)
+        self.anim = Core.QPropertyAnimation(self, "windowOpacity", self.parent)
+        self.anim.finished.connect(self.delete_)
         self.setWindowFlags(Core.Qt.Popup)
+        self.setup(msgtype)
+        layout = Gui.QVBoxLayout(self)
+        self.s = Gui.QLabel(msg, self)
+        layout.addWidget(self.s)
+
+    def setup(self, msgtype):
+        self.autoclosetimeout = msgtype==self.ERROR and 3000 or 1000
         if msgtype in (None, self.INFO):
             bgcolor = '#ffff7f'
         elif msgtype == self.WARNING:
             bgcolor = 'blue'#'#ffff7f'
         elif msgtype == self.ERROR:
             bgcolor = 'red'#'#ffff7f'
-            self.autoclosetimeout = 3000
 
         self.setStyleSheet(u'QWidget { background-color: %s; }' % bgcolor)
-        layout = Gui.QVBoxLayout(self)
-        self.s = Gui.QLabel(msg, self)
-        layout.addWidget(self.s)
 
     def show_(self):
         if self.autoclose == True:
-            Core.QTimer.singleShot(self.autoclosetimeout, self.close)
+            self.timer.start(self.autoclosetimeout)
         elif hasattr(self.autoclose, 'connect'): # it's a qt/pyqt signal
             self.autoclose.connect(self.close)
         self.show()
 
     def delete_(self):
         self.hide()
+        self.emitter.closing.emit()
         self.deleteLater()
 
     def close(self):
-        self.closing.emit()
-        anim = Core.QPropertyAnimation(self, "windowOpacity", self.parent)
-        anim.setDuration(1000)
-        anim.setStartValue(1.0)
-        anim.setEndValue(0.0)
-        anim.finished.connect(self.delete_)
-        self.anim = anim
+        self.stopped = True
+        self.anim.setDuration(1000)
+        self.anim.setStartValue(1.0)
+        self.anim.setEndValue(0.0)
         self.anim.start()
 
-    def addMessage(self, s):
+    def addMessage(self, s, msgtype):
+        self.setup(msgtype)
+        try:
+            self.anim.stop()
+        except AttributeError:#close animation does not exist because close() was never run
+            pass 
+        self.timer.start(self.autoclosetimeout)
         self.s.setText(unicode(self.s.text()) + "<br>" + s)
 
 def readResourceFile(qrcPath):
@@ -325,20 +343,31 @@ class Odometer(Gui.QMainWindow):
             return None
 
         if len(self.statusboxes):
+            print "boses: ", self.statusboxes
             b = self.statusboxes[-1]
-            b.addMessage(msg)
-        else:
-            b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
-            b.closing.connect(lambda: self.statusboxes.remove(b))
-            self.statusboxes.append(b)
-            b.show_()
-            self._laststatusmsg = unicode(msg)
-            self.logMessage(msg, msgtype)
-            return b
+            if not b.stopped: 
+                b.addMessage(msg, msgtype)
+                return b
+            else:
+                self.closebox(b)
+        b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
+        self.statusboxes.append(b)
+        b.emitter.closing.connect(lambda: self.closebox(b))
+        b.show_()
+        self._laststatusmsg = unicode(msg)
+        self.logMessage(msg, msgtype)
+        return b
 
     def showerror(self, msg):
         'Show error message'
         return self.showstatus(msg, msgtype=StatusBox.ERROR)
+
+    def closebox(self, b):
+        print "closebok: ", b
+        try:
+            print "boxes remove: ", self.statusboxes.remove(b)
+        except: 
+            pass
 
     def closestatusboxes(self):
         'Close all statusboxes'
