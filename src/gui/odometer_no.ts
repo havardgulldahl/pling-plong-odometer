@@ -466,7 +466,7 @@ Hent den nye versjonen: %s</translation>
     <message>
         <location filename="main.py" line="728"/>
         <source>&lt;h1&gt;Track metadata sheet for PRF&lt;/h1&gt;</source>
-        <translation>&lt;h1&gt;Metadata-ark til PRF for dette sporet&lt;/h1&gt;</translation>
+        <translation>&lt;h1&gt;Metadata-ark til PRF&lt;/h1&gt;</translation>
     </message>
     <message>
         <location filename="main.py" line="731"/>

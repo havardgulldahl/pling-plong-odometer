@@ -743,23 +743,23 @@ class Odometer(Gui.QMainWindow):
         s = unicode(self.tr('<h1>Track metadata sheet for PRF</h1>'))
         for r in self.itercheckedrows():
             _t = r.metadata.title if r.metadata.title else repr(r.audioname)
-            s += unicode(self.tr('<div><dt>Title:</dt><dd>%s</dd>' % _t))
+            s += unicode(self.tr('<div><dt>Title:</dt><dd>%s</dd>')) % _t
             if r.metadata.artist not in (None, u'(N/A for production music)'):
-                s += unicode(self.tr('<dt>Artist:</dt><dd>%s</dd>' % r.metadata.artist))
+                s += unicode(self.tr('<dt>Artist:</dt><dd>%s</dd>')) % r.metadata.artist
             if r.metadata.albumname is not None:
-                s += unicode(self.tr('<dt>Album name:</dt><dd>%s</dd>' % r.metadata.albumname))
+                s += unicode(self.tr('<dt>Album name:</dt><dd>%s</dd>')) % r.metadata.albumname
             if r.metadata.lyricist is not None:
-                s += unicode(self.tr('<dt>Lyricist:</dt><dd>%s</dd>' % r.metadata.lyricist))
+                s += unicode(self.tr('<dt>Lyricist:</dt><dd>%s</dd>')) % r.metadata.lyricist
             if r.metadata.composer is not None:
-                s += unicode(self.tr('<dt>Composer:</dt><dd>%s</dd>' % r.metadata.composer))
+                s += unicode(self.tr('<dt>Composer:</dt><dd>%s</dd>')) % r.metadata.composer
             if r.metadata.label is not None:
-                s += unicode(self.tr('<dt>Label:</dt><dd>%s</dd>' % r.metadata.label))
+                s += unicode(self.tr('<dt>Label:</dt><dd>%s</dd>')) % r.metadata.label
             if r.metadata.recordnumber is not None:
-                s += unicode(self.tr('<dt>Recordnumber:</dt><dd>%s</dd>' % r.metadata.recordnumber))
+                s += unicode(self.tr('<dt>Recordnumber:</dt><dd>%s</dd>')) % r.metadata.recordnumber
             if r.metadata.copyright is not None and r.metadata.copyright != u'(This information requires login)':
-                s += unicode(self.tr('<dt>Copyright owner:</dt><dd>%s</dd>' % r.metadata.copyright))
+                s += unicode(self.tr('<dt>Copyright owner:</dt><dd>%s</dd>')) % r.metadata.copyright
             if r.metadata.year != -1:
-                s += unicode(self.tr('<dt>Released year:</dt><dd>%s</dd>' % r.metadata.year))
+                s += unicode(self.tr('<dt>Released year:</dt><dd>%s</dd>')) % r.metadata.year
 
             s += "<p><b>" + unicode(self.tr(u"Seconds in total</b>: %s")) % r.clip['durationsecs']
             if len(r.subclips):
