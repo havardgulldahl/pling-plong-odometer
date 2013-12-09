@@ -10,6 +10,7 @@ import urllib2
 import json
 import StringIO
 import ConfigParser
+import logging
 import traceback
 try:
     import cPickle as pickle
@@ -78,7 +79,7 @@ class XmemlWorker(Core.QThread):
             xmeml = xmemliter.XmemlParser(self.xmemlfile)
             self.loaded.emit(xmeml)
         except BaseException as e:
-            #print "beep"
+            #logging.debug("beep"
             self.failed.emit(e)
 
 class StatusBox(Gui.QWidget):
@@ -343,7 +344,6 @@ class Odometer(Gui.QMainWindow):
             return None
 
         if len(self.statusboxes):
-            print "boses: ", self.statusboxes
             b = self.statusboxes[-1]
             if not b.stopped: 
                 b.addMessage(msg, msgtype)
@@ -363,9 +363,8 @@ class Odometer(Gui.QMainWindow):
         return self.showstatus(msg, msgtype=StatusBox.ERROR)
 
     def closebox(self, b):
-        print "closebok: ", b
         try:
-            print "boxes remove: ", self.statusboxes.remove(b)
+            self.statusboxes.remove(b)
         except: 
             pass
 
@@ -384,7 +383,7 @@ class Odometer(Gui.QMainWindow):
             _version = ''
         if self.buildflags.getboolean('release', 'beta'):
             _version = unicode(_version).strip() + ' NEXT'
-        #print "---%s---" % _version
+        logging.debug("got version:  ---%s---", _version)
         return _version
 
     def showAbout(self):
@@ -402,7 +401,7 @@ class Odometer(Gui.QMainWindow):
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def helpdocloaded(success):
-            # print "help doc loaded: %s" % success
+            logging.debug("help doc loaded: %s", success)
             # TODO: Add offline fallback 
             if not success:
                 self.showerror(self.tr("Could not load help document, sorry. :("))
@@ -432,7 +431,7 @@ class Odometer(Gui.QMainWindow):
             #self.showerror(self.tr('Could not look up the most recent version online. Check your internet connection'))
             #return 
         def failed(ex):
-            #print "faile!", ex
+            logging.error("faile! %s", ex)
             self.showerror(self.tr('Could not look up the most recent version online. Check your internet connection'))
             self.logException(ex)
         def compare(data):
@@ -486,7 +485,7 @@ class Odometer(Gui.QMainWindow):
         except Exception as e:
             self.logException(e)
             repertoire = None
-        #print "found repertoire:", repertoire
+        logging.debug("found repertoire: %s", repertoire)
         def age(dt):
             return (datetime.datetime.now() - dt).days
         if repertoire is not None and age(repertoire['timestamp']) < 7:
@@ -500,12 +499,12 @@ class Odometer(Gui.QMainWindow):
 
         def store(data):
             repertoire = json.loads(data.read())
-            #print "got repertoire:", repertoire
+            logging.debug("got repertoire: %s", repertoire)
             repertoire['timestamp'] = datetime.datetime.now()
             self.settings.setValue('auxrepertoire', pickle.dumps(repertoire))
             self.AUXRepertoire = repertoire
         def failed(ex):
-            #print "faile!", ex
+            #logging.debug("faile!", ex
             self.logException(ex)
         async = UrlWorker()
         async.load(_url, timeout=7)
@@ -577,7 +576,7 @@ class Odometer(Gui.QMainWindow):
             frames = len(ranges)
             if frames == 0:
                 continue
-            #print "======= %s: %s -> %s======= " % (audioname, ranges.r, frames)
+            logging.debug("======= %s: %s -> %s======= ", audioname, ranges.r, frames)
             fileref = self.audiofiles[audioname] # might be None, if clip is offline
             secs = ranges.seconds()
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname, 
@@ -588,7 +587,7 @@ class Odometer(Gui.QMainWindow):
             r.subclips = []
             self.rows[audioname] = r
             w = metadata.findResolver(audioname)
-            print "w:",audioname.encode('utf-8'), w
+            logging.debug("w: %s",audioname.encode('utf-8'), w)
             r.setCheckState(0, Core.Qt.Unchecked)
             if w:
                 if isinstance(w, metadata.AUXResolver): # make sure repertoire is current
@@ -618,7 +617,7 @@ class Odometer(Gui.QMainWindow):
     def loadMetadata(self, filename, metadata):
         'Handle metadata for a specific clip'
         row = self.rows[unicode(filename)]
-        print "loadMetadata: %s - %s" % (filename, metadata)
+        logging.debug("loadMetadata: %s - %s", filename, metadata)
         row.metadata = metadata
         if metadata.productionmusic:
             if metadata.title is None and metadata.label is None:
@@ -637,7 +636,7 @@ class Odometer(Gui.QMainWindow):
 
     def trackCompleted(self, filename, metadata):
         'React to metadata finished loading for a specific clip'
-        print "got metadata (%s): %s" % (filename, metadata)
+        logging.debug("got metadata (%s): %s", (filename, metadata))
         self.rows[unicode(filename)].setCheckState(0, Core.Qt.Checked)
         self.metadataloaded += 1
         if len(self.audioclips)  == self.metadataloaded:
@@ -645,7 +644,7 @@ class Odometer(Gui.QMainWindow):
 
     def showProgress(self, filename, progress):
         'Show progress bar for a specific clip, e.g. when metadata is loading'
-        print "got progress for %s: %s" % (filename, progress)
+        logging.debug("got progress for %s: %s", filename, progress)
         row = self.rows[unicode(filename)]
         if progress < 100: # not yet reached 100%
             p = Gui.QProgressBar(parent=self.ui.clips)
@@ -712,7 +711,7 @@ class Odometer(Gui.QMainWindow):
                 labelWidget.show()
             index = detailsLayout.indexOf(widget)
             row, column, cols, rows = detailsLayout.getItemPosition(index)
-            #print "poss: ",index, row, column, cols, rows
+            logging.debug("poss: %s %s %s %s %s ",index, row, column, cols, rows)
             text = widget.text()
             widget.hide()
             detailsLayout.takeAt(index)
@@ -733,7 +732,7 @@ class Odometer(Gui.QMainWindow):
     def itercheckedrows(self):
         'iterate through rows that are checked'
         for row in self.rows.values():
-            #print row
+            #logging.debug(row
             if row.checkState(0) == Core.Qt.Checked: 
                 yield row
 
@@ -771,7 +770,7 @@ class Odometer(Gui.QMainWindow):
             s += "</p></div><hr>"
         ui.textBrowser.setHtml(s)
         def _save():
-            # print "saving report for prf"
+            logging.debug("saving report for prf")
             try:
                 loc = Gui.QFileDialog.getSaveFileName(PRFDialog, self.tr("Save prf report"))
                 f = open(unicode(loc), "wb")
@@ -796,7 +795,7 @@ class Odometer(Gui.QMainWindow):
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def reportloaded(boolean):
-            #print "report loaded: %s" % boolean
+            logging.debug("report loaded: %s", boolean)
             html = ui.webView.page().mainFrame()
             submit = html.findFirstElement('input[type=submit]')
             submit.setAttribute('style', 'visibility:hidden')
@@ -816,7 +815,7 @@ class Odometer(Gui.QMainWindow):
             text.setPlainText(s)
         ui.webView.loadFinished.connect(reportloaded)
         def reportsubmit():
-            #print "report submitting"
+            logging.debug("report submitting")
             html = ui.webView.page().mainFrame()
             for el in ['foretag', 'kontakt', 'telefon', 'email', 'produktionsnamn']:
                 htmlel = html.findFirstElement('input[name=%s]' % el)
@@ -865,7 +864,7 @@ class Odometer(Gui.QMainWindow):
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def reportloaded(boolean):
-            #print "report loaded: %s" % boolean
+            logging.debug("report loaded: %s" % boolean)
             html = ui.webView.page().mainFrame()
             fn = html.findFirstElement('input[id="entry_0"]')
             fn.setAttribute("value", filename)
@@ -891,7 +890,7 @@ class Odometer(Gui.QMainWindow):
         ui.setupUi(CreditsDialog)
         ui.textBrowser.setText(s)
         def _save():
-            #print "saving credits"
+            logging.debug("saving credits")
             try:
                 loc = Gui.QFileDialog.getSaveFileName(CreditsDialog, self.tr("Save credits"))
                 f = open(unicode(loc), "wb")
@@ -915,7 +914,7 @@ class Odometer(Gui.QMainWindow):
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def reportloaded(boolean):
-            # print "reporterror loaded: %s" % boolean
+            logging.debug("reporterror loaded: %s", boolean)
             html = ui.webView.page().mainFrame()
             log = html.findFirstElement('textarea[id="entry_5"]')
             log.setPlainText(''.join(self.log))
@@ -926,7 +925,7 @@ class Odometer(Gui.QMainWindow):
         
     def editDuration(self, row, col): # called when double clicked
         "Replace duration column with a spinbox to manually change value"
-        #print "editDuration:", row, col
+        logging.debug("editDuration: %s %s", row, col)
         if col != 2: 
             return False
         editor = Gui.QDoubleSpinBox(parent=self.ui.clips)
@@ -965,9 +964,9 @@ class Odometer(Gui.QMainWindow):
         self.gluon.resolve(prodno, checked)
 
     def gluonFinished(self, trackname, metadata):
-        #print "gluonFinished: %s -> %s" % (trackname, metadata)
-        for nom, row in self.gluon.currentList:
-            #print repr(os.path.splitext(nom)[0]), repr(unicode(trackname))
+        logging.debug("gluonFinished: %s -> %s", trackname, metadata)
+        for nom, row in self.gluon.currejtList:
+            logging.debug("%s %s", repr(os.path.splitext(nom)[0]), repr(unicode(trackname)))
             if os.path.splitext(nom)[0] == unicode(trackname):
                 row.setBackground(0, Gui.QBrush(Gui.QColor("light green")))
 
@@ -983,7 +982,7 @@ class Odometer(Gui.QMainWindow):
             self.app.removeTranslator(self.translator)
         else:
             self.translator = Core.QTranslator(self.app)
-        # print "loading translation: odometer_%s" % language
+        logging.debug("loading translation: odometer_%s", language)
         self.translator.load(':data/translation_%s' % language)
         self.app.installTranslator(self.translator)
         # also for qt strings
@@ -991,7 +990,7 @@ class Odometer(Gui.QMainWindow):
             self.app.removeTranslator(self.translatorQt)
         else:
             self.translatorQt = Core.QTranslator(self.app)
-        # print "loading Qttranslation: qt_%s" % language
+        logging.debug("loading Qttranslation: qt_%s", language)
         self.translatorQt.load(':data/qt_%s' % language)
         self.app.installTranslator(self.translatorQt)
 
@@ -1012,7 +1011,7 @@ def xmemlfileFromEvent(event):
                 # also try to see if xmemliter accepts it?
                 return fil
     except Exception, (e):
-        print e
+        logging.error(e)
     return False
 
 def rungui(argv):
@@ -1041,8 +1040,12 @@ def rungui(argv):
 
 if __name__ == '__main__':
     # suppress error on win
+    logging.basicConfig(level=logging.DEBUG)
     if hasattr(sys, 'frozen') and sys.frozen == 'windows_exe':
         import StringIO
         sys.stderr = StringIO.StringIO()
         sys.stdout = StringIO.StringIO()
     rungui(sys.argv)
+
+
+
