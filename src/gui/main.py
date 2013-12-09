@@ -3,7 +3,7 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2011-2013
 
-import sys, os.path
+import sys, os, os.path
 import time
 import datetime
 import urllib2
@@ -350,6 +350,9 @@ class Odometer(Gui.QMainWindow):
                 return b
             else:
                 self.closebox(b)
+        if isinstance(msg, Exception): #unwrap exception
+            msgtype=StatusBox.ERROR
+            msg=unicode(msg)
         b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
         self.statusboxes.append(b)
         b.emitter.closing.connect(lambda: self.closebox(b))
@@ -587,7 +590,7 @@ class Odometer(Gui.QMainWindow):
             r.subclips = []
             self.rows[audioname] = r
             w = metadata.findResolver(audioname)
-            logging.debug("w: %s",audioname.encode('utf-8'), w)
+            logging.debug("w: %s -> %s",audioname.encode('utf-8'), w)
             r.setCheckState(0, Core.Qt.Unchecked)
             if w:
                 if isinstance(w, metadata.AUXResolver): # make sure repertoire is current
@@ -772,7 +775,9 @@ class Odometer(Gui.QMainWindow):
         def _save():
             logging.debug("saving report for prf")
             try:
-                loc = Gui.QFileDialog.getSaveFileName(PRFDialog, self.tr("Save prf report"))
+                loc = Gui.QFileDialog.getSaveFileName(PRFDialog, self.tr("Save PRF report (as HTML)"), '', self.tr('HTML document (*.html)'))
+                if(len(unicode(loc)) == 0): # cancelled
+                    return False
                 f = open(unicode(loc), "wb")
                 f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
@@ -892,7 +897,7 @@ class Odometer(Gui.QMainWindow):
         def _save():
             logging.debug("saving credits")
             try:
-                loc = Gui.QFileDialog.getSaveFileName(CreditsDialog, self.tr("Save credits"))
+                loc = Gui.QFileDialog.getSaveFileName(CreditsDialog, self.tr("Save credits (as HTML)"), '', self.tr('HTML document (*.html)'))
                 f = open(unicode(loc), "wb")
                 f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
