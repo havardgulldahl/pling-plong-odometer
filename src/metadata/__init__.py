@@ -145,7 +145,14 @@ class GluonLookupWorker(Core.QThread):
 
     def request(self, musicid):
         "do an http post request with given gluon xml payload"
-        req = urllib.urlopen(GLUON_HTTP_LOOKUP +  musicid + '.xml')
+        try:
+            req = urllib.urlopen(GLUON_HTTP_LOOKUP +  musicid + '.xml')
+        except IOError as e:
+            # e.g. dns lookup failed
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            return None
+
         if req.getcode() in (404, 403, 401, 400, 500):
             self.trackFailed.emit()
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
