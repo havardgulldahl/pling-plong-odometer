@@ -227,139 +227,139 @@
 <context>
     <name>Odometer</name>
     <message>
-        <location filename="main.py" line="645"/>
+        <location filename="main.py" line="663"/>
         <source>Metadata</source>
         <translation>Metadata</translation>
     </message>
     <message>
-        <location filename="main.py" line="888"/>
+        <location filename="main.py" line="908"/>
         <source>Credits</source>
         <translation>Rulletekst</translation>
     </message>
     <message>
-        <location filename="main.py" line="195"/>
+        <location filename="main.py" line="207"/>
         <source>Edit</source>
         <translation>Redigér</translation>
     </message>
     <message>
-        <location filename="main.py" line="198"/>
+        <location filename="main.py" line="210"/>
         <source>Manual lookup</source>
         <translation>Manuelt oppslag</translation>
     </message>
     <message>
-        <location filename="main.py" line="223"/>
+        <location filename="main.py" line="235"/>
         <source>Drop your xml file here</source>
         <translation>Slipp xml-fila di her</translation>
     </message>
     <message>
-        <location filename="main.py" line="266"/>
+        <location filename="main.py" line="278"/>
         <source>This does not seem to be a valid FCP XML file. Sorry.</source>
         <translation>Dette ser ikke ut til å være en gyldig FCP XML-fil. Beklager.</translation>
     </message>
     <message>
-        <location filename="main.py" line="296"/>
+        <location filename="main.py" line="308"/>
         <source>No XMEML loaded</source>
         <translation>Ingen XMEML lest</translation>
     </message>
     <message>
-        <location filename="main.py" line="323"/>
+        <location filename="main.py" line="335"/>
         <source>Unexpected error: %s</source>
         <translation>Uventet feil: %s</translation>
     </message>
     <message>
-        <location filename="main.py" line="392"/>
+        <location filename="main.py" line="410"/>
         <source>Could not load help document, sorry. :(</source>
         <translation>Kunne ikke laste hjelp-dokumentet, beklager :(</translation>
     </message>
     <message>
-        <location filename="main.py" line="400"/>
+        <location filename="main.py" line="418"/>
         <source>This project is free software</source>
         <translation>Dette prosjektet er fri programvare</translation>
     </message>
     <message>
-        <location filename="main.py" line="401"/>
+        <location filename="main.py" line="419"/>
         <source>You may use and redistribute it according to the GPL license, version 3</source>
         <translation>Du kan bruke og redistribuere det i samsvar med versjon 3 av GPL-lisensen</translation>
     </message>
     <message>
-        <location filename="main.py" line="420"/>
+        <location filename="main.py" line="438"/>
         <source>Could not look up the most recent version online. Check your internet connection</source>
         <translation>Kunne ikke slå opp siste versjon på nett. Sjekk internett-tilkoblinga di</translation>
     </message>
     <message>
-        <location filename="main.py" line="430"/>
+        <location filename="main.py" line="448"/>
         <source>Oooooo!</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="main.py" line="430"/>
+        <location filename="main.py" line="448"/>
         <source>Odometer is out of date. 
 Get the new version: %s</source>
         <translation>Odometer er utdatert. 
 Hent den nye versjonen: %s</translation>
     </message>
     <message>
-        <location filename="main.py" line="432"/>
+        <location filename="main.py" line="450"/>
         <source>Relax</source>
         <translation>Slapp av</translation>
     </message>
     <message>
-        <location filename="main.py" line="432"/>
+        <location filename="main.py" line="450"/>
         <source>Odometer is up to date</source>
         <translation>Odometer er siste versjon</translation>
     </message>
     <message>
-        <location filename="main.py" line="467"/>
+        <location filename="main.py" line="485"/>
         <source>Updating AUX repertoire</source>
         <translation>Oppdaterer AUX-repertoaret</translation>
     </message>
     <message>
-        <location filename="main.py" line="477"/>
+        <location filename="main.py" line="495"/>
         <source>Found fresh AUX repertoire list in cache</source>
         <translation>Fant et nytt AUX-repertoar i cache</translation>
     </message>
     <message>
-        <location filename="main.py" line="482"/>
+        <location filename="main.py" line="500"/>
         <source>AUX repertoire cache is too old, fetch new online</source>
         <translation>AUX-repertoaret i cachen er for gammelt, henter nytt fra nett</translation>
     </message>
     <message>
-        <location filename="main.py" line="502"/>
+        <location filename="main.py" line="520"/>
         <source>Open an xmeml file (FCP export)</source>
         <translation>Åpne en xmeml-fil (eksportert fra FCP)</translation>
     </message>
     <message>
-        <location filename="main.py" line="502"/>
+        <location filename="main.py" line="520"/>
         <source>Xmeml files (*.xml)</source>
         <translation>Xmeml-filer (*.xml)</translation>
     </message>
     <message>
-        <location filename="main.py" line="518"/>
+        <location filename="main.py" line="536"/>
         <source>Loading %s...</source>
         <translation>Leser %s...</translation>
     </message>
     <message>
-        <location filename="main.py" line="521"/>
+        <location filename="main.py" line="539"/>
         <source>&lt;b&gt;Loaded:&lt;/b&gt; %s</source>
         <translation>&lt;b&gt;Leste:&lt;/b&gt; %s</translation>
     </message>
     <message>
-        <location filename="main.py" line="557"/>
+        <location filename="main.py" line="575"/>
         <source>&lt;i&gt;(above %i dB)&lt;/i&gt;</source>
         <translation>&lt;i&gt;(over %i dB)&lt;/i&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="550"/>
+        <location filename="main.py" line="568"/>
         <source>%i audio clips loaded from xmeml sequence u00ab%su00bb.</source>
         <translation>%i lydspor lest fra xmeml-sekvensen \u00ab%s\u00bb.</translation>
     </message>
     <message>
-        <location filename="main.py" line="614"/>
+        <location filename="main.py" line="632"/>
         <source>Incomplete metadata. Please update manually</source>
         <translation>Ufullstendige metadata. Vennligst oppdatert manuelt</translation>
     </message>
     <message>
-        <location filename="main.py" line="653"/>
+        <location filename="main.py" line="671"/>
         <source>&lt;i&gt;Name:&lt;/i&gt;&lt;br&gt;%(name)s&lt;br&gt;
                 &lt;i&gt;Total length:&lt;/i&gt;&lt;br&gt;%(secs)ss&lt;br&gt;
                 &lt;i&gt;Rate:&lt;/i&gt;&lt;br&gt;%(timebase)sfps&lt;br&gt;
@@ -369,12 +369,12 @@ Hent den nye versjonen: %s</translation>
 &lt;i&gt;Rammerate:&lt;/i&gt;&lt;br&gt;%(timebase)sfps&lt;br&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="658"/>
+        <location filename="main.py" line="676"/>
         <source>&lt;i&gt;Library&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</source>
         <translation>&lt;i&gt;Katalog&lt;/i&gt;&lt;br&gt;%s&lt;br&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="677"/>
+        <location filename="main.py" line="695"/>
         <source>Unknown</source>
         <translation>Ukjent</translation>
     </message>
@@ -409,109 +409,124 @@ Hent den nye versjonen: %s</translation>
             &lt;/dl&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="749"/>
+        <location filename="main.py" line="767"/>
         <source>Seconds in total&lt;/b&gt;: %s</source>
         <translation>Sekunder totalt&lt;/b&gt;: %s</translation>
     </message>
     <message>
-        <location filename="main.py" line="751"/>
+        <location filename="main.py" line="769"/>
         <source>, in these subclips:</source>
         <translation>, i disse subklippene:</translation>
     </message>
     <message>
         <location filename="main.py" line="760"/>
         <source>Save prf report</source>
-        <translation>Lagre prf-rapport</translation>
+        <translation type="obsolete">Lagre prf-rapport</translation>
     </message>
     <message>
-        <location filename="main.py" line="764"/>
+        <location filename="main.py" line="784"/>
         <source>Prf report saved</source>
         <translation>PRF-rapport lagret</translation>
     </message>
     <message>
-        <location filename="main.py" line="809"/>
+        <location filename="main.py" line="829"/>
         <source>&quot;%s&quot; cannot be blank</source>
         <translation>&quot;%s&quot; kan ikke være blank</translation>
     </message>
     <message>
-        <location filename="main.py" line="828"/>
+        <location filename="main.py" line="848"/>
         <source>Music ID</source>
         <translation>Musikk-ID</translation>
     </message>
     <message>
-        <location filename="main.py" line="828"/>
+        <location filename="main.py" line="848"/>
         <source>Enter the correct music ID:</source>
         <translation>Skriv inn korrekt musikk-ID</translation>
     </message>
     <message>
         <location filename="main.py" line="880"/>
         <source>Save credits</source>
-        <translation>Lagre rulletekst</translation>
+        <translation type="obsolete">Lagre rulletekst</translation>
     </message>
     <message>
-        <location filename="main.py" line="884"/>
+        <location filename="main.py" line="904"/>
         <source>End credits saved</source>
         <translation>Rulletekst lagret</translation>
     </message>
     <message>
-        <location filename="main.py" line="939"/>
+        <location filename="main.py" line="959"/>
         <source>Need production number</source>
         <translation>Trenger produksjonsnummer</translation>
     </message>
     <message>
-        <location filename="main.py" line="939"/>
+        <location filename="main.py" line="959"/>
         <source>You must enter the production number</source>
         <translation>Du må oppgi produksjonsnummeret</translation>
     </message>
     <message>
-        <location filename="main.py" line="728"/>
+        <location filename="main.py" line="746"/>
         <source>&lt;h1&gt;Track metadata sheet for PRF&lt;/h1&gt;</source>
         <translation>&lt;h1&gt;Metadata-ark til PRF&lt;/h1&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="731"/>
+        <location filename="main.py" line="749"/>
         <source>&lt;div&gt;&lt;dt&gt;Title:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</source>
         <translation>&lt;div&gt;&lt;dt&gt;Tittel:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="733"/>
+        <location filename="main.py" line="751"/>
         <source>&lt;dt&gt;Artist:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</source>
         <translation>&lt;div&gt;&lt;dt&gt;Artist:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="735"/>
+        <location filename="main.py" line="753"/>
         <source>&lt;dt&gt;Album name:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</source>
         <translation>&lt;div&gt;&lt;dt&gt;Albumnavn:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="737"/>
+        <location filename="main.py" line="755"/>
         <source>&lt;dt&gt;Lyricist:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</source>
         <translation>&lt;div&gt;&lt;dt&gt;Tekstforfatter:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="739"/>
+        <location filename="main.py" line="757"/>
         <source>&lt;dt&gt;Composer:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</source>
         <translation>&lt;div&gt;&lt;dt&gt;Komponist:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="741"/>
+        <location filename="main.py" line="759"/>
         <source>&lt;dt&gt;Label:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</source>
         <translation>&lt;div&gt;&lt;dt&gt;Platemerke:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="743"/>
+        <location filename="main.py" line="761"/>
         <source>&lt;dt&gt;Recordnumber:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</source>
         <translation>&lt;div&gt;&lt;dt&gt;Platenummer:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="745"/>
+        <location filename="main.py" line="763"/>
         <source>&lt;dt&gt;Copyright owner:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</source>
         <translation>&lt;div&gt;&lt;dt&gt;Hvem har rettighetene:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="747"/>
+        <location filename="main.py" line="765"/>
         <source>&lt;dt&gt;Released year:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</source>
         <translation>&lt;div&gt;&lt;dt&gt;Utgitt år:&lt;/dt&gt;&lt;dd&gt;%s&lt;/dd&gt;</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="778"/>
+        <source>Save PRF report (as HTML)</source>
+        <translation>Lagre prf-rapporten (som HTML)</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="900"/>
+        <source>HTML document (*.html)</source>
+        <translation>HTML-dokument (*.html)</translation>
+    </message>
+    <message>
+        <location filename="main.py" line="900"/>
+        <source>Save credits (as HTML)</source>
+        <translation>Lagre rulletekst (som HTML)</translation>
     </message>
 </context>
 <context>
