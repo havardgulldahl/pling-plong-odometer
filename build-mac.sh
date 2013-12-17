@@ -71,10 +71,7 @@ echo "$VERSION|$DMGURL" > $DROPBOXPATH/Public/Odometer/odometerversion_mac.txt
 # create pkg
 echo "Creating .pkg installer";
 ./macromanconv.py ABOUT build/ABOUT.txt
-/Developer/usr/bin/packagemaker --doc macpkg.pmdoc \
-                                --version "$VERSION" \
-                                --title "♫ ♪ Odometer versjon $VERSION" \
-                                --verbose || error "Packagemaker failed";
+/usr/local/bin/packagesbuild -v Odometer.pkgproj || error "Packagemaker failed";
 
 # changing back defaults
 sed -i .bk "s/beta=.*/beta=1/" BUILDFLAGS
