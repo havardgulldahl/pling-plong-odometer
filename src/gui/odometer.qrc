@@ -16,7 +16,7 @@
     <file alias="help_no">../../HELP.no.html</file>
     <file alias="version_mac">../../VERSIONMAC</file>
     <file alias="version_win">../../VERSIONWIN</file>
-    <file alias="about">../../ABOUT</file>
+    <file alias="about">../../ABOUT.txt</file>
   </qresource>
   <qresource prefix="data">
     <file alias="translation_no.qm">odometer_no.qm</file>
