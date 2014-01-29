@@ -639,7 +639,7 @@ class Odometer(Gui.QMainWindow):
 
     def trackCompleted(self, filename, metadata):
         'React to metadata finished loading for a specific clip'
-        logging.debug("got metadata (%s): %s", (filename, metadata))
+        logging.debug("got metadata (%s): %s", filename, metadata)
         self.rows[unicode(filename)].setCheckState(0, Core.Qt.Checked)
         self.metadataloaded += 1
         if len(self.audioclips)  == self.metadataloaded:

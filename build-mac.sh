@@ -12,7 +12,7 @@ function error {
 
 # some settings
 
-DROPBOXPATH=/Volumes/Media/Dropbox;
+DROPBOXPATH=/Users/havard/Dropbox;
 DROPBOXURL=http://dl.dropbox.com/u/12128173/Odometer;
 VERSION=$(date +"%Y-%m-%d");
 NIB=/Library/Frameworks/QtGui.framework/Versions/4/Resources/qt_menu.nib

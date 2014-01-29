@@ -13,6 +13,8 @@ Prerequisites
 
 Python with json
 python-demjson
+python mutagen
+pytagger
 python-qt (with phonon bindings for prelisten support)
 https://github.com/havardgulldahl/xmeml
 
