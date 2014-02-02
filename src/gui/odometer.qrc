@@ -10,7 +10,7 @@
     <file alias="spinner">Spinning_wheel_throbber.gif</file>
   </qresource>
   <qresource prefix="txt">
-    <file alias="license">../../LICENSE</file>
+    <file alias="license">../../LICENSE.txt</file>
     <file alias="notes">../../NOTES</file>
     <file alias="readme">../../README</file>
     <file alias="help_no">../../HELP.no.html</file>
