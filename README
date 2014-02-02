@@ -14,7 +14,16 @@ Prerequisites
 Python with json
 python-demjson
 python-qt (with phonon bindings for prelisten support)
+mutagen
+python-tagger
+python-hashlib
 https://github.com/havardgulldahl/xmeml
+ - lxml
+
+# Build deps #
+
+Packages for packaging (http://s.sudre.free.fr/Software/Packages/about.html)
+STATIC_DEPS=true pip install lxml # lxml needs static dependencies to work smoothly on all osx versions
 
 
 
