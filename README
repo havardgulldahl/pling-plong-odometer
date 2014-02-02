@@ -9,14 +9,15 @@ audio clips goes in it and for how long each clip is audible.
 Created by havard.gulldahl@nrk.no
 ===
 
-Prerequisites
+Build prerequisites
 
-Python with json
+Python 2.7
 python-demjson
-python mutagen
+python-mutagen
 pytagger
-python-qt (with phonon bindings for prelisten support)
+pyqt4 (with phonon bindings for prelisten support)
 https://github.com/havardgulldahl/xmeml
 
+packagemaker
 
 
