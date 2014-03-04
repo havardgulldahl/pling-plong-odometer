@@ -261,13 +261,14 @@ class ApollomusicLookupWorker(Core.QThread):
     def __del__(self):
         self.wait()
 
-    def load(self, filename):
+    def load(self, filename, logincookie):
         self.filename = filename
         self.musicid = ApollomusicResolver.musicid(filename)
+        self.logincookie = logincookie
         self.start()
 
     def run(self):
-        albumdata, trackdata = self.request(self.musicid)
+        albumdata, trackdata = self.request(self.musicid, self.logincookie)
         if trackdata is None:
             return 
         self.progress.emit(50)
@@ -354,7 +355,7 @@ class ApollomusicLookupWorker(Core.QThread):
         #self.terminate()
         #self.deleteLater()
 
-    def request(self, musicid):
+    def request(self, musicid, logincookie):
         "do an http post request to apollomusic.dk"
         try:
             _lbl, _albumid, _trackno = self.musicid.split('_')
@@ -376,6 +377,7 @@ class ApollomusicLookupWorker(Core.QThread):
                                          })
             print postdata
             # req = urllib2.urlopen('http://www.findthetune.com/action/search_tracks_action/', postdata)
+            headers = {'Cookie':logincookie}
             r = urllib2.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
             req = urllib2.urlopen(r)
 
@@ -417,6 +419,7 @@ class ResolverBase(Core.QObject):
         self.trackResolved.connect(dbgresolved)
         self.trackResolved.connect(self.cleanup)
         self.trackFailed.connect(self.cleanup)
+        self.logincookie = None
 
     def accepts(self, filename): 
         for f in self.prefixes:
@@ -537,6 +540,10 @@ class ResolverBase(Core.QObject):
         except Exception as e:
             print "cleanup failed:", e
             pass
+
+    def setlogincookie(self, cookie):
+        "Add login cookie to service. Only applicable for some services"
+        self.logincookie = cookie
 
 class GenericFileResolver(ResolverBase):
     'Resolve file based on embedded metadata, i.e. id3 tags, vorbis tags, bwf'
@@ -828,9 +835,7 @@ class ApollomusicResolver(ResolverBase):
     prefixes = [ 'APOLLO_',]
     name = 'ApolloMusic'
     urlbase = 'http://www.findthetune.com/action/search_tracks_action/' # HTTP POST interface, returns json
-    labelmap = {
-
-               }
+    labelmap = { } # TODO: get list of labels
 
     @staticmethod
     def musicid(filename):
@@ -863,39 +868,13 @@ class ApollomusicResolver(ResolverBase):
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
         self.worker.error.connect(lambda msg: self.error.emit(msg))
-        self.worker.load(filename)
-
-    def xparse(self):
-        metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
-        if len(metadatabox.strip()) == 0:
+        # check login cookie, without it we get nothing from the service
+        if self.logincookie is None:
+            self.error.emit(u"You need to log in to ApolloMusic before we can look something up")
             self.trackFailed.emit(self.filename)
-            self.error.emit("Could not get info on %s. Lookup failed" % self.filename)
-            return None
-        metadata = TrackMetadata(filename=self.doc.filename, musiclibrary=self.name)
-        try:
-            duration = unicode(self.doc.frame.findAllElements("div[style='top:177px;']")[1].toInnerXml())
-            mins, secs = [int(s.strip()) for s in duration.split(' ')[0].split(":")]
-            metadata.length=mins*60+secs
-        except:
-            pass
-        mapping = { 'Track Name': 'title', #REMEMBER LAST SUMMER
-                    'Track Number': 'recordnumber', #SCD 821 20.0
-                    'Composer': 'composer', #Mladen Franko
-                    'Artist': 'artist', #(N/A for production music)
-                    'Album Name': 'albumname',#ORCHESTRAL LANDSCAPES 2
-                    'Catalogue number': 'catalogue', #821
-                    'Label': '_label', #SCD
-                    'Copyright Owner': 'copyright', #(This information requires login)
-                    'LC Number': 'lcnumber', #07573 - Library of Congress id
-                  }
-        for l in metadatabox.split('\n'):
-            if not len(l.strip()): continue
-            #print "!!", l
-            meta, data = [s.strip() for s in l.split(':', 1)]
-            setattr(metadata, mapping[meta], data)
-        metadata.productionmusic = True
-        metadata.label = self.getlabel(metadata._label)
-        self.trackResolved.emit(self.filename, metadata)
+            return
+
+        self.worker.load(filename, self.logincookie)
 
 
 def findResolver(filename):
@@ -971,6 +950,9 @@ if __name__ == '__main__':
     app = Gui.QApplication(sys.argv)
     resolver = findResolver(filename)
     print 'resolver:', resolver
+    import os
+    print "login cookie detected: %s" % os.environ['LOGINCOOKIE']
+    resolver.setlogincookie(os.environ['LOGINCOOKIE'])
     resolver.trackResolved.connect(mymeta)
     resolver.resolve(filename, os.path.abspath(filename), fromcache=False)
     #doc = webdoc(filename, 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=SCD082120&w=tr&lyr=0')
