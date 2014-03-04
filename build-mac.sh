@@ -35,6 +35,7 @@ echo "Generating code for UX"
 pyuic4 -o src/gui/odometer_ui.py src/gui/pling-plong-odometer.ui || error "pyuic failed"
 pyuic4 -o src/gui/auxreport_ui.py src/gui/pling-plong-auxreport.ui || error "pyuic failed"
 pyuic4 -o src/gui/prfreport_ui.py src/gui/pling-plong-prfreport.ui || error "pyuic failed"
+pyuic4 -o src/gui/onlinelogin_ui.py src/gui/pling-plong-onlinelogin.ui || error "pyuic failed"
 
 # store settings in files, to be picked up by pyqt resource system
 echo "$DROPBOXURL" > ./DROPBOXURL;

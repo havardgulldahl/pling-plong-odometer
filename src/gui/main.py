@@ -6,7 +6,7 @@
 import sys, os, os.path
 import time
 import datetime
-import urllib2
+import urllib, urllib2
 import json
 import StringIO
 import ConfigParser
@@ -27,6 +27,7 @@ import odometer_ui
 import odometer_rc 
 import auxreport_ui
 import prfreport_ui
+import onlinelogin_ui
 
 try:
     from gui import audioplayer
@@ -46,16 +47,19 @@ class UrlWorker(Core.QThread):
         self.exiting = True
         self.wait()
 
-    def load(self, url, timeout=10):
+    def load(self, url, timeout=10, data=None):
         self.url = url
         self.timeout = timeout
+        self.data = data is not None and urllib.urlencode(data) or None
         self.start()
 
     def run(self):
+        logging.info('urlworker working on url %s with data %s', self.url, self.data)
         try:
-            con = urllib2.urlopen(self.url, timeout=self.timeout)
+            con = urllib2.urlopen(self.url, self.data, timeout=self.timeout)
             self.finished.emit(con)
         except Exception as e:
+            logging.exception(e)
             self.failed.emit(tuple(sys.exc_info()))
 
 class XmemlWorker(Core.QThread):
@@ -227,6 +231,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.actionLogs.triggered.connect(self.showLogs)
         self.ui.actionCheck_for_updates.triggered.connect(self.showCheckForUpdates)
         self.ui.actionShowPatterns.triggered.connect(self.showShowPatterns)
+        self.ui.actionLoginOnline.triggered.connect(self.showLoginOnline)
         #self.ui.actionConfig.triggered.connect(lambda: self.showstatus("About Config"))
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
@@ -481,6 +486,85 @@ class Odometer(Gui.QMainWindow):
         LogDialog.setWindowTitle('Help')
         return LogDialog.exec_()
 
+    def showLoginOnline(self):
+        'Pop up a dialog to log in to online services like AUX and ApolloMusic'
+        LoginDialog = Gui.QDialog()
+        ui = onlinelogin_ui.Ui_PlingPlongOnlineDialog()
+        ui.setupUi(LoginDialog)
+        ui.AUXuser.setText(self.settings.value('AUXuser', '').toString())
+        ui.AUXpassword.setText(self.settings.value('AUXpassword', '').toString())
+        ui.Apollouser.setText(self.settings.value('Apollouser', '').toString())
+        ui.Apollopassword.setText(self.settings.value('Apollopassword', '').toString())
+        def storeCookie(service, data):
+            logging.debug("Storing cookie for %s: %s", service, data)
+            logging.debug("Service returned %s", data.getcode())
+            logging.debug("Headers: %s", data.info())
+            b = data.read()
+            logging.debug("body: %s", b)
+            result = json.loads(b)
+            login = False
+            if service == 'AUX':
+                if result['ax_success'] == 1:
+                    self.settings.setValue('%scookie', data.info()['Set-Cookie'])
+                    self.showstatus('Logged in to AUX')
+                else:
+                    m = '%s login failed: %s' % (service, result['ax_errmsg'])
+                    logging.warning(m)
+                    self.showerror(m)
+            elif service == 'Apollo':
+                if result['success'] == 1: 
+                    self.settings.setValue('%scookie', data.info()['Set-Cookie'])
+                    self.showstatus('Logged in to Apollo')
+                else:   
+                    m = '%s login failed: %s' % (service, result['message'])
+                    logging.warning(m)
+                    self.showerror(m)
+            stopBusy()
+
+                
+        def failed(ex):
+            logging.warning("faile!", ex)
+            self.logException(ex)
+            stopBusy()
+        def startBusy():
+            ui.progressBar.setRange(0,0)
+        def stopBusy():
+            ui.progressBar.setMaximum(1)
+        def AUXlogin():
+            logging.info('login to aux')
+            self.settings.setValue('AUXuser', ui.AUXuser.text())
+            self.settings.setValue('AUXpassword', ui.AUXpassword.text())
+            startBusy()
+            async = UrlWorker()
+            url = 'http://search.auxmp.com//search/html/ajax/axExtData.php'
+            getdata = urllib.urlencode({'ac':'login',
+                                        'country': 'NO',
+                                        'sprache': 'en',
+                                        'ext': 1,
+                                        '_dc': int(time.time()),
+                                        'luser':unicode(ui.AUXuser.text()),
+                                        # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
+
+                                        'lpass':unicode(ui.AUXpassword.text())})
+            async.load('%s?%s' % (url, getdata), timeout=7)
+            async.finished.connect(lambda d: storeCookie('AUX', d))
+            async.failed.connect(failed)
+        def Apollologin():
+            logging.info('login to apollo')
+            self.settings.setValue('Apollouser', ui.Apollouser.text())
+            self.settings.setValue('Apollopassword', ui.Apollopassword.text())
+            startBusy()
+            async = UrlWorker()
+            url = 'http://www.findthetune.com/online/login/ajax_authentication/'
+            postdata = {'user':unicode(ui.Apollouser.text()),
+                        'pass':unicode(ui.Apollopassword.text())}
+            async.load(url, timeout=7, data=postdata)
+            async.finished.connect(lambda d: storeCookie('Apollo', d))
+            async.failed.connect(failed)
+        ui.AUXlogin.clicked.connect(AUXlogin)
+        ui.Apollologin.clicked.connect(Apollologin)
+        return LoginDialog.exec_()
+
     def updateAUXRepertoire(self):
         self.logMessage(self.tr('Updating AUX repertoire'))
         try:
@@ -598,8 +682,10 @@ class Odometer(Gui.QMainWindow):
             logging.debug("w: %s -> %s",audioname.encode('utf-8'), w)
             r.setCheckState(0, Core.Qt.Unchecked)
             if w:
-                if isinstance(w, metadata.AUXResolver): # make sure repertoire is current
-                    w.updateRepertoire(self.AUXRepertoire)
+                if isinstance(w, metadata.AUXResolver): 
+                    w.updateRepertoire(self.AUXRepertoire) # make sure repertoire is current
+                elif isinstance(w, metadata.ApolloResolver):
+                    w.setlogincookie(unicode(self.settings.value('Apollocookie', '').toString()))
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress) 
