@@ -515,13 +515,21 @@
     <addaction name="actionAbout_Odometer"/>
     <addaction name="actionHelp"/>
     <addaction name="separator"/>
-    <addaction name="actionCheck_for_updates"/>
     <addaction name="actionShowPatterns"/>
     <addaction name="separator"/>
     <addaction name="actionLicenses"/>
     <addaction name="actionLogs"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="actionLoginOnline"/>
+    <addaction name="separator"/>
+    <addaction name="actionCheck_for_updates"/>
+   </widget>
    <addaction name="menu_About"/>
+   <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAbout_Odometer">
@@ -554,6 +562,9 @@
    <property name="text">
     <string>Logs</string>
    </property>
+   <property name="toolTip">
+    <string>Show application logs (helpful if something is wrong)</string>
+   </property>
   </action>
   <action name="actionShowPatterns">
    <property name="text">
@@ -561,6 +572,14 @@
    </property>
    <property name="toolTip">
     <string>Show recognised file name patterns</string>
+   </property>
+  </action>
+  <action name="actionLoginOnline">
+   <property name="text">
+    <string>Log on to online services</string>
+   </property>
+   <property name="toolTip">
+    <string>Log on to services like AUX and Apollo</string>
    </property>
   </action>
  </widget>
