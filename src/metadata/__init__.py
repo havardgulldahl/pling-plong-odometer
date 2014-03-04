@@ -924,20 +924,6 @@ def mdprint(f,m):
     print "metadata: ", vars(m)
 
 if __name__ == '__main__':
-    import signal
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
-    import os.path
-
-    #filename = 'SCD082120.wav'
-    #filename = 'AUXMP_SCD082120.wav'
-    #filename = 'AUXMP_AD002306.mp3'
-    filename = 'SCDV020016_WARMING SUN A_SONOTON.wav'
-    filename = 'AUXMP_WD303822-TENSE FEELING.aiff'
-    filename = 'AUXMP_UBMM211517_DESIERTO-AIFF 48/24.aiff'
-    filename = 'SCD0694 track11_Fill it up A_J.D.Trigger / DJ Chunk / R Pick.wav'
-    #filename = 'NONRT900497LP0205_xxx.wav'
-    filename = 'rykta.mp3'
-    filename = 'Apollo_SMI_360_1__TOUCH_THE_SKY__MIKE_KNELLER_STEPHAN_NORTH.mp3'
     try:
         filename = sys.argv[1]
     except IndexError:
@@ -946,14 +932,22 @@ if __name__ == '__main__':
     def mymeta(filename, _metadata):
         metadata = _metadata
         print "mymeta:", vars(metadata)
+    
+    class Application(Gui.QApplication):
+        def event(self, e):
+            return Gui.QApplication.event(self, e)
 
-    app = Gui.QApplication(sys.argv)
+    app = Application(sys.argv)
+    import signal
+    signal.signal(signal.SIGINT, lambda *a: app.quit()) # trap ^C to quit cleanly
+    app.startTimer(200)
     resolver = findResolver(filename)
     print 'resolver:', resolver
     import os
     print "login cookie detected: %s" % os.environ['LOGINCOOKIE']
     resolver.setlogincookie(os.environ['LOGINCOOKIE'])
     resolver.trackResolved.connect(mymeta)
+    import os.path
     resolver.resolve(filename, os.path.abspath(filename), fromcache=False)
     #doc = webdoc(filename, 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=SCD082120&w=tr&lyr=0')
     #doc.load()
