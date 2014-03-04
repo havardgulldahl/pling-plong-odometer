@@ -67,7 +67,7 @@ class TrackMetadata(object):
 
     def getmusicid(self):
         "Return a music id (DMA/Sonoton unique key) from filename"
-        for res in (DMAResolver, AUXResolver, SonotonResolver):
+        for res in (DMAResolver, AUXResolver, SonotonResolver, ApollomusicResolver):
             if self.musiclibrary == res.name:
                 return res.musicid(self.filename)
         return ResolverBase.musicid(self.filename)
@@ -247,6 +247,93 @@ class DMAWorker(Core.QThread):
         self.trackResolved.emit(md)
         #self.terminate()
         self.deleteLater()
+
+
+class ApollomusicLookupWorker(Core.QThread):
+    trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
+    trackFailed = Core.pyqtSignal(name="trackFailed" ) 
+    progress = Core.pyqtSignal(int, name="progress" )
+    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+
+    def __init__(self, parent=None):
+        super(ApollomusicLookupWorker, self).__init__(parent)
+
+    def __del__(self):
+        self.wait()
+
+    def load(self, filename):
+        self.filename = filename
+        self.musicid = ApollomusicResolver.musicid(filename)
+        self.start()
+
+    def run(self):
+        response = self.request(self.musicid)
+        if response is None:
+            return 
+        print "response: %s" % response
+        self.progress.emit(50)
+        metadata = TrackMetadata(filename=self.filename,
+                 musiclibrary=ApollomusicResolver.name,
+                 # title=None,
+                 # length=-1,
+                 # composer=None,
+                 # artist=None,
+                 # year=-1,
+                 # recordnumber=None,
+                 # albumname=None,
+                 # copyright=None,
+                 # lcnumber=None,
+                 # isrc=None,
+                 # ean=None,
+                 # catalogue=None,
+                 # label=None,
+                 # lyricist=None,
+                 # identifier=None,
+                 )
+        metadata.productionmusic = True
+        self.progress.emit(70)
+        self.trackResolved.emit(metadata)
+        self.progress.emit(100)
+        #self.terminate()
+        #self.deleteLater()
+
+    def request(self, musicid):
+        "do an http post request to apollomusic.dk"
+        try:
+            _lbl, _albumid, _trackno = self.musicid.split('_')
+            postdata = urllib.urlencode({'label_fk':_lbl, 
+                                         'album_num':_albumid, 
+                                         # 'track_num':_trackno,
+                                         'type_query':'tracks',
+                                         'sound_type':'0',
+                                         'query':'',
+                                         'genre':'',
+                                         'min_length':'00:00:00',
+                                         'max_length':'99:99:99',
+                                         'composer':'',
+                                         'track_num':'',
+                                         'cur_page':'1',
+                                         'per_page':'100',
+                                         'offset':'0',
+                                         'limit':'100',
+                                         })
+            print postdata
+            # req = urllib2.urlopen('http://www.findthetune.com/action/search_tracks_action/', postdata)
+            r = urllib2.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
+            req = urllib2.urlopen(r)
+
+        except IOError as e:
+            # e.g. dns lookup failed
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            return None
+
+        if req.getcode() in (404, 403, 401, 400, 500):
+            self.trackFailed.emit()
+            self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
+            return None
+        response = req.read()
+        return response
 
 class ResolverBase(Core.QObject):
 
@@ -675,15 +762,90 @@ class AUXResolver(SonotonResolver):
                 self.prefixes.append(prefix)
 
 
+class ApollomusicResolver(ResolverBase):
+    prefixes = [ 'APOLLO_',]
+    name = 'ApolloMusic'
+    urlbase = 'http://www.findthetune.com/action/search_tracks_action/' # HTTP POST interface, returns json
+    labelmap = {
+
+               }
+
+    @staticmethod
+    def musicid(filename):
+        """Returns musicid from filename. 
+
+        Apollo_SMI_360_1__TOUCH_THE_SKY__MIKE_KNELLER_STEPHAN_NORTH.mp3 -> SMI_360_1 
+
+        """
+        rex = re.compile(r'^Apollo_([A-Z]+_\d+_\d+)__') # _<label>_<albumid>_<trackno>__
+        g = rex.search(filename)
+        try:
+            return g.group(1)
+        except AttributeError: #no match
+            return None
+
+    def getlabel(self, hint):
+        "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
+        return self.labelmap.get(hint, hint) # return hint verbatim if it's not in map
+
+    def resolve(self, filename, fullpath, fromcache=True):
+        self.filename = filename
+        self.fullpath = fullpath
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                self.trackResolved.emit(self.filename, md)
+                return
+        self.worker = ApollomusicLookupWorker()
+        self.worker.progress.connect(self.progress)
+        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
+        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
+        self.worker.error.connect(lambda msg: self.error.emit(msg))
+        self.worker.load(filename)
+
+    def xparse(self):
+        metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
+        if len(metadatabox.strip()) == 0:
+            self.trackFailed.emit(self.filename)
+            self.error.emit("Could not get info on %s. Lookup failed" % self.filename)
+            return None
+        metadata = TrackMetadata(filename=self.doc.filename, musiclibrary=self.name)
+        try:
+            duration = unicode(self.doc.frame.findAllElements("div[style='top:177px;']")[1].toInnerXml())
+            mins, secs = [int(s.strip()) for s in duration.split(' ')[0].split(":")]
+            metadata.length=mins*60+secs
+        except:
+            pass
+        mapping = { 'Track Name': 'title', #REMEMBER LAST SUMMER
+                    'Track Number': 'recordnumber', #SCD 821 20.0
+                    'Composer': 'composer', #Mladen Franko
+                    'Artist': 'artist', #(N/A for production music)
+                    'Album Name': 'albumname',#ORCHESTRAL LANDSCAPES 2
+                    'Catalogue number': 'catalogue', #821
+                    'Label': '_label', #SCD
+                    'Copyright Owner': 'copyright', #(This information requires login)
+                    'LC Number': 'lcnumber', #07573 - Library of Congress id
+                  }
+        for l in metadatabox.split('\n'):
+            if not len(l.strip()): continue
+            #print "!!", l
+            meta, data = [s.strip() for s in l.split(':', 1)]
+            setattr(metadata, mapping[meta], data)
+        metadata.productionmusic = True
+        metadata.label = self.getlabel(metadata._label)
+        self.trackResolved.emit(self.filename, metadata)
+
+
 def findResolver(filename):
-    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), GenericFileResolver()]
+    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), ApollomusicResolver(), GenericFileResolver()]
     for resolver in resolvers:
+        print "%s accepts: %s" % (resolver, resolver.accepts(filename))
         if resolver.accepts(filename):
             return resolver
     return False
 
 def getResolverPatterns():
-    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), GenericFileResolver()]
+    resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), ApollomusicResolver(), GenericFileResolver()]
     r = {}
     for resolver in resolvers:
         r[resolver.name] = {'prefixes':resolver.prefixes, 'postfixes':resolver.postfixes}
@@ -734,6 +896,7 @@ if __name__ == '__main__':
     filename = 'SCD0694 track11_Fill it up A_J.D.Trigger / DJ Chunk / R Pick.wav'
     #filename = 'NONRT900497LP0205_xxx.wav'
     filename = 'rykta.mp3'
+    filename = 'Apollo_SMI_360_1__TOUCH_THE_SKY__MIKE_KNELLER_STEPHAN_NORTH.mp3'
     try:
         filename = sys.argv[1]
     except IndexError:
