@@ -267,28 +267,85 @@ class ApollomusicLookupWorker(Core.QThread):
         self.start()
 
     def run(self):
-        response = self.request(self.musicid)
-        if response is None:
+        albumdata, trackdata = self.request(self.musicid)
+        if trackdata is None:
             return 
-        print "response: %s" % response
         self.progress.emit(50)
+        # albumdata is a dict, like:
+        # {u'active': u'1',
+        # u'album_desc': u'A superb selection of music tracks particularly suitable to spice up any media such as websites - online videos - slide shows - etc.',
+        # u'album_num': u'360',
+        # u'album_title': u'WEBTRAXX',
+        # u'comment_ext': u'',
+        # u'comment_int': u'',
+        # u'country': u'BE',
+        # u'created': u'2013-11-04 16:27:06',
+        # u'deleted': u'0',
+        # u'isNewest': u'0',
+        # u'label_fk': u'SMI',
+        # u'published': u'2011',
+        # u'rating': u'8',
+        # u'registered_album': u'',
+        # u'score': u'8',
+        # u'society': u'',
+        # u'sound_type': u'0',
+        # u'upload_fk': u'808'}
+        #
+        # trackdata is a dict, e.g.:
+        # {u'album_num': u'360',
+        #  u'bpm': u'99',
+        #  u'composer': u'MIKE KNELLER STEPHAN NORTH      ',
+        #  u'country': u'',
+        #  u'created': u'2013-11-04 16:27:06',
+        #  u'deleted': u'0',
+        #  u'description': u'Uplifting carefree piano melody',
+        #  u'downloaded_score': u'0',
+        #  u'duration': u'01:00',
+        #  u'instrumentation': None,
+        #  u'keywords': [u''],
+        #  u'keywords_internal': u'Uplifting carefree piano melody',
+        #  u'label_fk': u'SMI',
+        #  u'performer': None,
+        #  u'primary_title': u'HOLD ON TO YOUR DREAMS',
+        #  u'published_score': u'20',
+        #  u'rating_score': u'40',
+        #  u'recorded': u'2011',
+        #  u'registered_track': None,
+        #  u'secondary_title': u'',
+        #  u'serialized_composers': [{u'album_num': u'360',
+        #                             u'composer': u'MIKE KNELLER STEPHAN NORTH      ',
+        #                             u'ipi_id': None,
+        #                             u'label_fk': u'SMI',
+        #                             u'role': None,
+        #                             u'share': 0,
+        #                             u'track_num': u'2',
+        #                             u'upload_fk': 808}],
+        #  u'sort_score': None,
+        #  u'sound_type': u'0',
+        #  u'tempo': u'Medium-Slow',
+        #  u'time_score': u'0',
+        #  u'track_id': u'391529',
+        #  u'track_num': u'2',
+        #  u'upload_fk': u'808',
+        #  u'wave_created': u'1'}
+
         metadata = TrackMetadata(filename=self.filename,
                  musiclibrary=ApollomusicResolver.name,
-                 # title=None,
+                 title=trackdata.get('primary_title', None),
                  # length=-1,
-                 # composer=None,
-                 # artist=None,
-                 # year=-1,
-                 # recordnumber=None,
-                 # albumname=None,
-                 # copyright=None,
+                 composer=trackdata.get('composer', None),
+                 artist=trackdata.get('performer', None),
+                 year=int(trackdata.get('recorded', -1), 10),
+                 recordnumber=self.musicid,
+                 albumname=albumdata.get('album_title', None),
+                 copyright='Apollo Music',
                  # lcnumber=None,
                  # isrc=None,
                  # ean=None,
                  # catalogue=None,
-                 # label=None,
+                 label=trackdata.get('label_fk', None),
                  # lyricist=None,
-                 # identifier=None,
+                 identifier='apollotrack# %s' % trackdata.get('track_id', -1),
                  )
         metadata.productionmusic = True
         self.progress.emit(70)
@@ -332,8 +389,13 @@ class ApollomusicLookupWorker(Core.QThread):
             self.trackFailed.emit()
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
-        response = req.read()
-        return response
+        
+        response = json.loads(req.read()) # it's a json array 
+        albumdata = response.pop()        # of 1 albumdict
+
+        trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
+        del(albumdata['tracks'])
+        return albumdata, trackdata
 
 class ResolverBase(Core.QObject):
 
