@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011-2013
+# (C) 2011-2014
 
 import sys, os, os.path
 import time
@@ -536,9 +536,14 @@ class Odometer(Gui.QMainWindow):
         msgbox = self.showstatus(unicode(self.tr("Loading %s...")) % unicxmemlfile, autoclose=self.loaded)
         self.loadingbar()
         self.loaded.connect(self.removeLoadingbar)
+        self.xmemlthread.failed.connect(self.removeLoadingbar)
         self.loaded.connect(lambda: self.ui.fileInfo.setText(unicode(self.tr("<b>Loaded:</b> %s")) % os.path.basename(unicxmemlfile)))
         self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(os.path.abspath(unicxmemlfile)))
-        self.xmemlthread.load(xmemlfile)
+        try:
+	    self.xmemlthread.load(xmemlfile)
+        except Exception:
+            self.removeLoadingbar()
+            raise 
 
     def loadingbar(self):
         'Add global progress bar'
@@ -639,7 +644,7 @@ class Odometer(Gui.QMainWindow):
 
     def trackCompleted(self, filename, metadata):
         'React to metadata finished loading for a specific clip'
-        logging.debug("got metadata (%s): %s", (filename, metadata))
+        logging.debug("got metadata (%s): %s", filename, metadata)
         self.rows[unicode(filename)].setCheckState(0, Core.Qt.Checked)
         self.metadataloaded += 1
         if len(self.audioclips)  == self.metadataloaded:

@@ -9,13 +9,13 @@ audio clips goes in it and for how long each clip is audible.
 Created by havard.gulldahl@nrk.no
 ===
 
-Prerequisites
+Build prerequisites
 
-Python with json
+Python 2.7
 python-demjson
-python-qt (with phonon bindings for prelisten support)
-mutagen
-python-tagger
+python-mutagen
+pytagger
+pyqt4 (with phonon bindings for prelisten support)
 python-hashlib
 https://github.com/havardgulldahl/xmeml
  - lxml
@@ -23,7 +23,6 @@ https://github.com/havardgulldahl/xmeml
 # Build deps #
 
 Packages for packaging (http://s.sudre.free.fr/Software/Packages/about.html)
-STATIC_DEPS=true pip install lxml # lxml needs static dependencies to work smoothly on all osx versions
-
+## STATIC_DEPS=true pip install lxml # lxml needs static dependencies to work smoothly on all osx versions
 
 

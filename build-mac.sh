@@ -12,10 +12,11 @@ function error {
 
 # some settings
 
-DROPBOXPATH=/Volumes/Media/Dropbox;
+DROPBOXPATH=/Users/havard/Dropbox;
 DROPBOXURL=http://dl.dropbox.com/u/12128173/Odometer;
 VERSION=$(date +"%Y-%m-%d");
-NIB=/Library/Frameworks/QtGui.framework/Versions/4/Resources/qt_menu.nib
+#NIB=/Library/Frameworks/QtGui.framework/Versions/4/Resources/qt_menu.nib
+NIB=./resources/qt_menu.nib
 
 echo "Generating version: $VERSION";
 
@@ -49,6 +50,10 @@ rm -rf ./build ./dist ./pling-plong-odometer.dmg || error "cleanup failed"
 echo "Building the app (see build.log)"
 python2.7 setup.py py2app > build.log || error "py2app failed"
 
+# changing back defaults
+sed -i .bk "s/beta=.*/beta=1/" BUILDFLAGS
+pyrcc4 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
+                                
 # add some missing pieces
 echo "Adding some extra resources"
 cp -r "$NIB" dist/Pling\ Plong\ Odometer.app/Contents/Resources/ || error "Could not copy crucial qt resource"
@@ -73,10 +78,6 @@ echo "Creating .pkg installer";
 ./macromanconv.py ABOUT build/ABOUT.txt
 /usr/local/bin/packagesbuild -v Odometer.pkgproj || error "Packagemaker failed";
 
-# changing back defaults
-sed -i .bk "s/beta=.*/beta=1/" BUILDFLAGS
-pyrcc4 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
-                                
 echo "Finished. Take a look at $DMGNAME"
 echo "Online: $DMGURL"; 
 echo "Installer in dist/";

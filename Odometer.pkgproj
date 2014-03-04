@@ -8,7 +8,7 @@
 			<key>PACKAGE_FILES</key>
 			<dict>
 				<key>DEFAULT_INSTALL_LOCATION</key>
-				<string>/</string>
+				<string>/Applications</string>
 				<key>HIERARCHY</key>
 				<dict>
 					<key>CHILDREN</key>
@@ -440,9 +440,9 @@
 							<key>GID</key>
 							<integer>0</integer>
 							<key>PATH</key>
-							<string>/Users/n18040/Documents/Utvikling/pling-plong-odometer/dist/♫ ♪ Odometer.app</string>
+							<string>dist/♫ ♪ Odometer.app</string>
 							<key>PATH_TYPE</key>
-							<integer>0</integer>
+							<integer>3</integer>
 							<key>PERMISSIONS</key>
 							<integer>493</integer>
 							<key>TYPE</key>
@@ -515,9 +515,9 @@
 			ZW50LVN0eWxlLVR5cGUiIGNvbnRlbnQ9InRleHQvY3NzIj4KPHRp
 			dGxlPjwvdGl0bGU+CjxtZXRhIG5hbWU9IkdlbmVyYXRvciIgY29u
 			dGVudD0iQ29jb2EgSFRNTCBXcml0ZXIiPgo8bWV0YSBuYW1lPSJD
-			b2NvYVZlcnNpb24iIGNvbnRlbnQ9IjExODcuNCI+CjxzdHlsZSB0
-			eXBlPSJ0ZXh0L2NzcyI+Cjwvc3R5bGU+CjwvaGVhZD4KPGJvZHk+
-			CjwvYm9keT4KPC9odG1sPgo=
+			b2NvYVZlcnNpb24iIGNvbnRlbnQ9IjExMzguMjMiPgo8c3R5bGUg
+			dHlwZT0idGV4dC9jc3MiPgo8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5
+			Pgo8L2JvZHk+CjwvaHRtbD4K
 			</data>
 		</dict>
 		<key>PROJECT_PRESENTATION</key>
@@ -653,19 +653,7 @@
 				<key>KEYWORDS</key>
 				<dict/>
 				<key>LOCALIZATIONS</key>
-				<array>
-					<dict>
-						<key>LANGUAGE</key>
-						<string>English</string>
-						<key>VALUE</key>
-						<dict>
-							<key>PATH</key>
-							<string>/Users/n18040/Documents/Utvikling/pling-plong-odometer/LICENSE.txt</string>
-							<key>PATH_TYPE</key>
-							<integer>0</integer>
-						</dict>
-					</dict>
-				</array>
+				<array/>
 				<key>MODE</key>
 				<integer>0</integer>
 			</dict>
