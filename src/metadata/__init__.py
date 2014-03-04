@@ -3,7 +3,7 @@
 # (C) 2011-2013
 
 import os
-import time
+import logging
 import cPickle as pickle
 import sys, os.path, random, time, urllib, urllib2, urlparse, re, datetime
 import json, StringIO
@@ -375,8 +375,7 @@ class ApollomusicLookupWorker(Core.QThread):
                                          'offset':'0',
                                          'limit':'100',
                                          })
-            print postdata
-            # req = urllib2.urlopen('http://www.findthetune.com/action/search_tracks_action/', postdata)
+            # logging.debug('postdata: %s', postdata)
             headers = {'Cookie':logincookie}
             r = urllib2.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
             req = urllib2.urlopen(r)
@@ -880,7 +879,7 @@ class ApollomusicResolver(ResolverBase):
 def findResolver(filename):
     resolvers = [ DMAResolver(), AUXResolver(), SonotonResolver(), ApollomusicResolver(), GenericFileResolver()]
     for resolver in resolvers:
-        print "%s accepts: %s" % (resolver, resolver.accepts(filename))
+        # print "%s accepts: %s" % (resolver, resolver.accepts(filename))
         if resolver.accepts(filename):
             return resolver
     return False
@@ -949,6 +948,4 @@ if __name__ == '__main__':
     resolver.trackResolved.connect(mymeta)
     import os.path
     resolver.resolve(filename, os.path.abspath(filename), fromcache=False)
-    #doc = webdoc(filename, 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=SCD082120&w=tr&lyr=0')
-    #doc.load()
     sys.exit(app.exec_())
