@@ -505,7 +505,7 @@ class Odometer(Gui.QMainWindow):
             login = False
             if service == 'AUX':
                 if result['ax_success'] == 1:
-                    self.settings.setValue('%scookie', data.info()['Set-Cookie'])
+                    self.settings.setValue('AUXcookie', data.info()['Set-Cookie'])
                     self.showstatus('Logged in to AUX')
                 else:
                     m = '%s login failed: %s' % (service, result['ax_errmsg'])
@@ -513,12 +513,13 @@ class Odometer(Gui.QMainWindow):
                     self.showerror(m)
             elif service == 'Apollo':
                 if result['success'] == 1: 
-                    self.settings.setValue('%scookie', data.info()['Set-Cookie'])
+                    self.settings.setValue('Apollocookie', data.info()['Set-Cookie'])
                     self.showstatus('Logged in to Apollo')
                 else:   
                     m = '%s login failed: %s' % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
+            print list(self.settings.allKeys())
             stopBusy()
 
                 
@@ -684,8 +685,14 @@ class Odometer(Gui.QMainWindow):
             if w:
                 if isinstance(w, metadata.AUXResolver): 
                     w.updateRepertoire(self.AUXRepertoire) # make sure repertoire is current
-                elif isinstance(w, metadata.ApolloResolver):
-                    w.setlogincookie(unicode(self.settings.value('Apollocookie', '').toString()))
+                elif isinstance(w, metadata.ApollomusicResolver):
+                    logincookie = unicode(self.settings.value('Apollocookie', '').toString())
+                    if not logincookie: # not logged in to apollo, big problem
+                        self.showerror(self.tr(u'Track from Apollo Music detected. Please log in to the service'))
+                        self.logMessage(self.tr(u'No logincookie from apollo music found.'), msgtype=StatusBox.WARNING)
+                        continue # go to next track
+                    else:
+                        w.setlogincookie(logincookie)
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress) 

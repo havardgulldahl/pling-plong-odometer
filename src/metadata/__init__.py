@@ -269,6 +269,7 @@ class ApollomusicLookupWorker(Core.QThread):
 
     def run(self):
         albumdata, trackdata = self.request(self.musicid, self.logincookie)
+        # print trackdata
         if trackdata is None:
             return 
         self.progress.emit(50)
@@ -329,14 +330,15 @@ class ApollomusicLookupWorker(Core.QThread):
         #  u'track_num': u'2',
         #  u'upload_fk': u'808',
         #  u'wave_created': u'1'}
-
+        try: _yr = int(trackdata.get('recorded', -1), 10)
+        except:  _yr = -1   
         metadata = TrackMetadata(filename=self.filename,
                  musiclibrary=ApollomusicResolver.name,
                  title=trackdata.get('primary_title', None),
                  # length=-1,
                  composer=trackdata.get('composer', None),
                  artist=trackdata.get('performer', None),
-                 year=int(trackdata.get('recorded', -1), 10),
+                 year=_yr,
                  recordnumber=self.musicid,
                  albumname=albumdata.get('album_title', None),
                  copyright='Apollo Music',
