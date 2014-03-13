@@ -19,6 +19,7 @@ except ImportError:
 import PyQt4.QtGui as Gui
 import PyQt4.QtCore as Core
 import PyQt4.QtSvg as Svg
+import PyQt4.QtNetwork as QtNetwork
 import PyQt4.Qt as Qt
 
 from xmeml import iter as xmemliter
@@ -219,6 +220,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.DMAButton.clicked.connect(self.prfReport)
         self.ui.DMAButton.setEnabled(True)
         self.ui.AUXButton.clicked.connect(self.auxReport)
+        self.ui.ApolloButton.clicked.connect(self.apollomusicReport)
         self.ui.creditsButton.clicked.connect(self.credits)
         self.ui.errorButton.clicked.connect(self.reportError)
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
@@ -731,8 +733,10 @@ class Odometer(Gui.QMainWindow):
             else:
                 txt = u"%(artist)s: \u00ab%(title)s\u00bb \u2117 %(label)s %(year)s" 
         row.setText(3, txt % vars(metadata))
-        if metadata.musiclibrary in("Sonoton", 'AUX Publishing'):
+        if metadata.musiclibrary in ("Sonoton", 'AUX Publishing'):
             self.ui.AUXButton.setEnabled(True)
+        elif metadata.musiclibrary == 'ApolloMusic':
+            self.ui.ApolloButton.setEnabled(True)
         self.metadataLoaded.emit(row)
 
     def trackCompleted(self, filename, metadata):
@@ -797,7 +801,8 @@ class Odometer(Gui.QMainWindow):
         except AttributeError, (e):
             self.logException(e)
             self.ui.detailsBox.hide()
-        self.ui.resolveManualButton.setEnabled(row.metadata.title is None)
+        if hasattr(self.ui, 'resolveManualButton'):
+            self.ui.resolveManualButton.setEnabled(row.metadata.title is None)
 
     def editMetadata(self):
         'Show fields to edit metadata for a specific track'
@@ -933,6 +938,66 @@ class Odometer(Gui.QMainWindow):
             #return AUXDialog.accept()
         ui.buttonBox.accepted.connect(reportsubmit)
         return AUXDialog.exec_()
+
+    def apollomusicReport(self):
+        'Load the online Apollo Music (findthetune.com) report form in a dialog'
+
+        # 1: 
+        # HTTP POST: http://www.findthetune.com/online/projects
+        # model={"title":"ODOTEST","description":"Automatically created by odometer for report","children":false,"tracks":"428544,429492"}
+
+        # collect all tracks and their apollomusic identifier
+        _trackids={}
+        for r in self.itercheckedrows(): # find the appropriate tracks
+            if r.metadata.musiclibrary == 'ApolloMusic':
+                _trackids[r.metadata.identifier.replace('apollotrack# ', '')] = r.clip['durationsecs']
+
+        def createRequest(url): # helper method to add cookie to request
+            r = QtNetwork.QNetworkRequest(Core.QUrl(url))
+            r.setRawHeader('Cookie', str(self.settings.value('Apollocookie').toString()))
+            return r
+
+        apollomusicDialog = Gui.QDialog()
+        ui = auxreport_ui.Ui_PlingPlongAUXDialog()
+        ui.setupUi(apollomusicDialog)
+        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webView.loadProgress.connect(ui.progressBar.setValue)
+        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+
+        requestq = [ # a last in, first out queue of requests
+                     # ('http://www.findthetune.com/online/#projects', None), # the last request: show project page
+                     (None, '<html><body><h1>Tracks added to Apollo Music Project</h1><p>Please log on to findthetune.com and finish your report</p></body></html>'),
+                     ('http://www.findthetune.com/online/projects', # the first request: create a project with all tracks
+                      {'model': json.dumps({'title':unicode(self.ui.prodno.text()) or datetime.datetime.now().isoformat(),
+                                  'description':'Created by Pling Plong Odometer for easy reporting and big smiles',
+                                  'children':False,
+                                  'tracks': ",".join(_trackids.keys()) 
+                                  })
+                      }),
+                    ]
+
+        def next(): # get next url in queue
+            try:
+                _url, _data = requestq.pop()
+            except IndexError:
+                return # queue empty
+            logging.debug("next url: %s, data:%s", _url, _data)
+            if _url is None: # display _data, which is html
+                ui.webView.setHtml(_data)
+                return 
+
+            r = createRequest(_url)
+
+            if _data is None: # do a http GET
+                ui.webView.load(r, QtNetwork.QNetworkAccessManager.GetOperation)
+            else: # do a http POST
+                body = urllib.urlencode(_data)
+                r.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, 'application/x-www-form-urlencoded')
+                ui.webView.load(r, QtNetwork.QNetworkAccessManager.PostOperation, body)
+
+        ui.webView.loadFinished.connect(next)
+        next()
+        return apollomusicDialog.exec_()
 
     def manualResolve(self):
         'Manually submit selected tracks to aux for resolving'
