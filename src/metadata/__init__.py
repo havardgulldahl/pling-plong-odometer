@@ -73,6 +73,7 @@ class TrackMetadata(object):
         return ResolverBase.musicid(self.filename)
 
 class GluonReportWorker(Core.QThread):
+    'Create a Gluon report (a music metadata usage report) to and submit it to Gluon'
     reported = Core.pyqtSignal(name="reported") # success
     error = Core.pyqtSignal(unicode, name="error") # failure, with error message
 
@@ -114,6 +115,7 @@ class GluonReportWorker(Core.QThread):
         return response
 
 class GluonLookupWorker(Core.QThread):
+    'Lookup a DMA track on gluon and retrieve metadata'
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress")
@@ -734,7 +736,7 @@ class SonotonResolver(ResolverBase):
 
     def parse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
-        logging.debug('metadatabox: %s', metadatabox)
+        #logging.debug('metadatabox: %s', metadatabox)
         if len(metadatabox.strip()) == 0:
             self.trackFailed.emit(self.filename)
             self.error.emit("Could not get info on %s. Lookup failed" % self.filename)
