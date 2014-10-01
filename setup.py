@@ -53,7 +53,7 @@ if sys.platform == 'darwin':
                         #CFBundleDisplayName=u'\u266b \u266a Odometer',
                         CFBundleShortVersionString='Odometer, version %s' % getversion(),
                         NSSupportsSuddenTermination=True,
-                        NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011-2012')
+                        NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011-2014')
              )
          ),
      )
