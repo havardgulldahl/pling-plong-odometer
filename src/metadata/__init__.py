@@ -6,7 +6,7 @@ import os
 import logging
 import cPickle as pickle
 import sys, os.path, random, time, urllib, urllib2, urlparse, re, datetime
-import json, StringIO
+import json, StringIO, HTMLParser
 import hashlib
 import demjson
 import xml.etree.ElementTree as ET
@@ -734,6 +734,7 @@ class SonotonResolver(ResolverBase):
 
     def parse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
+        logging.debug('metadatabox: %s', metadatabox)
         if len(metadatabox.strip()) == 0:
             self.trackFailed.emit(self.filename)
             self.error.emit("Could not get info on %s. Lookup failed" % self.filename)
@@ -760,9 +761,9 @@ class SonotonResolver(ResolverBase):
         for l in metadatabox.split('\n'):
             if not len(l.strip()): continue
             meta, data = [s.strip() for s in l.split(':', 1)]
-            logging.debug('metadata: %s=%s', meta, data)
+            logging.debug('metadata: %s=%s', meta, htmlunescape(data))
             try:
-                setattr(metadata, mapping[meta], data)
+                setattr(metadata, mapping[meta], htmlunescape(data))
             except KeyError:
                 logging.error('Unknown metadata field received from AUX: -%s-, skipping to next', meta)
 
@@ -930,6 +931,9 @@ class webdoc(Core.QObject):
 def mdprint(f,m):
     print "filename: ",f
     print "metadata: ", vars(m)
+
+def htmlunescape(s):
+    return HTMLParser.HTMLParser().unescape(s)
 
 if __name__ == '__main__':
     try:
