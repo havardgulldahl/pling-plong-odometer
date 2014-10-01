@@ -457,6 +457,7 @@ class ResolverBase(Core.QObject):
             self.error.emit('Invalid url for filename %s' % filename)
             self.trackFailed.emit(filename)
             return False
+        logging.debug('ResolverBase.resolve traversing the INTERNET: %s => %s', filename, url)
         self.doc = webdoc(self.filename, url, parent=None)
         self.doc.frame.loadFinished.connect(self.parse)
         self.doc.page.loadProgress.connect(self.progress)
@@ -744,20 +745,20 @@ class SonotonResolver(ResolverBase):
             metadata.length=mins*60+secs
         except:
             pass
-        mapping = { 'Track Name': 'title', #REMEMBER LAST SUMMER
-                    'Track Number': 'recordnumber', #SCD 821 20.0
+        mapping = { 'Track name': 'title', #REMEMBER LAST SUMMER
+                    'Track number': 'recordnumber', #SCD 821 20.0
                     'Composer': 'composer', #Mladen Franko
                     'Artist': 'artist', #(N/A for production music)
-                    'Album Name': 'albumname',#ORCHESTRAL LANDSCAPES 2
+                    'Album name': 'albumname',#ORCHESTRAL LANDSCAPES 2
                     'Catalogue number': 'catalogue', #821
                     'Label': '_label', #SCD
-                    'Copyright Owner': 'copyright', #(This information requires login)
-                    'LC Number': 'lcnumber', #07573 - Library of Congress id
+                    'Copyright owner': 'copyright', #(This information requires login)
+                    'LC number': 'lcnumber', #07573 - Library of Congress id
                   }
         for l in metadatabox.split('\n'):
             if not len(l.strip()): continue
-            #print "!!", l
             meta, data = [s.strip() for s in l.split(':', 1)]
+            logging.debug('metadata: %s=%s', meta, data)
             setattr(metadata, mapping[meta], data)
         metadata.productionmusic = True
         metadata.label = self.getlabel(metadata._label)
@@ -929,7 +930,7 @@ if __name__ == '__main__':
         filename = sys.argv[1]
     except IndexError:
         filename = 'test.mp3'
-        
+    logging.basicConfig(level=logging.DEBUG)
     def mymeta(filename, _metadata):
         metadata = _metadata
         print "mymeta:", vars(metadata)
@@ -945,8 +946,8 @@ if __name__ == '__main__':
     resolver = findResolver(filename)
     print 'resolver:', resolver
     import os
-    print "login cookie detected: %s" % os.environ['LOGINCOOKIE']
-    resolver.setlogincookie(os.environ['LOGINCOOKIE'])
+    print "login cookie detected: %s" % os.environ.get('LOGINCOOKIE', None)
+    resolver.setlogincookie(os.environ.get('LOGINCOOKIE', None))
     resolver.trackResolved.connect(mymeta)
     import os.path
     resolver.resolve(filename, os.path.abspath(filename), fromcache=False)
