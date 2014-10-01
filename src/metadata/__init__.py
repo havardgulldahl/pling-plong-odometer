@@ -754,12 +754,18 @@ class SonotonResolver(ResolverBase):
                     'Label': '_label', #SCD
                     'Copyright owner': 'copyright', #(This information requires login)
                     'LC number': 'lcnumber', #07573 - Library of Congress id
+                    'EAN/GTIN': 'ean', # 4020771100217 - ean-13 (barcode)
+                    'ISRC': 'isrc', # DE-B63-10-021-20 - International Standard Recording Code
                   }
         for l in metadatabox.split('\n'):
             if not len(l.strip()): continue
             meta, data = [s.strip() for s in l.split(':', 1)]
             logging.debug('metadata: %s=%s', meta, data)
-            setattr(metadata, mapping[meta], data)
+            try:
+                setattr(metadata, mapping[meta], data)
+            except KeyError:
+                logging.error('Unknown metadata field received from AUX: -%s-, skipping to next', meta)
+
         metadata.productionmusic = True
         metadata.label = self.getlabel(metadata._label)
         self.trackResolved.emit(self.filename, metadata)
