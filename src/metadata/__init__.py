@@ -135,7 +135,7 @@ class GluonLookupWorker(Core.QThread):
     def run(self):
         response = self.request(self.musicid)
         if response is None:
-            return 
+            return
         self.progress.emit(50)
         gp = gluon.GluonMetadataResponseParser()
         metadata = gp.parse(StringIO.StringIO(response), factory=TrackMetadata)
@@ -162,98 +162,9 @@ class GluonLookupWorker(Core.QThread):
         response = req.read()
         return response
 
-class DMAWorker(Core.QThread):
-    trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
-    trackFailed = Core.pyqtSignal(name="trackFailed" ) 
-    progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
-
-    def __init__(self, parent=None):
-        super(DMAWorker, self).__init__(parent)
-
-    def __del__(self):
-        self.wait()
-
-    def load(self, filename):
-        self.filename = filename
-        self.musicid = DMAResolver.musicid(filename)
-        self.start()
-
-    def run(self):
-        #http://dma/trackDetailsPage.do?muobId=NONRT023272CD0010
-        # -> internal muobid and track details
-        # http://dma/productDetailsJson.do, POST muobId=592113247
-        # -> album ('product') details
-        url = 'http://dma/trackDetailsPage.do?muobId='+self.musicid
-        try:
-            data = urllib.urlopen(url).read(512)
-        except IOError:
-            self.error.emit(u'Could not open DMA. Not connected to the network?')
-            self.trackFailed.emit()
-            return 
-        rex = re.compile(r'NRK.action.onMuobResultClick\((\d+)\);')
-        m = rex.search(data)
-        muobid = m.group(1)
-        self.progress.emit(33)
-        try:
-            #rexstart = re.search(r'var\ albumRecs\ =\ \[', data).end()
-            #rexend = re.compile(r'];\s*trackRecord.albums\ =\ albumRecs;', re.M).search(data).start()
-            rexstart = re.search(r"CM.app.cache\('track\.details\.\d+',", data).end()
-            rexend = re.compile(r'\);\s*function\ callAddToWindow\(\){', re.M).search(data).start()
-        except AttributeError:
-            self.progress.emit(5)
-            return None
-        metadata = demjson.decode(data[rexstart:rexend])
-        self.progress.emit(66)
-        _albumname = '; '.join([x['name'] for x in metadata['albums']])
-        if not _albumname:
-            _albumname = '; '.join([x['name'] for x in metadata['products']])
-        md = TrackMetadata(filename=self.filename,
-                           identifier=self.musicid,
-                           musiclibrary='DMA',
-                           title=metadata['title'],
-                           artist="; ".join([x['name'] for x in metadata['artists']]),
-                           year=metadata['releaseYear'],
-                           albumname=_albumname,
-                           composer='; '.join([x['name'] for x in metadata['composer']]),
-                           label='Må hentes i DMA',
-                           copyright='Må hentes i DMA')
-
-        try:
-            recordid = metadata['media'][0]['id']
-            recorddetails = urllib.urlopen('http://dma/productDetailsJson.do', 
-                                     {'muobId': recordid})
-            recordmetadata = demjson.decode(details.read())['records'][0]
-            #print recordmetadata
-            md.label = recordmetadata['recordLabel'][0]['label']
-            md.lcnumber = recordmetadata['recordLabel'][0]['recordLabelNr']
-        except IOError:
-            self.error.emit(u'Could not open DMA. Sorry. Please look %s up yourself.' % self.musicid)
-            self.trackFailed.emit(self.filename)
-        except:
-            # something failed, but we have almost everything we need
-            # TODO: popup an error dialog about this
-            self.error.emit(u'Resolving %s failed because - well, who knows why? Biscuit?' % self.musicid)
-            self.trackFailed.emit(self.filename)
-
-        #xml = urllib.urlopen('http://dma/playerInformation.do?muobId='+muobid).read()
-        #tree = ET.parse(StringIO.StringIO(xml.strip()))
-        #md = TrackMetadata(filename=self.filename, identifier=self.musicid, musiclibrary='DMA')
-        #md.title = tree.find('./track/title').text
-        #md.composer = 'Kommer fra DMA'
-        #md.label = 'Kommer fra DMA'
-        #md.artist = '; '.join([a.text.strip() for a in tree.iterfind('./track/artists/artist/name')])
-        #md.composer = 'Kommer fra DMA'
-        #md.copyright = 'Kommer fra DMA'
-        self.progress.emit(100)
-        self.trackResolved.emit(md)
-        #self.terminate()
-        self.deleteLater()
-
-
 class ApollomusicLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
-    trackFailed = Core.pyqtSignal(name="trackFailed" ) 
+    trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
     error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
 
@@ -273,7 +184,7 @@ class ApollomusicLookupWorker(Core.QThread):
         albumdata, trackdata = self.request(self.musicid, self.logincookie)
         # print trackdata
         if trackdata is None:
-            return 
+            return
         self.progress.emit(50)
         # albumdata is a dict, like:
         # {u'active': u'1',
@@ -333,7 +244,7 @@ class ApollomusicLookupWorker(Core.QThread):
         #  u'upload_fk': u'808',
         #  u'wave_created': u'1'}
         try: _yr = int(trackdata.get('recorded', -1), 10)
-        except:  _yr = -1   
+        except:  _yr = -1
         metadata = TrackMetadata(filename=self.filename,
                  musiclibrary=ApollomusicResolver.name,
                  title=trackdata.get('primary_title', None),
@@ -363,8 +274,8 @@ class ApollomusicLookupWorker(Core.QThread):
         "do an http post request to apollomusic.dk"
         try:
             _lbl, _albumid, _trackno = self.musicid.split('_')
-            postdata = urllib.urlencode({'label_fk':_lbl, 
-                                         'album_num':_albumid, 
+            postdata = urllib.urlencode({'label_fk':_lbl,
+                                         'album_num':_albumid,
                                          # 'track_num':_trackno,
                                          'type_query':'tracks',
                                          'sound_type':'0',
@@ -394,8 +305,8 @@ class ApollomusicLookupWorker(Core.QThread):
             self.trackFailed.emit()
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
-        
-        response = json.loads(req.read()) # it's a json array 
+
+        response = json.loads(req.read()) # it's a json array
         albumdata = response.pop()        # of 1 albumdict
 
         trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
@@ -424,7 +335,7 @@ class ResolverBase(Core.QObject):
         self.trackFailed.connect(self.cleanup)
         self.logincookie = None
 
-    def accepts(self, filename): 
+    def accepts(self, filename):
         for f in self.prefixes:
             if unicode(filename).upper().startswith(f):
                 return True
@@ -437,7 +348,7 @@ class ResolverBase(Core.QObject):
         self.filename = filename
         i = random.randint(0,1000)
         md = TrackMetadata( filename = unicode(filename),
-                            musiclibrary = self.name, 
+                            musiclibrary = self.name,
                             title = "Funky title %i" % i,
                             length = random.randint(30,500),
                             composer = "Mr. Composer %i" % i,
@@ -445,7 +356,7 @@ class ResolverBase(Core.QObject):
                             year = random.randint(1901,2011) )
         #time.sleep(random.random() * 4)
         self.trackResolved.emit(self.filename, md)
-    
+
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
         self.fullpath = fullpath
@@ -475,7 +386,7 @@ class ResolverBase(Core.QObject):
             return False
         return self.urlbase % _id
 
-    def parse(self): 
+    def parse(self):
         # reimplement this to emit a signal with a TrackMetadata object when found
         #self.trackResolved.emit(self.filename, md)
         pass
@@ -529,7 +440,7 @@ class ResolverBase(Core.QObject):
         dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
         ourdir = os.path.join(os.path.abspath(unicode(dir)), 'no.nrk.odometer')
         if not os.path.exists(ourdir):
-           os.makedirs(ourdir) 
+           os.makedirs(ourdir)
                #return os.path.join(ourdir, self.filename)
         try:
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
@@ -553,7 +464,7 @@ class GenericFileResolver(ResolverBase):
     'Resolve file based on embedded metadata, i.e. id3 tags, vorbis tags, bwf'
     name = 'file'
     postfixes = ['MP3','WAV']
-    
+
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
         self.fullpath = fullpath  # may be None, on offline clips
@@ -579,7 +490,7 @@ class GenericFileResolver(ResolverBase):
         else:
             self.trackResolved.emit(self.filename, parsed)
             return True
-    
+
     def wavparse(self, filename):
         'Parse metadata from wav and return TrackMetadata object or False'
         #TODO: implement this
@@ -596,7 +507,7 @@ class GenericFileResolver(ResolverBase):
             if hasattr(e, 'message'):
                 self.error.emit(e.message)
             return False
-            
+
         md = TrackMetadata(filename)
 
         md.title = _filev1.songname.decode('latin1')
@@ -635,8 +546,8 @@ class GenericFileResolver(ResolverBase):
             except ValueError:
                 pass
         return md
-            
-            
+
+
 class DMAResolver(ResolverBase):
     # Fra gammelt av har vi disse kodene:
     # NRKO_
@@ -645,7 +556,7 @@ class DMAResolver(ResolverBase):
     # NONRO
     # NONRT
     # NONRE
-    # 
+    #
     prefixes = ['NRKO_', 'NRKT_', 'NONRO', 'NONRT', 'NONRE' ]
     name = 'DMA'
     #cacheTimeout = 1
@@ -716,7 +627,7 @@ class SonotonResolver(ResolverBase):
 
     @staticmethod
     def musicid(filename):
-        """Returns musicid from filename. 
+        """Returns musicid from filename.
 
         SCD076819.wav -> SCD076819
         SCD076819.wav -> SCD076819
@@ -777,37 +688,37 @@ class AUXResolver(SonotonResolver):
     prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD']
 
     labelmap = { # static label map. See .updateReportoire()
-                'AD': 'Adapt', 
-                'AFRO': 'AFRO Musique', 
-                'BAC': 'Big and Clever Music', 
-                'BL': 'Bleach', 
-                'BM': 'Brilliant Music', 
-                'CNS': 'Commercials Non Stop', 
-                'ECM': 'Extra Chilli Music', 
-                'FWM': 'Frameworks', 
-                'IPX': 'Impax Music', 
-                'ISCD': 'Intersound', 
-                'SPOT': 'Intersound', 
-                'JW': 'JW Media Music', 
-                'CAND': 'Music Candy', 
-                'MMIT': 'MUSICA IT', 
-                'KOK': 'Pacifica Artist', 
-                'PMA': 'Pacifica Music Artist', 
-                'ISPV': 'Pro Viva', 
-                'RSM': 'Reliable Source Music', 
-                'RSMV': 'Reliable Source Music Virtual', 
-                'SONI': 'Sonia Classics', 
-                'SCD': 'Sonoton', 
-                'SAS': 'Sonoton Authentic Series', 
-                'SCDC': 'Sonoton Classical', 
-                'STT': 'Sonoton Trailer Tracks', 
-                'STTV': 'Sonoton Trailer Tracks V', 
-                'SCDV': 'Sonoton Virtual CDs', 
-                'TM': 'Telemusic', 
-                'TRED': 'Trede Collection', 
-                'TSU': 'Tsunami Sounds', 
-                'UBMM': 'UBM Media', 
-                'WDA': 'Wild Diesel Artist', 
+                'AD': 'Adapt',
+                'AFRO': 'AFRO Musique',
+                'BAC': 'Big and Clever Music',
+                'BL': 'Bleach',
+                'BM': 'Brilliant Music',
+                'CNS': 'Commercials Non Stop',
+                'ECM': 'Extra Chilli Music',
+                'FWM': 'Frameworks',
+                'IPX': 'Impax Music',
+                'ISCD': 'Intersound',
+                'SPOT': 'Intersound',
+                'JW': 'JW Media Music',
+                'CAND': 'Music Candy',
+                'MMIT': 'MUSICA IT',
+                'KOK': 'Pacifica Artist',
+                'PMA': 'Pacifica Music Artist',
+                'ISPV': 'Pro Viva',
+                'RSM': 'Reliable Source Music',
+                'RSMV': 'Reliable Source Music Virtual',
+                'SONI': 'Sonia Classics',
+                'SCD': 'Sonoton',
+                'SAS': 'Sonoton Authentic Series',
+                'SCDC': 'Sonoton Classical',
+                'STT': 'Sonoton Trailer Tracks',
+                'STTV': 'Sonoton Trailer Tracks V',
+                'SCDV': 'Sonoton Virtual CDs',
+                'TM': 'Telemusic',
+                'TRED': 'Trede Collection',
+                'TSU': 'Tsunami Sounds',
+                'UBMM': 'UBM Media',
+                'WDA': 'Wild Diesel Artist',
                 'WD': 'Wild Diesel',
                }
     name = 'AUX Publishing'
@@ -850,9 +761,9 @@ class ApollomusicResolver(ResolverBase):
 
     @staticmethod
     def musicid(filename):
-        """Returns musicid from filename. 
+        """Returns musicid from filename.
 
-        Apollo_SMI_360_1__TOUCH_THE_SKY__MIKE_KNELLER_STEPHAN_NORTH.mp3 -> SMI_360_1 
+        Apollo_SMI_360_1__TOUCH_THE_SKY__MIKE_KNELLER_STEPHAN_NORTH.mp3 -> SMI_360_1
 
         """
         rex = re.compile(r'^Apollo_([A-Z]+_\d+_\d+)__') # _<label>_<albumid>_<trackno>__
@@ -904,7 +815,7 @@ def getResolverPatterns():
     return r
 
 class Gluon(Core.QObject):
-    
+
     def __init__(self, parent=None):
         super(Gluon, self).__init__(parent)
         self.worker = GluonReportWorker()
@@ -946,7 +857,7 @@ if __name__ == '__main__':
     def mymeta(filename, _metadata):
         metadata = _metadata
         print "mymeta:", vars(metadata)
-    
+
     class Application(Gui.QApplication):
         def event(self, e):
             return Gui.QApplication.event(self, e)
