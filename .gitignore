@@ -47,6 +47,9 @@ src/gui/auxreport_ui.py
 src/gui/prfreport_ui.py
 src/gui/build/
 src/gui/odometer_no.qm
+BUILDFLAGS.bk
+odometer.sublime-project
+odometer.sublime-workspace
 
 # Imported projects #
 #####################
@@ -55,3 +58,6 @@ src/xmeml/
 # Stuff #
 #########
 data/
+dist/
+build/
+
