@@ -401,16 +401,6 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="playButton">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Play extract</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <spacer name="verticalSpacer">
         <property name="orientation">
          <enum>Qt::Vertical</enum>
@@ -568,7 +558,7 @@
   </action>
   <action name="actionShowPatterns">
    <property name="text">
-    <string>Show recognised patterns</string>
+    <string>Show recognised file patterns</string>
    </property>
    <property name="toolTip">
     <string>Show recognised file name patterns</string>
