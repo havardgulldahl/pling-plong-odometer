@@ -30,12 +30,6 @@ import auxreport_ui
 import prfreport_ui
 import onlinelogin_ui
 
-try:
-    from gui import audioplayer
-    USE_AUDIOPLAYER=True
-except ImportError:
-    USE_AUDIOPLAYER=False
-
 class UrlWorker(Core.QThread):
     finished = Core.pyqtSignal(object)
     failed = Core.pyqtSignal(tuple)
@@ -240,8 +234,6 @@ class Odometer(Gui.QMainWindow):
         self.ui.dropIcon = Svg.QSvgWidget(':/gfx/graystar', self.ui.clips)
         self.ui.dropIcon.setMinimumSize(200,200)
         self.ui.dropIcon.setToolTip(self.tr('Drop your xml file here'))
-        if not (USE_AUDIOPLAYER and self.buildflags.getboolean('ui', 'playbutton')):
-            self.ui.playButton.hide()
         if not self.buildflags.getboolean('release', 'releasecheck'):
             self.ui.actionCheck_for_updates.setEnabled(False)
         if not self.buildflags.getboolean('ui', 'volumeThreshold'):
