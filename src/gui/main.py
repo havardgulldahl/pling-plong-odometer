@@ -289,9 +289,10 @@ class Odometer(Gui.QMainWindow):
         'React to file being dropped (if it looks like an xmeml file, load it)'
         event.acceptProposedAction()
         self.ui.dropIcon.load(':/gfx/graystar')
-        x = xmemlfileFromEvent(event)
+        x = xmemlfileFromEvent(event) # x is a unicode file path
         if x:
-            self.loadxml(x)
+            self.xmemlfile = x
+            self.loadxml(self.xmemlfile)
 
     def resizeEvent(self, event):
         'React to main gui being resized'
@@ -1179,7 +1180,7 @@ def xmemlfileFromEvent(event):
         for f in data.urls():
             fil = unicode(f.toLocalFile())
             if os.path.isfile(fil) and os.path.splitext(fil.upper())[1] == ".XML":
-                # also try to see if xmemliter accepts it?
+                # TODO: also try to see if xmemliter accepts it?
                 return fil
     except Exception, (e):
         logging.error(e)
