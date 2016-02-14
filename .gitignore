@@ -45,6 +45,7 @@ src/gui/odometer_rc.py
 src/gui/odometer_ui.py
 src/gui/auxreport_ui.py
 src/gui/prfreport_ui.py
+src/gui/onlinelogin_ui.py
 src/gui/build/
 src/gui/odometer_no.qm
 BUILDFLAGS.bk
