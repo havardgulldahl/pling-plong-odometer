@@ -25,7 +25,7 @@ import PyQt4.Qt as Qt
 from xmeml import iter as xmemliter
 import metadata
 import odometer_ui
-import odometer_rc 
+import odometer_rc
 import auxreport_ui
 import prfreport_ui
 import onlinelogin_ui
@@ -153,7 +153,7 @@ class StatusBox(Gui.QWidget):
         try:
             self.anim.stop()
         except AttributeError:#close animation does not exist because close() was never run
-            pass 
+            pass
         self.timer.start(self.autoclosetimeout)
         self.s.setText(unicode(self.s.text()) + "<br>" + s)
 
@@ -176,7 +176,7 @@ def readBuildflags():
     cp = ConfigParser.ConfigParser()
     cp.readfp(StringIO.StringIO(unicode(readResourceFile(':/data/buildflags'))))
     return cp
-    
+
 class Odometer(Gui.QMainWindow):
     msg = Core.pyqtSignal(unicode, name="msg")
     loaded = Core.pyqtSignal()
@@ -313,7 +313,7 @@ class Odometer(Gui.QMainWindow):
                 name = os.path.basename(self.xmemlfile.decode(sys.getfilesystemencoding()))
         except (AttributeError, TypeError):
             name = self.tr('No XMEML loaded')
-        self.log.append('<div style="color:%s">[%s - %s]: %s</div>' % (color, 
+        self.log.append('<div style="color:%s">[%s - %s]: %s</div>' % (color,
                                                                        name,
                                                                        datetime.datetime.now().time().isoformat(),
                                                                        msg))
@@ -340,19 +340,19 @@ class Odometer(Gui.QMainWindow):
     def showException(self, e):
         self.logException(e)
         self.showerror(unicode(self.tr('Unexpected error: %s')) % e)
-        
+
     def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
         'Show floating status box'
         # if you don't autoclose, call self.closestatusboxes()
         # or keep a reference to this box and .close() it yourself
 
-        if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg: 
+        if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg:
             # don't repeat yourself
             return None
 
         if len(self.statusboxes):
             b = self.statusboxes[-1]
-            if not b.stopped: 
+            if not b.stopped:
                 b.addMessage(msg, msgtype)
                 return b
             else:
@@ -375,7 +375,7 @@ class Odometer(Gui.QMainWindow):
     def closebox(self, b):
         try:
             self.statusboxes.remove(b)
-        except: 
+        except:
             pass
 
     def closestatusboxes(self):
@@ -412,11 +412,11 @@ class Odometer(Gui.QMainWindow):
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def helpdocloaded(success):
             logging.debug("help doc loaded: %s", success)
-            # TODO: Add offline fallback 
+            # TODO: Add offline fallback
             if not success:
                 self.showerror(self.tr("Could not load help document, sorry. :("))
         ui.webView.loadFinished.connect(helpdocloaded)
-        return HelpDialog.exec_()     
+        return HelpDialog.exec_()
 
     def showLicenses(self):
         'Show a dialog to display licenses and terms'
@@ -439,7 +439,7 @@ class Odometer(Gui.QMainWindow):
         #except Exception as e:
             #self.logException(e)
             #self.showerror(self.tr('Could not look up the most recent version online. Check your internet connection'))
-            #return 
+            #return
         def failed(ex):
             logging.error("faile! %s", ex)
             self.showerror(self.tr('Could not look up the most recent version online. Check your internet connection'))
@@ -514,17 +514,17 @@ class Odometer(Gui.QMainWindow):
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Apollo':
-                if result['success'] == 1: 
+                if result['success'] == 1:
                     self.settings.setValue('Apollocookie', data.info()['Set-Cookie'])
                     self.showstatus('Logged in to Apollo')
-                else:   
+                else:
                     m = '%s login failed: %s' % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
             print list(self.settings.allKeys())
             stopBusy()
 
-                
+
         def failed(ex):
             logging.warning("faile!", ex)
             self.logException(ex)
@@ -580,6 +580,7 @@ class Odometer(Gui.QMainWindow):
             return (datetime.datetime.now() - dt).days
         if repertoire is not None and age(repertoire['timestamp']) < 7:
             self.logMessage(self.tr('Found fresh AUX repertoire list in cache'))
+            self.logMessage(unicode(self.tr('AUX repertoire: %s catalogs')) % (len(repertoire.keys())-1))
             self.AUXRepertoire = repertoire
             return
 
@@ -593,6 +594,7 @@ class Odometer(Gui.QMainWindow):
             repertoire['timestamp'] = datetime.datetime.now()
             self.settings.setValue('auxrepertoire', pickle.dumps(repertoire))
             self.AUXRepertoire = repertoire
+            self.logMessage(unicode(self.tr('AUX repertoire: %s catalogs')) % (len(repertoire.keys())-1))
         def failed(ex):
             #logging.debug("faile!", ex
             self.logException(ex)
@@ -630,7 +632,7 @@ class Odometer(Gui.QMainWindow):
 	    self.xmemlthread.load(xmemlfile)
         except Exception:
             self.removeLoadingbar()
-            raise 
+            raise
 
     def loadingbar(self):
         'Add global progress bar'
@@ -670,11 +672,12 @@ class Odometer(Gui.QMainWindow):
         for audioname, ranges in self.audioclips.iteritems():
             frames = len(ranges)
             if frames == 0:
+                self.logMessage(unicode(self.tr(u'Skipping clip "%s" because no frames are audible')) % audioname)
                 continue
             logging.debug("======= %s: %s -> %s======= ", audioname, ranges.r, frames)
             fileref = self.audiofiles[audioname] # might be None, if clip is offline
             secs = ranges.seconds()
-            r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname, 
+            r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname,
                                                     '%ss (%sf)' % (secs, frames)])
             r.metadata = metadata.TrackMetadata(filename=audioname)
             r.audioname = audioname
@@ -685,7 +688,7 @@ class Odometer(Gui.QMainWindow):
             logging.debug("w: %s -> %s",audioname.encode('utf-8'), w)
             r.setCheckState(0, Core.Qt.Unchecked)
             if w:
-                if isinstance(w, metadata.AUXResolver): 
+                if isinstance(w, metadata.AUXResolver):
                     w.updateRepertoire(self.AUXRepertoire) # make sure repertoire is current
                 elif isinstance(w, metadata.ApollomusicResolver):
                     logincookie = unicode(self.settings.value('Apollocookie', '').toString())
@@ -697,9 +700,9 @@ class Odometer(Gui.QMainWindow):
                         w.setlogincookie(logincookie)
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
-                w.trackProgress.connect(self.showProgress) 
+                w.trackProgress.connect(self.showProgress)
                 #w.trackFailed.connect(lambda x: r.setCheckState(0, Core.Qt.Unchecked))
-                w.error.connect(self.showerror) 
+                w.error.connect(self.showerror)
                 w.warning.connect(lambda s: self.logMessage(s, msgtype=StatusBox.WARNING))
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
@@ -731,7 +734,7 @@ class Odometer(Gui.QMainWindow):
             if metadata.title is None and metadata.artist is None:
                 txt = self.tr("Incomplete metadata. Please update manually")
             else:
-                txt = u"%(artist)s: \u00ab%(title)s\u00bb \u2117 %(label)s %(year)s" 
+                txt = u"%(artist)s: \u00ab%(title)s\u00bb \u2117 %(label)s %(year)s"
         row.setText(3, txt % vars(metadata))
         if metadata.musiclibrary in ("Sonoton", 'AUX Publishing'):
             self.ui.AUXButton.setEnabled(True)
@@ -834,12 +837,12 @@ class Odometer(Gui.QMainWindow):
                   self.ui.clipCopyright,
                   self.ui.clipLabel):
             editable(x)
-        
+
     def itercheckedrows(self):
         'iterate through rows that are checked'
         for row in self.rows.values():
             #logging.debug(row
-            if row.checkState(0) == Core.Qt.Checked: 
+            if row.checkState(0) == Core.Qt.Checked:
                 yield row
 
     def prfReport(self):
@@ -942,7 +945,7 @@ class Odometer(Gui.QMainWindow):
     def apollomusicReport(self):
         'Load the online Apollo Music (findthetune.com) report form in a dialog'
 
-        # 1: 
+        # 1:
         # HTTP POST: http://www.findthetune.com/online/projects
         # model={"title":"ODOTEST","description":"Automatically created by odometer for report","children":false,"tracks":"428544,429492"}
 
@@ -971,7 +974,7 @@ class Odometer(Gui.QMainWindow):
                       {'model': json.dumps({'title':unicode(self.ui.prodno.text()) or datetime.datetime.now().isoformat(),
                                   'description':'Created by Pling Plong Odometer for easy reporting and big smiles',
                                   'children':False,
-                                  'tracks': ",".join(_trackids.keys()) 
+                                  'tracks': ",".join(_trackids.keys())
                                   })
                       }),
                     ]
@@ -984,7 +987,7 @@ class Odometer(Gui.QMainWindow):
             logging.debug("next url: %s, data:%s", _url, _data)
             if _url is None: # display _data, which is html
                 ui.webView.setHtml(_data)
-                return 
+                return
 
             r = createRequest(_url)
 
@@ -1008,7 +1011,7 @@ class Odometer(Gui.QMainWindow):
             row.setCheckState(0, Core.Qt.Checked)
 
         filepath = self.audiofiles[row.audioname]
-        manualPattern, result = Gui.QInputDialog.getText(self, self.tr('Music ID'), 
+        manualPattern, result = Gui.QInputDialog.getText(self, self.tr('Music ID'),
             self.tr('Enter the correct music ID:'), Gui.QLineEdit.Normal, filepath.name)
 
         #resolver = metadata.AUXResolver()
@@ -1016,8 +1019,8 @@ class Odometer(Gui.QMainWindow):
         resolver.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
         resolver.trackResolved.connect(updateMetadata)
         resolver.trackResolved.connect(self.submitMissingFilename)
-        resolver.trackProgress.connect(self.showProgress) 
-        resolver.error.connect(self.showerror) 
+        resolver.trackProgress.connect(self.showProgress)
+        resolver.error.connect(self.showerror)
         self.workers.append(resolver) # keep track of the worker
         resolver.resolve(unicode(manualPattern), filepath.pathurl) # put the worker to work async
 
@@ -1089,12 +1092,12 @@ class Odometer(Gui.QMainWindow):
             log = html.findFirstElement('input[id="entry_7"]')
             log.setAttribute('value', self.getVersion())
         ui.webView.loadFinished.connect(reportloaded)
-        return GdocsDialog.exec_()     
-        
+        return GdocsDialog.exec_()
+
     def editDuration(self, row, col): # called when double clicked
         "Replace duration column with a spinbox to manually change value"
         logging.debug("editDuration: %s %s", row, col)
-        if col != 2: 
+        if col != 2:
             return False
         editor = Gui.QDoubleSpinBox(parent=self.ui.clips)
         editor.setMaximum(10000.0)
@@ -1111,7 +1114,7 @@ class Odometer(Gui.QMainWindow):
     def checkUsage(self):
         "To be reimplemented whenever there usage agreements change"
         return True # TODO: check FONO status, calculate Apollo pricing
-            
+
     def gluon(self):
         #ALL  data loaded
         prodno = unicode(self.ui.prodno.text()).strip()
@@ -1119,7 +1122,7 @@ class Odometer(Gui.QMainWindow):
         if False: #not ok:
             msg = Gui.QMessageBox.critical(self, "Rights errors", "Not ok according to usage agreement")
         if len(prodno) == 0:
-            msg = Gui.QMessageBox.critical(self, self.tr("Need production number"), 
+            msg = Gui.QMessageBox.critical(self, self.tr("Need production number"),
                                            self.tr("You must enter the production number"))
             self.ui.prodno.setFocus()
             return False
@@ -1164,9 +1167,9 @@ class Odometer(Gui.QMainWindow):
 
 def uniqify(seq):
     'Return list of unique items in a sequence'
-    keys = {} 
-    for e in seq: 
-        keys[e] = 1 
+    keys = {}
+    for e in seq:
+        keys[e] = 1
     return keys.keys()
 
 def xmemlfileFromEvent(event):
@@ -1193,7 +1196,7 @@ def rungui(argv):
     if sys.platform == 'win32':
         # default win32 looks awful, make it pretty
         # docs advise to do this before QApplication() is started
-        Gui.QApplication.setStyle("cleanlooks") 
+        Gui.QApplication.setStyle("cleanlooks")
     app = Gui.QApplication(argv)
     if sys.platform == 'win32':
         def setfont(fontname):
