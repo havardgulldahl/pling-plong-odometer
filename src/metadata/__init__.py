@@ -307,6 +307,11 @@ class ApollomusicLookupWorker(Core.QThread):
             return None
 
         response = json.loads(req.read()) # it's a json array
+        if len(response) == 0:
+            # empty response, likely not logged in or expired login cookie
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but failed. Please try to log in to Apollo again' % (musicid,))
+            return None
         albumdata = response.pop()        # of 1 albumdict
 
         trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
