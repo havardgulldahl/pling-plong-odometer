@@ -89,6 +89,9 @@
          <property name="text">
           <string>♫</string>
          </property>
+         <property name="toolTip">
+          <string>Check clips that you want to include in your report</string>
+         </property>
         </column>
         <column>
          <property name="text">
@@ -99,10 +102,16 @@
          <property name="text">
           <string>Duration</string>
          </property>
+         <property name="toolTip">
+          <string>Duration of the clip</string>
+         </property>
         </column>
         <column>
          <property name="text">
           <string>Metadata</string>
+         </property>
+         <property name="toolTip">
+          <string>A summary of metadata</string>
          </property>
         </column>
        </widget>
