@@ -1,28 +1,29 @@
-Pling Plong Odometer
-====================
+# Pling Plong Odometer #
 
--- keeping track of what goes into your sound track --
+### keeping track of what goes into your sound track ###
 
 This tool will analyze your FCP project and tell you what 
 audio clips goes in it and for how long each clip is audible.
 
-Created by havard.gulldahl@nrk.no
-===
+Created by *havard.gulldahl@nrk.no*
 
-Build prerequisites
 
-Python 2.7
-python-demjson
-python-mutagen
-pytagger
-pyqt4 (with phonon bindings for prelisten support)
-python-hashlib
-https://github.com/havardgulldahl/xmeml
- - lxml
+## Build prerequisites ##
+
+* Python 2.7
+* python-demjson
+* python-mutagen
+* pytagger
+* pyqt4 
+* python-hashlib
+* https://github.com/havardgulldahl/xmeml
+* lxml
 
 # Build deps #
 
-Packages for packaging (http://s.sudre.free.fr/Software/Packages/about.html)
-## STATIC_DEPS=true pip install lxml # lxml needs static dependencies to work smoothly on all osx versions
+### OSX ###
 
+* `Packages` for packaging (http://s.sudre.free.fr/Software/Packages/about.html)
+* lxml needs static dependencies to work smoothly on all osx versions: 
 
+>    ## STATIC_DEPS=true pip install lxml # 
