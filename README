@@ -26,4 +26,9 @@ Created by *havard.gulldahl@nrk.no*
 * `Packages` for packaging (http://s.sudre.free.fr/Software/Packages/about.html)
 * lxml needs static dependencies to work smoothly on all osx versions: 
 
->    ## STATIC_DEPS=true pip install lxml # 
+
+```
+#!bash
+
+STATIC_DEPS=true pip install lxml 
+```
