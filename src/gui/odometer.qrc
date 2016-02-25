@@ -12,7 +12,7 @@
   <qresource prefix="txt">
     <file alias="license">../../LICENSE</file>
     <file alias="notes">../../NOTES</file>
-    <file alias="readme">../../README</file>
+    <file alias="readme">../../README.md</file>
     <file alias="help_no">../../HELP.no.html</file>
     <file alias="version_mac">../../VERSIONMAC</file>
     <file alias="version_win">../../VERSIONWIN</file>
