@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="nb_NO" sourcelanguage="en">
+<!DOCTYPE TS><TS version="2.0" language="nb_NO" sourcelanguage="en">
 <context>
     <name>MainWindow</name>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="pling-plong-odometer.ui" line="18"/>
         <source>♫ ♪ Odometer</source>
         <translation></translation>
@@ -23,7 +22,7 @@
         <source>Drop a Final Cut Pro sequence (XML export) anywhere to load it.</source>
         <translation>Slipp en Final Cut Pro-sekvens (XML-eksport) på et vilkårlig sted for å laste den inn.</translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="pling-plong-odometer.ui" line="90"/>
         <source>♫</source>
         <translation></translation>
@@ -143,7 +142,7 @@
         <source>About</source>
         <translation>Om</translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="pling-plong-odometer.ui" line="536"/>
         <source>About ♫ ♪ Odometer</source>
         <translation>Om ♫ ♪ Odometer</translation>

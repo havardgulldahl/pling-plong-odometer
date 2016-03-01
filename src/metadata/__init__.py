@@ -14,8 +14,8 @@ import PyQt4.QtCore as Core
 import PyQt4.QtGui as Gui
 import PyQt4.QtWebKit as Web
 import PyQt4.Qt as Qt
-import mutagen
-import tagger # unfortunately, we need tagger also, to read id3v1 frames, since mutagen skips past them
+#import mutagen
+#import tagger # unfortunately, we need tagger also, to read id3v1 frames, since mutagen skips past them
 
 import gluon
 
@@ -504,6 +504,8 @@ class GenericFileResolver(ResolverBase):
 
     def id3parse(self, filename):
         'Parse metadata from id3 tags and return TrackMetadata object or False'
+	# disable mp3 scanning
+	return False
         try:
             _filev1 = tagger.ID3v1(filename)
             _filev2 = tagger.ID3v2(filename)

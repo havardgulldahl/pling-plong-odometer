@@ -1,6 +1,6 @@
 #!/bin/bash
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011-2012
+# (C) 2011-2016
 
 function error {
     echo "Plonk! Something went wrong:";
@@ -8,7 +8,7 @@ function error {
     exit 1;
 }
 
-# building pling plong odometer for win32
+# building pling plong odometer for windows
 
 # some settings
 
@@ -19,7 +19,7 @@ VERSION=$(date +"%Y-%m-%d");
 
 # change bulid defaults
 sed -i "s/beta=.*/beta=0/" BUILDFLAGS
-sed -i "s/releaseCheck=.*/releaseCheck=1/" BUILDFLAGS
+sed -i "s/releaseCheck=.*/releaseCheck=0/" BUILDFLAGS
 
 # update all generated code 
 
@@ -36,7 +36,6 @@ $PYTHON $PYQTPATH/uic/pyuic.py -o src/gui/onlinelogin_ui.py src/gui/pling-plong-
 # store settings in files, to be picked up by pyqt resource system
 echo "$DROPBOXURL" > ./DROPBOXURL;
 echo "$VERSION" > ./VERSIONWIN;
-git commit ./VERSIONWIN -m "build-win.sh: commiting new version $VERSION"
 $PYQTPATH/pyrcc4.exe -py2 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
 # clean up old cruft
@@ -51,7 +50,7 @@ $PYTHON setup.py py2exe > build.log || error "py2exe failed"
 BUNDLE=Pling-Plong-Odometer-$VERSION;
 SHORTNAME=odometer-$VERSION.exe;
 mv dist $BUNDLE;
-/c/Programfiler/7-Zip/7z.exe a -r -sfx7z.sfx $SHORTNAME $BUNDLE || error "creating sfx bundle failed";
+/c/Program\ Files/7-Zip/7z.exe a -r -sfx7z.sfx $SHORTNAME $BUNDLE || error "creating sfx bundle failed";
 
 # publish to dropbox
 echo "Publishing to dropbox"
@@ -60,6 +59,8 @@ cp "$SHORTNAME" /c/tmp/Dropbox/Public/Odometer/"$SHORTNAME" || error "Copying t
 echo "$VERSION|$DBURL" > /c/tmp/Dropbox/Public/Odometer/odometerversion_win.txt
 
 rm -rf ./$BUNDLE;
+
+git commit ./VERSIONWIN -m "build-win.sh: commiting new version $VERSION"
 
 # changing back defaults
 sed -i "s/beta=.*/beta=1/" BUILDFLAGS

@@ -20,7 +20,7 @@ import sys, os.path
 from setuptools import setup
 
 if sys.platform == 'win32':
-	import py2exe
+    import py2exe
 
 def getversion():
     if sys.platform == 'darwin':
@@ -48,6 +48,7 @@ if sys.platform == 'darwin':
              iconfile='odometer.icns',
              packages=['lxml'],
              includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'],
+	     excludes=["Tkconstants","Tkinter","tcl"],
              plist=dict(CFBundleIdentifier='no.nrk.odometer',
                         ##CFBundleDisplayName='♫ ♪ Odometer',
                         #CFBundleDisplayName=u'\u266b \u266a Odometer',
@@ -68,6 +69,7 @@ elif sys.platform == 'win32':
 					  },
 		 options=dict(py2exe=dict(
              packages=['lxml'],
+	     excludes=["Tkconstants","Tkinter","tcl"],
              includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'])
 		)
     )
