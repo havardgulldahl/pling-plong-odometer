@@ -21,7 +21,7 @@ VERSION=$(date +"%Y-%m-%d");
 sed -i "s/beta=.*/beta=0/" BUILDFLAGS
 sed -i "s/releaseCheck=.*/releaseCheck=0/" BUILDFLAGS
 
-# update all generated code 
+# update all generated code
 
 echo "Generating translations for UX"
 #pylupdate4-2.7
@@ -52,20 +52,17 @@ SHORTNAME=odometer-$VERSION.exe;
 mv dist $BUNDLE;
 /c/Program\ Files/7-Zip/7z.exe a -r -sfx7z.sfx $SHORTNAME $BUNDLE || error "creating sfx bundle failed";
 
-# publish to dropbox
-echo "Publishing to dropbox"
-DBURL=$DROPBOXURL/$SHORTNAME;
-cp "$SHORTNAME" /c/tmp/Dropbox/Public/Odometer/"$SHORTNAME" || error "Copying to dropbox failed"
-echo "$VERSION|$DBURL" > /c/tmp/Dropbox/Public/Odometer/odometerversion_win.txt
-
 rm -rf ./$BUNDLE;
 
-git commit ./VERSIONWIN -m "build-win.sh: commiting new version $VERSION"
+# create history
+git tag -a "v$VERSION-win" -m "Version $VERSION release" || error "couldnt tag git tree";
+git push --tags || error "problems pushing tags to central repository";
+git commit ./VERSIONWIN -m "build-win.sh: commiting new windows version $VERSION" || error "problems pushing changes to central repository";
 
 # changing back defaults
 sed -i "s/beta=.*/beta=1/" BUILDFLAGS
 $PYQTPATH/pyrcc4.exe -py2 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
 echo "Finished. Take a look at $SHORTNAME"
-echo "Online: $DBURL"; 
+echo "Online: $DBURL";
 

@@ -24,10 +24,10 @@ echo "Generating version: $VERSION";
 sed -i .bk "s/beta=.*/beta=0/" BUILDFLAGS
 sed -i .bk "s/releaseCheck=.*/releaseCheck=0/" BUILDFLAGS
 
-# update all generated code 
+# update all generated code
 
 echo "Generating translations for UX"
-#pylupdate4-2.7r 
+#pylupdate4-2.7r
 pylupdate4 src/gui/gui.pro || error "pylupdate failed";
 lrelease src/gui/gui.pro || error "lrelease failed";
 
@@ -40,7 +40,6 @@ pyuic4 -o src/gui/onlinelogin_ui.py src/gui/pling-plong-onlinelogin.ui || error 
 # store settings in files, to be picked up by pyqt resource system
 echo "$DROPBOXURL" > ./DROPBOXURL;
 echo "$VERSION" > ./VERSIONMAC;
-git commit ./VERSIONMAC -m "build-mac.sh: commiting new version $VERSION"
 pyrcc4 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
 # clean up old cruft
@@ -54,7 +53,7 @@ python2.7 setup.py py2app > build.log || error "py2app failed"
 # changing back defaults
 sed -i .bk "s/beta=.*/beta=1/" BUILDFLAGS
 pyrcc4 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
-                                
+
 # add some missing pieces
 echo "Adding some extra resources"
 cp -r "$NIB" dist/Pling\ Plong\ Odometer.app/Contents/Resources/ || error "Could not copy crucial qt resource"
@@ -65,20 +64,19 @@ mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
 
 # create dmg images since all mac heads like to mount archives
 echo "Creating dmg image"
-DMGNAME=pling-plong-odometer-$VERSION.dmg 
+DMGNAME=pling-plong-odometer-$VERSION.dmg
 hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer" -fs "HFS+" -srcfolder "dist/" || error "Failed to create dmg"
-
-# publish to dropbox
-echo "Publishing to dropbox"
-DMGURL=$DROPBOXURL/$DMGNAME;
-cp "$DMGNAME" $DROPBOXPATH/Public/Odometer/"$DMGNAME" || error "Copying to dropbox failed"
-echo "$VERSION|$DMGURL" > $DROPBOXPATH/Public/Odometer/odometerversion_mac.txt
 
 # create pkg
 echo "Creating .pkg installer";
 ./macromanconv.py ABOUT build/ABOUT.txt
 /usr/local/bin/packagesbuild -v Odometer.pkgproj || error "Packagemaker failed";
 
+# create history
+git tag -a "v$VERSION-mac" -m "Version $VERSION release" || error "couldnt tag git tree";
+git push --tags || error "problems pushing tags to central repository";
+git commit ./VERSIONMAC -m "build-mac.sh: commiting new mac version $VERSION" || error "problems pushing changes to central repository";
+
+
 echo "Finished. Take a look at $DMGNAME"
-echo "Online: $DMGURL"; 
 echo "Installer in dist/";
