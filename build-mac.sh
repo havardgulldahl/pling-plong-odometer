@@ -65,6 +65,7 @@ mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
 # create dmg images since all mac heads like to mount archives
 echo "Creating dmg image"
 DMGNAME=pling-plong-odometer-$VERSION.dmg
+test -f "$DMGNAME" && rm -f "$DMGNAME"; # remove old build
 hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer" -fs "HFS+" -srcfolder "dist/" || error "Failed to create dmg"
 
 # create pkg

@@ -48,13 +48,15 @@ if sys.platform == 'darwin':
              iconfile='odometer.icns',
              packages=['lxml'],
              includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'],
-	     excludes=["Tkconstants","Tkinter","tcl"],
+      	     excludes=["Tkconstants","Tkinter","tcl",
+                 'PyQt4.QtDesigner', 'PyQt4.QtOpenGL', 'PyQt4.QtScript',
+                 'PyQt4.QtSql', 'PyQt4.QtTest', 'PyQt4.QtXml', 'PyQt4.phonon'],
              plist=dict(CFBundleIdentifier='no.nrk.odometer',
                         ##CFBundleDisplayName='♫ ♪ Odometer',
                         #CFBundleDisplayName=u'\u266b \u266a Odometer',
                         CFBundleShortVersionString='Odometer, version %s' % getversion(),
                         NSSupportsSuddenTermination=True,
-                        NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011-2014')
+                        NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011-2016')
              )
          ),
      )
