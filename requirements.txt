@@ -1,6 +1,7 @@
-#
-# build requirements:
-# py2app
-
-xmeml
-mutagen
+python-demjson
+python-mutagen
+pytagger
+pyqt4
+python-hashlib
+https://github.com/havardgulldahl/xmeml
+lxml
