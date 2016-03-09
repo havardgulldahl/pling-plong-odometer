@@ -38,6 +38,7 @@
 ehthumbs.db
 Icon?
 Thumbs.db
+.cache
 
 # Generated files #
 ###################
@@ -61,4 +62,9 @@ src/xmeml/
 data/
 dist/
 build/
+
+# Test files #
+##############
+src/metadata/*.wav
+src/metadata/*.mp3
 
