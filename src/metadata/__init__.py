@@ -333,9 +333,6 @@ class ResolverBase(Core.QObject):
     def __init__(self, parent=None):
         super(ResolverBase, self).__init__(parent)
         self.trackResolved.connect(lambda f,md: self.cache(md))
-        def dbgresolved(f, md):
-            print "trakresolved:", f, md
-        self.trackResolved.connect(dbgresolved)
         self.trackResolved.connect(self.cleanup)
         self.trackFailed.connect(self.cleanup)
         self.logincookie = None
