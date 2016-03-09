@@ -181,7 +181,10 @@ class ApollomusicLookupWorker(Core.QThread):
         self.start()
 
     def run(self):
-        albumdata, trackdata = self.request(self.musicid, self.logincookie)
+        try:
+            albumdata, trackdata = self.request(self.musicid, self.logincookie)
+        except TypeError: # self.request will return None on login errors
+            albumdata, trackdata = (None, None)
         # print trackdata
         if trackdata is None:
             return
