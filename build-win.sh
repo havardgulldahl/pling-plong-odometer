@@ -40,6 +40,10 @@ $PYQTPATH/pyrcc4.exe -py2 -o src/gui/odometer_rc.py src/gui/odometer.qrc || erro
 echo "Removing old code"
 rm -rf ./build ./dist || error "cleanup failed"
 
+# update xmeml
+(cd ../xmeml && git pull);
+cp -fr ../xmeml/xmeml src/ || error "couldnt find xmeml library";
+
 # build the castle
 echo "Building the app (see build.log)"
 $PYTHON setup.py py2exe > build.log || error "py2exe failed"
