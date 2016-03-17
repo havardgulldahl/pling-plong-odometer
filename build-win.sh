@@ -14,7 +14,6 @@ function error {
 
 PYTHON="/c/Python27/python.exe"
 PYQTPATH="/c/Python27/Lib/site-packages/PyQt4"
-DROPBOXURL=http://dl.dropbox.com/u/12128173/Odometer;
 VERSION=$(date +"%Y-%m-%d");
 
 # change bulid defaults
@@ -34,13 +33,16 @@ $PYTHON $PYQTPATH/uic/pyuic.py -o src/gui/prfreport_ui.py src/gui/pling-plong-pr
 $PYTHON $PYQTPATH/uic/pyuic.py -o src/gui/onlinelogin_ui.py src/gui/pling-plong-onlinelogin.ui || error "pyuic prfreport failed"
 
 # store settings in files, to be picked up by pyqt resource system
-echo "$DROPBOXURL" > ./DROPBOXURL;
 echo "$VERSION" > ./VERSIONWIN;
 $PYQTPATH/pyrcc4.exe -py2 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
 # clean up old cruft
 echo "Removing old code"
 rm -rf ./build ./dist || error "cleanup failed"
+
+# update xmeml
+(cd ../xmeml && git pull);
+cp -fr ../xmeml/xmeml src/ || error "couldnt find xmeml library";
 
 # build the castle
 echo "Building the app (see build.log)"
@@ -64,5 +66,4 @@ sed -i "s/beta=.*/beta=1/" BUILDFLAGS
 $PYQTPATH/pyrcc4.exe -py2 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
 echo "Finished. Take a look at $SHORTNAME"
-echo "Online: $DBURL";
 

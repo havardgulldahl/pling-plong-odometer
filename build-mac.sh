@@ -46,6 +46,10 @@ pyrcc4 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 echo "Removing old code"
 rm -rf ./build ./dist ./pling-plong-odometer.dmg || error "cleanup failed"
 
+# update xmeml
+(cd ../xmeml && git pull);
+cp -fr ../xmeml/xmeml src/ || error "couldnt find xmeml library";
+
 # build the castle
 echo "Building the app (see build.log)"
 python2.7 setup.py py2app > build.log || error "py2app failed"
