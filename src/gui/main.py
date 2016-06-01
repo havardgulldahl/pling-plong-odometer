@@ -171,6 +171,13 @@ def readBuildflags():
     cp.readfp(StringIO.StringIO(unicode(readResourceFile(':/data/buildflags'))))
     return cp
 
+def formatTC(secs):
+    '''Convert floating point /secs/ to a TC label. E.g. 62.1 -> 00:01:02.200
+    Returns hh:mm:ss.sss'''
+    return "%02d:%02d:%02d.%02d" % \
+        reduce(lambda ll,b : divmod(ll[0],b) + ll[1:],
+               [(secs*1000,),1000,60,60])
+
 class Odometer(Gui.QMainWindow):
     msg = Core.pyqtSignal(unicode, name="msg")
     loaded = Core.pyqtSignal()
@@ -485,7 +492,13 @@ class Odometer(Gui.QMainWindow):
     def showExportReport(self):
         'Pop up a dialog to export a detailed report'
         logging.debug('Pop up a dialog to export a detailed report')
-        pass
+        ExportDialog = Gui.QDialog()
+        ui = prfreport_ui.Ui_PlingPlongPRFDialog()
+        ui.setupUi(ExportDialog)
+
+        ui.textBrowser.setHtml(''.join(self.log))
+        ExportDialog.setWindowTitle('Export')
+        return ExportDialog.exec_()
 
     def showLoginOnline(self):
         'Pop up a dialog to log in to online services like AUX and ApolloMusic'
@@ -628,7 +641,7 @@ class Odometer(Gui.QMainWindow):
         self.loaded.connect(lambda: self.ui.fileInfo.setText(unicode(self.tr("<b>Loaded:</b> %s")) % os.path.basename(unicxmemlfile)))
         self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(os.path.abspath(unicxmemlfile)))
         try:
-	    self.xmemlthread.load(xmemlfile)
+      	    self.xmemlthread.load(xmemlfile)
         except Exception:
             self.removeLoadingbar()
             raise
@@ -680,7 +693,7 @@ class Odometer(Gui.QMainWindow):
                                                     '%ss (%sf)' % (secs, frames)])
             r.metadata = metadata.TrackMetadata(filename=audioname)
             r.audioname = audioname
-            r.clip = {'durationsecs':secs, 'durationframes':frames}
+            r.clip = {'durationsecs':secs, 'durationframes':frames, 'in':None, 'out':None}
             r.subclips = []
             self.rows[audioname] = r
             w = metadata.findResolver(audioname)
@@ -710,7 +723,9 @@ class Odometer(Gui.QMainWindow):
                 for range in ranges:
                     frames = len(range)
                     secs = float(frames) / ranges.framerate
-                    r.subclips.append( {'durationsecs':secs, 'durationframes':frames} )
+                    r.subclips.append( {'durationsecs':secs, 'durationframes':frames,
+                                        'in':formatTC(float(range.start) / ranges.framerate),
+                                        'out':formatTC(float(range.end) / ranges.framerate)} )
                     sr = Gui.QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
                                                  '%ss (%sf)' % (secs, frames),
                                                  u'%sf\u2013%sf' % (range.start, range.end)
@@ -873,7 +888,7 @@ class Odometer(Gui.QMainWindow):
             if len(r.subclips):
                 s += unicode(self.tr(", in these subclips:")) + "<ol>"
                 for sc in r.subclips:
-                    s += "<li>%s</li>" % sc['durationsecs']
+                    s += u"<li>%s\" \u2013 %s-%s</li>" % (sc['durationsecs'], sc['in'], sc['out'])
                 s += "</ol>"
             s += "</p></div><hr>"
         ui.textBrowser.setHtml(s)
