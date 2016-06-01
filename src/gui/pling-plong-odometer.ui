@@ -511,7 +511,7 @@
     <property name="title">
      <string>About</string>
     </property>
-    <addaction name="actionAbout_Odometer"/>
+    <addaction name="actionAboutOdometer"/>
     <addaction name="actionHelp"/>
     <addaction name="separator"/>
     <addaction name="actionShowPatterns"/>
@@ -525,13 +525,20 @@
     </property>
     <addaction name="actionLoginOnline"/>
     <addaction name="separator"/>
-    <addaction name="actionCheck_for_updates"/>
+    <addaction name="actionCheckForUpdates"/>
+   </widget>
+   <widget class="QMenu" name="menuAdvanced">
+    <property name="title">
+     <string>Advanced</string>
+    </property>
+    <addaction name="actionExportDetailedReport"/>
    </widget>
    <addaction name="menu_About"/>
    <addaction name="menuSettings"/>
+   <addaction name="menuAdvanced"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionAbout_Odometer">
+  <action name="actionAboutOdometer">
    <property name="text">
     <string>About ♫ ♪ Odometer</string>
    </property>
@@ -549,7 +556,7 @@
     <string>Show a help document</string>
    </property>
   </action>
-  <action name="actionCheck_for_updates">
+  <action name="actionCheckForUpdates">
    <property name="text">
     <string>Check for updates</string>
    </property>
@@ -579,6 +586,11 @@
    </property>
    <property name="toolTip">
     <string>Log on to services like AUX and Apollo</string>
+   </property>
+  </action>
+  <action name="actionExportDetailedReport">
+   <property name="text">
+    <string>Export detailed report</string>
    </property>
   </action>
  </widget>

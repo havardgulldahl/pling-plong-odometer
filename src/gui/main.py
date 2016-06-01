@@ -221,13 +221,14 @@ class Odometer(Gui.QMainWindow):
         self.ui.clips.itemActivated.connect(self.showMetadata)
         self.ui.clips.itemDoubleClicked.connect(self.editDuration) # manually override duration column
         self.ui.volumeThreshold.valueChanged.connect(lambda i: self.computeAudibleDuration(xmemliter.Volume(gain=float(i))))
-        self.ui.actionAbout_Odometer.triggered.connect(self.showAbout)
+        self.ui.actionAboutOdometer.triggered.connect(self.showAbout)
         self.ui.actionHelp.triggered.connect(self.showHelp)
         self.ui.actionLicenses.triggered.connect(self.showLicenses)
         self.ui.actionLogs.triggered.connect(self.showLogs)
-        self.ui.actionCheck_for_updates.triggered.connect(self.showCheckForUpdates)
+        self.ui.actionCheckForUpdates.triggered.connect(self.showCheckForUpdates)
         self.ui.actionShowPatterns.triggered.connect(self.showShowPatterns)
         self.ui.actionLoginOnline.triggered.connect(self.showLoginOnline)
+        self.ui.actionExportDetailedReport.triggered.connect(self.showExportReport)
         #self.ui.actionConfig.triggered.connect(lambda: self.showstatus("About Config"))
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
@@ -235,7 +236,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.dropIcon.setMinimumSize(200,200)
         self.ui.dropIcon.setToolTip(self.tr('Drop your xml file here'))
         if not self.buildflags.getboolean('release', 'releasecheck'):
-            self.ui.actionCheck_for_updates.setEnabled(False)
+            self.ui.actionCheckForUpdates.setEnabled(False)
         if not self.buildflags.getboolean('ui', 'volumeThreshold'):
             self.ui.volumeThreshold.hide()
             self.ui.volumeInfo.hide()
@@ -480,6 +481,11 @@ class Odometer(Gui.QMainWindow):
         ui.textBrowser.setHtml(''.join(self.log))
         LogDialog.setWindowTitle('Help')
         return LogDialog.exec_()
+
+    def showExportReport(self):
+        'Pop up a dialog to export a detailed report'
+        logging.debug('Pop up a dialog to export a detailed report')
+        pass
 
     def showLoginOnline(self):
         'Pop up a dialog to log in to online services like AUX and ApolloMusic'
