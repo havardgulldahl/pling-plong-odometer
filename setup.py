@@ -47,7 +47,7 @@ if sys.platform == 'darwin':
              argv_emulation=False,
              iconfile='odometer.icns',
              packages=['lxml'],
-             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'],
+             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip', 'PyQt4._qt'],
       	     excludes=["Tkconstants","Tkinter","tcl",
                  'PyQt4.QtDesigner', 'PyQt4.QtOpenGL', 'PyQt4.QtScript',
                  'PyQt4.QtSql', 'PyQt4.QtTest', 'PyQt4.QtXml', 'PyQt4.phonon'],
