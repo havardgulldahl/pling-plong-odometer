@@ -3,15 +3,21 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2011
 
-import sys, xml.etree.ElementTree as ET
+import sys
+import xml.etree.ElementTree as ET
+
+import PyQt4.QtCore as Core
+
 
 #from metadata import TrackMetadata
 
 GLUON_NAMESPACE='{http://gluon.nrk.no/gluon2}'
 GLUONDICT_NAMESPACE='{http://gluon.nrk.no/gluonDict}'
 XSI_NAMESPACE='{http://www.w3.org/2001/XMLSchema-instance}'
+GLUON_HTTP_REPORT="http://localhost:8000/gluon"
 
-## three convenience methods to hide all 
+
+## three convenience methods to hide all
 ## namespace ugliness and clutter
 
 def glns(tag):
@@ -26,6 +32,61 @@ class glel(ET._ElementInterface):
 
 def glsel(parent, tag, *a, **kw):
     return ET.SubElement(parent, glns(tag), *a, **kw)
+
+class Gluon(Core.QObject):
+
+    def __init__(self, parent=None):
+        super(Gluon, self).__init__(parent)
+        self.worker = GluonReportWorker()
+
+    def resolve(self, prodno, clipnames):
+        self.currentList = clipnames
+        self.worker.load(prodno, clipnames)
+
+
+class GluonReportWorker(Core.QThread):
+    'Create a Gluon report (a music metadata usage report) to and submit it to Gluon'
+    reported = Core.pyqtSignal(name="reported") # success
+    error = Core.pyqtSignal(unicode, name="error") # failure, with error message
+
+    def __init__(self, parent=None):
+        super(GluonReportWorker, self).__init__(parent)
+
+    def __del__(self):
+        self.wait()
+
+    def load(self, prodno, clips):
+        self.prodno = prodno
+        self.clips = clips
+        self.start()
+
+    def run(self):
+        gb = GluonReportBuilder(self.prodno, self.clips)
+        xmlreq = gb.toxml()
+        response = self.request(xmlreq)
+        if response is None:
+            self.error('Could not report to Gluon. Are you connected to the network?')
+
+        if response.getvalue() == "OK":
+            self.reported.emit()
+        else:
+            self.error.emit("Some error occured")
+
+    def request(self, gluonpayload):
+        "do an http post request with given gluon xml payload"
+        data = urllib.urlencode( {"data":gluonpayload} )
+        try:
+            req = urllib.urlopen(GLUON_HTTP_REPORT, data)
+        except Exception, (e):
+            self.error.emit(e)
+        if req.getcode() in (400, 401, 403, 404, 500):
+            self.error.emit('Got error message %s from Gluon server when reporting' % req.getcode())
+            return None
+
+        response = req.read()
+        return response
+
+
 
 class GluonReportBuilder(object):
     "Build a gluon xml tree from a list of audio clips and their length"
@@ -78,7 +139,7 @@ class GluonReportBuilder(object):
             start.set('startPoint', 'XX')
             end = glsel(dateAlternative, 'end')
             end.set('startPoint', 'XX')
-            
+
     def toxml(self):
         xml = ET.tostring(self.root, encoding='utf-8')
         return xml
@@ -132,8 +193,8 @@ class GluonRequestParser(object):
         self.tree = ET.parse(xmlsource)
         programmeobj = self.tree.find('./'+glns('objects/object'))
         if programmeobj.get('objecttype') != 'programme':
-            return 
-        programme = {"identifier": 
+            return
+        programme = {"identifier":
                 programmeobj.find('./'+glns('metadata/identifier')).text,
                      "metadatacreator":
                 self.tree.find('./' + \
@@ -174,6 +235,6 @@ if __name__ == '__main__':
     gp = GluonMetadataResponseParser()
     x = gp.parse(sys.argv[1])
     print vars(x)
-            
+
 
 
