@@ -648,7 +648,7 @@ class UniPPMResolver(ResolverBase):
         KOS_397_3_Exploit_Kalfayan_Sarkissian_710023.wav -> 710023
 
         """
-        rex = re.compile(r'^[A-Z]{2,4}_.*_(\d+).wav') # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
+        rex = re.compile(r'^[A-Za-z0-9_-]{2,5}_\d{1,4}_\d{1,4}_.*_(\d+).*') # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
         g = rex.search(filename)
         try:
             return g.group(1)

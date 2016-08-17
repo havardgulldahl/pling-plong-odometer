@@ -246,11 +246,17 @@ class UniPPMLookupWorker(Core.QThread):
         # first, get track id
         self.progress.emit(10)
         self.musicid = resolvers.UniPPMResolver.musicid(self.filename)
+        if self.musicid is None:
+            # could not extract track id from filename
+            self.trackFailed.emit()
+            self.error.emit('Tried to parse track id from filename "%s", but failed :(' % (self.filename, ))
+            return None
+
         self.progress.emit(50)
 
         # then, get all metadata
         albumdata, trackdata = self.request_trackdata(self.musicid)
-        print trackdata
+        #print trackdata
         if trackdata is None:
             return
         self.progress.emit(75)
@@ -330,7 +336,7 @@ class UniPPMLookupWorker(Core.QThread):
                  # catalogue=None,
                  label=trackdata.get('LabelName', ''),
                  # lyricist=None,
-                 identifier='UniPPMTrack# %s' % trackdata.get('id', -1),
+                 identifier='UniPPMTrack# %s' % self.musicid,
                  )
         metadata.productionmusic = True
         self.progress.emit(90)
