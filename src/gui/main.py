@@ -23,7 +23,9 @@ import PyQt4.QtNetwork as QtNetwork
 import PyQt4.Qt as Qt
 
 from xmeml import iter as xmemliter
-import metadata
+import metadata.gluon
+import metadata.model
+import metadata.resolvers
 import odometer_ui
 import odometer_rc
 import auxreport_ui
@@ -469,7 +471,7 @@ class Odometer(Gui.QMainWindow):
         ui.setupUi(PatternDialog)
         ui.buttonBox.removeButton(ui.buttonBox.button(Gui.QDialogButtonBox.Save))
         r = []
-        for catalog, patterns in metadata.getResolverPatterns().iteritems():
+        for catalog, patterns in metadata.resolvers.getResolverPatterns().iteritems():
             r.append('<h1>%s</h1><ul>' % catalog)
             for tok in patterns['prefixes']:
                 r.append('<li>%s...</li>' % tok)
@@ -691,18 +693,18 @@ class Odometer(Gui.QMainWindow):
             secs = ranges.seconds()
             r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname,
                                                     '%ss (%sf)' % (secs, frames)])
-            r.metadata = metadata.TrackMetadata(filename=audioname)
+            r.metadata = metadata.model.TrackMetadata(filename=audioname)
             r.audioname = audioname
             r.clip = {'durationsecs':secs, 'durationframes':frames, 'in':None, 'out':None}
             r.subclips = []
             self.rows[audioname] = r
-            w = metadata.findResolver(audioname)
+            w = metadata.resolvers.findResolver(audioname)
             logging.debug("w: %s -> %s",audioname.encode('utf-8'), w)
             r.setCheckState(0, Core.Qt.Unchecked)
             if w:
-                if isinstance(w, metadata.AUXResolver):
+                if isinstance(w, metadata.resolvers.AUXResolver):
                     w.updateRepertoire(self.AUXRepertoire) # make sure repertoire is current
-                elif isinstance(w, metadata.ApollomusicResolver):
+                elif isinstance(w, metadata.resolvers.ApollomusicResolver):
                     logincookie = unicode(self.settings.value('Apollocookie', '').toString())
                     if not logincookie: # not logged in to apollo, big problem
                         self.showerror(self.tr(u'Track from Apollo Music detected. Please log in to the service'))
@@ -766,7 +768,7 @@ class Odometer(Gui.QMainWindow):
 
     def showProgress(self, filename, progress):
         'Show progress bar for a specific clip, e.g. when metadata is loading'
-        logging.debug("got progress for %s: %s", filename, progress)
+        logging.debug("got progress for %s: %r", filename, progress)
         row = self.rows[unicode(filename)]
         if progress < 100: # not yet reached 100%
             p = Gui.QProgressBar(parent=self.ui.clips)
@@ -1140,7 +1142,7 @@ class Odometer(Gui.QMainWindow):
                                            self.tr("You must enter the production number"))
             self.ui.prodno.setFocus()
             return False
-        self.gluon = metadata.Gluon()
+        self.gluon = metadata.gluon.Gluon()
         self.gluon.worker.reported.connect(self.gluonFinished)
         self.gluon.worker.reported.connect(self.removeLoadingbar)
         self.gluon.worker.error.connect(self.removeLoadingbar)
