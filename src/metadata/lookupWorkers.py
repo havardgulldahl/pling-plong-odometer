@@ -78,7 +78,7 @@ class ApollomusicLookupWorker(Core.QThread):
 
     def load(self, filename, logincookie):
         self.filename = filename
-        self.musicid = ApollomusicResolver.musicid(filename)
+        self.musicid = resolvers.ApollomusicResolver.musicid(filename)
         self.logincookie = logincookie
         self.start()
 
@@ -151,7 +151,7 @@ class ApollomusicLookupWorker(Core.QThread):
         try: _yr = int(trackdata.get('recorded', -1), 10)
         except:  _yr = -1
         metadata = TrackMetadata(filename=self.filename,
-                 musiclibrary=ApollomusicResolver.name,
+                 musiclibrary=resolvers.ApollomusicResolver.name,
                  title=trackdata.get('primary_title', None),
                  # length=-1,
                  composer=trackdata.get('composer', None),
@@ -232,7 +232,7 @@ class UniPPMLookupWorker(Core.QThread):
     error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
 
     def __init__(self, parent=None):
-        super(UprightLookupWorker, self).__init__(parent)
+        super(UniPPMLookupWorker, self).__init__(parent)
 
     def __del__(self):
         self.wait()
@@ -243,10 +243,9 @@ class UniPPMLookupWorker(Core.QThread):
         self.start()
 
     def run(self):
-        # first, get track guid
+        # first, get track id
         self.progress.emit(10)
-
-        self.musicid = self.request_guid(self.filename)
+        self.musicid = resolvers.UniPPMResolver.musicid(self.filename)
         self.progress.emit(50)
 
         # then, get all metadata
@@ -316,14 +315,14 @@ class UniPPMLookupWorker(Core.QThread):
         composers = [ trackdata.get('shares', []) ]
 
         metadata = TrackMetadata(filename=self.filename,
-                 musiclibrary=UniPPMResolver.name,
+                 musiclibrary=resolvers.UniPPMResolver.name,
                  title=trackdata.get('WorkName', None),
                  # length=-1,
                  composer=trackdata.get('WorkComposers', None),
                  artist=None,
                  year=-1,
                  recordnumber=self.musicid,
-                 albumname=albumdata.get('WorkGroupingName', None),
+                 albumname=trackdata.get('WorkGroupingName', None),
                  copyright='Universal Publishing Production Music',
                  # lcnumber=None,
                  # isrc=None,
@@ -376,7 +375,7 @@ class UniPPMLookupWorker(Core.QThread):
             self.trackFailed.emit()
             self.error.emit('Tried to lookup %s, but failed. Please try again' % (musicid,))
             return None
-        trackdata = response['track'] # return correct track, from the array of 'tracks' on the album dict
+        trackdata = response
         albumdata = None # TODO: get this
         return albumdata, trackdata
 

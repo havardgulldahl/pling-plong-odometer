@@ -24,6 +24,12 @@ import lookupWorkers
 from model import TrackMetadata
 
 def findResolver(filename):
+    resolvers = [DMAResolver(),
+             AUXResolver(),
+             ApollomusicResolver(),
+             UniPPMResolver(),
+             UprightmusicResolver(),
+             GenericFileResolver()]
     for resolver in resolvers:
         # print "%s accepts: %s" % (resolver, resolver.accepts(filename))
         if resolver.accepts(filename):
@@ -31,6 +37,12 @@ def findResolver(filename):
     return False
 
 def getResolverPatterns():
+    resolvers = [DMAResolver(),
+             AUXResolver(),
+             ApollomusicResolver(),
+             UniPPMResolver(),
+             UprightmusicResolver(),
+             GenericFileResolver()]
     r = {}
     for resolver in resolvers:
         r[resolver.name] = {'prefixes':resolver.prefixes, 'postfixes':resolver.postfixes}
@@ -200,7 +212,7 @@ class ResolverBase(Core.QObject):
     def cleanup(self, filename, *args):
         "Remove objects to prevent hanging threads"
         try:
-            if hasattr(self, 'docXXX'):
+            if hasattr(self, 'doc'):
                 self.doc.deleteLater()
         except Exception as e:
             print "cleanup failed:", e
@@ -535,7 +547,7 @@ class UniPPMResolver(ResolverBase):
  'BCC':'Bruton Classical Series ',
  'BEE':'Bruton Bee Stings ',
  'BER':'BER',
- 'Best4 (BEST4)':'',
+ 'BEST4':'Best4',
  'BIGS':'Big Shorts ',
  'BPM':'BPM',
  'BPM1':'BPM Classical Series ',
@@ -701,13 +713,4 @@ class UprightmusicResolver(ResolverBase):
 
         self.worker.load(filename, self.logincookie)
 
-
-
-resolvers = [DMAResolver(),
-             AUXResolver(),
-             #SonotonResolver(),
-             ApollomusicResolver(),
-             UniPPMResolver(),
-             UprightmusicResolver(),
-             GenericFileResolver()]
 
