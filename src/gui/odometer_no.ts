@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
-<TS version="2.0" language="nb_NO" sourcelanguage="en">
+<!DOCTYPE TS><TS version="2.0" language="nb_NO" sourcelanguage="en">
 <context>
     <name>MainWindow</name>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="pling-plong-odometer.ui" line="18"/>
         <source>♫ ♪ Odometer</source>
         <translation></translation>
@@ -23,7 +22,7 @@
         <source>Drop a Final Cut Pro sequence (XML export) anywhere to load it.</source>
         <translation>Slipp en Final Cut Pro-sekvens (XML-eksport) på et vilkårlig sted for å laste den inn.</translation>
     </message>
-    <message utf8="true">
+    <message encoding="UTF-8">
         <location filename="pling-plong-odometer.ui" line="90"/>
         <source>♫</source>
         <translation></translation>
@@ -143,28 +142,28 @@
         <source>About</source>
         <translation>Om</translation>
     </message>
-    <message utf8="true">
-        <location filename="pling-plong-odometer.ui" line="543"/>
+    <message encoding="UTF-8">
+        <location filename="pling-plong-odometer.ui" line="546"/>
         <source>About ♫ ♪ Odometer</source>
         <translation>Om ♫ ♪ Odometer</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="548"/>
+        <location filename="pling-plong-odometer.ui" line="551"/>
         <source>Licenses</source>
         <translation>Lisenser</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="553"/>
+        <location filename="pling-plong-odometer.ui" line="556"/>
         <source>Help</source>
         <translation>Hjelp</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="556"/>
+        <location filename="pling-plong-odometer.ui" line="559"/>
         <source>Show a help document</source>
         <translation>Vis et hjelpedokument</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="569"/>
+        <location filename="pling-plong-odometer.ui" line="572"/>
         <source>Logs</source>
         <translation>Logg</translation>
     </message>
@@ -174,7 +173,7 @@
         <translation type="obsolete">Vis gjenkjente filnavn</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="580"/>
+        <location filename="pling-plong-odometer.ui" line="583"/>
         <source>Show recognised file name patterns</source>
         <translation>Vis gjenkjente mønster på filnavn</translation>
     </message>
@@ -184,7 +183,7 @@
         <translation type="obsolete">Sjekk etter oppdateringer</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="564"/>
+        <location filename="pling-plong-odometer.ui" line="567"/>
         <source>Check for updates online</source>
         <translation>Sjekk etter oppdateringer på nettet</translation>
     </message>
@@ -219,7 +218,7 @@
         <translation>Opplever du feil eller mangler? Send det inn!</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="561"/>
+        <location filename="pling-plong-odometer.ui" line="564"/>
         <source>Check for updates</source>
         <translation>Sjekk etter oppdateringer</translation>
     </message>
@@ -229,17 +228,17 @@
         <translation>Innstillinger</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="572"/>
+        <location filename="pling-plong-odometer.ui" line="575"/>
         <source>Show application logs (helpful if something is wrong)</source>
         <translation>Vis programlogg (kan være til hjelp hvis noe er galt)</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="585"/>
+        <location filename="pling-plong-odometer.ui" line="588"/>
         <source>Log on to online services</source>
         <translation>Logg inn på online tjenester</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="588"/>
+        <location filename="pling-plong-odometer.ui" line="591"/>
         <source>Log on to services like AUX and Apollo</source>
         <translation>Logg inn på tjenester som AUX og Apollo </translation>
     </message>
@@ -259,19 +258,19 @@
         <translation>Sammendrag av metadata</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="577"/>
+        <location filename="pling-plong-odometer.ui" line="580"/>
         <source>Show recognised file patterns</source>
         <translation>Vis gjenkjente filmønstre</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="532"/>
+        <location filename="pling-plong-odometer.ui" line="535"/>
         <source>Advanced</source>
-        <translation type="unfinished">Avansert</translation>
+        <translation>Avansert</translation>
     </message>
     <message>
-        <location filename="pling-plong-odometer.ui" line="593"/>
+        <location filename="pling-plong-odometer.ui" line="599"/>
         <source>Export detailed report</source>
-        <translation type="unfinished">Exportér detaljert rapport</translation>
+        <translation>Exportér detaljert rapport</translation>
     </message>
 </context>
 <context>

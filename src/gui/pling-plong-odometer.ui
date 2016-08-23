@@ -528,6 +528,9 @@
     <addaction name="actionCheckForUpdates"/>
    </widget>
    <widget class="QMenu" name="menuAdvanced">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="title">
      <string>Advanced</string>
     </property>
@@ -589,6 +592,9 @@
    </property>
   </action>
   <action name="actionExportDetailedReport">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Export detailed report</string>
    </property>
