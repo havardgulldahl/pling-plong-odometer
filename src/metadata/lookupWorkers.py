@@ -249,7 +249,7 @@ class UniPPMLookupWorker(Core.QThread):
         if self.musicid is None:
             # could not extract track id from filename
             self.trackFailed.emit()
-            self.error.emit('Tried to parse track id from filename "%s", but failed :(' % (self.filename, ))
+            self.error.emit('Tried to get UniPPM track id from filename "%s", but failed. Please report this.' % (self.filename, ))
             return None
 
         self.progress.emit(50)
