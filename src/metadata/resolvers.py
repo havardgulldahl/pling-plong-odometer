@@ -637,7 +637,7 @@ class UniPPMResolver(ResolverBase):
  'ZTS':'Zero To Sixty',} # TODO: get list of labels automatically
 
     def __init__(self, parent=None):
-        self.prefixes = self.labelmap.keys()
+        self.prefixes = ['%s_' % x for x in self.labelmap.keys()] # prfix is <LABEL> + _
         super(UniPPMResolver, self).__init__(parent)
 
 
