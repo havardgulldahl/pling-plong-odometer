@@ -30,7 +30,11 @@ def run(cmd, *args):
                                                                                       errno=_errno)))
 
 if __name__ == '__main__':
-    _sp = os.path.join(site.getsitepackages()[0], "PyQt4")
+    _sp = None
+    for _p in site.getsitepackages():
+        if os.path.exists(os.path.join(_p, "PyQt4")):
+            _sp = os.path.join(_p, "PyQt4")
+
     if not os.path.exists(_sp):
         puts(colored.red("Couldnt find PyQt4 installation (looked at {path}".format(path=_sp)))
         sys.exit(1)
