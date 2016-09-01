@@ -25,8 +25,9 @@ init:
   ## miniconda (installed by appveyor) prevent pyqt installer to run, because
   ## of a registry key. So the line below overwrite the registry key.
   - REG ADD HKCU\Software\Python\PythonCore\2.7\InstallPath /f /ve /t REG_SZ /d %PYTHON%
-  - ps: (new-object net.webclient).DownloadFile($env:PyQT, "C:\install-PyQt4.exe")
+  - ps: (new-object net.webclient).DownloadFile($env:PYQT, "C:\install-PyQt4.exe")
   - ps: "git config --global core.autocrlf false" # always use unix lineendings
+  - ls "%PYTHON%/Scripts/"
 
 
 install:
