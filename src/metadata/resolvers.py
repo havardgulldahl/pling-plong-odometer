@@ -332,7 +332,7 @@ class DMAResolver(ResolverBase):
 
     @staticmethod
     def musicid(filename):
-        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}(CD|CS|HD|LP)\d{4})')
+        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}[A-Z][a-z]+\d{4})')
         g = rex.search(filename)
         try:
             return g.group(1)
@@ -637,7 +637,7 @@ class UniPPMResolver(ResolverBase):
  'ZTS':'Zero To Sixty',} # TODO: get list of labels automatically
 
     def __init__(self, parent=None):
-        self.prefixes = self.labelmap.keys()
+        self.prefixes = ['%s_' % x for x in self.labelmap.keys()] # prfix is <LABEL> + _
         super(UniPPMResolver, self).__init__(parent)
 
 

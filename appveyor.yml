@@ -1,0 +1,61 @@
+# https://ci.appveyor.com/project/havardgulldahl/odometer
+build: false
+
+environment:
+  matrix:
+    - PYTHON: "C:/Python27" # this is win32
+      LXML: "test/contrib/lxml-3.6.4-cp27-cp27m-win32.whl"
+      PY2EXE: "py2exe_py2"
+      PYQT: "https://www.dropbox.com/s/vrzlipbjocuiofb/PyQt4-4.11.4-cp27-none-win32.whl?dl=1"
+      REQUIREMENTS: "requirements.txt"
+    #- PYTHON: "C:/Python35"
+    #  LXML: "tests/contrib/lxml-3.6.4-cp35-cp35m-win32.whl"
+    #  PY2EXE: "tests/contrib/py2exe.whl"
+    #  REQUIREMENTS: "tests/requirements.win.txt"
+    #- PYTHON: "C:\\Python27-x64" #TODO: enable x64 build
+    #  PYTHON_VERSION: "2.7.x" # currently 2.7.9
+    #  PYTHON_ARCH: "64"
+init:
+  - "ECHO %PYTHON%"
+  - "SET PYTHONPATH=%PYTHONPATH%;tests;%CD%\tests"
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "ECHO %LXML%"
+  - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:/ez_setup.py"
+  - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:/get-pip.py"
+  - ps: "git config --global core.autocrlf false" # always use unix lineendings
+
+
+install:
+  - "%PYTHON%/python.exe c:/ez_setup.py > NUL"
+  - "%PYTHON%/python.exe c:/get-pip.py"
+  - "%PYTHON%/Scripts/pip.exe install %LXML%"
+  - "%PYTHON%/Scripts/pip.exe install %PY2EXE%"
+  - "%PYTHON%/Scripts/pip.exe install %PYQT%"
+  #- "python -c \"import site; print site.getsitepackages()\""
+  - "python -c \"from PyQt4 import QtGui\""
+  - "%PYTHON%/Scripts/pip.exe install -r %REQUIREMENTS%"
+  - "%PYTHON%/Scripts/pip.exe install ."
+  - dir "%PYTHON%/Scripts/"
+
+test_script:
+  - echo "PYTHONPATH=%PYTHONPATH%"
+  - "%PYTHON%/Scripts/py.test test.py"
+
+build_script:
+  - echo Building..
+  - #build-win.sh
+  - "%PYTHON%/python.exe setup.py py2exe"
+  - "%PYTHON%/python.exe dist.py zip"
+  - dir
+  - dir dist\
+
+artifacts:
+  - path: dist
+    name: "installer-%APPVEYOR_REPO_COMMIT_TIMESTAMP%"
+
+#deploy:
+#  provider: Environment
+#  name: GitHub
+#  on:
+#    branch: master
+#    appveyor_repo_tag: true

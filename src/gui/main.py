@@ -715,7 +715,7 @@ class Odometer(Gui.QMainWindow):
                 w.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress)
-                #w.trackFailed.connect(lambda x: r.setCheckState(0, Core.Qt.Unchecked))
+                w.trackFailed.connect(lambda x: self.showProgress(x, 100)) # dont leave progress bar dangling
                 w.error.connect(self.showerror)
                 w.warning.connect(lambda s: self.logMessage(s, msgtype=StatusBox.WARNING))
                 self.workers.append(w) # keep track of the worker
