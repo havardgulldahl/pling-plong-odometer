@@ -1,5 +1,7 @@
 """Create distributions of pling-plong-odometer
 
+Heavily inspired by pyblish-shell
+
 Platforms:
 - zip
 - windows (requires InnoSetup)
@@ -17,7 +19,6 @@ import zipfile
 import argparse
 import subprocess
 
-from pyblish_shell import version
 build = (os.environ.get("APPVEYOR_BUILD_NUMBER") or
          os.environ.get("TRAVIS_BUILD_NUMBER") or
          0)
