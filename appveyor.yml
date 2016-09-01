@@ -53,8 +53,8 @@ test_script:
   #- "%PYTHON%/Scripts/py.test test.py"
 
 artifacts:
-  - path: dist
-    name: "installer-%APPVEYOR_REPO_COMMIT_TIMESTAMP%"
+  - path: dist\odometer*.zip
+    name: Odometer Zip
 
 #deploy:
 #  provider: Environment
