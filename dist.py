@@ -95,11 +95,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    src = os.path.abspath("build")
-    dst = os.path.abspath("dist")
+    src = os.path.abspath("dist")
+    dst = os.path.abspath("odometer-{version}".format(version=version))
 
     if args.clean and os.path.exists(dst):
-        print("Cleaning dist directory..")
+        print("Cleaning dest directory..")
 
         try:
             shutil.rmtree(dst)

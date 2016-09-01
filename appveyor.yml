@@ -37,23 +37,22 @@ install:
   - "%PYTHON%/Scripts/pip.exe install -r %REQUIREMENTS%"
   - "%PYTHON%/Scripts/pip.exe install ."
   - ps: Invoke-WebRequest "$env:MSVCP" -OutFile "C:\projects\pling-plong-odometer\MSVCP90.dll"
-  - dir "%PYTHON%/Scripts/"
+  - dir "%PYTHON%/Lib/site-packages/PyQt4"
 
 build_script:
   - echo Building..
   - #build-win.sh
   - "%PYTHON%/python.exe setup.py py2exe"
   - "%PYTHON%/python.exe dist.py zip"
-  - dir
   - dir dist\
 
-test_script:
-  - echo "PYTHONPATH=%PYTHONPATH%"
+#test_script:
+  #- echo "PYTHONPATH=%PYTHONPATH%"
   # TODO: enable test scipts
   #- "%PYTHON%/Scripts/py.test test.py"
 
 artifacts:
-  - path: dist\odometer*.zip
+  - path: odometer-*\odometer*.zip
     name: Odometer Zip
 
 #deploy:
