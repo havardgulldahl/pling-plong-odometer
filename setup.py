@@ -67,12 +67,12 @@ elif sys.platform == 'win32':
 		 packages=['gui','metadata','xmeml'],
 		 package_dir={'metadata':'src/metadata',
 		              'gui':'src/gui',
-		              'xmeml':'src/xmeml'
+		              #'xmeml':'src/xmeml'
 					  },
 		 options=dict(py2exe=dict(
              packages=['lxml'],
 	     excludes=["Tkconstants","Tkinter","tcl"],
-             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'])
+             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip', 'xmeml'])
 		)
     )
 else:
