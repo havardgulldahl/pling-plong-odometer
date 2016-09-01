@@ -39,6 +39,7 @@ ehthumbs.db
 Icon?
 Thumbs.db
 .cache
+.Python
 
 # Generated files #
 ###################
@@ -64,6 +65,9 @@ data/
 dist/
 build/
 samples/
+bin/
+lib/
+include/
 
 # Test files #
 ##############
