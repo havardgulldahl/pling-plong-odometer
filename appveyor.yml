@@ -7,6 +7,7 @@ environment:
       LXML: "test/contrib/lxml-3.6.4-cp27-cp27m-win32.whl"
       PY2EXE: "py2exe_py2"
       PYQT: "https://www.dropbox.com/s/vrzlipbjocuiofb/PyQt4-4.11.4-cp27-none-win32.whl?dl=1"
+      MSVCP: "https://www.dropbox.com/s/57tqa3oiqqf7s4j/msvcp90.dll?dl=1"
       REQUIREMENTS: "requirements.txt"
     #- PYTHON: "C:/Python35"
     #  LXML: "tests/contrib/lxml-3.6.4-cp35-cp35m-win32.whl"
@@ -22,6 +23,7 @@ init:
   - "ECHO %LXML%"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:/ez_setup.py"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:/get-pip.py"
+  - ps: Invoke-WebRequest "$env:MSVCP" -OutFile "MSVCP90.dll"
   - ps: "git config --global core.autocrlf false" # always use unix lineendings
 
 
