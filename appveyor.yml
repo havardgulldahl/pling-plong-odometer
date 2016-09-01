@@ -23,7 +23,6 @@ init:
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:/ez_setup.py"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:/get-pip.py"
   - ps: "git config --global core.autocrlf false" # always use unix lineendings
-  - dir "%PYTHON%/Scripts/"
 
 
 install:
@@ -32,10 +31,12 @@ install:
   - "%PYTHON%/Scripts/pip.exe install %LXML%"
   - "%PYTHON%/Scripts/pip.exe install %PY2EXE%"
   - "%PYTHON%/Scripts/pip.exe install %PYQT%"
+  - "%PYTHON%/Scripts/pip.exe install py.test"
   #- "python -c \"import site; print site.getsitepackages()\""
   - "python -c \"from PyQt4 import QtGui\""
   - "%PYTHON%/Scripts/pip.exe install -r %REQUIREMENTS%"
   - "%PYTHON%/Scripts/pip.exe install ."
+  - dir "%PYTHON%/Scripts/"
 
 test_script:
   - echo "PYTHONPATH=%PYTHONPATH%"

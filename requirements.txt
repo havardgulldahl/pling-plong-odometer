@@ -1,7 +1,7 @@
-python-demjson
-python-mutagen
+demjson
+mutagen
 pytagger
-pyqt4
-python-hashlib
+PyQt4
+hashlib
 git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml
 lxml
