@@ -1,8 +1,5 @@
 sudo: true
-# we dont want to use the container based setup because fuse isnt available there, so we set "sudo: true"
-
 language: python
-
 
 #osx version matrix per september 2016
 #<osx_tag>                <xcode version>   <osx version>
@@ -15,51 +12,47 @@ language: python
 #osx_image: beta-xcode6.3	Xcode	            OS X 10.10
 #osx_image: beta-xcode6.2	Xcode	            OS X 10.9
 #osx_image: beta-xcode6.1 Default	Xcode	    OS X 10.9
-
 matrix:
   include:
-    #- os: linux
-    #  dist: trusty
-    #  sudo: required
-    #  python: 2.7
+  - os: osx
+    osx_image: xcode7.2
+    language: generic
+    env: OSX=OSX10.11
+  - os: osx
+    osx_image: xcode6.4
+    language: generic
+    env: OSX=OSX10.10
+  - os: osx
+    osx_image: beta-xcode6.2
+    language: generic
+    env: OSX=OSX10.9
 
-    - os: osx
-      osx_image: xcode7.2
-      language: generic
-      env: OSX=OSX10.11
-    - os: osx
-      osx_image: xcode6.4
-      language: generic
-      env: OSX=OSX10.10
-    - os: osx
-      osx_image: beta-xcode6.2
-      language: generic
-      env: OSX=OSX10.9
-
-
-# dont test feature branches
 branches:
   only:
-    - master
+  - master
 
 init:
-  - echo "Booting Mac ${OSX} "
+- echo "Booting Mac ${OSX} "
 
-# install dependencies
 before_install:
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install python; fi
-  - pip install py2app
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install python; fi
+- pip install py2app
 
-# install our program
 install:
-  - pip install -r requirements.txt
-  - pip install .
-  - ls
+- pip install -r requirements.txt
+- pip install .
+- ls
 
 script:
-  # run tests
-  #- PYTHONPATH=$PYTHONPATH:./src py.test tests/
-  # create package
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./build-mac.sh; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./build-mac.sh; fi
+
+deploy:
+  provider: releases
+  api_key:
+    secure: mxQvi+AOIrwaYos82pudnjQ+a4eDUlfYokRIC7Mt+N05c25eUg2UHADwoYa1xy6Wr/KvmeBGbmp/yYgO65n6tx5GEUaujdWZ2nJVgzJNuEqyg5MUWxSGMvqFg6RgZZMw7REuyul2toDW8tT8D3KvFeKgMeDDI5lDZxcNjfHzavfGsJG3WNm7FKX6roL46Hrxc2y450pbzeA6vODBB4NKnkvVONIvZ5sQ2PUvHi54exaEXNCZS2Nu9o2AviNYpDYA04CIpbLXkcDpPJSwv28+7VIocFD3eWFis4PeUnSYKPYiIRVDVFRg3RZRth47u4Hk/jA01gpm7YUN2mNKIHX0liSq0dQ0KZZ4MdxNR5X8oDXi6dLA7UQc8HJp4RcRqF3fzfv6SfIs9L8uZ06p1EdTkeRenQsv5jYqYUuTr6Gpo8PnqQ2Pc5lXYKF8d9gwBLbVOFlxwSQHAXlBXzN7lAHN0zwDK7hhrd/fjIqu8EzN/jSIE82lETI4geBUDjgDj2RpmXOKJnblKKI0Xs5DIGP2nDWp6FqbbQ6u8YZvRYnoSHhkzaf/DjymWSrY58YsRSUCaMZ1LpmfPyInqSVsO5ySiSHkRnR89qQ2PkVW/0DdfVn8VmW2OTd6CStfrykiCXcrb4ZgRMuzIdxo64AeIlA9KUQbuGT2pL72PljVCBoagTI=
+  file: pling-plong-odometer*.dmg
+  skip_cleanup: true
+  on:
+    tags: true
