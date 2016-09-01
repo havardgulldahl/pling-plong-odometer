@@ -18,11 +18,18 @@ import shutil
 import zipfile
 import argparse
 import subprocess
+from datetime import date
 
 build = (os.environ.get("APPVEYOR_BUILD_NUMBER") or
          os.environ.get("TRAVIS_BUILD_NUMBER") or
          0)
 
+version = (os.environ.get("APPVEYOR_REPO_TAG_NAME") or
+           os.environ.get("TRAVIS_TAG") or
+           None)
+
+if version is None:
+    version = "dev-{date}".format(date=date.today().isoformat())
 
 def build_inno_exe(src, dst):
     """Create Windows installer using Inno Setup
