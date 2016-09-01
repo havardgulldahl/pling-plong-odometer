@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# encoding: utf-8
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2016
 
@@ -14,11 +15,19 @@ from datetime import date
 
 def run(cmd, *args):
     try:
-        return subprocess.check_output([cmd, args*])
-    except subprocess.CalledProcessError as e:
+        return subprocess.check_output([cmd,] + list(args))
+    except (subprocess.CalledProcessError, OSError) as e:
+        if hasattr(e, 'output'):
+            _error = e.output
+        else:
+            _error = e.strerror
+        if hasattr(e, 'returncode'):
+            _errno = e.returncode
+        else:
+            _errno = e.errno
         puts(colored.red("Tried to run `{command}`, but got {error} ({errno})".format(command=cmd,
-                                                                                      error=e.output,
-                                                                                      errno=e.returncode)))
+                                                                                      error=_error,
+                                                                                      errno=_errno)))
 
 if __name__ == '__main__':
     _sp = os.path.join(site.getsitepackages()[0], "PyQt4")
@@ -36,10 +45,10 @@ if __name__ == '__main__':
     #sed -i "s/releaseCheck=.*/releaseCheck=0/" BUILDFLAGS
     if sys.platform == 'darwin':
         # osx
-        _pylupdate = os.path.join(_sp, 'pylupdate4')
-        _lrelease = os.path.join(_sp, 'lrelease')
-        _pyuic = os.path.join(_sp, 'pyuic4.bat')
-        _pyrcc = os.path.join(_sp, 'pyrcc4')
+        _pylupdate = run('which', 'pylupdate4').strip()
+        _lrelease = run('which', 'lrelease').strip()
+        _pyuic = run('which', 'pyuic4').strip()
+        _pyrcc = run('which', 'pyrcc4').strip()
         _versionfile = os.path.join('.', 'VERSIONMAC')
     elif sys.platform == 'win32':
         _pylupdate = os.path.join(_sp, 'pylupdate4.exe')
