@@ -64,15 +64,15 @@ elif sys.platform == 'win32':
      extra_options = dict(
          setup_requires=['py2exe'],
          windows=[mainscript],
-		 packages=['gui','metadata','xmeml'],
+		 packages=['gui','metadata'],
 		 package_dir={'metadata':'src/metadata',
 		              'gui':'src/gui',
 		              #'xmeml':'src/xmeml'
 					  },
 		 options=dict(py2exe=dict(
-             packages=['lxml'],
+             packages=['lxml', 'xmeml'],
 	     excludes=["Tkconstants","Tkinter","tcl"],
-             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip', 'xmeml'])
+             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'])
 		)
     )
 else:
