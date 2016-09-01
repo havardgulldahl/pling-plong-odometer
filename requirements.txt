@@ -2,3 +2,4 @@ PyQt4
 git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml
 lxml
 pytest
+clint
