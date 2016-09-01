@@ -42,7 +42,7 @@ install:
 build_script:
   - echo Building..
   - #build-win.sh
-  - "%PYTHON%/python.exe buildqt.py"
+  - "%PYTHON%/python.exe buildpyqt.py"
   - "%PYTHON%/python.exe setup.py py2exe"
   - "%PYTHON%/python.exe dist.py zip"
   - dir dist\
