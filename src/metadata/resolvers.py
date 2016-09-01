@@ -332,7 +332,7 @@ class DMAResolver(ResolverBase):
 
     @staticmethod
     def musicid(filename):
-        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)\d{6}[A-Z][a-z]+\d{4})')
+        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]+)')
         g = rex.search(filename)
         try:
             return g.group(1)
