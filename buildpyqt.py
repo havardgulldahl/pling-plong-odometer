@@ -57,7 +57,7 @@ if __name__ == '__main__':
     elif sys.platform == 'win32':
         _pylupdate = os.path.join(_sp, 'pylupdate4.exe')
         _lrelease = os.path.join(_sp, 'lrelease.exe')
-        _pyuic = os.path.join(_sp, 'uic', 'pyuic.py')
+        _pyuic = os.path.join(_sp, 'pyuic4.bat')
         _pyrcc = os.path.join(_sp, 'pyrcc4.exe')
         _versionfile = os.path.join('.', 'VERSIONWIN')
     puts(colored.blue("Generating translations for UX"))
