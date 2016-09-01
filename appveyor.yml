@@ -31,7 +31,6 @@ install:
   - "%PYTHON%/Scripts/pip.exe install %LXML%"
   - "%PYTHON%/Scripts/pip.exe install %PY2EXE%"
   - "%PYTHON%/Scripts/pip.exe install %PYQT%"
-  - "%PYTHON%/Scripts/pip.exe install py.test"
   #- "python -c \"import site; print site.getsitepackages()\""
   - "python -c \"from PyQt4 import QtGui\""
   - "%PYTHON%/Scripts/pip.exe install -r %REQUIREMENTS%"

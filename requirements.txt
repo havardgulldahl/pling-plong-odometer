@@ -5,3 +5,4 @@ PyQt4
 hashlib
 git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml
 lxml
+pytest
