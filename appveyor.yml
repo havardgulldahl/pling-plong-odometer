@@ -44,8 +44,8 @@ test_script:
 build_script:
   - echo Building..
   - #build-win.sh
-  - "%PYTHON%/python.exe setup.py py2exe
-  - "%PYTHON%/python.exe dist.py zip
+  - "%PYTHON%/python.exe setup.py py2exe"
+  - "%PYTHON%/python.exe dist.py zip"
   - dir
   - dir dist\
 
