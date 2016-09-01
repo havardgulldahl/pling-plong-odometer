@@ -23,7 +23,6 @@ init:
   - "ECHO %LXML%"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:/ez_setup.py"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:/get-pip.py"
-  - ps: Invoke-WebRequest "$env:MSVCP" -OutFile "MSVCP90.dll"
   - ps: "git config --global core.autocrlf false" # always use unix lineendings
 
 
@@ -37,6 +36,7 @@ install:
   - "python -c \"from PyQt4 import QtGui\""
   - "%PYTHON%/Scripts/pip.exe install -r %REQUIREMENTS%"
   - "%PYTHON%/Scripts/pip.exe install ."
+  - ps: Invoke-WebRequest "$env:MSVCP" -OutFile "C:\projects\pling-plong-odometer\MSVCP90.dll"
   - dir "%PYTHON%/Scripts/"
 
 test_script:
