@@ -55,9 +55,6 @@ build_script:
 artifacts:
   - path: dist\*
   - name: "installer-%APPVEYOR_REPO_COMMIT_TIMESTAMP%"
-  on:
-    branch: master
-    appveyor_repo_tag: true
 #deploy:
 #  provider: Environment
 #  name: GitHub
