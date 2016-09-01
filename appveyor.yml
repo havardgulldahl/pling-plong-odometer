@@ -35,7 +35,8 @@ install:
   ## miniconda (installed by appveyor) prevent pyqt installer to run, because
   ## of a registry key. So the line below overwrite the registry key.
   - REG ADD HKCU\Software\Python\PythonCore\2.7\InstallPath /f /ve /t REG_SZ /d %PYTHON%
-  - ps: (new-object net.webclient).DownloadFile($env:PYQT, "C:\install-PyQt4.exe")  - ps: Start-Process -FilePath C:\install-PyQt4.exe -ArgumentList "/S" -Wait -Passthru
+  - ps: (new-object net.webclient).DownloadFile($env:PYQT, "C:\install-PyQt4.exe")
+  - ps: Start-Process -FilePath C:\install-PyQt4.exe -ArgumentList "/S" -Wait -Passthru
   - "python -c \"from PyQt4 import QtGui\""
   - "%PYTHON%/Scripts/pip.exe -q install -r %REQUIREMENTS%"
   #- git clone https://github.com/havardgulldahl/odometer
