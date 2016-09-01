@@ -3,5 +3,5 @@ python-mutagen
 pytagger
 pyqt4
 python-hashlib
-https://github.com/havardgulldahl/xmeml
+git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml
 lxml
