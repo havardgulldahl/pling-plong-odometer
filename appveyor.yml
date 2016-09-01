@@ -17,15 +17,11 @@ environment:
     #  PYTHON_ARCH: "64"
 init:
   - "ECHO %PYTHON%"
-  - set PYTHONPATH=%PYTHONPATH%;tests;%CD%\tests"
+  - "SET PYTHONPATH=%PYTHONPATH%;tests;%CD%\tests"
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "ECHO %LXML%"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:/ez_setup.py"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:/get-pip.py"
-  # install PyQt4
-  ## miniconda (installed by appveyor) prevent pyqt installer to run, because
-  ## of a registry key. So the line below overwrite the registry key.
-  - REG ADD HKCU\Software\Python\PythonCore\2.7\InstallPath /f /ve /t REG_SZ /d %PYTHON%
-  - ps: (new-object net.webclient).DownloadFile($env:PYQT, "C:\install-PyQt4.exe")
   - ps: "git config --global core.autocrlf false" # always use unix lineendings
   - ls "%PYTHON%/Scripts/"
 
@@ -35,7 +31,11 @@ install:
   - "%PYTHON%/python.exe c:/get-pip.py"
   - "%PYTHON%/Scripts/pip.exe install %LXML%"
   - "%PYTHON%/Scripts/pip.exe install %PY2EXE%"
-  - ps: Start-Process -FilePath C:\install-PyQt4.exe -ArgumentList "/S" -Wait -Passthru
+  # install PyQt4
+  ## miniconda (installed by appveyor) prevent pyqt installer to run, because
+  ## of a registry key. So the line below overwrite the registry key.
+  - REG ADD HKCU\Software\Python\PythonCore\2.7\InstallPath /f /ve /t REG_SZ /d %PYTHON%
+  - ps: (new-object net.webclient).DownloadFile($env:PYQT, "C:\install-PyQt4.exe")  - ps: Start-Process -FilePath C:\install-PyQt4.exe -ArgumentList "/S" -Wait -Passthru
   - "python -c \"from PyQt4 import QtGui\""
   - "%PYTHON%/Scripts/pip.exe -q install -r %REQUIREMENTS%"
   #- git clone https://github.com/havardgulldahl/odometer
