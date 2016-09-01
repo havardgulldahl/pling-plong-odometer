@@ -6,7 +6,7 @@ environment:
     - PYTHON: "C:/Python27" # this is win32
       LXML: "test/contrib/lxml-3.6.4-cp27-cp27m-win32.whl"
       PY2EXE: "py2exe_py2"
-      PYQT: "http://kent.dl.sourceforge.net/project/pyqt/PyQt4/PyQt-4.11.4/PyQt4-4.11.4-gpl-Py2.7-Qt4.8.7-x32.exe"
+      PYQT: "https://www.dropbox.com/s/vrzlipbjocuiofb/PyQt4-4.11.4-cp27-none-win32.whl?dl=1"
       REQUIREMENTS: "requirements.txt"
     #- PYTHON: "C:/Python35"
     #  LXML: "tests/contrib/lxml-3.6.4-cp35-cp35m-win32.whl"
@@ -31,18 +31,11 @@ install:
   - "%PYTHON%/python.exe c:/get-pip.py"
   - "%PYTHON%/Scripts/pip.exe install %LXML%"
   - "%PYTHON%/Scripts/pip.exe install %PY2EXE%"
-  # install PyQt4
-  ## miniconda (installed by appveyor) prevent pyqt installer to run, because
-  ## of a registry key. So the line below overwrite the registry key.
-  - REG ADD HKCU\Software\Python\PythonCore\2.7\InstallPath /f /ve /t REG_SZ /d %PYTHON%
-  #- ps: (new-object net.webclient).DownloadFile($env:PYQT, "C:\install-PyQt4.exe")
-  - ps: Invoke-WebRequest "$env:PYQT" -OutFile "C:\install-PyQt4.exe"
-  - ps: Start-Process -FilePath C:\install-PyQt4.exe -ArgumentList "/S" -Wait -Passthru
-  - "python -c \"import site; site.getsitepackages()\""
+  - "%PYTHON%/Scripts/pip.exe install %PYQT%"
+  - "python -c \"import site; print site.getsitepackages()\""
   - dir "%PYTHON%/Lib/Site-packages"
   - "python -c \"from PyQt4 import QtGui\""
   - "%PYTHON%/Scripts/pip.exe install -r %REQUIREMENTS%"
-  #- git clone https://github.com/havardgulldahl/odometer
   - "%PYTHON%/Scripts/pip.exe install ."
 
 test_script:
