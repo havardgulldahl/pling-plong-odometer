@@ -38,6 +38,8 @@ install:
   #- ps: (new-object net.webclient).DownloadFile($env:PYQT, "C:\install-PyQt4.exe")
   - ps: Invoke-WebRequest "$env:PYQT" -OutFile "C:\install-PyQt4.exe"
   - ps: Start-Process -FilePath C:\install-PyQt4.exe -ArgumentList "/S" -Wait -Passthru
+  - "python -c \"import site; site.getsitepackages()\""
+  - dir "%PYTHON%/Lib/Site-packages"
   - "python -c \"from PyQt4 import QtGui\""
   - "%PYTHON%/Scripts/pip.exe install -r %REQUIREMENTS%"
   #- git clone https://github.com/havardgulldahl/odometer
