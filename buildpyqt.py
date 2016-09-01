@@ -31,7 +31,9 @@ def run(cmd, *args):
 
 if __name__ == '__main__':
     _sp = None
-    for _p in site.getsitepackages():
+    for _p in sys.path:
+        if not _p.endswith('site-packages'):
+            continue
         if os.path.exists(os.path.join(_p, "PyQt4")):
             _sp = os.path.join(_p, "PyQt4")
 
