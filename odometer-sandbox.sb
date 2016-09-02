@@ -1,6 +1,6 @@
 ;; This is my first sandbox configuration file!
 (version 1)
-(deny default)
+(allow default)
 
 ;; Let's allow file read and write in specific locations and not
 ;; all over my filesystem!
@@ -8,18 +8,13 @@
 ;; on what your MyApp needs to function properly.
 (allow file-write* file-read-data file-read-metadata
   ;; (regex "^/Users/user_name/[Directories it requires to write and read from]")
-  (regex "^/Users/n18040/Documents/Utvikling/pling-plong-odometer/♫ ♪ Odometer.app")
+  (subpath "/Users/n18040/Documents/Utvikling/pling-plong-odometer/♫ ♪ Odometer.app")
   (regex "^(/private)?/tmp/"))
 
 ;; You can also add a sperate section for reading and writing files outside your
 ;; user_name account directory.
-(allow file-read-data file-read-metadata
-  ;; (regex "^/dev/autofs.*")
-  ;; (regex "^/System/Library")
-  (regex "^/Users/n18040/Documents/Utvikling/pling-plong-odometer/♫ ♪ Odometer.app")
-  ;; (regex "^/usr/lib")
-  (regex "^/var")
-  ;; (regex "^/Users/user_name")
+(deny file-read-data file-read-metadata
+  (subpath "/usr/local")
   )
 
 ;; If your MyApp requires to access sysctl (in read)
@@ -39,7 +34,7 @@
 ;; If your MyApp wants to run extra processes it's be allowed to run only
 ;; child processes and nothign else
 (allow process-exec
-  (regex "^/Users/n18040/Documents/Utvikling/pling-plong-odometer/♫ ♪ Odometer.app"))
+  (regex "^/Users/n18040/Documents/Utvikling/pling-plong-odometer/dist/♫ ♪ Odometer.app/Contents/MacOS/Pling Plong Odometer"))
 
 ;; If your MyApp requires network access you can grant it here:
 (allow network*)

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+export X=$PATH;
 
-sandbox-exec -f odometer-sandbox.sb "dist/♫ ♪ Odometer.app/Contents/MacOS/Pling Plong Odometer";
+PROG="${1:-dist/♫ ♪ Odometer.app/Contents/MacOS/Pling Plong Odometer}";
+
+sandbox-exec -f odometer-sandbox.sb "${PROG}";
 
