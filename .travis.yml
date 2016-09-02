@@ -58,7 +58,7 @@ deploy:
 
 addons:
   artifacts:
-    s3_region: "eu-central-1"
+    s3_region: "eu-west-1"
     paths:
     - $(ls *.dmg | tr "\n" ":")
     debug: true
