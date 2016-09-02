@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export X=$PATH;
+export PATH=/usr/bin:/bin:/usr/sbin:/sbin;
 
 PROG="${1:-dist/♫ ♪ Odometer.app/Contents/MacOS/Pling Plong Odometer}";
 
