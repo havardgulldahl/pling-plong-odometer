@@ -62,3 +62,13 @@ artifacts:
 #  on:
 #    branch: master
 #    appveyor_repo_tag: true
+
+#deploy:
+#  provider: S3
+#  access_key_id: AKIAJTPGNIAI5CIPIANA
+#  secret_access_key:
+#  bucket: pling-plong-odometer
+#  region: eu-west-1
+#  set_public: false
+#  folder: win32
+#  artifact: odometer-*\odometer*.zip
