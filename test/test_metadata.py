@@ -1,3 +1,5 @@
+# encoding: utf-8
+# tests of metadata resolvers
 
 import metadata
 from metadata.resolvers import DMAResolver, AUXResolver, ApollomusicResolver, UprightmusicResolver, UniPPMResolver
