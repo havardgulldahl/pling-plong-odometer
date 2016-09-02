@@ -11,8 +11,8 @@ function error {
 # building pling plong odometer for mac os x
 
 # some settings
-IDENTIFIER=$1; # pass version on cmdline
-VERSION=$(date +"%Y-%m-%d");
+IDENTIFIER=${1:-DEV}; # pass version on cmdline
+VERSION=$(date +"%Y-%m-%d")-${IDENTIFIER};
 NIB=./resources/qt_menu.nib
 
 echo "Generating version: $VERSION";
@@ -21,10 +21,11 @@ echo "Generating version: $VERSION";
 sed -i .bk "s/beta=.*/beta=0/" BUILDFLAGS
 sed -i .bk "s/releaseCheck=.*/releaseCheck=0/" BUILDFLAGS
 
+echo "$VERSION" > ./VERSIONMAC
+
 # update all generated code
 
 python ./buildpyqt.py
-
 
 # build the castle
 echo "Building the app (see build.log)"
@@ -43,9 +44,9 @@ mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
 
 # create dmg images since all mac heads like to mount archives
 echo "Creating dmg image"
-DMGNAME=pling-plong-odometer-$VERSION-$IDENTIFIER.dmg
+DMGNAME=pling-plong-odometer-$VERSION.dmg
 test -f "$DMGNAME" && rm -f "$DMGNAME"; # remove old build
-hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer" -fs "HFS+" -srcfolder "dist/" || error "Failed to create dmg"
+hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer $IDENTIFIER" -fs "HFS+" -srcfolder "dist/" || error "Failed to create dmg"
 
 # create pkg
 #echo "Creating .pkg installer";

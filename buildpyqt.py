@@ -45,10 +45,7 @@ if __name__ == '__main__':
     puts(colored.blue("Building PyQt4 resources for Odometer version {v}".format(v=version)))
 
     puts(colored.blue("Checking project settings"))
-    #TODO
-    # change bulid defaults
-    #sed -i "s/beta=.*/beta=0/" BUILDFLAGS
-    #sed -i "s/releaseCheck=.*/releaseCheck=0/" BUILDFLAGS
+
     if sys.platform == 'darwin':
         # osx
         _pylupdate = run('which', 'pylupdate4').strip()
@@ -62,18 +59,18 @@ if __name__ == '__main__':
         _pyuic = os.path.join(_sp, 'pyuic4.bat')
         _pyrcc = os.path.join(_sp, 'pyrcc4.exe')
         _versionfile = os.path.join('.', 'VERSIONWIN')
+
     puts(colored.blue("Generating translations for UX"))
     run(_pylupdate, 'src/gui/gui.pro') # translate
     run(_lrelease, 'src/gui/gui.pro')  # compile
+
     puts(colored.blue("Generating UI"))
     run(_pyuic, '-o', 'src/gui/odometer_ui.py', 'src/gui/pling-plong-odometer.ui')  # compile
     run(_pyuic, '-o', 'src/gui/auxreport_ui.py', 'src/gui/pling-plong-auxreport.ui')  # compile
     run(_pyuic, '-o', 'src/gui/prfreport_ui.py', 'src/gui/pling-plong-prfreport.ui')  # compile
     run(_pyuic, '-o', 'src/gui/onlinelogin_ui.py', 'src/gui/pling-plong-onlinelogin.ui')  # compile
+
     puts(colored.blue("Compiling resource file"))
-    # store settings in files, to be picked up by pyqt resource system
-    with open(_versionfile, 'w') as f:
-        f.write(version)
     run(_pyrcc, '-py2', '-o', 'src/gui/odometer_rc.py', 'src/gui/odometer.qrc')
 
 

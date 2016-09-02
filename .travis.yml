@@ -34,18 +34,20 @@ branches:
 before_install:
 - echo "Booting Mac ${OSX} "
 - export TAG="${TRAVIS_TAG:-dev}"
+- echo "$PATH"
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install python pyqt; fi
-- pip install py2app
 
 install:
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install python pyqt; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
+#- if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./setup-python-osx.sh; fi
 - pip install -r requirements.txt
 - pip install .
 - ls
 
 script:
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./build-mac.sh $TAG; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./build-mac.sh ${OSX}-${TAG}; fi
 
 deploy:
   provider: releases
@@ -61,4 +63,4 @@ addons:
     s3_region: "eu-west-1"
     paths:
     - $(ls *.dmg | tr "\n" ":")
-    debug: true
+    debug: false
