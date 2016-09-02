@@ -5,7 +5,7 @@ import sys, logging, glob
 
 from PyQt4 import QtCore, QtGui
 
-from pytestqt.qt_compat import qWarning
+#from pytestqt.qt_compat import qWarning
 
 import gui
 import metadata
