@@ -11,7 +11,7 @@ function error {
 # building pling plong odometer for mac os x
 
 # some settings
-
+IDENTIFIER=$1; # pass version on cmdline
 VERSION=$(date +"%Y-%m-%d");
 NIB=./resources/qt_menu.nib
 
@@ -43,14 +43,14 @@ mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
 
 # create dmg images since all mac heads like to mount archives
 echo "Creating dmg image"
-DMGNAME=pling-plong-odometer-$VERSION.dmg
+DMGNAME=pling-plong-odometer-$VERSION-$IDENTIFIER.dmg
 test -f "$DMGNAME" && rm -f "$DMGNAME"; # remove old build
 hdiutil create "$DMGNAME" -volname "♫ ♪ Odometer" -fs "HFS+" -srcfolder "dist/" || error "Failed to create dmg"
 
 # create pkg
-echo "Creating .pkg installer";
-./macromanconv.py ABOUT build/ABOUT.txt
-/usr/local/bin/packagesbuild -v Odometer.pkgproj || error "Packagemaker failed";
+#echo "Creating .pkg installer";
+#./macromanconv.py ABOUT build/ABOUT.txt
+#/usr/local/bin/packagesbuild -v Odometer.pkgproj || error "Packagemaker failed";
 
 echo "Finished. Take a look at $DMGNAME"
 echo "Installer in dist/";
