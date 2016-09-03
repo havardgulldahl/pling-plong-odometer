@@ -393,7 +393,7 @@ class UprightmusicLookupWorker(Core.QThread):
     error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
 
     def __init__(self, parent=None):
-        super(UprightLookupWorker, self).__init__(parent)
+        super(UprightmusicLookupWorker, self).__init__(parent)
 
     def __del__(self):
         self.wait()
