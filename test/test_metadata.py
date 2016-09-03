@@ -53,11 +53,17 @@ def test_resolvers(qtbot, xmemlfiles):
                 # SignalTimeoutError will be raised.
             # trackResolved returns `tuple(filename, metadata.model.TrackMetadata)`
             # whereas trackFailed returns `tuple(filename)`
-            pytest.assume(len(blocker.args) == 2)
+            pytest.assume(len(blocker.args) == 2, msg='%s couldnt resolve %r' % (_resolvername, filename))
             if len(blocker.args) == 1:
                 continue
             _filename, _trackmetadata = blocker.args
-            pytest.assume(_trackmetadata, metadata.model.TrackMetadata)
+            pytest.assume(isinstance(_trackmetadata, metadata.model.TrackMetadata),
+                          msg='expectd TrackMetadata() for %r, but got %r' % (musicid, _trackmetadata) )
+
+            pytest.assume(_trackmetadata.identifier == musicid,
+                          msg='%s: expected musicid %r to be returned, instead we got %r' % (_resolvername,
+                                                                                             musicid,
+                                                                                             _trackmetadata.identifier))
 
     app.deleteLater()
     app.exit()
