@@ -12,6 +12,7 @@ import StringIO
 import ConfigParser
 import logging
 import traceback
+from collections import defaultdict
 try:
     import cPickle as pickle
 except ImportError:
@@ -237,7 +238,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.actionCheckForUpdates.triggered.connect(self.showCheckForUpdates)
         self.ui.actionShowPatterns.triggered.connect(self.showShowPatterns)
         self.ui.actionLoginOnline.triggered.connect(self.showLoginOnline)
-        self.ui.actionExportDetailedReport.triggered.connect(self.showExportReport)
+        self.ui.actionTimelineOrderReport.triggered.connect(self.showTimelineOrderReport)
         #self.ui.actionConfig.triggered.connect(lambda: self.showstatus("About Config"))
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
@@ -491,15 +492,39 @@ class Odometer(Gui.QMainWindow):
         LogDialog.setWindowTitle('Help')
         return LogDialog.exec_()
 
-    def showExportReport(self):
-        'Pop up a dialog to export a detailed report'
-        logging.debug('Pop up a dialog to export a detailed report')
+    def showTimelineOrderReport(self):
+        'Pop up a dialog to show a detailed report, showing each subclip in the order they appear on the timeline'
+        logging.debug('Pop up a dialog to show detailed run sheet report')
         ExportDialog = Gui.QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(ExportDialog)
-
-        ui.textBrowser.setHtml(''.join(self.log))
-        ExportDialog.setWindowTitle('Export')
+        s = unicode(self.tr('<h1>Tracks by order of entry on timeline</h1>'))
+        s = s + '<table cellpadding=10><tr>'
+        s = s + unicode(self.tr('<th>In</th>'))
+        s = s + unicode(self.tr('<th>Out</th>'))
+        s = s + unicode(self.tr('<th>Duration</th>'))
+        s = s + unicode(self.tr('<th>Clip details</th>'))
+        s = s + '</tr>'
+        clips = defaultdict(list)
+        for r in self.itercheckedrows():
+            if r.metadata.title is None:
+                # not resolved, use file name
+                _t = repr(r.audioname)
+            else:
+                _t = u'\u00ab%(title)s\u00bb \u2117 %(musiclibrary)s' % vars(r.metadata)
+            for sc in r.subclips:
+                _s = '<tr><td><code>%s</code></td><td><code>%s</code></td>' % (sc['in'], sc['out'])
+                _s += '<td>%06.2f\"</td>' % (sc['durationsecs'])
+                _s += '<td>%s</td>' % _t
+                _s += "</tr>"
+                clips[sc['in']].append(_s)
+        # sort all clips by inpoint
+        inpoints = clips.keys()
+        inpoints.sort()
+        s = s + "".join(["".join(clips[inpoint]) for inpoint in inpoints])
+        s = s + '</table>'
+        ui.textBrowser.setHtml(s)
+        ExportDialog.setWindowTitle(self.tr('Detailed run sheet'))
         return ExportDialog.exec_()
 
     def showLoginOnline(self):

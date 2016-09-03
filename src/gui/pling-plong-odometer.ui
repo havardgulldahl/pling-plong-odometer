@@ -528,13 +528,10 @@
     <addaction name="actionCheckForUpdates"/>
    </widget>
    <widget class="QMenu" name="menuAdvanced">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
     <property name="title">
      <string>Advanced</string>
     </property>
-    <addaction name="actionExportDetailedReport"/>
+    <addaction name="actionTimelineOrderReport"/>
    </widget>
    <addaction name="menu_About"/>
    <addaction name="menuSettings"/>
@@ -591,12 +588,15 @@
     <string>Log on to services like AUX and Apollo</string>
    </property>
   </action>
-  <action name="actionExportDetailedReport">
+  <action name="actionTimelineOrderReport">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
-    <string>Export detailed report</string>
+    <string>Clips by timeline order</string>
+   </property>
+   <property name="toolTip">
+    <string>Create a report of all checked clips, ordered by timeline entry</string>
    </property>
   </action>
  </widget>
