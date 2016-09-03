@@ -60,10 +60,10 @@ def test_resolvers(qtbot, xmemlfiles):
             pytest.assume(isinstance(_trackmetadata, metadata.model.TrackMetadata),
                           msg='expectd TrackMetadata() for %r, but got %r' % (musicid, _trackmetadata) )
 
-            pytest.assume(_trackmetadata.identifier == musicid,
-                          msg='%s: expected musicid %r to be returned, instead we got %r' % (_resolvername,
-                                                                                             musicid,
-                                                                                             _trackmetadata.identifier))
+            pytest.assume(_trackmetadata.recordnumber == musicid,
+                          msg='%s: expected metadata.recordnumber %r from resolver, instead we got %r' % (_resolvername,
+                                                                                                         musicid,
+                                                                                                         _trackmetadata.identifier))
 
     app.deleteLater()
     app.exit()

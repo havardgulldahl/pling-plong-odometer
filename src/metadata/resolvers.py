@@ -451,7 +451,9 @@ class AUXResolver(ResolverBase):
             self.trackFailed.emit(self.filename)
             self.error.emit("Could not get info on %s. Lookup failed" % self.filename)
             return None
-        metadata = TrackMetadata(filename=self.doc.filename, musiclibrary=self.name)
+        metadata = TrackMetadata(filename=self.doc.filename,
+                                 recordnumber=self.musicid(self.doc.filename),
+                                 musiclibrary=self.name)
         try:
             duration = unicode(self.doc.frame.findAllElements("div[style='top:177px;']")[1].toInnerXml())
             mins, secs = [int(s.strip()) for s in duration.split(' ')[0].split(":")]
@@ -459,7 +461,7 @@ class AUXResolver(ResolverBase):
         except:
             pass
         mapping = { 'Track name': 'title', #REMEMBER LAST SUMMER
-                    'Track number': 'recordnumber', #SCD 821 20.0
+                    'Track number': 'identifier', #SCD 821 20.0
                     'Composer': 'composer', #Mladen Franko
                     'Artist': 'artist', #(N/A for production music)
                     'Album name': 'albumname',#ORCHESTRAL LANDSCAPES 2
