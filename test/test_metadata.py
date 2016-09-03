@@ -1,58 +1,64 @@
 # encoding: utf-8
 # tests of metadata resolvers
 
+import sys
+import logging
+import os.path
+import pytest
+from PyQt4 import QtCore, QtGui
+
 import metadata
 from metadata.resolvers import DMAResolver, AUXResolver, ApollomusicResolver, UprightmusicResolver, UniPPMResolver
 
-def test_resolveDMA():
-    _filenames = {"NONRO716733SG0201": "NONRO716733SG0201 Ofelastema.wav",
-                  "NONRO174537CD0001": "NONRO174537CD0001 Klaverkonsert, op. 16, a-moll_ 1. sats. Alleg.wav",
-                  "NONRE643326HD0001": "NONRE643326HD0001 Panda.wav",
-                  "NONRO306374CS0002": "NONRO306374CS0002 Phone Tap (Instrumental).wav",
-                  "NONRE643326LP0001": "NONRE643326LP0001 Panda.wav",}
-
-    for musicid, filename in _filenames.iteritems():
-        assert DMAResolver.musicid(filename) == musicid
+log = logging.getLogger('test_metadata')
 
 
-def test_resolveAUX():
-    _filenames = {"SCD086738": "SCD086738_PRETTY IN PINK_SONOTON.wav",
-                  "SCD074002": "AUXMP_SCD074002_HEARTWARMING  B.wav",
-                  "RSM010436": "AUXMP_RSM010436_HEAVY URBAN.mp3",
-                  "UBMM214809": "AUXMP_UBMM214809_EVIL FORCES.wav"}
+def test_musicids(xmemlfiles):
+    for _resolvername, data in xmemlfiles.iteritems():
+        if _resolvername == 'DMA':
+            resolver = DMAResolver
+        elif _resolvername == 'AUX':
+            resolver = AUXResolver
+        elif _resolvername == 'APOLLO':
+            resolver = ApollomusicResolver
+        elif _resolvername == 'UPRIGHT':
+            resolver = UprightmusicResolver
+        elif _resolvername == 'UNIPPM':
+            resolver = UniPPMResolver
+        for musicid, filename in data.iteritems():
+            log.warning(musicid)
+            assert resolver.musicid(filename) == musicid
 
-    for musicid, filename in _filenames.iteritems():
-        assert AUXResolver.musicid(filename) == musicid
+def test_resolvers(qtbot, xmemlfiles):
+    app = QtGui.QApplication([])
+    for _resolvername, data in xmemlfiles.iteritems():
+        if _resolvername == 'DMA':
+            resolver = DMAResolver()
+        elif _resolvername == 'AUX':
+            resolver = AUXResolver()
+        elif _resolvername == 'APOLLO':
+            resolver = ApollomusicResolver()
+        elif _resolvername == 'UPRIGHT':
+            resolver = UprightmusicResolver()
+        elif _resolvername == 'UNIPPM':
+            resolver = UniPPMResolver()
+        for musicid, filename in data.iteritems():
+            # Watch for the app.worker.finished signal, then start the worker.
+            with qtbot.waitSignal(resolver.trackResolved, timeout=10000) as blocker:
+                blocker.connect(resolver.trackFailed)  # Can add other signals to blocker
 
-def test_resolveApollo():
-    _filenames = {"MUM_124_17": "Apollo_MUM_124_17__Trail_Rider__Donnelly,_Steve.mp3",
-                  "DWCD_514_3": "Apollo_DWCD_514_3__Big_Game_Hunter__Sir_Bald_Diddley.mp3",
-                  "NVS_102_27": "Apollo_NVS_102_27__Unyielding__Dan_Elias_Brevig.mp3",
-                  "SL_60_37": "Apollo_SL_60_37__Hey_Mack_(rhythm_section)__Matthew_David_Waldrum.mp3"}
+                resolver.resolve(filename, os.path.join(".", filename), fromcache=False)
+                # Test will block at this point until either the "trackResolved" or the
+                # "trackFailed" signal is emitted. If 10 seconds passed without a signal,
+                # SignalTimeoutError will be raised.
+            # trackResolved returns `tuple(filename, metadata.model.TrackMetadata)`
+            # whereas trackFailed returns `tuple(filename)`
+            pytest.assume(len(blocker.args) == 2)
+            if len(blocker.args) == 1:
+                continue
+            _filename, _trackmetadata = blocker.args
+            pytest.assume(_trackmetadata, metadata.model.TrackMetadata)
 
-    for musicid, filename in _filenames.iteritems():
-        assert ApollomusicResolver.musicid(filename) == musicid
+    app.deleteLater()
+    app.exit()
 
-def test_resolveUpright():
-    _filenames = {"EDS_016_006": "_UPRIGHT_EDS_016_006_Downplay_(Main).WAV",
-                  "EDS_016_011": "_UPRIGHT_EDS_016_011_Jagged_Edge_(Main).WAV",
-                  "EDS_016_011": "_UPRIGHT_EDS_016_011_Jagged_Edge_(Main).MP3"}
-
-    for musicid, filename in _filenames.iteritems():
-        assert UprightmusicResolver.musicid(filename) == musicid
-
-def test_resolveUniPPM():
-    _filenames = {"777051": "KOK_2360_32_Lightning_Drone_Chevalier_777051",
-                  "627163": "KOS_97_11_Rap_And_Scratch_Andreasen_Kalfayan_627163.wav",
-                  "714159": "RNM_50_9_You_Ives_714159.wav",
-                  "863434": "VTMA_26_33_Lonely_Traveller_863434.wav",
-                  "25175": "EDGE_21_63_Slow_Downer_Cunningham_Fox_Lang_25175.wav",
-                  "896746": "STSC_77_14_A_Million_Copeland_Darnell_Desmond_Kalayeh_896746.wav",
-                  "762667": "STFTA_1_175_Don_t_Take_Me_Down_Hart_Williams_762667.wav",
-                  "858425": "BR_586_5_Unstoppable_Force_Britton_858425.wav",
-                  "652177": "CHAP_386_2_Neapolitan_Love_Song_Stott_652177.wav",
-                  "897593": "RDR_18_5_Sunshine_Shapes_Instrumental_Keane_897593.wav",
-                  "898428": "BER_1250_89_Stress_mit_Recht_Muller_898428.wav"}
-
-    for musicid, filename in _filenames.iteritems():
-        assert UniPPMResolver.musicid(filename) == musicid
