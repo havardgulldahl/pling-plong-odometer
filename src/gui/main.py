@@ -239,7 +239,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.actionShowPatterns.triggered.connect(self.showShowPatterns)
         self.ui.actionLoginOnline.triggered.connect(self.showLoginOnline)
         self.ui.actionTimelineOrderReport.triggered.connect(self.showTimelineOrderReport)
-        #self.ui.actionConfig.triggered.connect(lambda: self.showstatus("About Config"))
+        self.ui.actionAdjustThreshold.toggled.connect(self.setThresholdVisible)
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
         self.ui.dropIcon = Svg.QSvgWidget(':/gfx/graystar', self.ui.clips)
@@ -563,7 +563,6 @@ class Odometer(Gui.QMainWindow):
             print list(self.settings.allKeys())
             stopBusy()
 
-
         def failed(ex):
             logging.warning("faile!", ex)
             self.logException(ex)
@@ -641,6 +640,11 @@ class Odometer(Gui.QMainWindow):
         async.load(_url, timeout=7)
         async.finished.connect(store)
         async.failed.connect(failed)
+
+    def setThresholdVisible(self, b):
+        "toggle visibility of volume threshold spinbox"
+        self.ui.volumeThreshold.setVisible(b)
+        self.ui.volumeInfo.setVisible(b)
 
     def clicked(self, qml):
         'Open file dialog to get xmeml file name'

@@ -532,6 +532,7 @@
      <string>Advanced</string>
     </property>
     <addaction name="actionTimelineOrderReport"/>
+    <addaction name="actionAdjustThreshold"/>
    </widget>
    <addaction name="menu_About"/>
    <addaction name="menuSettings"/>
@@ -589,6 +590,9 @@
    </property>
   </action>
   <action name="actionTimelineOrderReport">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
    <property name="enabled">
     <bool>true</bool>
    </property>
@@ -597,6 +601,14 @@
    </property>
    <property name="toolTip">
     <string>Create a report of all checked clips, ordered by timeline entry</string>
+   </property>
+  </action>
+  <action name="actionAdjustThreshold">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Adjust threshold manually</string>
    </property>
   </action>
  </widget>
