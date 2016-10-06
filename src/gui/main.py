@@ -45,16 +45,29 @@ class UrlWorker(Core.QThread):
         self.exiting = True
         self.wait()
 
-    def load(self, url, timeout=10, data=None):
+    def load(self, url, timeout=10, data=None, headers=None):
         self.url = url
         self.timeout = timeout
-        self.data = data is not None and urllib.urlencode(data) or None
+        if data is not None:
+            logging.warning("urlworker load data %r", data)
+            if isinstance(data, basestring):
+                self.data = data
+            else:
+                self.data = urllib.urlencode(data)
+        else:
+            self.data = None
+        self.headers = {'X_REQUESTED_WITH' :'XMLHttpRequest',
+           'ACCEPT': 'application/json, text/javascript, */*; q=0.01',}
+        self.headers.update(headers or {})
+        logging.debug('UrlWorker headers: %r', self.headers)
         self.start()
 
     def run(self):
         logging.info('urlworker working on url %s with data %s', self.url, self.data)
         try:
-            con = urllib2.urlopen(self.url, self.data, timeout=self.timeout)
+            req = urllib2.Request(self.url, self.data, headers=self.headers)
+            con = urllib2.urlopen(req, timeout=self.timeout)
+
             self.finished.emit(con)
         except Exception as e:
             logging.exception(e)
@@ -536,15 +549,21 @@ class Odometer(Gui.QMainWindow):
         ui.AUXpassword.setText(self.settings.value('AUXpassword', '').toString())
         ui.Apollouser.setText(self.settings.value('Apollouser', '').toString())
         ui.Apollopassword.setText(self.settings.value('Apollopassword', '').toString())
+        ui.Universaluser.setText(self.settings.value('Universaluser', '').toString())
+        ui.Universalpassword.setText(self.settings.value('Universalpassword', '').toString())
+        ui.Uprightuser.setText(self.settings.value('Uprightuser', '').toString())
+        ui.Uprightpassword.setText(self.settings.value('Uprightpassword', '').toString())
+        ui.Extremeuser.setText(self.settings.value('Extremeuser', '').toString())
+        ui.Extremepassword.setText(self.settings.value('Extremepassword', '').toString())
         def storeCookie(service, data):
-            logging.debug("Storing cookie for %s: %s", service, data)
+            logging.debug("Storing cookie for %s: %s", service, data.info().get('Set-Cookie', None))
             logging.debug("Service returned %s", data.getcode())
-            logging.debug("Headers: %s", data.info())
+            #logging.debug("Headers: %s", data.info())
             b = data.read()
-            logging.debug("body: %s", b)
-            result = json.loads(b)
+            #logging.debug("body: %s", b)
             login = False
             if service == 'AUX':
+                result = json.loads(b)
                 if result['ax_success'] == 1:
                     self.settings.setValue('AUXcookie', data.info()['Set-Cookie'])
                     self.showstatus('Logged in to AUX')
@@ -553,6 +572,7 @@ class Odometer(Gui.QMainWindow):
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Apollo':
+                result = json.loads(b)
                 if result['success'] == 1:
                     self.settings.setValue('Apollocookie', data.info()['Set-Cookie'])
                     self.showstatus('Logged in to Apollo')
@@ -560,11 +580,47 @@ class Odometer(Gui.QMainWindow):
                     m = '%s login failed: %s' % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
-            print list(self.settings.allKeys())
+            elif service == 'Upright':
+                if result['success'] == 1:
+                    self.settings.setValue('Uprightcookie', data.info()['Set-Cookie'])
+                    self.showstatus('Logged in to Upright')
+                else:
+                    m = '%s login failed: %s' % (service, result['message'])
+                    logging.warning(m)
+                    self.showerror(m)
+            elif service == 'Universal':
+                # if password matched, we get
+                #  <div class="result" ssoToken="xxx">True</div>
+                # but if pasword failed, instead we get
+                # <div class="error failedlogin">You have 5 password attempts remaining.</div>
+                if b.startswith('''<div class="result" ssoToken="'''):
+                    self.settings.setValue('Universalcookie', data.info()['Set-Cookie'])
+                    self.showstatus('Logged in to Universal')
+                else:
+                    m = '%s login failed: %s' % (service, result['message'])
+                    logging.warning(m)
+                    self.showerror(m)
+            elif service == 'Extreme':
+                result = json.loads(b)
+                try:
+                    success = result['login']['error'] == 'WRONG_PASSWORD'
+                except KeyError:
+                    success = True
+                if not success:
+                    m = '%s login failed: %s' % (service, result['message'])
+                    logging.warning(m)
+                    self.showerror(m)
+                else:
+                    self.settings.setValue('Extremecookie', data.info()['Set-Cookie'])
+                    self.showstatus('Logged in to Extreme')
+
+
+            #logging.debug("settings: %r", list(self.settings.allKeys()))
+
             stopBusy()
 
         def failed(ex):
-            logging.warning("faile!", ex)
+            logging.warning("faile! %r", ex)
             self.logException(ex)
             stopBusy()
         def startBusy():
@@ -602,14 +658,83 @@ class Odometer(Gui.QMainWindow):
             async.load(url, timeout=7, data=postdata)
             async.finished.connect(lambda d: storeCookie('Apollo', d))
             async.failed.connect(failed)
+        def Uprightlogin():
+            logging.info('login to Upright')
+            self.settings.setValue('Uprightuser', ui.Uprightuser.text())
+            self.settings.setValue('Uprightpassword', ui.Uprightpassword.text())
+            startBusy()
+            async = UrlWorker()
+            url = 'http://www.findthetune.com/online/login/ajax_authentication/'
+            getdata = urllib.urlencode({'ac':'login',
+                                        'country': 'NO',
+                                        'sprache': 'en',
+                                        'ext': 1,
+                                        '_dc': int(time.time()),
+                                        'luser':unicode(ui.AUXuser.text()),
+                                        # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
+
+                                        'lpass':unicode(ui.AUXpassword.text())})
+            postdata = {'user':unicode(ui.Uprightuser.text()),
+                        'pass':unicode(ui.Uprightpassword.text())}
+            async.load(url, timeout=7, data=postdata)
+            async.finished.connect(lambda d: storeCookie('Upright', d))
+            async.failed.connect(failed)
+        def Universallogin():
+            logging.info('login to Universal PPM')
+            self.settings.setValue('Universaluser', ui.Universaluser.text())
+            self.settings.setValue('Universalpassword', ui.Universalpassword.text())
+            startBusy()
+            async = UrlWorker()
+            url = 'http://www.unippm.se/Feeds/commonXMLFeed.aspx'
+            getdata = urllib.urlencode({'method': 'Login',
+                                        'user':unicode(ui.Universaluser.text()),
+                                        'password':unicode(ui.Universalpassword.text()),
+                                        'rememberme':'false',
+                                        'autoLogin':'false',
+                                        '_': int(time.time()),
+                                        })
+            async.load('%s?%s' % (url, getdata), timeout=7)
+            async.finished.connect(lambda d: storeCookie('Universal', d))
+            async.failed.connect(failed)
+        def Extremeauth():
+            logging.info('Getting auth from Extreme Music')
+            def getauth(resp):
+                'extract json from response body'
+                body = resp.read()
+                logging.debug('auth: %s', body)
+                self.settings.setValue('ExtremeAUTH', json.loads(body)['env']['API_AUTH'])
+            startBusy()
+            env = UrlWorker()
+            env.failed.connect(failed)
+            env.finished.connect(getauth)
+            env.finished.connect(lambda d: Extremelogin())
+            env.load('https://www.extrememusic.com/env')
+
+        def Extremelogin():
+            logging.info('login to Extreme Music')
+            time.sleep(0.5)
+            self.settings.setValue('Extremeuser', ui.Extremeuser.text())
+            self.settings.setValue('Extremepassword', ui.Extremepassword.text())
+            async = UrlWorker()
+            url = 'https://lapi.extrememusic.com/accounts/login'
+            postdata = json.dumps({'username': unicode(ui.Extremeuser.text()),
+                                   'password': unicode(ui.Extremepassword.text()),
+                                   'remember_me': False})
+            auth = {'X-API-Auth': unicode(self.settings.value('ExtremeAUTH', '').toString()),
+                    'Content-Type':'application/json; charset=utf-8'}
+            async.load(url, timeout=7, data=postdata, headers=auth)
+            async.finished.connect(lambda d: storeCookie('Extreme', d))
+            async.failed.connect(failed)
         ui.AUXlogin.clicked.connect(AUXlogin)
         ui.Apollologin.clicked.connect(Apollologin)
+        ui.Universallogin.clicked.connect(Universallogin)
+        ui.Extremelogin.clicked.connect(Extremeauth)
         return LoginDialog.exec_()
 
     def updateAUXRepertoire(self):
         self.logMessage(self.tr('Updating AUX repertoire'))
         try:
-            repertoire = pickle.loads(str(self.settings.value('auxrepertoire', None).toString()))
+            repertoire = pickle.loads(str(self.settings.value('auxrepertoire', '').toString()))
         except Exception as e:
             self.logException(e)
             repertoire = None
