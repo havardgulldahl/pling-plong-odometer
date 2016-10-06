@@ -27,75 +27,79 @@ from xmeml import iter as xmemliter
 import metadata.gluon
 import metadata.model
 import metadata.resolvers
+from core.workers import UrlWorker, XmemlWorker
+
+
+# import gui
 import odometer_ui
 import odometer_rc
 import auxreport_ui
 import prfreport_ui
 import onlinelogin_ui
 
-class UrlWorker(Core.QThread):
-    finished = Core.pyqtSignal(object)
-    failed = Core.pyqtSignal(tuple)
+# class UrlWorker(Core.QThread):
+#     finished = Core.pyqtSignal(object)
+#     failed = Core.pyqtSignal(tuple)
 
-    def __init__(self, parent=None):
-        super(UrlWorker, self).__init__(parent)
-        self.exiting = False
+#     def __init__(self, parent=None):
+#         super(UrlWorker, self).__init__(parent)
+#         self.exiting = False
 
-    def __del__(self):
-        self.exiting = True
-        self.wait()
+#     def __del__(self):
+#         self.exiting = True
+#         self.wait()
 
-    def load(self, url, timeout=10, data=None, headers=None):
-        self.url = url
-        self.timeout = timeout
-        if data is not None:
-            logging.warning("urlworker load data %r", data)
-            if isinstance(data, basestring):
-                self.data = data
-            else:
-                self.data = urllib.urlencode(data)
-        else:
-            self.data = None
-        self.headers = {'X_REQUESTED_WITH' :'XMLHttpRequest',
-           'ACCEPT': 'application/json, text/javascript, */*; q=0.01',}
-        self.headers.update(headers or {})
-        logging.debug('UrlWorker headers: %r', self.headers)
-        self.start()
+#     def load(self, url, timeout=10, data=None, headers=None):
+#         self.url = url
+#         self.timeout = timeout
+#         if data is not None:
+#             logging.warning("urlworker load data %r", data)
+#             if isinstance(data, basestring):
+#                 self.data = data
+#             else:
+#                 self.data = urllib.urlencode(data)
+#         else:
+#             self.data = None
+#         self.headers = {'X_REQUESTED_WITH' :'XMLHttpRequest',
+#            'ACCEPT': 'application/json, text/javascript, */*; q=0.01',}
+#         self.headers.update(headers or {})
+#         logging.debug('UrlWorker headers: %r', self.headers)
+#         self.start()
 
-    def run(self):
-        logging.info('urlworker working on url %s with data %s', self.url, self.data)
-        try:
-            req = urllib2.Request(self.url, self.data, headers=self.headers)
-            con = urllib2.urlopen(req, timeout=self.timeout)
+#     def run(self):
+#         logging.info('urlworker working on url %s with data %s', self.url, self.data)
+#         try:
+#             req = urllib2.Request(self.url, self.data, headers=self.headers)
+#             con = urllib2.urlopen(req, timeout=self.timeout)
 
-            self.finished.emit(con)
-        except Exception as e:
-            logging.exception(e)
-            self.failed.emit(tuple(sys.exc_info()))
+#             self.finished.emit(con)
+#         except Exception as e:
+#             logging.exception(e)
+#             self.failed.emit(tuple(sys.exc_info()))
 
-class XmemlWorker(Core.QThread):
-    loaded = Core.pyqtSignal(xmemliter.XmemlParser, name="loaded")
-    failed = Core.pyqtSignal(BaseException)
+# class XmemlWorker(Core.QThread):
+#     loaded = Core.pyqtSignal(xmemliter.XmemlParser, name="loaded")
+#     failed = Core.pyqtSignal(BaseException)
 
-    def __init__(self, parent=None):
-        super(XmemlWorker, self).__init__(parent)
-        self.exiting = False
+#     def __init__(self, parent=None):
+#         super(XmemlWorker, self).__init__(parent)
+#         self.exiting = False
 
-    def __del__(self):
-        self.exiting = True
-        self.wait()
+#     def __del__(self):
+#         self.exiting = True
+#         self.wait()
 
-    def load(self, filename):
-        self.xmemlfile = filename
-        self.start()
+#     def load(self, filename):
+#         self.xmemlfile = filename
+#         self.start()
 
-    def run(self):
-        try:
-            xmeml = xmemliter.XmemlParser(self.xmemlfile)
-            self.loaded.emit(xmeml)
-        except BaseException as e:
-            #logging.debug("beep"
-            self.failed.emit(e)
+#     def run(self):
+#         try:
+#             xmeml = xmemliter.XmemlParser(self.xmemlfile)
+#             self.loaded.emit(xmeml)
+#         except BaseException as e:
+#             #logging.debug("beep"
+#             self.failed.emit(e)
 
 class StatusBox(Gui.QWidget):
     INFO = 1
@@ -219,7 +223,7 @@ class Odometer(Gui.QMainWindow):
         self.xmemlthread = XmemlWorker()
         self.xmemlthread.loaded.connect(self.load)
         self.xmemlthread.failed.connect(self.showException)
-    	self.ui = odometer_ui.Ui_MainWindow()
+        self.ui = odometer_ui.Ui_MainWindow()
         self.setLanguage(language)
         self.ui.setupUi(self)
         self.ui.detailsBox.hide()
@@ -261,8 +265,7 @@ class Odometer(Gui.QMainWindow):
         if not self.buildflags.getboolean('release', 'releasecheck'):
             self.ui.actionCheckForUpdates.setEnabled(False)
         if not self.buildflags.getboolean('ui', 'volumeThreshold'):
-            self.ui.volumeThreshold.hide()
-            self.ui.volumeInfo.hide()
+            self.setThresholdVisible(False)
         if not self.buildflags.getboolean('ui', 'prfbutton'):
             self.ui.DMAButton.hide()
         if not self.buildflags.getboolean('ui', 'auxbutton'):
