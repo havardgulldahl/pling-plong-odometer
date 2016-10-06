@@ -44,6 +44,7 @@ def test_xmemlsamples(datadir):
     def load(f):
         print("test load {f}".format(f=_fsdecode(f.basename)))
         xmeml = xmemliter.XmemlParser(f.open())
+        audioclips, audiofiles = xmeml.audibleranges()
         return xmeml
 
     #print datadir.listdir()

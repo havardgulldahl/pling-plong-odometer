@@ -36,9 +36,16 @@ def xmemlfiles(request):
               "897593": "RDR_18_5_Sunshine_Shapes_Instrumental_Keane_897593.wav",
               "898428": "BER_1250_89_Stress_mit_Recht_Muller_898428.wav"}
 
+
+    EXTREME = {"SCS069_02": "SCS069_02 MR DARKSIDE.WAV",
+               "SCS062_06_3": "SCS062_06_3 DINGO BINGO_DIDGERIDOO ONLY.WAV",
+               }
+
+
     return {'DMA': DMA,
             'AUX': AUX,
             'APOLLO': APOLLO,
             'UPRIGHT': UPRIGHT,
             'UNIPPM': UNIPPM,
+            'EXTREME': EXTREME,
             }
