@@ -516,3 +516,129 @@ class UprightmusicLookupWorker(Core.QThread):
         trackdata = response['track'] # return correct track, from the array of 'tracks' on the album dict
         albumdata = None # TODO: get this
         return albumdata, trackdata
+
+
+
+class ExtremeMusicLookupWorker(Core.QThread):
+    trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
+    trackFailed = Core.pyqtSignal(name="trackFailed" )
+    progress = Core.pyqtSignal(int, name="progress" )
+    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+
+    def __init__(self, parent=None):
+        super(ExtremeMusicLookupWorker, self).__init__(parent)
+
+    def __del__(self):
+        self.wait()
+
+    def load(self, filename, logincookie):
+        self.filename = filename
+        self.musicid = resolvers.ExtremeMusicResolver.musicid(filename)
+        self.logincookie = logincookie
+        self.start()
+
+    def run(self):
+        try:
+            trackdata = self.request(self.musicid, self.logincookie)
+        except TypeError: # self.request will return None on login errors
+            trackdata = None
+        # print trackdata
+        if trackdata is None:
+            return
+        self.progress.emit(75)
+
+        # Extreme Music has different versions of each song
+        # e.g. "full version", "30 seconds", "bass only", etc.
+        # and the different variants share the track_id, but
+        # the track_sound_no will be different and equal to
+        # self.musicid
+
+        version_title = None
+        version_duration = -1
+        version_musicid = None
+
+        for version in trackdata['track_sounds']:
+            if self.musicid == version['track_sound_no']: # this is the one
+                version_title = '%s (%s)' % (version['title'], version['version_type'])
+                version_duration = version['duration']
+
+
+        composers = ['%s (%s)' % (c['name'], c['society']) for c in trackdata['composers']]
+        arrangers = ['%s' % (c['name'],) for c in trackdata['arrangers']]
+
+        metadata = TrackMetadata(filename=self.filename,
+                 musiclibrary=resolvers.ExtremeMusicResolver.name,
+                 title=version_title or trackdata.get('title', None),
+                 length=version_duration or trackdata.get('duration', -1),
+                 composer=', '.join(composers),
+                 artist=None,
+                 year=-1,
+                 recordnumber=self.musicid,
+                 albumname=albumdata.get('album_title', None),
+                 copyright=', '.join([c['name'] for c in trackdata['collecting_publishers']]),
+                 # lcnumber=None,
+                 # isrc=None,
+                 # ean=None,
+                 # catalogue=None,
+                 label=self.musicid[0:3],
+                 # lyricist=None,
+                 identifier='extremetrack# %s' % trackdata.get('track_id', -1),
+                 )
+        metadata.productionmusic = True
+        self.progress.emit(90)
+        self.trackResolved.emit(metadata)
+        self.progress.emit(100)
+        #self.terminate()
+        #self.deleteLater()
+
+    def request(self, musicid, logincookie):
+        "do http requests to lapi.extrememusic.com to get track metadata"
+
+        def req(url):
+            "helper function to do all the http heavy lifting. get url, return json"
+
+            try:
+                headers = {'X-API-Auth':logincookie}
+                r = urllib2.Request(url, headers)
+                req = urllib2.urlopen(r)
+
+            except IOError as e:
+                # e.g. dns lookup failed
+                self.trackFailed.emit()
+                self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+                return None
+
+            if req.getcode() in (404, 403, 401, 400, 500):
+                self.trackFailed.emit()
+                self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
+                return None
+
+            response = json.loads(req.read()) # it's a json array
+            if len(response) == 0:
+                # empty response, likely not logged in or expired login cookie
+                self.trackFailed.emit()
+                self.error.emit('Tried to lookup %s, but failed. Please try again' % (musicid,))
+                return None
+            return response
+
+        srch = req('https://lapi.extrememusic.com/search/tracks?query=%s&mode=filter' % musicid)
+        if srch is None:
+            return None
+        self.progress.emit(40)
+        if not len(srch['track_search_result_items']) > 0:
+            # something is wrong, no results
+            self.trackFailed.emit()
+            self.error.emit('The Extreme Music catalogue does not seem to know anything about this music id: %s' % (musicid, ))
+            return None
+        # get internal music id
+        extrack_id = srch['track_search_result_items'][0]['track_id']
+        trackdata = req('https://lapi.extrememusic.com/tracks/%s' % extrack_id)
+        if trackdata['track'] is None:
+            # something is wrong, no results
+            self.trackFailed.emit()
+            self.error.emit('The Extreme Music catalogue does not seem to know anything about this music id: %s (internal music id: %s)' % (musicid, extrack_id))
+            return None
+        return trackdata['track']
+
+
+
