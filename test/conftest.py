@@ -34,8 +34,13 @@ def xmemlfiles(request):
               "858425": "BR_586_5_Unstoppable_Force_Britton_858425.wav",
               "652177": "CHAP_386_2_Neapolitan_Love_Song_Stott_652177.wav",
               "897593": "RDR_18_5_Sunshine_Shapes_Instrumental_Keane_897593.wav",
-              "898428": "BER_1250_89_Stress_mit_Recht_Muller_898428.wav"}
+              "898428": "BER_1250_89_Stress_mit_Recht_Muller_898428.wav",
+              "66126": "CHAPWR_6_4_Sufi_Hamadcha_Amar_66126.wav",
+              "920961": "SUN_3_2_Neon_Pulse_Keaton_Thomas_920961.wav",
+              "321775": "LO_CD_18_6_East_Of_West_Black_Carpenter_More_321775.wav",
+              "762667": "STFTA_1_175_Don_t_Take_Me_Down_Hart_Williams_762667.wav",
 
+              }
 
     EXTREME = {"SCS069_02": "SCS069_02 MR DARKSIDE.WAV",
                "SCS062_06_3": "SCS062_06_3 DINGO BINGO_DIDGERIDOO ONLY.WAV",
