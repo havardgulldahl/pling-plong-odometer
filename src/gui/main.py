@@ -893,7 +893,8 @@ class Odometer(Gui.QMainWindow):
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress)
                 w.trackFailed.connect(lambda x: self.showProgress(x, 100)) # dont leave progress bar dangling
-                w.error.connect(self.showerror)
+                w.error.connect(self.setRowInfo)
+                w.error.connect(lambda f, e: self.showerror(e))
                 w.warning.connect(lambda s: self.logMessage(s, msgtype=StatusBox.WARNING))
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
@@ -922,13 +923,15 @@ class Odometer(Gui.QMainWindow):
             if metadata.title is None and metadata.label is None:
                 txt = self.tr("Incomplete metadata. Please update manually")
             else:
-                txt = u"\u00ab%(title)s\u00bb \u2117 %(label)s"
+                txt = u"\u00ab%(title)s\u00bb \u2117 %(label)s (%(musiclibrary)s)"
         else:
             if metadata.title is None and metadata.artist is None:
                 txt = self.tr("Incomplete metadata. Please update manually")
             else:
                 txt = u"%(artist)s: \u00ab%(title)s\u00bb \u2117 %(label)s %(year)s"
-        row.setText(3, txt % vars(metadata))
+        #row.setText(3, txt % vars(metadata))
+        self.setRowInfo(row, txt % vars(metadata))
+
         if metadata.musiclibrary in ("Sonoton", 'AUX Publishing'):
             self.ui.AUXButton.setEnabled(True)
         elif metadata.musiclibrary == 'ApolloMusic':
@@ -1030,6 +1033,16 @@ class Odometer(Gui.QMainWindow):
                   self.ui.clipCopyright,
                   self.ui.clipLabel):
             editable(x)
+
+    def setRowInfo(self, row, text):
+        'Set the 3rd cell of the <row> to <text>'
+
+        if isinstance(row, basestring):
+            row = self.rows[row]
+        elif isinstance(row, Core.QString):
+            row = self.rows[unicode(row)]
+        logging.debug('setting row  <%r> to <%r>', row, text)
+        row.setText(3, text)
 
     def itercheckedrows(self):
         'iterate through rows that are checked'
@@ -1212,7 +1225,7 @@ class Odometer(Gui.QMainWindow):
         resolver.trackResolved.connect(updateMetadata)
         resolver.trackResolved.connect(self.submitMissingFilename)
         resolver.trackProgress.connect(self.showProgress)
-        resolver.error.connect(self.showerror)
+        resolver.error.connect(lambda f, e: self.showerror(e))
         self.workers.append(resolver) # keep track of the worker
         resolver.resolve(unicode(manualPattern), filepath.pathurl) # put the worker to work async
 

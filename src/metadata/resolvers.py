@@ -85,7 +85,7 @@ class ResolverBase(Core.QObject):
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     labelmap = [] # a list of labels that this music service carries
     name = 'general'
-    error = Core.pyqtSignal(unicode, name="error" ) # error message
+    error = Core.pyqtSignal(unicode, unicode, name="error" ) # filename,  error message
     trackFailed = Core.pyqtSignal(unicode, name="trackFailed" ) # filename
     trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" ) # filename, metadataobj
     trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" ) # filename, progress 0-100
@@ -131,7 +131,7 @@ class ResolverBase(Core.QObject):
                 return False
         url = self.url(filename)
         if not url: # invalid url, dont load it
-            self.error.emit('Invalid url for filename %s' % filename)
+            self.error.emit(filename, 'Invalid url for filename %s' % filename)
             self.trackFailed.emit(filename)
             return False
         logging.debug('ResolverBase.resolve traversing the INTERNET: %s => %s', filename, url)
@@ -276,7 +276,7 @@ class GenericFileResolver(ResolverBase):
         except Exception as e:
             #file is not available or is corrupt
             if hasattr(e, 'message'):
-                self.error.emit(e.message)
+                self.error.emit(filename, e.message)
             return False
 
         md = TrackMetadata(filename)
@@ -367,7 +367,7 @@ class DMAResolver(ResolverBase):
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(msg))
+        self.worker.error.connect(lambda msg: self.error.emit(filename, msg))
         self.worker.load(filename)
 
     @staticmethod
@@ -451,7 +451,7 @@ class AUXResolver(ResolverBase):
         #logging.debug('metadatabox: %s', metadatabox)
         if len(metadatabox.strip()) == 0:
             self.trackFailed.emit(self.filename)
-            self.error.emit("Could not get info on %s. Lookup failed" % self.filename)
+            self.error.emit(self.filename, "Could not get info on %s. Lookup failed" % self.filename)
             return None
         metadata = TrackMetadata(filename=self.doc.filename,
                                  recordnumber=self.musicid(self.doc.filename),
@@ -528,10 +528,10 @@ class ApollomusicResolver(ResolverBase):
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(msg))
+        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
         # check login cookie, without it we get nothing from the service
         if self.logincookie is None:
-            self.error.emit(u"You need to log in to ApolloMusic before we can look something up")
+            self.error.emit(self.filename, u"You need to log in to ApolloMusic before we can look something up")
             self.trackFailed.emit(self.filename)
             return
 
@@ -677,7 +677,7 @@ class UniPPMResolver(ResolverBase):
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(msg))
+        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
 
         self.worker.load(filename)
 
@@ -714,10 +714,10 @@ class UprightmusicResolver(ResolverBase):
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(msg))
+        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
         # check login cookie, without it we get nothing from the service
         if self.logincookie is None:
-            self.error.emit(u"You need to log in to UprightMusic before we can look something up")
+            self.error.emit(self.filename, u"You need to log in to UprightMusic before we can look something up")
             self.trackFailed.emit(self.filename)
             return
 
@@ -785,7 +785,7 @@ class ExtremeMusicResolver(ResolverBase):
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(msg))
+        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
         # check login cookie, without it we get nothing from the service
         if self.logincookie is None:
             self.fetchlogincookie()
