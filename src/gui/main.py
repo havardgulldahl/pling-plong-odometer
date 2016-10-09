@@ -233,8 +233,7 @@ class Odometer(Gui.QMainWindow):
             self.ui.editMetadataButton = self.ui.buttonBox.addButton(self.tr('Edit'), Gui.QDialogButtonBox.ActionRole)
             self.ui.editMetadataButton.clicked.connect(self.editMetadata)
         if self.buildflags.getboolean('ui', 'manuallookupbutton'):
-            self.ui.resolveManualButton = self.ui.buttonBox.addButton(self.tr('Manual lookup'), Gui.QDialogButtonBox.ActionRole)
-            self.ui.resolveManualButton.clicked.connect(self.manualResolve)
+            self.setManualLookupButtonVisible(True)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         #self.ui.DMAButton.clicked.connect(self.gluon)
@@ -257,6 +256,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.actionLoginOnline.triggered.connect(self.showLoginOnline)
         self.ui.actionTimelineOrderReport.triggered.connect(self.showTimelineOrderReport)
         self.ui.actionAdjustThreshold.toggled.connect(self.setThresholdVisible)
+        self.ui.actionManualLookup.toggled.connect(self.setManualLookupButtonVisible)
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
         self.ui.dropIcon = Svg.QSvgWidget(':/gfx/graystar', self.ui.clips)
@@ -773,6 +773,16 @@ class Odometer(Gui.QMainWindow):
         "toggle visibility of volume threshold spinbox"
         self.ui.volumeThreshold.setVisible(b)
         self.ui.volumeInfo.setVisible(b)
+
+    def setManualLookupButtonVisible(self, show):
+        if show:
+            self.ui.resolveManualButton = self.ui.buttonBox.addButton(self.tr('Manual lookup'), Gui.QDialogButtonBox.ActionRole)
+            self.ui.resolveManualButton.clicked.connect(self.manualResolve)
+        else:
+            try:
+                self.ui.buttonBox.removeButton(self.ui.resolveManualButton)
+            except Exception as e:
+                self.showException(e)
 
     def clicked(self, qml):
         'Open file dialog to get xmeml file name'
