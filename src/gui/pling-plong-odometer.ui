@@ -31,6 +31,9 @@
          <string>Project</string>
         </property>
         <layout class="QFormLayout" name="formLayout_2">
+         <property name="fieldGrowthPolicy">
+          <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+         </property>
          <item row="0" column="0">
           <widget class="QLabel" name="label_8">
            <property name="text">
@@ -40,6 +43,16 @@
          </item>
          <item row="0" column="1">
           <widget class="QLineEdit" name="prodno"/>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLineEdit" name="prodtitle"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>Production title</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -423,36 +436,78 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="DMAButton">
-        <property name="enabled">
-         <bool>false</bool>
+       <widget class="QGroupBox" name="groupBox_2">
+        <property name="title">
+         <string>Create reports</string>
         </property>
-        <property name="text">
-         <string>&amp;PRF report</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="AUXButton">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="toolTip">
-         <string>Open a report form for AUX production music</string>
-        </property>
-        <property name="text">
-         <string>&amp;AUX report</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="ApolloButton">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="text">
-         <string>Apollo report</string>
-        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="QPushButton" name="DMAButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>&amp;PRF</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="AUXButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>Open a report form for AUX production music</string>
+           </property>
+           <property name="text">
+            <string>AUX</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="ApolloButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Apollo</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="extremeButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="text">
+            <string>Extreme</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="UprightButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Upright</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="UniversalButton">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="text">
+            <string>Universal</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
@@ -490,7 +545,7 @@
          <string>Experiencing errors or glitches? Report it!</string>
         </property>
         <property name="text">
-         <string>Report error</string>
+         <string>Report an error</string>
         </property>
        </widget>
       </item>
@@ -513,26 +568,27 @@
     </property>
     <addaction name="actionAboutOdometer"/>
     <addaction name="actionHelp"/>
-    <addaction name="separator"/>
-    <addaction name="actionShowPatterns"/>
-    <addaction name="separator"/>
     <addaction name="actionLicenses"/>
-    <addaction name="actionLogs"/>
+    <addaction name="separator"/>
+    <addaction name="actionCheckForUpdates_2"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
      <string>Settings</string>
     </property>
     <addaction name="actionLoginOnline"/>
+    <addaction name="actionShowPatterns"/>
+    <addaction name="actionAdjustThreshold"/>
     <addaction name="separator"/>
-    <addaction name="actionCheckForUpdates"/>
    </widget>
    <widget class="QMenu" name="menuAdvanced">
     <property name="title">
      <string>Advanced</string>
     </property>
     <addaction name="actionTimelineOrderReport"/>
-    <addaction name="actionAdjustThreshold"/>
+    <addaction name="actionLogs"/>
+    <addaction name="separator"/>
+    <addaction name="actionReportError"/>
    </widget>
    <addaction name="menu_About"/>
    <addaction name="menuSettings"/>
@@ -597,10 +653,15 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Clips by timeline order</string>
+    <string>Report by timeline order</string>
    </property>
    <property name="toolTip">
     <string>Create a report of all checked clips, ordered by timeline entry</string>
+   </property>
+  </action>
+  <action name="actionReportError">
+   <property name="text">
+    <string>Create an error report</string>
    </property>
   </action>
   <action name="actionAdjustThreshold">
@@ -609,6 +670,11 @@
    </property>
    <property name="text">
     <string>Adjust threshold manually</string>
+   </property>
+  </action>
+  <action name="actionCheckForUpdates_2">
+   <property name="text">
+    <string>Check for updates</string>
    </property>
   </action>
  </widget>
