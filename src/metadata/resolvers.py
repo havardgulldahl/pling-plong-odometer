@@ -631,6 +631,7 @@ class UniPPMResolver(ResolverBase):
                   'SOHO': 'Unknown',
                   'ST':'Selectracks ',
                   'STDT':'Selectracks Documentary ',
+                  'STQM': 'Unknown',
                   'STSC':'Selectracks Songs ',
                   'STTK':'Selectracks Toolkits ',
                   'STFTA': 'Selectedtracks Unknown',
