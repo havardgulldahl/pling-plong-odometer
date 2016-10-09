@@ -583,6 +583,7 @@
     <addaction name="actionShowPatterns"/>
     <addaction name="actionAdjustThreshold"/>
     <addaction name="actionManualLookup"/>
+    <addaction name="actionSubmit_missing_filenames"/>
    </widget>
    <widget class="QMenu" name="menuAdvanced">
     <property name="title">
@@ -685,7 +686,18 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Look up file manually</string>
+    <string>Look up files manually</string>
+   </property>
+   <property name="toolTip">
+    <string>Makes it possible to look up files manually if the automatic fails</string>
+   </property>
+  </action>
+  <action name="actionSubmit_missing_filenames">
+   <property name="text">
+    <string>Submit missing filenames</string>
+   </property>
+   <property name="toolTip">
+    <string>Notify developers of filenames that should be recognised</string>
    </property>
   </action>
  </widget>

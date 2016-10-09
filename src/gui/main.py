@@ -784,6 +784,16 @@ class Odometer(Gui.QMainWindow):
             except Exception as e:
                 self.showException(e)
 
+    def setSubmitMissingButtonVisible(self, show):
+        if show:
+            self.ui.submitMissingButton = self.ui.buttonBox.addButton(self.tr('Submit missing filename'), Gui.QDialogButtonBox.ActionRole)
+            self.ui.submitMissingButton.clicked.connect(self.submitMissingFilename)
+        else:
+            try:
+                self.ui.buttonBox.removeButton(self.ui.resolveManualButton)
+            except Exception as e:
+                self.showException(e)
+
     def clicked(self, qml):
         'Open file dialog to get xmeml file name'
         lastdir = self.settings.value('lastdir', '').toString()
@@ -1186,7 +1196,7 @@ class Odometer(Gui.QMainWindow):
         return apollomusicDialog.exec_()
 
     def manualResolve(self):
-        'Manually submit selected tracks to aux for resolving'
+        'Manually submit selected tracks to proper music provider for resolving'
         row = self.ui.detailsBox.currentRow
         def updateMetadata(filename, md):
             row.metadata = md
@@ -1197,8 +1207,7 @@ class Odometer(Gui.QMainWindow):
         manualPattern, result = Gui.QInputDialog.getText(self, self.tr('Music ID'),
             self.tr('Enter the correct music ID:'), Gui.QLineEdit.Normal, filepath.name)
 
-        #resolver = metadata.AUXResolver()
-        resolver = metadata.findResolver(unicode(manualPattern))
+        resolver = metadata.resolvers.findResolver(unicode(manualPattern))
         resolver.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
         resolver.trackResolved.connect(updateMetadata)
         resolver.trackResolved.connect(self.submitMissingFilename)
@@ -1207,7 +1216,7 @@ class Odometer(Gui.QMainWindow):
         self.workers.append(resolver) # keep track of the worker
         resolver.resolve(unicode(manualPattern), filepath.pathurl) # put the worker to work async
 
-    def submitMissingFilename(self, filename, resolvedmetadata):
+    def submitMissingFilename(self, filename, resolvedmetadata=None):
         'Add filename and metadata to a public spreadsheet'
         _url = 'https://docs.google.com/spreadsheet/embeddedform?formkey=dEx0Z2xIWWJncHFxLVBQVWd2aW9xSUE6MQ'
         GdocsDialog = Gui.QDialog()
@@ -1217,6 +1226,15 @@ class Odometer(Gui.QMainWindow):
         ui.webView.load(Core.QUrl(_url))
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        if resolvedmetadata is None:
+            # take metadata from current row
+            try:
+                row = self.ui.detailsBox.currentRow
+                resolvedmetadata = row.metadata
+            except:
+                resolvedmetadata = {}
+
+
         def reportloaded(boolean):
             logging.debug("report loaded: %s" % boolean)
             html = ui.webView.page().mainFrame()
