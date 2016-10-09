@@ -29,6 +29,7 @@ def findResolver(filename):
              ApollomusicResolver(),
              UniPPMResolver(),
              UprightmusicResolver(),
+             ExtremeMusicResolver(),
              GenericFileResolver()]
     for resolver in resolvers:
         # print "%s accepts: %s" % (resolver, resolver.accepts(filename))
@@ -41,6 +42,7 @@ def getResolverPatterns():
              AUXResolver(),
              ApollomusicResolver(),
              UniPPMResolver(),
+             ExtremeMusicResolver(),
              UprightmusicResolver(),
              GenericFileResolver()]
     r = {}
