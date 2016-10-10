@@ -12,6 +12,8 @@ import StringIO
 import ConfigParser
 import logging
 import traceback
+import subprocess
+
 from collections import defaultdict
 try:
     import cPickle as pickle
@@ -1388,14 +1390,19 @@ def uniqify(seq):
 
 def xmemlfileFromEvent(event):
     'Return first xmeml file from a (e.g. dropped) Qt event'
+
     data = event.mimeData()
     try:
         for f in data.urls():
             fil = unicode(f.toLocalFile())
+            if fil.startswith('/.file/id='):
+                # thanks for nothing, apple
+                # https://stackoverflow.com/questions/37351647/get-path-from-os-x-file-reference-url-alias-file-file-id/37363026#37363026
+                fil = subprocess.check_output(['osascript', '-e get posix path of my posix file "%s"' % fil]).strip()
             if os.path.isfile(fil) and os.path.splitext(fil.upper())[1] == ".XML":
                 # TODO: also try to see if xmemliter accepts it?
                 return fil
-    except Exception, (e):
+    except Exception as e:
         logging.error(e)
     return False
 
