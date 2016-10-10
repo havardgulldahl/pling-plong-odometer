@@ -617,6 +617,7 @@ class UniPPMResolver(ResolverBase):
                   'PML':'Parry Music Library ',
                   'PN8':'Plan 8 ',
                   'PN8CD':'Plan 8 Music',
+                  'PKT': 'Unknown',
                   'RCAL':'RCAL ',
                   'RCF':'REALITY by C. Franke ',
                   'RCR':'Roadside Couch Records ',
