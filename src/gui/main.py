@@ -895,7 +895,7 @@ class Odometer(Gui.QMainWindow):
                 w.trackResolved.connect(self.trackCompleted) # connect the 'resolved' signal
                 w.trackProgress.connect(self.showProgress)
                 w.trackFailed.connect(lambda x: self.showProgress(x, 100)) # dont leave progress bar dangling
-                w.error.connect(self.setRowInfo)
+                w.error.connect(lambda f, e: self.setRowInfo(row=f, text=e, warning=True))
                 w.error.connect(lambda f, e: self.showerror(e))
                 w.warning.connect(lambda s: self.logMessage(s, msgtype=StatusBox.WARNING))
                 self.workers.append(w) # keep track of the worker
@@ -1036,7 +1036,7 @@ class Odometer(Gui.QMainWindow):
                   self.ui.clipLabel):
             editable(x)
 
-    def setRowInfo(self, row, text):
+    def setRowInfo(self, row, text, warning=False):
         'Set the 3rd cell of the <row> to <text>'
 
         if isinstance(row, basestring):
@@ -1045,6 +1045,12 @@ class Odometer(Gui.QMainWindow):
             row = self.rows[unicode(row)]
         logging.debug('setting row  <%r> to <%r>', row, text)
         row.setText(3, text)
+        if warning:
+            row.setIcon(3, Gui.QIcon(':/gfx/warn'))
+            #            row.setSizeHint(3, Core.QSize(16,16))
+            row.setIconSize(Core.QSize(16,16))
+        else:
+            row.setIcon(3, Gui.QIcon())
 
     def itercheckedrows(self):
         'iterate through rows that are checked'
