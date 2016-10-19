@@ -88,6 +88,6 @@ setup(
     version=getversion(),
     author=u'Håvard Gulldahl',
     author_email='havard.gulldahl@nrk.no',
-    description='Pling Plong Odometer is a tool to automatically calculate audio usage in an fcp project',
+    description='Pling Plong Odometer is a tool to automatically calculate audio usage in a Adobe Premiere or Final Cut Pro project',
     **extra_options
 )
