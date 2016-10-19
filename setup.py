@@ -64,9 +64,10 @@ elif sys.platform == 'win32':
      extra_options = dict(
          setup_requires=['py2exe'],
          windows=[mainscript],
-		 packages=['gui','metadata'],
+		 packages=['gui','metadata', 'core'],
 		 package_dir={'metadata':'src/metadata',
 		              'gui':'src/gui',
+                      'core': 'src/core',
 		              #'xmeml':'src/xmeml'
 					  },
 		 options=dict(py2exe=dict(
