@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import os.path
+import tempfile
+
 
 from xmeml import iter as xmemliter
 
@@ -9,7 +11,7 @@ from flask_restful import Resource, Api, reqparse, fields, marshal_with
 from flask_restful_swagger import swagger
 import werkzeug
 
-from celery import Celery
+from celery import Celery, chain
 
 
 
@@ -22,6 +24,7 @@ app = Flask(__name__)
 
 app.config['CELERY_BROKER_URL'] = 'amqp://guest@localhost//'
 app.config['CELERY_RESULT_BACKEND'] = 'amqp://guest@localhost//'
+app.config['CELERY_RESULT_SERIALIZER'] = 'pickle'
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
@@ -43,16 +46,18 @@ class XmemlAnalysisTask(object):
     'The task of running an xmeml file through audio analysis'
 
     resource_fields = {
-        'xmemlfile': fields.String(attribute='xmemlfile.filename'),
+        'filename': fields.String,
         'celery_id': fields.String, # uuid from celery
         'status_url': fields.Url(endpoint='status'),
         'status': fields.String,
         #'audiblefiles': fields.List,
     }
-    def __init__(self, xmemlfile):
-        app.logger.debug('New Xmeml task with xmemlfile: %r', xmemlfile)
-        self.xmemlfile = xmemlfile # a werkzeug.datastructures.FileStorage object
+    def __init__(self, fileupload):
+        app.logger.debug('New Xmeml task with fileupload: %r', fileupload)
+        self.fileupload = fileupload # a werkzeug.datastructures.FileStorage object
         self.task = None # being set in .run()
+        self.xmemlfile = None # being set in .register()
+        self.filename = None # being set in .register()
 
     @property
     def celery_id(self):
@@ -72,9 +77,14 @@ class XmemlAnalysisTask(object):
 
     def register(self):
         'Do some basic checks and, if they pass put this task into the queue'
-        if not os.path.splitext(self.xmemlfile.filename)[1].lower() == '.xml':
+        if not os.path.splitext(self.fileupload.filename)[1].lower() == '.xml':
             raise InvalidXmeml('Invalid file extension, expexting .xml')
         
+        self.filename = self.fileupload.filename
+        self.xmemlfile = tempfile.NamedTemporaryFile(suffix='.xml', delete=False)
+        self.fileupload.save(self.xmemlfile)
+        self.fileupload.close()
+
         return self.run()
 
     def audiblefiles(self):
@@ -83,19 +93,27 @@ class XmemlAnalysisTask(object):
 
     def run(self):
         'Start analysis task'
-        self.task = parse_async_xmeml.apply_async((self.xmemlfile.filename, ),
-                                                  link=analyze_async_xmeml.s())
+
+        # This is a celery chain
+        # save_xmeml -> parse_xmeml -> get_metadata
+        self.task = chain(
+            parse_xmeml.s(self.xmemlfile.name),
+            analyze_xmeml.s()
+        )
+        app.logger.debug('Set up celery chain: %r', self.task)
+        self.task.delay()
         return self.task
 
 @celery.task(bind=True)
-def parse_async_xmeml(self, xmemlfile):
+def parse_xmeml(self, xmemlfile):
     """Background task to parse Xmeml with python-xmeml"""
     app.logger.info('Parsing the xmemlf ile with xmemliter: %r', xmemlfile)
+    app.logger.info('exists? %s', os.path.exists(xmemlfile))
     xmeml = xmemliter.XmemlParser(xmemlfile)
     return xmeml # Celery.AsyncResult
 
 @celery.task(bind=True)
-def analyze_async_xmeml(xmeml):
+def analyze_xmeml(self, xmeml):
     """Background task to analyze the audible parts from the xmeml"""
     app.logger.info('Analyzing the audible parts: %r', xmeml.audibleranges())
 
@@ -104,7 +122,7 @@ class AnalyzeXmeml(Resource):
 
     @marshal_with(XmemlAnalysisTask.resource_fields)
     @swagger.operation(
-        notes='This is how we do it',
+        notes='Do a HTTP POST file upload with a content-type of multipart/form-data',
         responseClass=XmemlAnalysisTask.__name__,
         nickname='upload',
         parameters=[
@@ -113,7 +131,7 @@ class AnalyzeXmeml(Resource):
                 "description": "The Xmeml sequence file from Premiere or Final Cut Pro.",
                 "required": True,
                 "allowMultiple": False,
-                "dataType": 'xmeml',
+                "dataType": "xmeml",
                 "paramType": "body"
             }
             ],
@@ -143,6 +161,7 @@ class AnalyzeXmeml(Resource):
         try:
             task.register()
         except InvalidXmeml as e:
+            app.logger.error(e)
             return {'error': str(e)}
 
         app.logger.info('New task created: %r', task)
@@ -151,10 +170,53 @@ class AnalyzeXmeml(Resource):
 class AnalysisStatus(Resource):
     'Get a report on how the analysis of that uuid is going'
 
+    @swagger.operation(
+        notes='Do a HTTP GET with a UUID for a task, and get the status of it',
+        #responseClass=XmemlAnalysisTask.__name__,
+        nickname='status',
+        parameters=[
+            {
+                "name": "task",
+                "description": "The UUID of the Task",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": 'path'
+            }
+            ]
+    )
     def get(self, task):
-        'GET a status on how the analysis of a task (a uuid) is going'
-        return {'status': 'running',
-                'task': str(task)}
+        'GET a status on how the analysis of a task (passed by a uuid) is going'
+        parse_task = parse_xmeml.AsyncResult(str(task))
+        app.logger.debug('Getting status for parse_task %r: %s', parse_task, vars(parse_task))
+
+        if parse_task.state == 'PENDING':
+            # job did not start yet
+            response = {
+                'state': parse_task.state,
+                'current': 0,
+                'total': 1,
+                'status': 'Pending...'
+            }
+        elif parse_task.state != 'FAILURE':
+            response = {
+                'state': parse_task.state,
+                'current': parse_task.info.get('current', 0),
+                'total': parse_task.info.get('total', 1),
+                'status': parse_task.info.get('status', '')
+            }
+            if 'result' in parse_task.info:
+                response['result'] = parse_task.info['result']
+        else:
+            # something went wrong in the background job
+            response = {
+                'state': parse_task.state,
+                'current': 1,
+                'total': 1,
+                'status': str(parse_task.info),  # this is the exception raised
+            }
+        response.update({'uuid': str(task)})
+        return response
 
 api.add_resource(AnalyzeXmeml, '/analyze')
 
