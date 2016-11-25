@@ -45,7 +45,7 @@ class XmemlAnalysisTask(object):
     resource_fields = {
         'xmemlfile': fields.String(attribute='xmemlfile.filename'),
         'celery_id': fields.String, # uuid from celery
-        'status_url': fields.Url,
+        'status_url': fields.Url(endpoint='status'),
         'status': fields.String,
         #'audiblefiles': fields.List,
     }
@@ -158,7 +158,7 @@ class AnalysisStatus(Resource):
 
 api.add_resource(AnalyzeXmeml, '/analyze')
 
-api.add_resource(AnalysisStatus, '/status/<uuid:task>')
+api.add_resource(AnalysisStatus, '/status/<uuid:task>', endpoint='status')
 
 
 
