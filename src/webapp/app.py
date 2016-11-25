@@ -30,7 +30,9 @@ celery.conf.update(app.config)
 # Wrap the Api with swagger.docs. It is a thin wrapper around the Api class
 # that adds some swagger smarts
 
-api = swagger.docs(Api(app), apiVersion=APIVERSION)
+api = swagger.docs(Api(app), 
+                   description='A simple, JSON based Restful API to Odometer+Origo',
+                   apiVersion=APIVERSION)
 ###################################
 
 class InvalidXmeml(Exception):
@@ -73,6 +75,31 @@ class AnalyzeXmeml(Resource):
     'Resource to handle reception of xmeml and push it into a queue'
 
     @marshal_with(XmemlAnalysisTask.resource_fields)
+    @swagger.operation(
+        notes='some really good notes',
+        responseClass=XmemlAnalysisTask.__name__,
+        nickname='upload',
+        parameters=[
+            {
+                "name": "xmeml",
+                "description": "The Xmeml sequence file from Premiere or Final Cut Pro.",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'xmeml',
+                "paramType": "body"
+            }
+            ],
+        responseMessages=[
+            {
+                "code": 201,
+                "message": "Created. The URL of the created blueprint should be in the Location header"
+            },
+            {
+                "code": 405,
+                "message": "Invalid input"
+            }
+            ]
+    )
     def post(self):
         'POST an xmeml sequence to start the music report analysis. Returns a unique identifier'
 
