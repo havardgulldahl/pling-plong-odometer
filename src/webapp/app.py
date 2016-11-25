@@ -83,15 +83,21 @@ class XmemlAnalysisTask(object):
 
     def run(self):
         'Start analysis task'
-        self.task = analyze_async_xmeml.delay()
+        self.task = parse_async_xmeml.apply_async((self.xmemlfile.filename, ),
+                                                  link=analyze_async_xmeml.s())
         return self.task
 
 @celery.task(bind=True)
-def analyze_async_xmeml(xmemlfile):
-    """Background task to analyze Xmeml with python-xmeml"""
+def parse_async_xmeml(self, xmemlfile):
+    """Background task to parse Xmeml with python-xmeml"""
+    app.logger.info('Parsing the xmemlf ile with xmemliter: %r', xmemlfile)
     xmeml = xmemliter.XmemlParser(xmemlfile)
     return xmeml # Celery.AsyncResult
 
+@celery.task(bind=True)
+def analyze_async_xmeml(xmeml):
+    """Background task to analyze the audible parts from the xmeml"""
+    app.logger.info('Analyzing the audible parts: %r', xmeml.audibleranges())
 
 class AnalyzeXmeml(Resource):
     'Resource to handle reception of xmeml and push it into a queue'
