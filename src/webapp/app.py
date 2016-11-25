@@ -117,7 +117,7 @@ class AnalyzeXmeml(Resource):
         except InvalidXmeml as e:
             return {'error': str(e)}
 
-        return task
+        return task, 201
 
 class AnalysisStatus(Resource):
     'Get a report on how the analysis of that uuid is going'
