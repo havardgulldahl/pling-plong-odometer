@@ -2,7 +2,7 @@
 
 import os.path
 
-import uuid as uuidlib
+from xmeml import iter as xmemliter
 
 from flask import Flask
 from flask_restful import Resource, Api, reqparse, fields, marshal_with
@@ -20,8 +20,8 @@ app = Flask(__name__)
 ###################################
 # Set up the Celery task runner
 
-app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
-app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
+app.config['CELERY_BROKER_URL'] = 'amqp://guest@localhost//'
+app.config['CELERY_RESULT_BACKEND'] = 'amqp://guest@localhost//'
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
@@ -44,31 +44,53 @@ class XmemlAnalysisTask(object):
 
     resource_fields = {
         'xmemlfile': fields.String(attribute='xmemlfile.filename'),
-        'uuid': fields.String,
-        'celery_id': fields.Integer,
+        'celery_id': fields.String, # uuid from celery
         'status_url': fields.Url,
-        'status': fields.String
+        'status': fields.String,
+        #'audiblefiles': fields.List,
     }
     def __init__(self, xmemlfile):
         app.logger.debug('New Xmeml task with xmemlfile: %r', xmemlfile)
         self.xmemlfile = xmemlfile # a werkzeug.datastructures.FileStorage object
-        self.uuid = uuidlib.uuid4()
+        self.task = None # being set in .run()
 
     @property
     def celery_id(self):
-        return 123
+        'Get celery queue id'
+        if self.task is not None:
+            return self.task.id
+        else:
+            return -1
 
     @property
     def status(self):
-        return 'RUNNING'
+        'Get status'
+        if self.task is not None:
+            return self.task.state
+        else:
+            return 'UNKNOWN'
 
     def register(self):
         'Do some basic checks and, if they pass put this task into the queue'
         if not os.path.splitext(self.xmemlfile.filename)[1].lower() == '.xml':
             raise InvalidXmeml('Invalid file extension, expexting .xml')
         
-        return True
+        return self.run()
 
+    def audiblefiles(self):
+        'Get all the audible files'
+        return []
+
+    def run(self):
+        'Start analysis task'
+        self.task = analyze_async_xmeml.delay()
+        return self.task
+
+@celery.task(bind=True)
+def analyze_async_xmeml(xmemlfile):
+    """Background task to analyze Xmeml with python-xmeml"""
+    xmeml = xmemliter.XmemlParser(xmemlfile)
+    return xmeml # Celery.AsyncResult
 
 
 class AnalyzeXmeml(Resource):
@@ -76,7 +98,7 @@ class AnalyzeXmeml(Resource):
 
     @marshal_with(XmemlAnalysisTask.resource_fields)
     @swagger.operation(
-        notes='some really good notes',
+        notes='This is how we do it',
         responseClass=XmemlAnalysisTask.__name__,
         nickname='upload',
         parameters=[
@@ -117,6 +139,7 @@ class AnalyzeXmeml(Resource):
         except InvalidXmeml as e:
             return {'error': str(e)}
 
+        app.logger.info('New task created: %r', task)
         return task, 201
 
 class AnalysisStatus(Resource):
