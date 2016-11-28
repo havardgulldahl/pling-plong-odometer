@@ -135,7 +135,8 @@ def resolve_metadata(self, audioname, fileref, ranges):
     # find resolver
     # run resolver
     # return metadata
-    time.sleep(2.0)
+    import random
+    time.sleep(random.randint(0, 20)*0.1)
     app.logger.info("pretending to resove audio %r", audioname)
     return audioname
 
@@ -186,7 +187,7 @@ class AnalyzeXmeml(Resource):
             app.logger.error(e)
             return {'error': str(e)}
 
-        app.logger.info('New task created: %r', task.task.id)
+        app.logger.info('New task created: %r', task.task)
         return task, 201
 
 class AnalysisStatus(Resource):
