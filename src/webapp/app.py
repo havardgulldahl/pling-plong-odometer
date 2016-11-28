@@ -2,6 +2,7 @@
 
 import os.path
 import tempfile
+import time
 
 
 from xmeml import iter as xmemliter
@@ -11,7 +12,7 @@ from flask_restful import Resource, Api, reqparse, fields, marshal_with
 from flask_restful_swagger import swagger
 import werkzeug
 
-from celery import Celery, chain
+from celery import Celery, chain, group
 
 
 
@@ -24,7 +25,9 @@ app = Flask(__name__)
 
 app.config['CELERY_BROKER_URL'] = 'amqp://guest@localhost//'
 app.config['CELERY_RESULT_BACKEND'] = 'amqp://guest@localhost//'
+app.config['CELERY_TASK_SERIALIZER'] = 'pickle'
 app.config['CELERY_RESULT_SERIALIZER'] = 'pickle'
+app.config['CELERY_ACCEPT_CONTENT'] = ['pickle', 'json', 'msgpack', 'yaml']
 
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
@@ -95,10 +98,11 @@ class XmemlAnalysisTask(object):
         'Start analysis task'
 
         # This is a celery chain
-        # save_xmeml -> parse_xmeml -> get_metadata
+        # parse_xmeml -> analyze_timeline
+        #                  |_*_> (group) resolve_metadata
         self.task = chain(
             parse_xmeml.s(self.xmemlfile.name),
-            analyze_xmeml.s()
+            analyze_timeline.s()
         )
         app.logger.debug('Set up celery chain: %r', self.task)
         self.task.delay()
@@ -110,12 +114,30 @@ def parse_xmeml(self, xmemlfile):
     app.logger.info('Parsing the xmemlf ile with xmemliter: %r', xmemlfile)
     app.logger.info('exists? %s', os.path.exists(xmemlfile))
     xmeml = xmemliter.XmemlParser(xmemlfile)
-    return xmeml # Celery.AsyncResult
+    audioclips, audiofiles = xmeml.audibleranges()
+    app.logger.info('Analyzing the audible parts: %r, files: %r', audioclips, audiofiles)
+    return (audioclips, audiofiles) # Celery.AsyncResult
 
 @celery.task(bind=True)
-def analyze_xmeml(self, xmeml):
+def analyze_timeline(self, ranges):
     """Background task to analyze the audible parts from the xmeml"""
-    app.logger.info('Analyzing the audible parts: %r', xmeml.audibleranges())
+    app.logger.info('analyzing #ranges: %r', len(ranges))
+    audioclips, audiofiles = ranges
+    analysis_group = group([resolve_metadata.s(aname, audiofiles[aname], cliprange) for aname, cliprange in audioclips.iteritems() if len(cliprange)>0])
+    analysis_group()
+
+@celery.task(bind=True)
+def resolve_metadata(self, audioname, fileref, ranges):
+
+    frames = len(ranges)
+    app.logger.info("======= %s: %s -> %s======= ", audioname, ranges.r, frames)
+    secs = ranges.seconds()
+    # find resolver
+    # run resolver
+    # return metadata
+    time.sleep(2.0)
+    app.logger.info("pretending to resove audio %r", audioname)
+    return audioname
 
 class AnalyzeXmeml(Resource):
     'Resource to handle reception of xmeml and push it into a queue'
@@ -164,7 +186,7 @@ class AnalyzeXmeml(Resource):
             app.logger.error(e)
             return {'error': str(e)}
 
-        app.logger.info('New task created: %r', task)
+        app.logger.info('New task created: %r', task.task.id)
         return task, 201
 
 class AnalysisStatus(Resource):
