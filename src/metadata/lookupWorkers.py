@@ -780,7 +780,7 @@ class AUXLookupWorker(Core.QThread):
                  catalogue=trackdata.get('p_nummer', None),
                  label=trackdata.get('label', None),
                  lyricist=trackdata.get('lyrics', None),
-                 identifier='AUXTrack# %s' % self.musicid,
+                 identifier=trackdata.get('cdkurz', self.musicid)
                  )
         self.progress.emit(90)
         metadata.productionmusic = True

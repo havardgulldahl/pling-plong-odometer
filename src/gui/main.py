@@ -1115,7 +1115,7 @@ class Odometer(Gui.QMainWindow):
         s = ""
         for r in self.itercheckedrows():
             if r.metadata.musiclibrary == "AUX Publishing":
-                s = s + u"%s x %s sek \r\n" % (r.metadata.getmusicid(), r.clip['durationsecs'])
+                s = s + u"%s x %s sek \r\n" % (r.metadata.identifier, r.clip['durationsecs'])
         AUXDialog = Gui.QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(AUXDialog)
