@@ -1446,7 +1446,7 @@ if __name__ == '__main__':
         import StringIO
         sys.stderr = StringIO.StringIO()
         sys.stdout = StringIO.StringIO()
+    # strptime has threading issues, calling it once before threading starts prevents this
+    time.strptime('2016', '%Y') 
     rungui(sys.argv)
-
-
 

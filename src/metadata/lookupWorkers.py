@@ -4,6 +4,8 @@
 
 import PyQt4.QtCore as Core
 import logging
+from datetime import datetime
+
 
 import urllib, urllib2
 
@@ -780,8 +782,19 @@ class AUXLookupWorker(Core.QThread):
                  lyricist=trackdata.get('lyrics', None),
                  identifier='AUXTrack# %s' % self.musicid,
                  )
-        metadata.productionmusic = True
         self.progress.emit(90)
+        metadata.productionmusic = True
+        try:
+            dt = datetime.strptime(trackdata.get('releasedat', None), '%Y-%m-%d') #SIC, 
+            logging.debug('Got datetime %r for musicid %r', dt, self.musicid)            
+            metadata.year = dt.year
+        except (ValueError, TypeError) as e:
+            logging.exception(e)
+            pass # the data does not fit our expectations, so we let it slide
+        except Exception as e:
+            # this is unexpected
+            logging.exception(e)
+
         self.trackResolved.emit(metadata)
         self.progress.emit(100)
         #self.terminate()
