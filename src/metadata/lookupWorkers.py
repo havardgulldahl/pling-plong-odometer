@@ -795,6 +795,8 @@ class AUXLookupWorker(Core.QThread):
             # this is unexpected
             logging.exception(e)
 
+        if metadata.title is not None:
+            metadata.title = metadata.title.title() # all AUX titles are ALL CAPS. Noisy!
         self.trackResolved.emit(metadata)
         self.progress.emit(100)
         #self.terminate()
