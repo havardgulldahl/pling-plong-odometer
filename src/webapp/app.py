@@ -44,14 +44,34 @@ api = swagger.docs(Api(app),
 class InvalidXmeml(Exception):
     pass
 
+class TaskRunner(object):
+    'Keep track of all tasks'
+    #TODO: keep track of every member of chain: 
+    # http://stackoverflow.com/a/23908345
+    def __init__(self):
+        self.tasks = {}
+
+    def add(self, task):
+        'Add a task to the list'
+        self.tasks[task.id] = task
+        return True
+
+    def get(self, taskId):
+        'Find a task by uuid'
+        try:
+            return self.tasks[taskId]
+        except KeyError:
+            #no such task found
+            return None
+
 @swagger.model
 class XmemlAnalysisTask(object):
     'The task of running an xmeml file through audio analysis'
 
     resource_fields = {
         'filename': fields.String,
-        'celery_id': fields.String, # uuid from celery
-        'status_url': fields.Url(endpoint='status'),
+        'celeryTaskId': fields.String, # uuid from celery
+        'statusUrl': fields.Url(endpoint='status'),
         'status': fields.String,
         #'audiblefiles': fields.List,
     }
@@ -59,16 +79,17 @@ class XmemlAnalysisTask(object):
         app.logger.debug('New Xmeml task with fileupload: %r', fileupload)
         self.fileupload = fileupload # a werkzeug.datastructures.FileStorage object
         self.task = None # being set in .run()
+        self.__chain = None
         self.xmemlfile = None # being set in .register()
         self.filename = None # being set in .register()
 
     @property
-    def celery_id(self):
-        'Get celery queue id'
-        if self.task is not None:
-            return self.task.id
+    def celeryTaskId(self):
+        'Get celery task id'
+        if self.__chain is not None:
+            return self.__chain.id
         else:
-            return -1
+            return None
 
     @property
     def status(self):
@@ -100,12 +121,12 @@ class XmemlAnalysisTask(object):
         # This is a celery chain
         # parse_xmeml -> analyze_timeline
         #                  |_*_> (group) resolve_metadata
-        self.task = chain(
+        self.__chain = chain(
             parse_xmeml.s(self.xmemlfile.name),
             analyze_timeline.s()
         )
-        app.logger.debug('Set up celery chain: %r', self.task)
-        self.task.delay()
+        app.logger.debug('Set up celery chain: %r', self.__chain)
+        self.task = self.__chain.delay()
         return self.task
 
 @celery.task(bind=True)
@@ -186,7 +207,7 @@ class AnalyzeXmeml(Resource):
         except InvalidXmeml as e:
             app.logger.error(e)
             return {'error': str(e)}
-
+        app.tasks.add(task.task)
         app.logger.info('New task created: %r', task.task)
         return task, 201
 
@@ -210,8 +231,9 @@ class AnalysisStatus(Resource):
     )
     def get(self, task):
         'GET a status on how the analysis of a task (passed by a uuid) is going'
-        parse_task = parse_xmeml.AsyncResult(str(task))
-        app.logger.debug('Getting status for parse_task %r: %s', parse_task, vars(parse_task))
+        #parse_task = parse_xmeml.AsyncResult(str(task))
+        parse_task = app.tasks.get(str(task))
+        app.logger.debug('Getting status for parse_task %r: %s', parse_task, dir(parse_task))
 
         if parse_task.state == 'PENDING':
             # job did not start yet
@@ -249,4 +271,5 @@ api.add_resource(AnalysisStatus, '/status/<uuid:task>', endpoint='status')
 
 
 if __name__ == '__main__':
+    app.tasks = TaskRunner()
     app.run(debug=True)
