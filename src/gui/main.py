@@ -1046,9 +1046,12 @@ class Odometer(Gui.QMainWindow):
         logging.debug('setting row  <%r> to <%r>', row, text)
         row.setText(3, text)
         if warning:
+            row.setSizeHint(3, Core.QSize(16,16))
             row.setIcon(3, Gui.QIcon(':/gfx/warn'))
-            #            row.setSizeHint(3, Core.QSize(16,16))
-            row.setIconSize(Core.QSize(16,16))
+            try:
+                row.setIconSize(Core.QSize(16,16))
+            except AttributeError as e:
+                logging.debug('Failed to set icon size, since %r', e)
         else:
             row.setIcon(3, Gui.QIcon())
 
