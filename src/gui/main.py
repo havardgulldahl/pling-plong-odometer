@@ -874,6 +874,12 @@ class Odometer(Gui.QMainWindow):
             self.ui.AUXButton.setEnabled(True)
         elif metadata.musiclibrary == 'ApolloMusic':
             self.ui.ApolloButton.setEnabled(True)
+        #elif metadata.musiclibrary == 'ExtremeMusic': # TODO: enable this when dynamic report is possible
+        #    self.ui.ExtremeButton.setEnabled(True)
+        #elif metadata.musiclibrary == 'Universal': # TODO: enable this when dynamic report is possible
+        #    self.ui.UniversalButton.setEnabled(True)
+        #elif metadata.musiclibrary == 'Upright': # TODO: enable this when dynamic report is possible
+        #    self.ui.Upright.setEnabled(True)
         self.metadataLoaded.emit(row)
 
     def trackCompleted(self, filename, metadata):
