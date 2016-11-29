@@ -642,3 +642,198 @@ class ExtremeMusicLookupWorker(Core.QThread):
 
 
 
+class AUXLookupWorker(Core.QThread):
+    trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
+    trackFailed = Core.pyqtSignal(name="trackFailed" )
+    progress = Core.pyqtSignal(int, name="progress" )
+    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+
+    def __init__(self, parent=None):
+        super(AUXLookupWorker, self).__init__(parent)
+
+    def __del__(self):
+        self.wait()
+
+    def load(self, filename):
+        self.filename = filename
+        self.musicid = None
+        self.start()
+
+    def run(self):
+        # first, get track id
+        self.progress.emit(10)
+        self.musicid = resolvers.AUXResolver.musicid(self.filename)
+        if self.musicid is None:
+            # could not extract track id from filename
+            self.trackFailed.emit()
+            self.error.emit('Tried to get AUX track id from filename "%s", but failed. Please report this.' % (self.filename, ))
+            return None
+
+        self.progress.emit(50)
+
+        # then, get all metadata
+        albumdata, trackdata = self.request_trackdata(self.musicid)
+        #print trackdata
+        if trackdata is None:
+            return
+        self.progress.emit(75)
+        # trackdata looks like this:
+        # {
+        # "tracks": [
+        #     {
+        #     "cd_samples": "",
+        #     "cd_neu": "1",
+        #     "cd_genre": "",
+        #     "disc": "",
+        #     "cd_title": "SPORTS ATTACK",
+        #     "cd_description": "Aggressive, muscular and tough athletes, triumphant in rousing rock renditions, covering metal, alternative, indie and hard rock styles. Performed by members of the legendary metal band RUNNING WILD.",
+        #     "cd_trackcnt": "37",
+        #     "releasedat": "2016-07-29",
+        #     "cd_webmix": "1",
+        #     "cd_surround": "0",
+        #     "cd_isrc": "",
+        #     "ean": "4020771163564",
+        #     "credits": "Arranged and produced by Peter Jordan. Recorded and mastered at PJ Music & Horus Sound Studio, Hannover, Germany. Sound engineers: Peter Jordan, Arne Neurand and Andre Bollweg. \nPerformed by Peter Jordan (guitars, bass, keyboards & percusssion), Ole Hempelmann (bass) and Michael Wolpers (drums & percussion)\n\nMusic consultant: Robert Narholz (LENA Film Inc., L.A.)\nCover design: Sahar Aharoni\n\nISRC: DE-B63-16-356-01-37  *  GTIN\/UPC: 4020771163564",
+        #     "label": "ROCK",
+        #     "p_nummer": "156",
+        #     "p_cut": "2.0",
+        #     "zeit": "0:30",
+        #     "nZeit": "30",
+        #     "solo": "GIEF",
+        #     "allkomp": "Peter Jordan",
+        #     "besetzb": "1",
+        #     "versionb": "128",
+        #     "tempob": "2",
+        #     "soundb": "2",
+        #     "has_mp3": "1",
+        #     "has_mp3down": "1",
+        #     "has_mp3play": "1",
+        #     "has_wav": "1",
+        #     "has_aiff": "1",
+        #     "expreis": "0",
+        #     "extrail": "0",
+        #     "cdkurz": "ROCK015602",
+        #     "cdcdkurz": "ROCK0156",
+        #     "maintrack": "1.0",
+        #     "webmix": "1",
+        #     "surround": "0",
+        #     "isrc": "DE-B63-16-356-02",
+        #     "funktionen": "G73-G74-G75-G80-G81-G21-G14-INT-AGG-TVN-UNR-PRO-DXN-DRT-ENE-AUF-G17-DTA-ARK-RK1-HEM-COG-EXX-SSP-ARO-PUN-PRK-TLP-ACT-RCP-PSP-WST-",
+        #     "copyrighted": "1",
+        #     "bpm": "176",
+        #     "tonart": "Gbmin",
+        #     "haslyrics": "0",
+        #     "hasstems": "0",
+        #     "lyrics": "",
+        #     "iswc": "",
+        #     "title": "THE HYPE B",
+        #     "description": "Commercial length. Uptempo alternative rock, punk rock with big nasty attitude for rough competition and endurance sports. 176 bpm (Gbmin)",
+        #     "keywords": "Instrumental, Aggressive, Aggression, Combative, Fiery, Furious, In your face, Offensive, Provocative, Punchy, Rage, Raging, Rampaging, hard-hitting, Driving, Restless, Agitated, Agitation, Antsy, Anxious, Fidgety, Propulsive, Driving, Propelling, Dramatic Action, Dramatic, Stirring, Energetic, Dynamic, Exciting, Excite, Excitement, Electrifying, Rousing, Stimulating, Thrilling, Action, Panic, Action Heroes, Action Rock, Adrenalin, Arena, Baseball, Crime Drama, Football, Hockey, Macho, Punchy, Pursuit, Racing, Raging, Reckless, Stadium Rock, Urgency, 2010 Rock, 2010s Rock, Heavy Metal Rock, Death, Hooligan, Provocation, Skinhead, Yob, Videogames, Extreme Sports, Sport - Special Productions, Alternative Rock, Punk, Rebellious, Skinhead, Punk Rock, Skinhead, Trailer - Sports, Action Trailer, Rock promos, Sports - Promos, Commercials, Ads, Advertisements, Jingles, Spots,Guitar-electric,,fast,, ROCK015602, ROCK0156, ROCK",
+        #     "alt_title": "",
+        #     "langcode": "EN",
+        #     "provider": "SON",
+        #     "lc": "30572",
+        #     "verlag": "Rockshop",
+        #     "library": "Rockshop - ROCK",
+        #     "gemadbnr": null,
+        #     "notiz": "",
+        #     "cd_notiz": "",
+        #     "img": "rock\/rock0156.jpg",
+        #     "repertoire": "ROCK",
+        #     "licences": {
+        #         "img": "\/img\/ctryspec\/rightsoc_NO.gif",
+        #         "link": "",
+        #         "text": "Copyright protected"
+        #     },
+        #     "tempotxt": "Fast",
+        #     "soundtxt": "Natural sound",
+        #     "formationtxt": "Small (1-10)",
+        #     "versiontxt": "Commercial 29\/30 sec",
+        #     "instruments": "Guitar-electric",
+        #     "akomp1": "Peter Jordan",
+        #     "artists": "Peter Jordan, Ole Hempelmann, Michael Wolpers",
+        #     "csinfo": "Track name: THE HYPE B\r\nTrack number: ROCK 156  2.0 (Trackcode: ROCK015602)\r\nComposer: Peter Jordan, Artists: Peter Jordan, Ole Hempelmann, Michael Wolpers\r\nEAN\/GTIN: 4020771163564 \r\nISRC: DE-B63-16-356-02\r\nAlbum name: SPORTS ATTACK\r\nCatalogue number: 156  \r\nLabel: ROCK\r\nCopyright owner: SONOTON Music GmbH & Co. KG\r\nLC number: 30572",
+        #     "dSec": "30",
+        #     "dMin": "0"
+        #     }
+        # ],
+        # "trackcnt": 1,
+        # "cnt": 1,
+        # "errmsg": "",
+        # "ax_success": 1
+        # }
+        metadata = TrackMetadata(filename=self.filename,
+                 musiclibrary=resolvers.AUXResolver.name,
+                 title=trackdata.get('title', None),
+                 length=trackdata.get('nZeit', -1),
+                 composer=trackdata.get('allkomp', None),
+                 artist=trackdata.get('artists', None),
+                 year=-1,
+                 recordnumber=self.musicid,
+                 albumname=trackdata.get('cd_title', None),
+                 copyright='SONOTON Music GmbH & Co. KG',
+                 lcnumber=trackdata.get('lc', None),
+                 isrc=trackdata.get('isrc', None),
+                 ean=trackdata.get('ean', None),
+                 catalogue=trackdata.get('p_nummer', None),
+                 label=trackdata.get('label', None),
+                 lyricist=trackdata.get('lyrics', None),
+                 identifier='AUXTrack# %s' % self.musicid,
+                 )
+        metadata.productionmusic = True
+        self.progress.emit(90)
+        self.trackResolved.emit(metadata)
+        self.progress.emit(100)
+        #self.terminate()
+        #self.deleteLater()
+
+    def request_trackdata(self, musicid):
+        """do an http get request to http://search.auxmp.co//search/html/ajax/axExtData.php
+
+        look up musicid, e.g ROCK015601
+
+        by doing a get request to
+        http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=ROCK015601&ac=track&country=NO'
+
+        and parse the json we get back
+
+        """
+        endpoint = 'http://search.auxmp.com//search/html/ajax/axExtData.php'
+        try:
+            data = ( ('ac','track'),
+                     ('country', 'NO'),
+                     ('cdkurz', musicid)
+                   )
+            r = urllib2.Request(endpoint + '?' + urllib.urlencode(data))
+            req = urllib2.urlopen(r)
+
+        except IOError as e:
+            # e.g. dns lookup failed
+            logging.exception(e)
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            return None
+
+        if req.getcode() in (404, 403, 401, 400, 500):
+            self.trackFailed.emit()
+            self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
+            return None
+
+        response = json.loads(req.read()) # it's a json array
+        if len(response) == 0 or response.get('ax_success') != 1:
+            # empty response,
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but failed. Please try again' % (musicid,))
+            return None
+        elif len(response.get('errmsg', '')) > 0:
+            # we got an error message from auxmp.com
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but received an error from AUX: %r' % (musicid, response.errmsg))
+        elif response.get('trackcnt') == 0:
+            # auxmp.com didnt return any tracks for our search term
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but the AUX server returned no tracks with that id' % (musicid, ))
+        trackdata = response.get('tracks')[0]
+        albumdata = None # TODO: get this
+        return albumdata, trackdata
+

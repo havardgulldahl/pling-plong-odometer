@@ -423,7 +423,8 @@ class AUXResolver(ResolverBase):
                 'WD': 'Wild Diesel',
                }
     name = 'AUX Publishing'
-    urlbase = 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr&lyr=0'
+    #urlbase = 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr&lyr=0'
+    urlbase = 'http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=%s&ac=track&country=NO'
 
     @staticmethod
     def musicid(filename):
@@ -436,17 +437,21 @@ class AUXResolver(ResolverBase):
             return None
 
     def resolve(self, filename, fullpath, fromcache=True):
-        # first try to get metadata from online sources.
-        if super(AUXResolver, self).resolve(filename, fullpath, fromcache):
-            return True
-        # then try to read id3 data from mp3 file, if we have a path
-        # (if the clip is offline, there won't be a path available)
-        if fullpath is not None:
-            _mp3 = GenericFileResolver()
-            return _mp3.resolve(filename, fullpath)
-        return False
+        self.filename = filename
+        self.fullpath = fullpath
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                self.trackResolved.emit(self.filename, md)
+                return
+        self.worker = lookupWorkers.AUXLookupWorker()
+        self.worker.progress.connect(self.progress)
+        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
+        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
+        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
+        self.worker.load(filename)
 
-    def parse(self):
+    def xxxparse(self):
         metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
         #logging.debug('metadatabox: %s', metadatabox)
         if len(metadatabox.strip()) == 0:
