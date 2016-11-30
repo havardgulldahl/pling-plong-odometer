@@ -662,9 +662,10 @@ class UniPPMResolver(ResolverBase):
         """Returns musicid from filename.
 
         KOS_397_3_Exploit_Kalfayan_Sarkissian_710023.wav -> 710023
-
+        BER_1216B_76_Silent_Movie_Theme_Mersch_433103.wav -> 433103
         """
-        rex = re.compile(r'^(%s)_\d{1,4}_\d{1,4}_.*_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys())) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
+        rex = re.compile(r'^(%s)_\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+            re.UNICODE) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
         g = rex.search(filename)
         try:
             return g.group(2)
