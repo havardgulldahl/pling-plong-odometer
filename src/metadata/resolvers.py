@@ -555,7 +555,7 @@ class UniPPMResolver(ResolverBase):
                   'BBCPM':'BBCPM',
                   'BCC':'Bruton Classical Series ',
                   'BEE':'Bruton Bee Stings ',
-                  'BER':'BER',
+                  'BER':'Berlin Production Music',
                   'BEST4':'Best4',
                   'BIGS':'Big Shorts ',
                   'BPM':'BPM',

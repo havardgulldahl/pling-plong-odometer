@@ -1236,6 +1236,7 @@ class Odometer(Gui.QMainWindow):
         CreditsDialog = Gui.QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(CreditsDialog)
+        s = s.replace('UniPPM', 'Universal Publishing Production Music')
         ui.textBrowser.setText(s)
         def _save():
             logging.debug("saving credits")
