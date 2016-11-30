@@ -172,6 +172,8 @@ class Odometer(Gui.QMainWindow):
             self.ui.editMetadataButton.clicked.connect(self.editMetadata)
         if self.buildflags.getboolean('ui', 'manuallookupbutton'):
             self.setManualLookupButtonVisible(True)
+            # check the option in the pulldown menu
+            self.ui.actionManualLookup.setChecked(True)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         #self.ui.DMAButton.clicked.connect(self.gluon)
@@ -1172,7 +1174,10 @@ class Odometer(Gui.QMainWindow):
         filepath = self.audiofiles[row.audioname]
         manualPattern, result = Gui.QInputDialog.getText(self, self.tr('Music ID'),
             self.tr('Enter the correct music ID:'), Gui.QLineEdit.Normal, filepath.name)
-
+        logging.debug('got manual music pattern: %r, dialog status %r', manualPattern, result)
+        if not result:
+            # dialog was cancelled 
+            return None
         resolver = metadata.resolvers.findResolver(unicode(manualPattern))
         resolver.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
         resolver.trackResolved.connect(updateMetadata)
