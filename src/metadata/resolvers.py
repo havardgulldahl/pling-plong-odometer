@@ -451,48 +451,6 @@ class AUXResolver(ResolverBase):
         self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
         self.worker.load(filename)
 
-    def xxxparse(self):
-        metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
-        #logging.debug('metadatabox: %s', metadatabox)
-        if len(metadatabox.strip()) == 0:
-            self.trackFailed.emit(self.filename)
-            self.error.emit(self.filename, "Could not get info on %s. Lookup failed" % self.filename)
-            return None
-        metadata = TrackMetadata(filename=self.doc.filename,
-                                 recordnumber=self.musicid(self.doc.filename),
-                                 musiclibrary=self.name)
-        try:
-            duration = unicode(self.doc.frame.findAllElements("div[style='top:177px;']")[1].toInnerXml())
-            mins, secs = [int(s.strip()) for s in duration.split(' ')[0].split(":")]
-            metadata.length=mins*60+secs
-        except:
-            pass
-        mapping = { 'Track name': 'title', #REMEMBER LAST SUMMER
-                    'Track number': 'identifier', #SCD 821 20.0
-                    'Composer': 'composer', #Mladen Franko
-                    'Artist': 'artist', #(N/A for production music)
-                    'Album name': 'albumname',#ORCHESTRAL LANDSCAPES 2
-                    'Catalogue number': 'catalogue', #821
-                    'Label': '_label', #SCD
-                    'Copyright owner': 'copyright', #(This information requires login)
-                    'LC number': 'lcnumber', #07573 - Library of Congress id
-                    'EAN/GTIN': 'ean', # 4020771100217 - ean-13 (barcode)
-                    'ISRC': 'isrc', # DE-B63-10-021-20 - International Standard Recording Code
-                  }
-        for l in metadatabox.split('\n'):
-            if not len(l.strip()): continue
-            meta, data = [s.strip() for s in l.split(':', 1)]
-            logging.debug('metadata: %s=%s', meta, htmlunescape(data))
-            try:
-                setattr(metadata, mapping[meta], htmlunescape(data))
-            except KeyError:
-                logging.error('Unknown metadata field received from AUX: -%s-, skipping to next', meta)
-
-        metadata.productionmusic = True
-        metadata.label = self.getlabel(metadata._label)
-        self.trackResolved.emit(self.filename, metadata)
-
-
     def updateRepertoire(self, labelmap):
         """Takes an updated label map, e.g. from auxjson.appspot.com, and updates the internal list"""
         self.labelmap.update(labelmap)
