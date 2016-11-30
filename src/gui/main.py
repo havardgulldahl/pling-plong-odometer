@@ -367,6 +367,7 @@ class Odometer(Gui.QMainWindow):
         HelpDialog = Gui.QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(HelpDialog)
+        HelpDialog.setWindowTitle(self.tr('Help'))
         ui.buttonBox.hide()
         ui.webView.load(Core.QUrl(self.buildflags.get('release', 'helpUrl')))
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
@@ -731,7 +732,7 @@ class Odometer(Gui.QMainWindow):
             self.ui.submitMissingButton.clicked.connect(self.submitMissingFilename)
         else:
             try:
-                self.ui.buttonBox.removeButton(self.ui.resolveManualButton)
+                self.ui.buttonBox.removeButton(self.ui.submitMissingButton)
             except Exception as e:
                 self.showException(e)
 
@@ -1125,6 +1126,7 @@ class Odometer(Gui.QMainWindow):
         apollomusicDialog = Gui.QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(apollomusicDialog)
+        apollomusicDialog.setWindowTitle(self.tr('Apollo Music report'))
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadProgress.connect(ui.progressBar.setValue)
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
@@ -1182,7 +1184,8 @@ class Odometer(Gui.QMainWindow):
         resolver = metadata.resolvers.findResolver(unicode(manualPattern))
         resolver.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
         resolver.trackResolved.connect(updateMetadata)
-        resolver.trackResolved.connect(self.submitMissingFilename)
+        # pop up a dialog to submit this filename to us, since it clearly is missing from our lists
+        resolver.trackResolved.connect(self.submitMissingFilename) 
         resolver.trackProgress.connect(self.showProgress)
         resolver.error.connect(lambda f, e: self.showerror(e))
         self.workers.append(resolver) # keep track of the worker
@@ -1194,6 +1197,7 @@ class Odometer(Gui.QMainWindow):
         GdocsDialog = Gui.QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(GdocsDialog)
+        GdocsDialog.setWindowTitle(self.tr('Submit missing filename'))
         ui.buttonBox.hide()
         ui.webView.load(Core.QUrl(_url))
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
