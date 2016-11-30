@@ -43,7 +43,7 @@ before_install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
 
 install:
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install python pyqt; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install homebrew/boneyard/pyqt; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
 #- if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./setup-python-osx.sh; fi
 - pip install -r requirements.txt
