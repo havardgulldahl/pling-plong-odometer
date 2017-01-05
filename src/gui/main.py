@@ -1200,6 +1200,7 @@ class Odometer(Gui.QMainWindow):
             row.metadata = md
             self.showMetadata(row)
             row.setCheckState(0, Core.Qt.Checked)
+            self.loadMetadata(row.audioname, md)
 
         filepath = self.audiofiles[row.audioname]
         manualPattern, result = Gui.QInputDialog.getText(self, self.tr('Music ID'),
@@ -1209,11 +1210,18 @@ class Odometer(Gui.QMainWindow):
             # dialog was cancelled 
             return None
         resolver = metadata.resolvers.findResolver(unicode(manualPattern))
-        resolver.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
+        if isinstance(resolver, metadata.resolvers.ApollomusicResolver):
+            logincookie = unicode(self.settings.value('Apollocookie', '').toString())
+            if not logincookie: # not logged in to apollo, big problem
+                self.showerror(self.tr(u'Please log in to the Apollo Music service from the login menu'))
+                self.logMessage(self.tr(u'Tried to manually resolve apollo track, but no logincookie found.'), msgtype=StatusBox.WARNING)
+                return # we cant continue
+            else:
+                resolver.setlogincookie(logincookie)
         resolver.trackResolved.connect(updateMetadata)
         # pop up a dialog to submit this filename to us, since it clearly is missing from our lists
         resolver.trackResolved.connect(self.submitMissingFilename) 
-        resolver.trackProgress.connect(self.showProgress)
+        resolver.trackProgress.connect(lambda fn, p: self.showProgress(fn, p))
         resolver.error.connect(lambda f, e: self.showerror(e))
         self.workers.append(resolver) # keep track of the worker
         resolver.resolve(unicode(manualPattern), filepath.pathurl) # put the worker to work async
