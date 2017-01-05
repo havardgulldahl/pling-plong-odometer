@@ -13,6 +13,7 @@ import ConfigParser
 import logging
 import traceback
 import subprocess
+import hashlib
 
 from collections import defaultdict
 try:
@@ -509,12 +510,11 @@ class Odometer(Gui.QMainWindow):
             logging.debug("Service returned %s", data.getcode())
             #logging.debug("Headers: %s", data.info())
             b = data.read()
-            #logging.debug("body: %s", b)
+            logging.debug("body: %s", b)
             login = False
             if service == 'AUX':
                 result = json.loads(b)
                 if result['ax_success'] == 1:
-                    self.settings.setValue('AUXcookie', data.info()['Set-Cookie'])
                     self.showstatus(self.tr('Logged in to AUX'))
                 else:
                     m = self.tr('%s login failed: %s') % (service, result['ax_errmsg'])
@@ -532,7 +532,7 @@ class Odometer(Gui.QMainWindow):
             elif service == 'Upright':
                 if result['success'] == 1:
                     self.settings.setValue('Uprightcookie', data.info()['Set-Cookie'])
-                    self.showstatus(self.tr('Logged in to Upright')
+                    self.showstatus(self.tr('Logged in to Upright'))
                 else:
                     m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
@@ -544,7 +544,7 @@ class Odometer(Gui.QMainWindow):
                 # <div class="error failedlogin">You have 5 password attempts remaining.</div>
                 if b.startswith('''<div class="result" ssoToken="'''):
                     self.settings.setValue('Universalcookie', data.info()['Set-Cookie'])
-                    self.showstatus(self.tr('Logged in to Universal')
+                    self.showstatus(self.tr('Logged in to Universal'))
                 else:
                     m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
@@ -556,12 +556,12 @@ class Odometer(Gui.QMainWindow):
                 except KeyError:
                     success = True
                 if not success:
-                    m = self.tr('%s login failed: %s' % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
                 else:
                     self.settings.setValue('Extremecookie', data.info()['Set-Cookie'])
-                    self.showstatus(self.tr('Logged in to Extreme')
+                    self.showstatus(self.tr('Logged in to Extreme'))
 
 
             #logging.debug("settings: %r", list(self.settings.allKeys()))
@@ -577,6 +577,23 @@ class Odometer(Gui.QMainWindow):
             ui.progressBar.setRange(0,0)
         def stopBusy():
             ui.progressBar.setMaximum(1)
+
+        def AUXauth():
+            logging.info('Getting auth (session id) from AUX')
+            def getauth(resp):
+                'extract session id from response json'
+                body = resp.read()
+                sid =json.loads(body)['sid'] 
+                logging.debug('aux sid: %s', sid)
+                self.settings.setValue('AUXSID', sid)
+                self.settings.setValue('AUXcookie', resp.info()['Set-Cookie'])
+
+            startBusy()
+            sid = UrlWorker()
+            sid.failed.connect(failed)
+            sid.finished.connect(getauth)
+            sid.finished.connect(lambda d: AUXlogin())
+            sid.load('http://search.auxmp.com//search/html/ajax/axExtData.php?_dc=%s&ext=1&sprache=en&country=NO&ac=login' % int(time.time()))
         def AUXlogin():
             logging.info('login to aux')
             self.settings.setValue('AUXuser', ui.AUXuser.text())
@@ -584,16 +601,21 @@ class Odometer(Gui.QMainWindow):
             startBusy()
             async = UrlWorker()
             url = 'http://search.auxmp.com//search/html/ajax/axExtData.php'
+            # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
+            _password = unicode(ui.AUXpassword.text()) +'~'+ unicode(self.settings.value('AUXSID', '').toString()) 
             getdata = urllib.urlencode({'ac':'login',
                                         'country': 'NO',
                                         'sprache': 'en',
                                         'ext': 1,
                                         '_dc': int(time.time()),
                                         'luser':unicode(ui.AUXuser.text()),
-                                        # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
-
-                                        'lpass':unicode(ui.AUXpassword.text())})
-            async.load('%s?%s' % (url, getdata), timeout=7)
+                                        'lpass':hashlib.md5(_password).hexdigest(),  
+                                        })
+            async.load('%s?%s' % (url, getdata), 
+                       timeout=7, 
+                       headers={
+                        'Cookie':unicode(self.settings.value('AUXcookie', '').toString())
+                       })
             async.finished.connect(lambda d: storeCookie('AUX', d))
             async.failed.connect(failed)
         def Apollologin():
@@ -621,9 +643,7 @@ class Odometer(Gui.QMainWindow):
                                         'ext': 1,
                                         '_dc': int(time.time()),
                                         'luser':unicode(ui.AUXuser.text()),
-                                        # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
-
-                                        'lpass':unicode(ui.AUXpassword.text())})
+                                       'lpass':unicode(ui.AUXpassword.text())})
             postdata = {'user':unicode(ui.Uprightuser.text()),
                         'pass':unicode(ui.Uprightpassword.text())}
             async.load(url, timeout=7, data=postdata)
@@ -675,9 +695,11 @@ class Odometer(Gui.QMainWindow):
             async.load(url, timeout=7, data=postdata, headers=auth)
             async.finished.connect(lambda d: storeCookie('Extreme', d))
             async.failed.connect(failed)
-        ui.AUXlogin.clicked.connect(AUXlogin)
+        ui.AUXlogin.clicked.connect(AUXauth)
         ui.Apollologin.clicked.connect(Apollologin)
         ui.Universallogin.clicked.connect(Universallogin)
+        # TODO: implement this login: 
+        # ui.Uprightlogin.clicked.connect(Uprightlogin)
         ui.Extremelogin.clicked.connect(Extremeauth)
         return LoginDialog.exec_()
 
