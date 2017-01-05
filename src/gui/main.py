@@ -498,6 +498,10 @@ class Odometer(Gui.QMainWindow):
         ui.Universalpassword.setText(self.settings.value('Universalpassword', '').toString())
         ui.Uprightuser.setText(self.settings.value('Uprightuser', '').toString())
         ui.Uprightpassword.setText(self.settings.value('Uprightpassword', '').toString())
+        #TODO: enable this when login is implemented
+        ui.Uprightuser.setDisabled(True)
+        ui.Uprightpassword.setDisabled(True)
+        ui.Uprightlogin.setDisabled(True)
         ui.Extremeuser.setText(self.settings.value('Extremeuser', '').toString())
         ui.Extremepassword.setText(self.settings.value('Extremepassword', '').toString())
         def storeCookie(service, data):
@@ -511,26 +515,26 @@ class Odometer(Gui.QMainWindow):
                 result = json.loads(b)
                 if result['ax_success'] == 1:
                     self.settings.setValue('AUXcookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to AUX')
+                    self.showstatus(self.tr('Logged in to AUX'))
                 else:
-                    m = '%s login failed: %s' % (service, result['ax_errmsg'])
+                    m = self.tr('%s login failed: %s') % (service, result['ax_errmsg'])
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Apollo':
                 result = json.loads(b)
                 if result['success'] == 1:
                     self.settings.setValue('Apollocookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to Apollo')
+                    self.showstatus(self.tr('Logged in to Apollo'))
                 else:
-                    m = '%s login failed: %s' % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Upright':
                 if result['success'] == 1:
                     self.settings.setValue('Uprightcookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to Upright')
+                    self.showstatus(self.tr('Logged in to Upright')
                 else:
-                    m = '%s login failed: %s' % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Universal':
@@ -540,9 +544,9 @@ class Odometer(Gui.QMainWindow):
                 # <div class="error failedlogin">You have 5 password attempts remaining.</div>
                 if b.startswith('''<div class="result" ssoToken="'''):
                     self.settings.setValue('Universalcookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to Universal')
+                    self.showstatus(self.tr('Logged in to Universal')
                 else:
-                    m = '%s login failed: %s' % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Extreme':
@@ -552,12 +556,12 @@ class Odometer(Gui.QMainWindow):
                 except KeyError:
                     success = True
                 if not success:
-                    m = '%s login failed: %s' % (service, result['message'])
+                    m = self.tr('%s login failed: %s' % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
                 else:
                     self.settings.setValue('Extremecookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to Extreme')
+                    self.showstatus(self.tr('Logged in to Extreme')
 
 
             #logging.debug("settings: %r", list(self.settings.allKeys()))
@@ -567,6 +571,7 @@ class Odometer(Gui.QMainWindow):
         def failed(ex):
             logging.warning("faile! %r", ex)
             self.logException(ex)
+            self.showerror(self.tr('Login failed. Check your password at the website.'))
             stopBusy()
         def startBusy():
             ui.progressBar.setRange(0,0)
