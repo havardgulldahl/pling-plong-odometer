@@ -8,7 +8,13 @@ import xmeml
 from gui import main
 import warnings
 
-logging.basicConfig(level=logging.CRITICAL)
+
+if '-d' in sys.argv:
+    lvl = logging.DEBUG
+else:
+    lvl = logging.CRITICAL
+
+logging.basicConfig(level=lvl)
 
 warnings.simplefilter('ignore') # suppress error messages 
 
