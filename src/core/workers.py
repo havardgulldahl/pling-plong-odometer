@@ -4,6 +4,7 @@
 #
 # workers.py: a collection of different threaded workers
 
+import sys
 import urllib, urllib2
 import logging
 
