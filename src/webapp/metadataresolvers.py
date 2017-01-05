@@ -56,25 +56,7 @@ def getmusicid(filename):
         return ResolverBase.musicid(filename)
     return res.musicid(filename)
 
-class webdoc(Core.QObject):
-    '''A helper class to load urls in Qt'''
-    def __init__(self, filename, url, parent=None):
-        super(webdoc, self).__init__(parent)
-        self.filename = filename
-        self.url = url
-        self.page = Web.QWebPage(self)
-        self.frame = self.page.mainFrame()
-        self.settings = self.page.settings()
-        self.settings.setAttribute(Web.QWebSettings.JavascriptEnabled, False)
-        self.settings.setAttribute(Web.QWebSettings.AutoLoadImages, False)
-
-    def load(self):
-        #print "loading url: ", self.url
-        self.frame.load(Core.QUrl(self.url))
-
-
-class ResolverBase(Core.QObject):
-
+class ResolverBase(object):
     prefixes = [] # a list of file prefixes that this resolver recognizes
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     labelmap = [] # a list of labels that this music service carries
@@ -88,9 +70,6 @@ class ResolverBase(Core.QObject):
 
     def __init__(self, parent=None):
         super(ResolverBase, self).__init__(parent)
-        self.trackResolved.connect(lambda f,md: self.cache(md))
-        self.trackResolved.connect(self.cleanup)
-        self.trackFailed.connect(self.cleanup)
         self.logincookie = None
 
     def accepts(self, filename):
@@ -156,6 +135,7 @@ class ResolverBase(Core.QObject):
 
     def cache(self, metadata):
         "Add metadata for a filename to a local cache to prevent constant network lookups"
+        return None # TODO: implement this when the celery queue is working
         if None in [metadata.title, metadata.recordnumber]:
             # invalid cached object, we dont cache it
             return False
@@ -171,6 +151,7 @@ class ResolverBase(Core.QObject):
 
     def fromcache(self):
         "Get metadata from local cache, or None if it's not cached or too old"
+        return None # TODO: implement this when the celery queue is working
         try:
             loc = open(self.cachelocation(), "rb")
         except IOError: #file doesn't exist -> not cached
@@ -191,10 +172,12 @@ class ResolverBase(Core.QObject):
 
     def incache(self):
         "Checks to see if the metadata is in cache"
+        return False # TODO: implement this when the celery queue is working
         return os.path.exists(self.cachelocation())
 
     def cachelocation(self):
         "Return a dir suitable for storage"
+        return '/tmp' # TODO: implement this when the celery queue is working
         dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
         ourdir = os.path.join(os.path.abspath(unicode(dir)), 'no.nrk.odometer')
         if not os.path.exists(ourdir):
@@ -204,15 +187,6 @@ class ResolverBase(Core.QObject):
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
         except UnicodeEncodeError:
             print repr(self.filename), type(self.filename)
-
-    def cleanup(self, filename, *args):
-        "Remove objects to prevent hanging threads"
-        try:
-            if hasattr(self, 'doc'):
-                self.doc.deleteLater()
-        except Exception as e:
-            print "cleanup failed:", e
-            pass
 
     def setlogincookie(self, cookie):
         "Add login cookie to service. Only applicable for some services"
