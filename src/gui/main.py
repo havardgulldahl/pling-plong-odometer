@@ -1043,6 +1043,8 @@ class Odometer(Gui.QMainWindow):
         for r in self.itercheckedrows():
             _t = r.metadata.title if r.metadata.title else repr(r.audioname)
             s += unicode(self.tr('<div><dt>Title:</dt><dd>%s</dd>')) % _t
+            if r.metadata.identifier is not None:
+                s += unicode(self.tr('<dt>Track identifier:</dt><dd>%s</dd>')) % r.metadata.identifier
             if r.metadata.artist not in (None, u'(N/A for production music)'):
                 s += unicode(self.tr('<dt>Artist:</dt><dd>%s</dd>')) % r.metadata.artist
             if r.metadata.albumname is not None:
