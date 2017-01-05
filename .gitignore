@@ -40,6 +40,7 @@ Icon?
 Thumbs.db
 .cache
 .Python
+*.egg-info/*
 
 # Generated files #
 ###################
