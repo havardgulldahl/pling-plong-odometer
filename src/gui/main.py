@@ -1121,13 +1121,13 @@ class Odometer(Gui.QMainWindow):
             for el in ['foretag', 'kontakt', 'telefon', 'email', 'produktionsnamn']:
                 htmlel = html.findFirstElement('input[name=%s]' % el)
                 val = htmlel.evaluateJavaScript("this.value").toString()
-                if len(val) == 0:
-                    self.showerror(unicode(self.tr('"%s" cannot be blank')) % el.title())
-                    return None
+                #if len(val) == 0:
+                    #self.showerror(unicode(self.tr('"%s" cannot be blank')) % el.title())
+                    #return None
                 self.settings.setValue('AUX/%s' % el, val)
             submit = html.findFirstElement('input[type=submit]')
             submit.setAttribute('style', 'visibility:show')
-            #submit.evaluateJavaScript('this.click()')
+            submit.evaluateJavaScript('this.click()')
             #return AUXDialog.accept()
         ui.buttonBox.accepted.connect(reportsubmit)
         return AUXDialog.exec_()
