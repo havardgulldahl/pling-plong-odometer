@@ -1429,13 +1429,6 @@ def rungui(argv):
     o.run(app)
 
 if __name__ == '__main__':
-    # suppress error on win
     logging.basicConfig(level=logging.DEBUG)
-    if hasattr(sys, 'frozen') and sys.frozen == 'windows_exe':
-        import StringIO
-        sys.stderr = StringIO.StringIO()
-        sys.stdout = StringIO.StringIO()
-    # strptime has threading issues, calling it once before threading starts prevents this
-    time.strptime('2016', '%Y') 
     rungui(sys.argv)
 
