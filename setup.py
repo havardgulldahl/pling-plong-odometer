@@ -63,7 +63,11 @@ if sys.platform == 'darwin':
 elif sys.platform == 'win32':
      extra_options = dict(
          setup_requires=['py2exe'],
-         windows=[mainscript],
+         windows=[ 
+             {"script": mainscript,
+              "icon_resources": [(0, "odometer.ico")]     ### Icon to embed into the PE file.
+             }
+         ],
 		 packages=['gui','metadata', 'core'],
 		 package_dir={'metadata':'src/metadata',
 		              'gui':'src/gui',
