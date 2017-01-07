@@ -35,7 +35,8 @@ branches:
   - master
 
 before_install:
-- echo "Booting Mac ${OSX} "
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then echo "Booting Mac ${OSX}"; sw_vers; fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "Booting linux "; lsb_release -a; fi
 - export TAG="${TRAVIS_TAG:-dev}"
 - echo "$PATH"
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
@@ -45,11 +46,11 @@ install:
 #- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install homebrew/boneyard/pyqt; fi
 - wget https://homebrew.bintray.com/bottles/qt-4.8.7_2.el_capitan.bottle.tar.gz -O "/tmp/qt.tar.gz"
 - wget https://homebrew.bintray.com/bottles/sip-4.18.1.el_capitan.bottle.tar.gz -O /tmp/sip.tar.gz
-- pushd /usr/local && tar xvf /tmp/qt.tar.gz --strip 2 && popd
-- pushd /usr/local && tar xvf /tmp/sip.tar.gz --strip 2 && popd
+- pushd /usr/local && sudo tar xvf /tmp/qt.tar.gz --strip 2 && popd
+- pushd /usr/local && sudo tar xvf /tmp/sip.tar.gz --strip 2 && popd
 - wget http://downloads.sf.net/project/pyqt/PyQt4/PyQt-4.11.4/PyQt-mac-gpl-4.11.4.tar.gz -O /tmp/pyqt.tar.gz
 - tar xvf /tmp/pyqt.tar.gz
-- pushd PyQt-mac-gpl-4.11.4 && python ./configure-ng.py --confirm-license && make && sudo make install && popd
+- pushd PyQt-mac-gpl-4.11.4 && python ./configure-ng.py --confirm-license --verbose && make && sudo make install && popd
 #- if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./setup-pyqt-osx.sh; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
 - pip install -r requirements.txt
