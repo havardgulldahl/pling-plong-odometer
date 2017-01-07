@@ -84,7 +84,7 @@ function remove_travis_ve_pip {
 
 #PYTHON_EXE="/usr/bin/python"
 #remove_travis_ve_pip
-system_install_pyqt
+install_pyqt
 #system_install_pip
 
 
