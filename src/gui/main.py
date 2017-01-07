@@ -972,7 +972,7 @@ class Odometer(Gui.QMainWindow):
             _y = row.metadata.year if row.metadata.year != -1 else None
             self.ui.clipYear.setText(unicode(row.metadata.year or 0))
             self.ui.detailsBox.show()
-        except AttributeError, (e):
+        except AttributeError as e:
             self.logException(e)
             self.ui.detailsBox.hide()
         if hasattr(self.ui, 'resolveManualButton'):
@@ -1080,7 +1080,7 @@ class Odometer(Gui.QMainWindow):
                 f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
                 self.showstatus(self.tr('Prf report saved'))
-            except IOError, (e):
+            except IOError as e:
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
         return PRFDialog.exec_()
@@ -1283,7 +1283,7 @@ class Odometer(Gui.QMainWindow):
                 f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
                 self.showstatus(self.tr('End credits saved'))
-            except IOError, (e):
+            except IOError as e:
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
         CreditsDialog.setWindowTitle(self.tr('Credits'))
