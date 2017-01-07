@@ -2,7 +2,7 @@
 
 # setup-pyqt-mac.sh -- set up a complete pyqt4 system on mac
 
-DOWNLOADS_SDIR="$PWD/downloads";
+DOWNLOADS_SDIR="/tmp/downloads";
 
 
 function require_success {
@@ -55,20 +55,22 @@ function install_pyqtx {
 function pour_stale_brew {
     # download last known functioning homebrew bottled qt, and sip and pyqt
     BOTTLED_QT="https://homebrew.bintray.com/bottles/qt-4.8.7_2.el_capitan.bottle.tar.gz";
-    curl "$BOTTLED_QT" -o "$DOWNLOADS_SDIR/qt.tar.gz";
-    require_success "Couldnt download QT bottle";
-    cd $(brew --prefix)/Cellar && tar xf "$DOWNLOADS_SDIR/qt.tar.gz" && brew link qt;
-    require_success "Couldnt install Qt";
+    QT_DIR="$(brew --cellar)/qt4";
+    curl -s "$BOTTLED_QT" -o "$DOWNLOADS_SDIR/qt.tar.gz";
+    require_success "Couldnt download QT4 bottle";
+    mkdir -p "$QT_DIR";
+    cd "$QT_DIR" && tar xf "$DOWNLOADS_SDIR/qt.tar.gz" --strip 1 && brew link qt4;
+    require_success "Couldnt install Qt4";
 
     BOTTLED_SIP="https://homebrew.bintray.com/bottles/sip-4.18.1.el_capitan.bottle.tar.gz";
-    curl "$BOTTLED_SIP" -o "$DOWNLOADS_SDIR/sip.tar.gz";
+    curl -s "$BOTTLED_SIP" -o "$DOWNLOADS_SDIR/sip.tar.gz";
     require_success "Couldnt download sip bottle";
     cd $(brew --prefix)/Cellar && tar xf "$DOWNLOADS_SDIR/sip.tar.gz" && brew link sip;
     require_success "Couldnt install SIP";
 
     PYQT_SOURCE="http://downloads.sf.net/project/pyqt/PyQt4/PyQt-4.11.4/PyQt-mac-gpl-4.11.4.tar.gz";
     PYQT_CELLAR="$(brew --cellar)/pyqt/4.11.4/";
-    curl "$PYQT_SOURCE" -o "$DOWNLOADS_SDIR/pyqt.tar.gz";
+    curl -s "$PYQT_SOURCE" -o "$DOWNLOADS_SDIR/pyqt.tar.gz";
     require_success "Couldnt download PyQt4 source";
 
     cd "$DOWNLOADS_SDIR";
