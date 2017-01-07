@@ -41,7 +41,7 @@ function install_pythonorg {
 
 }
 
-function install_pyqt {
+function install_pyqtx {
     # download pyqtx and install it
     PYQTX_URL="http://downloads.sourceforge.net/project/pyqtx/Complete/PyQtX%2B_py273_q482_pyqt494.pkg.mpkg.zip?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fpyqtx%2Ffiles%2FComplete%2F&ts=1483815319&use_mirror=netcologne"
     INSTALLER="$DOWNLOADS_SDIR/pyqtx_installer.mpkg"
@@ -51,9 +51,33 @@ function install_pyqt {
     require_success "Couldnt unzip pyqtx installer"
     sudo installer -pkg "$INSTALLER" -target /
     require_success "Installing pyqtx failed"
+}
 
+function pour_stale_brew {
+    # download last known functioning homebrew bottled qt, and sip and pyqt
+    BOTTLED_QT="https://homebrew.bintray.com/bottles/qt-4.8.7_2.el_capitan.bottle.tar.gz";
+    curl "$BOTTLED_QT" -o "$DOWNLOADS_SDIR/qt.tar.gz";
+    require_success "Couldnt download QT bottle";
+    cd $(brew --prefix)/Cellar && tar xf "$DOWNLOADS_SDIR/qt.tar.gz" && brew link qt;
+    require_success "Couldnt install Qt";
 
+    BOTTLED_SIP="https://homebrew.bintray.com/bottles/sip-4.18.1.el_capitan.bottle.tar.gz";
+    curl "$BOTTLED_SIP" -o "$DOWNLOADS_SDIR/sip.tar.gz";
+    require_success "Couldnt download sip bottle";
+    cd $(brew --prefix)/Cellar && tar xf "$DOWNLOADS_SDIR/sip.tar.gz" && brew link sip;
+    require_success "Couldnt install SIP";
 
+    PYQT_SOURCE="http://downloads.sf.net/project/pyqt/PyQt4/PyQt-4.11.4/PyQt-mac-gpl-4.11.4.tar.gz";
+    PYQT_CELLAR="$(brew --cellar)/pyqt/4.11.4/";
+    curl "$PYQT_SOURCE" -o "$DOWNLOADS_SDIR/pyqt.tar.gz";
+    require_success "Couldnt download PyQt4 source";
+
+    cd "$DOWNLOADS_SDIR";
+    tar xf pyqt.tar.gz;
+    python ./configure-ng.py --confirm-license 
+    make
+    make install
+    require_success "Couldnt install PyQt4"
 }
 
 
@@ -82,10 +106,12 @@ function remove_travis_ve_pip {
 ####
 # MAIN
 
+mkdir -p "$DOWNLOADS_SDIR";
 #PYTHON_EXE="/usr/bin/python"
 #remove_travis_ve_pip
-install_pyqt
+#install_pyqt
 #system_install_pip
+pour_stale_brew
 
 
 
