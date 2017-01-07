@@ -6,7 +6,7 @@
 import sys, os, os.path
 import time
 import datetime
-import urllib, urllib2
+import urllib
 import json
 import StringIO
 import ConfigParser
