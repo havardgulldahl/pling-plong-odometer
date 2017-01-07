@@ -2,8 +2,7 @@
 
 # setup-pyqt-mac.sh -- set up a complete pyqt4 system on mac
 
-DOWNLOADS_SDIR=downloads
-WORKING_SDIR=working
+DOWNLOADS_SDIR="$PWD/downloads";
 
 
 function require_success {
