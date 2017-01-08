@@ -796,9 +796,12 @@ class Odometer(QMainWindow):
             self.tr('Open an xmeml file (FCP export)'),
             lastdir,
             self.tr('Xmeml files (*.xml)'))
-        self.xmemlfile = str(xf)
-        if not os.path.exists(self.xmemlfile):
+        logging.debug('Got following file name to open: %r', xf)
+        _xmemlfile, _filter = xf
+        if not os.path.exists(_xmemlfile):
+            logging.warning('Tried to open a non-existing file: %r', _xmemlfile)
             return False
+        self.xmemlfile = _xmemlfile
         self.settings.setValue('lastdir', os.path.dirname(self.xmemlfile))
         self.loadxml(self.xmemlfile)
 
