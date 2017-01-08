@@ -28,23 +28,13 @@ try:
 except ImportError:
     import pickle
 
-#import Qt
-
-try:
-    import PyQt4.QtCore as Core
-    import PyQt4.QtGui as Gui
-    import PyQt4.QtNetwork as QtNetwork
-    import PyQt4.Qt as Qt
-    import PyQt4.QtSvg as Svg
-    from PyQt4.QtGui import QWidget, QMainWindow, QDialog, QDialogButtonBox
-except ImportError as e:
-    logging.exception(e)
-    import PyQt5.QtCore as Core
-    import PyQt5.QtGui as Gui
-    import PyQt5.QtNetwork as QtNetwork
-    import PyQt5.Qt as Qt
-    import PyQt5.QtSvg as Svg
-    from PyQt5.QtWidgets import QWidget, QMainWindow, QDialog, QDialogButtonBox
+import PyQt5.QtCore as Core
+import PyQt5.QtGui as Gui
+import PyQt5.QtNetwork as QtNetwork
+import PyQt5.Qt as Qt
+import PyQt5.QtSvg as Svg
+from PyQt5.QtWidgets import (QWidget, QMainWindow, QDialog, 
+    QDialogButtonBox, QApplication, QFileDialog, QLabel, QProgressBar)
 
 from xmeml import iter as xmemliter
 import metadata.gluon
@@ -140,7 +130,7 @@ def readResourceFile(qrcPath):
         raise IOError(u"Could not read resource '%s'" % qrcPath)
     t = Core.QTextStream(f)
     t.setCodec("UTF-8")
-    s = Core.QString(t.readAll())
+    s = str(t.readAll())
     f.close()
     return s
 
@@ -186,7 +176,6 @@ class Odometer(QMainWindow):
         self.setLanguage(language)
         self.ui.setupUi(self)
         self.ui.detailsBox.hide()
-        self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.gain)
         if self.buildflags.getboolean('ui', 'editbutton'):
             self.ui.editMetadataButton = self.ui.buttonBox.addButton(self.tr('Edit'), QDialogButtonBox.ActionRole)
@@ -324,6 +313,22 @@ class Odometer(QMainWindow):
         self.showerror(str(self.tr('Unexpected error: %s')) % e)
 
     def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
+        'Popup some info'
+
+        if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg:
+            # don't repeat yourself
+            return None
+
+        if isinstance(msg, Exception): #unwrap exception
+            msg=str(msg)
+
+        b = QLabel(msg, self.ui.information)
+        self._laststatusmsg = str(msg)
+        self.logMessage(msg, msgtype)
+        self.ui.information.show()
+        return b
+
+    def old___showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
         'Show floating status box'
         # if you don't autoclose, call self.closestatusboxes()
         # or keep a reference to this box and .close() it yourself
@@ -726,7 +731,7 @@ class Odometer(QMainWindow):
     def updateAUXRepertoire(self):
         self.logMessage(self.tr('Updating AUX repertoire'))
         try:
-            repertoire = pickle.loads(str(self.settings.value('auxrepertoire', '').toString()))
+            repertoire = pickle.loads(self.settings.value('auxrepertoire', ''))
         except Exception as e:
             self.logException(e)
             repertoire = None
@@ -744,7 +749,8 @@ class Odometer(QMainWindow):
         _url = self.buildflags.get('release', 'AUXRepertoireUrl')
 
         def store(data):
-            repertoire = json.loads(data.read())
+            logging.debug("got json aux data: %s", data)
+            repertoire = json.loads(data.read().decode('utf8'))
             logging.debug("got repertoire: %s", repertoire)
             repertoire['timestamp'] = datetime.datetime.now()
             self.settings.setValue('auxrepertoire', pickle.dumps(repertoire))
@@ -785,8 +791,8 @@ class Odometer(QMainWindow):
 
     def clicked(self, qml):
         'Open file dialog to get xmeml file name'
-        lastdir = self.settings.value('lastdir', '').toString()
-        xf = Gui.QFileDialog.getOpenFileName(self,
+        lastdir = self.settings.value('lastdir', '')
+        xf = QFileDialog.getOpenFileName(self,
             self.tr('Open an xmeml file (FCP export)'),
             lastdir,
             self.tr('Xmeml files (*.xml)'))
@@ -816,7 +822,7 @@ class Odometer(QMainWindow):
 
     def loadingbar(self):
         'Add global progress bar'
-        self.ui.progress = Gui.QProgressBar(self)
+        self.ui.progress = QProgressBar(self)
         self.ui.progress.setMinimum(0)
         self.ui.progress.setMaximum(0) # don't show progress, only "busy" indicator
         self.ui.statusbar.addWidget(self.ui.progress, 100)
@@ -1093,7 +1099,7 @@ class Odometer(QMainWindow):
         def _save():
             logging.debug("saving report for prf")
             try:
-                loc = Gui.QFileDialog.getSaveFileName(PRFDialog, self.tr("Save PRF report (as HTML)"), '', self.tr('HTML document (*.html)'))
+                loc = QFileDialog.getSaveFileName(PRFDialog, self.tr("Save PRF report (as HTML)"), '', self.tr('HTML document (*.html)'))
                 if(len(str(loc)) == 0): # cancelled
                     return False
                 f = open(str(loc), "wb")
@@ -1298,7 +1304,7 @@ class Odometer(QMainWindow):
         def _save():
             logging.debug("saving credits")
             try:
-                loc = Gui.QFileDialog.getSaveFileName(CreditsDialog, self.tr("Save credits (as HTML)"), '', self.tr('HTML document (*.html)'))
+                loc = QFileDialog.getSaveFileName(CreditsDialog, self.tr("Save credits (as HTML)"), '', self.tr('HTML document (*.html)'))
                 f = open(str(loc), "wb")
                 f.write(str(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
@@ -1437,8 +1443,8 @@ def rungui(argv):
     if sys.platform == 'win32':
         # default win32 looks awful, make it pretty
         # docs advise to do this before QApplication() is started
-        Gui.QApplication.setStyle("cleanlooks")
-    app = Gui.QApplication(argv)
+        QApplication.setStyle("cleanlooks")
+    app = QApplication(argv)
     if sys.platform == 'win32':
         def setfont(fontname):
             app.setFont(Gui.QFont(fontname, 9))

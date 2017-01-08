@@ -5,10 +5,11 @@
 
 from builtins import str
 import sys
+import logging
 import xml.etree.ElementTree as ET
 
-import PyQt4.QtCore as Core
-
+import six
+import PyQt5.QtCore as Core
 
 #from metadata import TrackMetadata
 
@@ -49,7 +50,7 @@ class Gluon(Core.QObject):
 class GluonReportWorker(Core.QThread):
     'Create a Gluon report (a music metadata usage report) to and submit it to Gluon'
     reported = Core.pyqtSignal(name="reported") # success
-    error = Core.pyqtSignal(unicode, name="error") # failure, with error message
+    error = Core.pyqtSignal(six.text_type, name="error") # failure, with error message
 
     def __init__(self, parent=None):
         super(GluonReportWorker, self).__init__(parent)

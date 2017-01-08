@@ -3,10 +3,7 @@
 # (C) 2016
 
 from builtins import str
-try:
-    import PyQt4.QtCore as Core
-except ImportError:
-    import PyQt5.QtCore as Core
+import PyQt5.QtCore as Core
 import logging
 from datetime import datetime
 

@@ -18,17 +18,12 @@ import re
 import json
 from six.moves import html_parser
 
-try:
-    import PyQt4.QtCore as Core
-    import PyQt4.QtGui as Gui
-    import PyQt4.QtWebKit as Web
-except ImportError:
-    import PyQt5.QtCore as Core
-    import PyQt5.QtGui as Gui
-    import PyQt5.QtWebEngine as Web
+import PyQt5.QtCore as Core
+import PyQt5.QtGui as Gui
+import PyQt5.QtWebEngine as Web
 
 
-import lookupWorkers
+from . import lookupWorkers
 from .model import TrackMetadata
 
 def findResolver(filename):

@@ -10,14 +10,9 @@ from six.moves.urllib import request
 import logging
 
 
-try:
-    import PyQt4.QtCore as Core
-    import PyQt4.QtNetwork as QtNetwork
-    import PyQt4.Qt as Qt
-except ImportError:
-    import PyQt5.QtCore as Core
-    import PyQt5.QtNetwork as QtNetwork
-    import PyQt5.Qt as Qt
+import PyQt5.QtCore as Core
+import PyQt5.QtNetwork as QtNetwork
+import PyQt5.Qt as Qt
 
 from xmeml import iter as xmemliter
 
