@@ -49,7 +49,7 @@ install:
 - pushd /usr/local && sudo tar xf /tmp/qt.tar.gz --strip-components 2 && popd
 - pushd /usr/local && sudo tar xf /tmp/sip.tar.gz --strip-components 2 && popd
 - ls /usr/local
-- ls /usr/local/sip 
+- ls /usr/local/*
 - wget http://downloads.sf.net/project/pyqt/PyQt4/PyQt-4.11.4/PyQt-mac-gpl-4.11.4.tar.gz -O /tmp/pyqt.tar.gz
 - tar xvf /tmp/pyqt.tar.gz
 - pushd PyQt-mac-gpl-4.11.4 && python ./configure-ng.py --confirm-license --verbose --bindir=/usr/local/bin --destdir=/usr/local/lib/python2.7/site-packages --sipdir=/usr/local/share/sip && make && sudo make install && popd
