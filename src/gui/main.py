@@ -115,6 +115,7 @@ class Odometer(QMainWindow):
         self.ui.ApolloButton.clicked.connect(self.apollomusicReport)
         self.ui.creditsButton.clicked.connect(self.credits)
         self.ui.errorButton.clicked.connect(self.reportError)
+        self.ui.clips.setIconSize(Core.QSize(16,16))
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
         self.ui.clips.itemDoubleClicked.connect(self.editDuration) # manually override duration column
@@ -967,12 +968,7 @@ class Odometer(QMainWindow):
         logging.debug('setting row  <%r> to <%r>', row, text)
         row.setText(3, text)
         if warning:
-            row.setSizeHint(3, Core.QSize(16,16))
             row.setIcon(3, Gui.QIcon(':/gfx/warn'))
-            try:
-                row.setIconSize(Core.QSize(16,16))
-            except AttributeError as e:
-                logging.debug('Failed to set icon size, since %r', e)
         else:
             row.setIcon(3, Gui.QIcon())
 
