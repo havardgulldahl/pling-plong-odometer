@@ -9,31 +9,23 @@ import time
 import datetime
 import urllib
 import json
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-try:
-    import ConfigParser
-except ImportError:
-    import configparser as ConfigParser
+from io import StringIO
+import configparser 
 import logging
 import traceback
 import subprocess
 import hashlib
+import functools
 
 from collections import defaultdict
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import pickle
 
 import PyQt5.QtCore as Core
 import PyQt5.QtGui as Gui
 import PyQt5.QtNetwork as QtNetwork
 import PyQt5.Qt as Qt
 import PyQt5.QtSvg as Svg
-from PyQt5.QtWidgets import (QWidget, QMainWindow, QDialog, 
+from PyQt5.QtWidgets import (QWidget, QMainWindow, QDialog, QTreeWidgetItem,
     QDialogButtonBox, QApplication, QFileDialog, QLabel, QProgressBar)
 
 from xmeml import iter as xmemliter
@@ -121,7 +113,7 @@ class StatusBox(QWidget):
         self.s.setText(str(self.s.text()) + "<br>" + s)
 
 def readResourceFile(qrcPath):
-    """Read qrc file and return QString.
+    """Read qrc file and return string
 
     'qrcPath' is ':/path/name', for example ':/txt/about.html'
     """
@@ -136,7 +128,7 @@ def readResourceFile(qrcPath):
 
 def readBuildflags():
     "Read build flags from builtin resource file"
-    cp = ConfigParser.ConfigParser()
+    cp = configparser.ConfigParser()
     cp.readfp(StringIO(str(readResourceFile(':/data/buildflags'))))
     return cp
 
@@ -144,8 +136,8 @@ def formatTC(secs):
     '''Convert floating point /secs/ to a TC label. E.g. 62.1 -> 00:01:02.200
     Returns hh:mm:ss.sss'''
     return "%02d:%02d:%02d.%02d" % \
-        reduce(lambda ll,b : divmod(ll[0],b) + ll[1:],
-               [(secs*1000,),1000,60,60])
+        functools.reduce(lambda ll,b : divmod(ll[0],b) + ll[1:],
+                        [(secs*1000,),1000,60,60])
 
 class Odometer(QMainWindow):
     msg = Core.pyqtSignal(str, name="msg")
@@ -456,7 +448,7 @@ class Odometer(QMainWindow):
         ui.setupUi(PatternDialog)
         ui.buttonBox.removeButton(ui.buttonBox.button(QDialogButtonBox.Save))
         r = []
-        for catalog, patterns in metadata.resolvers.getResolverPatterns().iteritems():
+        for catalog, patterns in metadata.resolvers.getResolverPatterns().items():
             r.append('<h1>%s</h1><ul>' % catalog)
             for tok in patterns['prefixes']:
                 r.append('<li>%s...</li>' % tok)
@@ -516,20 +508,20 @@ class Odometer(QMainWindow):
         LoginDialog = QDialog()
         ui = onlinelogin_ui.Ui_PlingPlongOnlineDialog()
         ui.setupUi(LoginDialog)
-        ui.AUXuser.setText(self.settings.value('AUXuser', '').toString())
-        ui.AUXpassword.setText(self.settings.value('AUXpassword', '').toString())
-        ui.Apollouser.setText(self.settings.value('Apollouser', '').toString())
-        ui.Apollopassword.setText(self.settings.value('Apollopassword', '').toString())
-        ui.Universaluser.setText(self.settings.value('Universaluser', '').toString())
-        ui.Universalpassword.setText(self.settings.value('Universalpassword', '').toString())
-        ui.Uprightuser.setText(self.settings.value('Uprightuser', '').toString())
-        ui.Uprightpassword.setText(self.settings.value('Uprightpassword', '').toString())
+        ui.AUXuser.setText(self.settings.value('AUXuser', ''))
+        ui.AUXpassword.setText(self.settings.value('AUXpassword', ''))
+        ui.Apollouser.setText(self.settings.value('Apollouser', ''))
+        ui.Apollopassword.setText(self.settings.value('Apollopassword', ''))
+        ui.Universaluser.setText(self.settings.value('Universaluser', ''))
+        ui.Universalpassword.setText(self.settings.value('Universalpassword', ''))
+        ui.Uprightuser.setText(self.settings.value('Uprightuser', ''))
+        ui.Uprightpassword.setText(self.settings.value('Uprightpassword', ''))
         #TODO: enable this when login is implemented
         ui.Uprightuser.setDisabled(True)
         ui.Uprightpassword.setDisabled(True)
         ui.Uprightlogin.setDisabled(True)
-        ui.Extremeuser.setText(self.settings.value('Extremeuser', '').toString())
-        ui.Extremepassword.setText(self.settings.value('Extremepassword', '').toString())
+        ui.Extremeuser.setText(self.settings.value('Extremeuser', ''))
+        ui.Extremepassword.setText(self.settings.value('Extremepassword', ''))
         def storeCookie(service, data):
             logging.debug("Storing cookie for %s: %s", service, data.info().get('Set-Cookie', None))
             logging.debug("Service returned %s", data.getcode())
@@ -627,7 +619,7 @@ class Odometer(QMainWindow):
             async = UrlWorker()
             url = 'http://search.auxmp.com//search/html/ajax/axExtData.php'
             # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
-            _password = str(ui.AUXpassword.text()) +'~'+ str(self.settings.value('AUXSID', '').toString()) 
+            _password = ui.AUXpassword.text() +'~'+ self.settings.value('AUXSID', '')
             getdata = urllib.urlencode({'ac':'login',
                                         'country': 'NO',
                                         'sprache': 'en',
@@ -639,7 +631,7 @@ class Odometer(QMainWindow):
             async.load('%s?%s' % (url, getdata), 
                        timeout=7, 
                        headers={
-                        'Cookie':str(self.settings.value('AUXcookie', '').toString())
+                        'Cookie':self.settings.value('AUXcookie', '')
                        })
             async.finished.connect(lambda d: storeCookie('AUX', d))
             async.failed.connect(failed)
@@ -715,7 +707,7 @@ class Odometer(QMainWindow):
             postdata = json.dumps({'username': str(ui.Extremeuser.text()),
                                    'password': str(ui.Extremepassword.text()),
                                    'remember_me': False})
-            auth = {'X-API-Auth': str(self.settings.value('ExtremeAUTH', '').toString()),
+            auth = {'X-API-Auth': self.settings.value('ExtremeAUTH', ''),
                     'Content-Type':'application/json; charset=utf-8'}
             async.load(url, timeout=7, data=postdata, headers=auth)
             async.finished.connect(lambda d: storeCookie('Extreme', d))
@@ -858,7 +850,7 @@ class Odometer(QMainWindow):
             self.ui.volumeInfo.setText(str(self.tr("<i>(above %i dB)</i>")) % volume.decibel)
         self.ui.clips.clear()
         self.rows = {}
-        for audioname, ranges in self.audioclips.iteritems():
+        for audioname, ranges in self.audioclips.items():
             frames = len(ranges)
             if frames == 0:
                 self.logMessage(str(self.tr(u'Skipping clip "%s" because no frames are audible')) % audioname)
@@ -866,8 +858,8 @@ class Odometer(QMainWindow):
             logging.debug("======= %s: %s -> %s======= ", audioname, ranges.r, frames)
             fileref = self.audiofiles[audioname] # might be None, if clip is offline
             secs = ranges.seconds()
-            r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname,
-                                                    '%ss (%sf)' % (secs, frames)])
+            r = QTreeWidgetItem(self.ui.clips, ['', audioname,
+                                                '%ss (%sf)' % (secs, frames)])
             r.metadata = metadata.model.TrackMetadata(filename=audioname)
             r.audioname = audioname
             r.clip = {'durationsecs':secs, 'durationframes':frames, 'in':None, 'out':None}
@@ -880,7 +872,7 @@ class Odometer(QMainWindow):
                 if isinstance(w, metadata.resolvers.AUXResolver):
                     w.updateRepertoire(self.AUXRepertoire) # make sure repertoire is current
                 elif isinstance(w, metadata.resolvers.ApollomusicResolver):
-                    logincookie = str(self.settings.value('Apollocookie', '').toString())
+                    logincookie = self.settings.value('Apollocookie', '')
                     if not logincookie: # not logged in to apollo, big problem
                         self.showerror(self.tr(u'Track from Apollo Music detected. Please log in to the service'))
                         self.logMessage(self.tr(u'No logincookie from apollo music found.'), msgtype=StatusBox.WARNING)
@@ -904,7 +896,7 @@ class Odometer(QMainWindow):
                     r.subclips.append( {'durationsecs':secs, 'durationframes':frames,
                                         'in':formatTC(float(range.start) / ranges.framerate),
                                         'out':formatTC(float(range.end) / ranges.framerate)} )
-                    sr = Gui.QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
+                    sr = QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
                                                  '%ss (%sf)' % (secs, frames),
                                                  u'%sf\u2013%sf' % (range.start, range.end)
                                                 ]
@@ -1041,10 +1033,9 @@ class Odometer(QMainWindow):
     def setRowInfo(self, row, text, warning=False):
         'Set the 3rd cell of the <row> to <text>'
 
-        if isinstance(row, basestring):
+        logging.debug('setRowinfo: row %r -> %r', row, text)
+        if isinstance(row, str):
             row = self.rows[row]
-        elif isinstance(row, Core.QString):
-            row = self.rows[str(row)]
         logging.debug('setting row  <%r> to <%r>', row, text)
         row.setText(3, text)
         if warning:
@@ -1132,13 +1123,13 @@ class Odometer(QMainWindow):
             submit = html.findFirstElement('input[type=submit]')
             submit.setAttribute('style', 'visibility:hidden')
             business = html.findFirstElement('input[name="foretag"]')
-            business.setAttribute("value", self.settings.value('AUX/foretag', "NRK <avdeling>").toString())
+            business.setAttribute("value", self.settings.value('AUX/foretag', "NRK <avdeling>"))
             contact = html.findFirstElement('input[name=kontakt]')
-            contact.setAttribute("value", self.settings.value('AUX/kontakt', "<ditt eller prosjektleders navn>").toString())
+            contact.setAttribute("value", self.settings.value('AUX/kontakt', "<ditt eller prosjektleders navn>"))
             phone = html.findFirstElement('input[name="telefon"]')
-            phone.setAttribute("value", self.settings.value('AUX/telefon', "<ditt eller prosjektleders telefonnummer>").toString())
+            phone.setAttribute("value", self.settings.value('AUX/telefon', "<ditt eller prosjektleders telefonnummer>"))
             email = html.findFirstElement('input[name="email"]')
-            email.setAttribute("value", self.settings.value('AUX/email', "<ditt eller prosjektleders epostadresse>").toString())
+            email.setAttribute("value", self.settings.value('AUX/email', "<ditt eller prosjektleders epostadresse>"))
             productionname = html.findFirstElement('input[name="produktionsnamn"]')
             productionname.setAttribute("value", self.ui.prodno.text())
             check_tv = html.findFirstElement('input[name="checkbox2"]')
@@ -1151,7 +1142,7 @@ class Odometer(QMainWindow):
             html = ui.webView.page().mainFrame()
             for el in ['foretag', 'kontakt', 'telefon', 'email', 'produktionsnamn']:
                 htmlel = html.findFirstElement('input[name=%s]' % el)
-                val = htmlel.evaluateJavaScript("this.value").toString()
+                val = htmlel.evaluateJavaScript("this.value")
                 #if len(val) == 0:
                     #self.showerror(str(self.tr('"%s" cannot be blank')) % el.title())
                     #return None
@@ -1178,7 +1169,7 @@ class Odometer(QMainWindow):
 
         def createRequest(url): # helper method to add cookie to request
             r = QtNetwork.QNetworkRequest(Core.QUrl(url))
-            r.setRawHeader('Cookie', str(self.settings.value('Apollocookie').toString()))
+            r.setRawHeader('Cookie', self.settings.value('Apollocookie'))
             return r
 
         apollomusicDialog = QDialog()
@@ -1242,7 +1233,7 @@ class Odometer(QMainWindow):
             return None
         resolver = metadata.resolvers.findResolver(str(manualPattern))
         if isinstance(resolver, metadata.resolvers.ApollomusicResolver):
-            logincookie = str(self.settings.value('Apollocookie', '').toString())
+            logincookie = self.settings.value('Apollocookie', '')
             if not logincookie: # not logged in to apollo, big problem
                 self.showerror(self.tr(u'Please log in to the Apollo Music service from the login menu'))
                 self.logMessage(self.tr(u'Tried to manually resolve apollo track, but no logincookie found.'), msgtype=StatusBox.WARNING)
@@ -1451,7 +1442,7 @@ def rungui(argv):
     if sys.platform == 'win32':
         def setfont(fontname):
             app.setFont(Gui.QFont(fontname, 9))
-            return str(app.font().toString()).split(',')[0] == fontname
+            return app.font().split(',')[0] == fontname
         # default win32 looks awful, make it pretty
         for z in ['Lucida Sans Unicode', 'Arial Unicode MS', 'Verdana']:
             if setfont(z): break

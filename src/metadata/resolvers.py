@@ -208,10 +208,11 @@ class ResolverBase(Core.QObject):
 
     def cachelocation(self):
         "Return a dir suitable for storage"
-        dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
-        ourdir = os.path.join(os.path.abspath(str(dir)), 'no.nrk.odometer')
+        #dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
+        _dir = Core.QStandardPaths.writableLocation(Core.QStandardPaths.CacheLocation)
+        ourdir = os.path.join(os.path.abspath(_dir), 'no.nrk.odometer')
         if not os.path.exists(ourdir):
-           os.makedirs(ourdir)
+            os.makedirs(ourdir)
                #return os.path.join(ourdir, self.filename)
         try:
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
@@ -250,9 +251,9 @@ class GenericFileResolver(ResolverBase):
                 self.trackResolved.emit(self.filename, md)
                 return True
         parsed = False
-        if isinstance(fullpath, basestring) and os.path.exists(fullpath) and fullpath.upper().endswith('.MP3'):
+        if isinstance(fullpath, str) and os.path.exists(fullpath) and fullpath.upper().endswith('.MP3'):
             parsed = self.id3parse(fullpath)
-        elif isinstance(fullpath, basestring) and os.path.exists(fullpath) and fullpath.upper().endswith('.WAV'):
+        elif isinstance(fullpath, str) and os.path.exists(fullpath) and fullpath.upper().endswith('.WAV'):
             parsed = self.wavparse(fullpath)
         if not parsed:
             if fullpath is None: # clip is offline
@@ -317,7 +318,7 @@ class GenericFileResolver(ResolverBase):
         if _filev1.album.decode('latin1') == u'NRK P3 Urørt':
             md.musiclibrary = u'Urørt'
         # try to fix things
-        if isinstance(md.year, basestring):
+        if isinstance(md.year, str):
             try:
                 _y = md.year
                 md.year = datetime.datetime.strptime(_y, '%Y-%m-%dT%H:%M:%SZ').year
