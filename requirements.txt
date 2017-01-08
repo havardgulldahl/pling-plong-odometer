@@ -1,4 +1,4 @@
-# PyQt4
+PyQt5
 git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml-iter
 lxml
 pytest
