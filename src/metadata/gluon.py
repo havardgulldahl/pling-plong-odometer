@@ -3,6 +3,7 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2011
 
+from builtins import str
 import sys
 import xml.etree.ElementTree as ET
 
