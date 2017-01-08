@@ -9,8 +9,6 @@ language: python
 #osx_image: xcode7.3      Xcode 7.3.1	      OS X 10.11
 #osx_image: xcode6.4	    Xcode 6.4	        OS X 10.10
 
-# maybe unsupported
-#osx_image: beta-xcode6.2	Xcode	            OS X 10.9
 matrix:
   include:
   - os: osx
@@ -25,10 +23,6 @@ matrix:
     osx_image: xcode6.4
     language: generic
     env: OSX=OSX10.10
-  - os: osx
-    osx_image: beta-xcode6.2
-    language: generic
-    env: OSX=OSX10.9
 
 branches:
   only:
@@ -51,7 +45,7 @@ install:
 - pushd /usr/local/Cellar && sudo tar xf /tmp/sip.tar.gz && popd
 - export PATH="$PATH:/usr/local/Cellar/sip/4.18.1/bin"
 - wget http://downloads.sf.net/project/pyqt/PyQt4/PyQt-4.11.4/PyQt-mac-gpl-4.11.4.tar.gz -O /tmp/pyqt.tar.gz
-- tar xvf /tmp/pyqt.tar.gz
+- tar xf /tmp/pyqt.tar.gz
 - pushd PyQt-mac-gpl-4.11.4 && python ./configure-ng.py --confirm-license --verbose --bindir=/usr/local/bin --destdir=/usr/local/lib/python2.7/site-packages --sipdir=/usr/local/share/sip && make && sudo make install && popd
 #- if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./setup-pyqt-osx.sh; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
