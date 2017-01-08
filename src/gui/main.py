@@ -42,76 +42,6 @@ from . import auxreport_ui
 from . import prfreport_ui
 from . import onlinelogin_ui
 
-class StatusBox(QWidget):
-    INFO = 1
-    WARNING = 2
-    ERROR = 3
-
-    class Emitter(Core.QObject):
-
-        closing = Core.pyqtSignal()
-        def __init__(self):
-            super(StatusBox.Emitter, self).__init__()
-
-
-    def __init__(self, msg, autoclose=True, msgtype=None, parent=None):
-        """autoclose may be a boolean (True == autoclose) or a signal that we
-        connect our close() method to"""
-        super(StatusBox, self).__init__(parent)
-        self.emitter = StatusBox.Emitter()
-        self.parent = parent
-        self.autoclose = autoclose
-        self.stopped = False
-        self.timer = Core.QTimer(parent=self)
-        self.timer.timeout.connect(self.close)
-        self.timer.timeout.connect(self.timer.stop)
-        self.anim = Core.QPropertyAnimation(self, "windowOpacity", self.parent)
-        self.anim.finished.connect(self.delete_)
-        self.setWindowFlags(Core.Qt.Popup)
-        self.setup(msgtype)
-        layout = Gui.QVBoxLayout(self)
-        self.s = Gui.QLabel(msg, self)
-        layout.addWidget(self.s)
-
-    def setup(self, msgtype):
-        self.autoclosetimeout = msgtype==self.ERROR and 3000 or 1000
-        if msgtype in (None, self.INFO):
-            bgcolor = '#ffff7f'
-        elif msgtype == self.WARNING:
-            bgcolor = 'blue'#'#ffff7f'
-        elif msgtype == self.ERROR:
-            bgcolor = 'red'#'#ffff7f'
-
-        self.setStyleSheet(u'QWidget { background-color: %s; }' % bgcolor)
-
-    def show_(self):
-        if self.autoclose == True:
-            self.timer.start(self.autoclosetimeout)
-        elif hasattr(self.autoclose, 'connect'): # it's a qt/pyqt signal
-            self.autoclose.connect(self.close)
-        self.show()
-
-    def delete_(self):
-        self.hide()
-        self.emitter.closing.emit()
-        self.deleteLater()
-
-    def close(self):
-        self.stopped = True
-        self.anim.setDuration(1000)
-        self.anim.setStartValue(1.0)
-        self.anim.setEndValue(0.0)
-        self.anim.start()
-
-    def addMessage(self, s, msgtype):
-        self.setup(msgtype)
-        try:
-            self.anim.stop()
-        except AttributeError:#close animation does not exist because close() was never run
-            pass
-        self.timer.start(self.autoclosetimeout)
-        self.s.setText(str(self.s.text()) + "<br>" + s)
-
 def readResourceFile(qrcPath):
     """Read qrc file and return string
 
@@ -1032,8 +962,6 @@ class Odometer(QMainWindow):
 
     def setRowInfo(self, row, text, warning=False):
         'Set the 3rd cell of the <row> to <text>'
-
-        logging.debug('setRowinfo: row %r -> %r', row, text)
         if isinstance(row, str):
             row = self.rows[row]
         logging.debug('setting row  <%r> to <%r>', row, text)
