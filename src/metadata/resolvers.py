@@ -10,6 +10,7 @@ import logging
 import pickle
 import random
 import urllib
+import six
 from six.moves.urllib import request
 import time
 import datetime
@@ -96,11 +97,11 @@ class ResolverBase(Core.QObject):
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     labelmap = [] # a list of labels that this music service carries
     name = 'general'
-    error = Core.pyqtSignal(str, str, name="error" ) # filename,  error message
-    trackFailed = Core.pyqtSignal(str, name="trackFailed" ) # filename
-    trackResolved = Core.pyqtSignal(str, TrackMetadata, name="trackResolved" ) # filename, metadataobj
-    trackProgress = Core.pyqtSignal(str, int, name="trackProgress" ) # filename, progress 0-100
-    warning = Core.pyqtSignal(str, name="warning") # warning message
+    error = Core.pyqtSignal(six.text_type, six.text_type, name="error" ) # filename,  error message
+    trackFailed = Core.pyqtSignal(six.text_type, name="trackFailed" ) # filename
+    trackResolved = Core.pyqtSignal(six.text_type, TrackMetadata, name="trackResolved" ) # filename, metadataobj
+    trackProgress = Core.pyqtSignal(six.text_type, int, name="trackProgress" ) # filename, progress 0-100
+    warning = Core.pyqtSignal(six.text_type, name="warning") # warning message
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
     def __init__(self, parent=None):

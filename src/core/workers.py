@@ -54,7 +54,7 @@ class UrlWorker(Core.QThread):
     def run(self):
         logging.info('urlworker working on url %s with data %s', self.url, self.data)
         try:
-            req = request.request(self.url, self.data, headers=self.headers)
+            req = request.Request(self.url, self.data, headers=self.headers)
             con = request.urlopen(req, timeout=self.timeout)
 
             self.finished.emit(con)

@@ -208,7 +208,7 @@ class ApollomusicLookupWorker(Core.QThread):
                                          })
             # logging.debug('postdata: %s', postdata)
             headers = {'Cookie':logincookie}
-            r = request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
+            r = request.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
             req = request.urlopen(r)
 
         except IOError as e:
@@ -372,7 +372,7 @@ class UniPPMLookupWorker(Core.QThread):
             data = ( ('method','workaudiodetails'),
                      ('workAudioId', musicid)
                    )
-            r = request(endpoint + '?' + urllib.urlencode(data))
+            r = request.Request(endpoint + '?' + urllib.urlencode(data))
             req = request.urlopen(r)
 
         except IOError as e:
@@ -504,7 +504,7 @@ class UprightmusicLookupWorker(Core.QThread):
             data = ( ('handler','load'),
                      ('tid', musicid)
                    )
-            r = request(endpoint + '?' + urllib.urlencode(data))
+            r = request.Request(endpoint + '?' + urllib.urlencode(data))
             req = request.urlopen(r)
 
         except IOError as e:
@@ -610,7 +610,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
 
             try:
                 headers = {'X-API-Auth':logincookie}
-                r = request(url, headers)
+                r = request.Request(url, headers)
                 req = request.urlopen(r)
 
             except IOError as e:
@@ -828,7 +828,7 @@ class AUXLookupWorker(Core.QThread):
                      ('country', 'NO'),
                      ('cdkurz', musicid)
                    )
-            r = request(endpoint + '?' + urllib.urlencode(data))
+            r = request.Request(endpoint + '?' + urllib.urlencode(data))
             req = request.urlopen(r)
 
         except IOError as e:
