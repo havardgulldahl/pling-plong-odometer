@@ -17,6 +17,7 @@ import subprocess
 import hashlib
 import functools
 
+from enum import Enum
 from collections import defaultdict
 import pickle
 
@@ -26,6 +27,7 @@ import PyQt5.QtNetwork as QtNetwork
 import PyQt5.Qt as Qt
 import PyQt5.QtSvg as Svg
 from PyQt5.QtWidgets import (QWidget, QMainWindow, QDialog, QTreeWidgetItem,
+    QLineEdit, QMessageBox, QInputDialog, 
     QDialogButtonBox, QApplication, QFileDialog, QLabel, QProgressBar)
 
 from xmeml import iter as xmemliter
@@ -41,6 +43,11 @@ from . import odometer_rc
 from . import auxreport_ui
 from . import prfreport_ui
 from . import onlinelogin_ui
+
+class Status(Enum):
+    INFO = 1
+    WARNING = 2
+    ERROR = 3
 
 def readResourceFile(qrcPath):
     """Read qrc file and return string
@@ -83,7 +90,6 @@ class Odometer(QMainWindow):
         self.rows = {}
         self.AUXRepertoire = {}
         self.metadataloaded = 0
-        self.statusboxes = []
         self.showsubclips = True
         self.translator = None
         self.translatorQt = None
@@ -192,13 +198,13 @@ class Odometer(QMainWindow):
         i = self.ui.dropIcon
         i.move(self.width()/2-i.width(), self.height()*0.75-i.height())
 
-    def logMessage(self, msg, msgtype=StatusBox.INFO):
+    def logMessage(self, msg, msgtype=Status.INFO):
         'Add a message to the log'
-        if msgtype == StatusBox.ERROR:
+        if msgtype == Status.ERROR:
             color = 'red'
-        elif msgtype == StatusBox.INFO:
+        elif msgtype == Status.INFO:
             color = '#390'
-        elif msgtype == StatusBox.WARNING:
+        elif msgtype == Status.WARNING:
             color = 'blue'
         try:
             if isinstance(self.xmemlfile, str):
@@ -235,7 +241,7 @@ class Odometer(QMainWindow):
         self.logException(e)
         self.showerror(str(self.tr('Unexpected error: %s')) % e)
 
-    def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
+    def showstatus(self, msg, autoclose=True, msgtype=Status.INFO):
         'Popup some info'
 
         if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg:
@@ -251,48 +257,9 @@ class Odometer(QMainWindow):
         self.ui.information.show()
         return b
 
-    def old___showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
-        'Show floating status box'
-        # if you don't autoclose, call self.closestatusboxes()
-        # or keep a reference to this box and .close() it yourself
-
-        if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg:
-            # don't repeat yourself
-            return None
-
-        if len(self.statusboxes):
-            b = self.statusboxes[-1]
-            if not b.stopped:
-                b.addMessage(msg, msgtype)
-                return b
-            else:
-                self.closebox(b)
-        if isinstance(msg, Exception): #unwrap exception
-            msgtype=StatusBox.ERROR
-            msg=str(msg)
-        b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
-        self.statusboxes.append(b)
-        b.emitter.closing.connect(lambda: self.closebox(b))
-        b.show_()
-        self._laststatusmsg = str(msg)
-        self.logMessage(msg, msgtype)
-        return b
-
     def showerror(self, msg):
         'Show error message'
-        return self.showstatus(msg, msgtype=StatusBox.ERROR)
-
-    def closebox(self, b):
-        try:
-            self.statusboxes.remove(b)
-        except:
-            pass
-
-    def closestatusboxes(self):
-        'Close all statusboxes'
-        for b in self.statusboxes:
-            b.close()
-        self.statusboxes = []
+        return self.showstatus(msg, msgtype=Status.ERROR)
 
     def getVersion(self):
         if sys.platform == 'darwin':
@@ -551,14 +518,14 @@ class Odometer(QMainWindow):
             url = 'http://search.auxmp.com//search/html/ajax/axExtData.php'
             # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
             _password = ui.AUXpassword.text() +'~'+ self.settings.value('AUXSID', '')
-            getdata = urllib.urlencode({'ac':'login',
-                                        'country': 'NO',
-                                        'sprache': 'en',
-                                        'ext': 1,
-                                        '_dc': int(time.time()),
-                                        'luser':str(ui.AUXuser.text()),
-                                        'lpass':hashlib.md5(_password).hexdigest(),  
-                                        })
+            getdata = urllib.parse.urlencode({'ac':'login',
+                                            'country': 'NO',
+                                            'sprache': 'en',
+                                            'ext': 1,
+                                            '_dc': int(time.time()),
+                                            'luser':str(ui.AUXuser.text()),
+                                            'lpass':hashlib.md5(_password).hexdigest(),  
+                                            })
             async.load('%s?%s' % (url, getdata), 
                        timeout=7, 
                        headers={
@@ -585,13 +552,6 @@ class Odometer(QMainWindow):
             startBusy()
             async = UrlWorker()
             url = 'http://www.findthetune.com/online/login/ajax_authentication/'
-            getdata = urllib.urlencode({'ac':'login',
-                                        'country': 'NO',
-                                        'sprache': 'en',
-                                        'ext': 1,
-                                        '_dc': int(time.time()),
-                                        'luser':str(ui.AUXuser.text()),
-                                       'lpass':str(ui.AUXpassword.text())})
             postdata = {'user':str(ui.Uprightuser.text()),
                         'pass':str(ui.Uprightpassword.text())}
             async.load(url, timeout=7, data=postdata)
@@ -604,13 +564,13 @@ class Odometer(QMainWindow):
             startBusy()
             async = UrlWorker()
             url = 'http://www.unippm.se/Feeds/commonXMLFeed.aspx'
-            getdata = urllib.urlencode({'method': 'Login',
-                                        'user':str(ui.Universaluser.text()),
-                                        'password':str(ui.Universalpassword.text()),
-                                        'rememberme':'false',
-                                        'autoLogin':'false',
-                                        '_': int(time.time()),
-                                        })
+            getdata = urllib.parse.urlencode({'method': 'Login',
+                                            'user':str(ui.Universaluser.text()),
+                                            'password':str(ui.Universalpassword.text()),
+                                            'rememberme':'false',
+                                            'autoLogin':'false',
+                                            '_': int(time.time()),
+                                            })
             async.load('%s?%s' % (url, getdata), timeout=7)
             async.finished.connect(lambda d: storeCookie('Universal', d))
             async.failed.connect(failed)
@@ -806,7 +766,7 @@ class Odometer(QMainWindow):
                     logincookie = self.settings.value('Apollocookie', '')
                     if not logincookie: # not logged in to apollo, big problem
                         self.showerror(self.tr(u'Track from Apollo Music detected. Please log in to the service'))
-                        self.logMessage(self.tr(u'No logincookie from apollo music found.'), msgtype=StatusBox.WARNING)
+                        self.logMessage(self.tr(u'No logincookie from apollo music found.'), msgtype=Status.WARNING)
                         continue # go to next track
                     else:
                         w.setlogincookie(logincookie)
@@ -816,7 +776,7 @@ class Odometer(QMainWindow):
                 w.trackFailed.connect(lambda x: self.showProgress(x, 100)) # dont leave progress bar dangling
                 w.error.connect(lambda f, e: self.setRowInfo(row=f, text=e, warning=True))
                 w.error.connect(lambda f, e: self.showerror(e))
-                w.warning.connect(lambda s: self.logMessage(s, msgtype=StatusBox.WARNING))
+                w.warning.connect(lambda s: self.logMessage(s, msgtype=Status.WARNING))
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
             if self.showsubclips:
@@ -878,7 +838,7 @@ class Odometer(QMainWindow):
         logging.debug("got progress for %s: %r", filename, progress)
         row = self.rows[str(filename)]
         if progress < 100: # not yet reached 100%
-            p = Gui.QProgressBar(parent=self.ui.clips)
+            p = QProgressBar(parent=self.ui.clips)
             p.setValue(progress)
             self.ui.clips.setItemWidget(row, 3, p)
         else: # finishd, show some text instead
@@ -947,7 +907,7 @@ class Odometer(QMainWindow):
             text = widget.text()
             widget.hide()
             detailsLayout.takeAt(index)
-            _edit = Gui.QLineEdit(text, self.ui.detailsBox)
+            _edit = QLineEdit(text, self.ui.detailsBox)
             detailsLayout.addWidget(_edit, row, column)
             _edit.editingFinished.connect(lambda: close(_edit, widget, row, column))
         for x in (self.ui.clipTitle,
@@ -1131,7 +1091,7 @@ class Odometer(QMainWindow):
             if _data is None: # do a http GET
                 ui.webView.load(r, QtNetwork.QNetworkAccessManager.GetOperation)
             else: # do a http POST
-                body = urllib.urlencode(_data)
+                body = urllib.parse.urlencode(_data)
                 r.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, 'application/x-www-form-urlencoded')
                 ui.webView.load(r, QtNetwork.QNetworkAccessManager.PostOperation, body)
 
@@ -1149,8 +1109,8 @@ class Odometer(QMainWindow):
             self.loadMetadata(row.audioname, md)
 
         filepath = self.audiofiles[row.audioname]
-        manualPattern, result = Gui.QInputDialog.getText(self, self.tr('Music ID'),
-            self.tr('Enter the correct music ID:'), Gui.QLineEdit.Normal, filepath.name)
+        manualPattern, result = QInputDialog.getText(self, self.tr('Music ID'),
+            self.tr('Enter the correct music ID:'), QLineEdit.Normal, filepath.name)
         logging.debug('got manual music pattern: %r, dialog status %r', manualPattern, result)
         if not result:
             # dialog was cancelled 
@@ -1160,7 +1120,7 @@ class Odometer(QMainWindow):
             logincookie = self.settings.value('Apollocookie', '')
             if not logincookie: # not logged in to apollo, big problem
                 self.showerror(self.tr(u'Please log in to the Apollo Music service from the login menu'))
-                self.logMessage(self.tr(u'Tried to manually resolve apollo track, but no logincookie found.'), msgtype=StatusBox.WARNING)
+                self.logMessage(self.tr(u'Tried to manually resolve apollo track, but no logincookie found.'), msgtype=Status.WARNING)
                 return # we cant continue
             else:
                 resolver.setlogincookie(logincookie)
@@ -1259,7 +1219,7 @@ class Odometer(QMainWindow):
         logging.debug("editDuration: %s %s", row, col)
         if col != 2:
             return False
-        editor = Gui.QDoubleSpinBox(parent=self.ui.clips)
+        editor = QDoubleSpinBox(parent=self.ui.clips)
         editor.setMaximum(10000.0)
         editor.setValue(row.clip['durationsecs'])
         editor.setSuffix('s')
@@ -1280,9 +1240,9 @@ class Odometer(QMainWindow):
         prodno = str(self.ui.prodno.text()).strip()
         #ok = self.checkUsage()
         if False: #not ok:
-            msg = Gui.QMessageBox.critical(self, "Rights errors", "Not ok according to usage agreement")
+            msg = QMessageBox.critical(self, "Rights errors", "Not ok according to usage agreement")
         if len(prodno) == 0:
-            msg = Gui.QMessageBox.critical(self, self.tr("Need production number"),
+            msg = QMessageBox.critical(self, self.tr("Need production number"),
                                            self.tr("You must enter the production number"))
             self.ui.prodno.setFocus()
             return False

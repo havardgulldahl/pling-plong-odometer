@@ -187,7 +187,7 @@ class ApollomusicLookupWorker(Core.QThread):
         "do an http post request to apollomusic.dk"
         try:
             _lbl, _albumid, _trackno = self.musicid.split('_')
-            postdata = urllib.urlencode({'label_fk':_lbl,
+            postdata = urllib.parse.urlencode({'label_fk':_lbl,
                                          'album_num':_albumid,
                                          # 'track_num':_trackno,
                                          'type_query':'tracks',
@@ -219,7 +219,7 @@ class ApollomusicLookupWorker(Core.QThread):
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
 
-        response = json.loads(req.read()) # it's a json array
+        response = json.loads(req.read().decode('utf-8')) # it's a json array
         if len(response) == 0:
             # empty response, likely not logged in or expired login cookie
             self.trackFailed.emit()
@@ -369,7 +369,7 @@ class UniPPMLookupWorker(Core.QThread):
             data = ( ('method','workaudiodetails'),
                      ('workAudioId', musicid)
                    )
-            r = request.Request(endpoint + '?' + urllib.urlencode(data))
+            r = request.Request(endpoint + '?' + urllib.parse.urlencode(data))
             req = request.urlopen(r)
 
         except IOError as e:
@@ -383,7 +383,7 @@ class UniPPMLookupWorker(Core.QThread):
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
 
-        response = json.loads(req.read()) # it's a json array
+        response = json.loads(req.read().decode('utf-8')) # it's a json array
         if len(response) == 0:
             # empty response,
             self.trackFailed.emit()
@@ -501,7 +501,7 @@ class UprightmusicLookupWorker(Core.QThread):
             data = ( ('handler','load'),
                      ('tid', musicid)
                    )
-            r = request.Request(endpoint + '?' + urllib.urlencode(data))
+            r = request.Request(endpoint + '?' + urllib.parse.urlencode(data))
             req = request.urlopen(r)
 
         except IOError as e:
@@ -515,7 +515,7 @@ class UprightmusicLookupWorker(Core.QThread):
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
 
-        response = json.loads(req.read()) # it's a json array
+        response = json.loads(req.read().decode('utf-8')) # it's a json array
         if len(response) == 0:
             # empty response, likely not logged in or expired login cookie
             self.trackFailed.emit()
@@ -621,7 +621,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
                 self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
                 return None
 
-            response = json.loads(req.read()) # it's a json array
+            response = json.loads(req.read().decode('utf-8')) # it's a json array
             if len(response) == 0:
                 # empty response, likely not logged in or expired login cookie
                 self.trackFailed.emit()
@@ -825,7 +825,7 @@ class AUXLookupWorker(Core.QThread):
                      ('country', 'NO'),
                      ('cdkurz', musicid)
                    )
-            r = request.Request(endpoint + '?' + urllib.urlencode(data))
+            r = request.Request(endpoint + '?' + urllib.parse.urlencode(data))
             req = request.urlopen(r)
 
         except IOError as e:
@@ -840,7 +840,7 @@ class AUXLookupWorker(Core.QThread):
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
 
-        response = json.loads(req.read()) # it's a json array
+        response = json.loads(req.read().decode('utf-8')) # it's a json array
         if len(response) == 0 or response.get('ax_success') != 1:
             # empty response,
             self.trackFailed.emit()
