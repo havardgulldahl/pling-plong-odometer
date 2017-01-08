@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011-2014
+# (C) 2011-2017
 
 import sys, os, os.path
 import time
 import datetime
 import urllib
 import json
-import StringIO
-import ConfigParser
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+try:
+    import ConfigParser
+except ImportError:
+    import configparser as ConfigParser
 import logging
 import traceback
 import subprocess
@@ -20,11 +26,24 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-import PyQt4.QtGui as Gui
-import PyQt4.QtCore as Core
-import PyQt4.QtSvg as Svg
-import PyQt4.QtNetwork as QtNetwork
-import PyQt4.Qt as Qt
+
+#import Qt
+
+try:
+    import PyQt4.QtCore as Core
+    import PyQt4.QtGui as Gui
+    import PyQt4.QtNetwork as QtNetwork
+    import PyQt4.Qt as Qt
+    import PyQt4.QtSvg as Svg
+    from PyQt4.QtGui import QWidget 
+except ImportError as e:
+    logging.exception(e)
+    import PyQt5.QtCore as Core
+    import PyQt5.QtGui as Gui
+    import PyQt5.QtNetwork as QtNetwork
+    import PyQt5.Qt as Qt
+    import PyQt5.QtSvg as Svg
+    import PyQt5.QtWidgets as QWidget
 
 from xmeml import iter as xmemliter
 import metadata.gluon
@@ -34,13 +53,13 @@ from core.workers import UrlWorker, XmemlWorker
 
 
 # import gui
-import odometer_ui
-import odometer_rc
-import auxreport_ui
-import prfreport_ui
-import onlinelogin_ui
+from . import odometer_ui
+from . import odometer_rc
+from . import auxreport_ui
+from . import prfreport_ui
+from . import onlinelogin_ui
 
-class StatusBox(Gui.QWidget):
+class StatusBox(QWidget):
     INFO = 1
     WARNING = 2
     ERROR = 3
@@ -127,7 +146,7 @@ def readResourceFile(qrcPath):
 def readBuildflags():
     "Read build flags from builtin resource file"
     cp = ConfigParser.ConfigParser()
-    cp.readfp(StringIO.StringIO(unicode(readResourceFile(':/data/buildflags'))))
+    cp.readfp(StringIO(unicode(readResourceFile(':/data/buildflags'))))
     return cp
 
 def formatTC(secs):

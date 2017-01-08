@@ -2,19 +2,28 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2016
 
-import PyQt4.QtCore as Core
+from builtins import str
+try:
+    import PyQt4.QtCore as Core
+except ImportError:
+    import PyQt5.QtCore as Core
 import logging
 from datetime import datetime
 
 
-import urllib, urllib2
-
+import urllib
+from six.moves.urllib import request
 import json
-import StringIO
+from io import StringIO
 
-from model import TrackMetadata
-import resolvers
-import gluon
+from .model import TrackMetadata
+try:
+    from . import resolvers
+    from . import gluon
+except ImportError:
+    import resolvers
+    import gluon
+
 
 GLUON_HTTP_LOOKUP="http://mamcdma02/DMA/"
 
@@ -23,7 +32,7 @@ class GluonLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress")
-    error = Core.pyqtSignal(unicode, name="error")
+    error = Core.pyqtSignal(str, name="error")
 
     def __init__(self, parent=None):
         super(GluonLookupWorker, self).__init__(parent)
@@ -52,11 +61,11 @@ class GluonLookupWorker(Core.QThread):
     def request(self, musicid):
         "do an http post request with given gluon xml payload"
         try:
-            req = urllib.urlopen(GLUON_HTTP_LOOKUP +  musicid + '.xml')
+            req = request.urlopen(GLUON_HTTP_LOOKUP +  musicid + '.xml')
         except IOError as e:
             # e.g. dns lookup failed
             self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):
@@ -70,7 +79,7 @@ class ApollomusicLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+    error = Core.pyqtSignal(str, name="error") # str : error msg
 
     def __init__(self, parent=None):
         super(ApollomusicLookupWorker, self).__init__(parent)
@@ -199,13 +208,13 @@ class ApollomusicLookupWorker(Core.QThread):
                                          })
             # logging.debug('postdata: %s', postdata)
             headers = {'Cookie':logincookie}
-            r = urllib2.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
-            req = urllib2.urlopen(r)
+            r = request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
+            req = request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
             self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):
@@ -231,7 +240,7 @@ class UniPPMLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+    error = Core.pyqtSignal(str, name="error") # str : error msg
 
     def __init__(self, parent=None):
         super(UniPPMLookupWorker, self).__init__(parent)
@@ -363,13 +372,13 @@ class UniPPMLookupWorker(Core.QThread):
             data = ( ('method','workaudiodetails'),
                      ('workAudioId', musicid)
                    )
-            r = urllib2.Request(endpoint + '?' + urllib.urlencode(data))
-            req = urllib2.urlopen(r)
+            r = request(endpoint + '?' + urllib.urlencode(data))
+            req = request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
             self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):
@@ -392,7 +401,7 @@ class UprightmusicLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+    error = Core.pyqtSignal(str, name="error") # str : error msg
 
     def __init__(self, parent=None):
         super(UprightmusicLookupWorker, self).__init__(parent)
@@ -495,13 +504,13 @@ class UprightmusicLookupWorker(Core.QThread):
             data = ( ('handler','load'),
                      ('tid', musicid)
                    )
-            r = urllib2.Request(endpoint + '?' + urllib.urlencode(data))
-            req = urllib2.urlopen(r)
+            r = request(endpoint + '?' + urllib.urlencode(data))
+            req = request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
             self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):
@@ -525,7 +534,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+    error = Core.pyqtSignal(str, name="error") # str : error msg
 
     def __init__(self, parent=None):
         super(ExtremeMusicLookupWorker, self).__init__(parent)
@@ -601,13 +610,13 @@ class ExtremeMusicLookupWorker(Core.QThread):
 
             try:
                 headers = {'X-API-Auth':logincookie}
-                r = urllib2.Request(url, headers)
-                req = urllib2.urlopen(r)
+                r = request(url, headers)
+                req = request.urlopen(r)
 
             except IOError as e:
                 # e.g. dns lookup failed
                 self.trackFailed.emit()
-                self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+                self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
                 return None
 
             if req.getcode() in (404, 403, 401, 400, 500):
@@ -648,7 +657,7 @@ class AUXLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+    error = Core.pyqtSignal(str, name="error") # str : error msg
 
     def __init__(self, parent=None):
         super(AUXLookupWorker, self).__init__(parent)
@@ -819,14 +828,14 @@ class AUXLookupWorker(Core.QThread):
                      ('country', 'NO'),
                      ('cdkurz', musicid)
                    )
-            r = urllib2.Request(endpoint + '?' + urllib.urlencode(data))
-            req = urllib2.urlopen(r)
+            r = request(endpoint + '?' + urllib.urlencode(data))
+            req = request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
             logging.exception(e)
             self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):

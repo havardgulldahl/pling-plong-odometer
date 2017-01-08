@@ -5,12 +5,19 @@
 # workers.py: a collection of different threaded workers
 
 import sys
-import urllib, urllib2
+import urllib
+from six.moves.urllib import request
 import logging
 
-import PyQt4.QtCore as Core
-import PyQt4.QtNetwork as QtNetwork
-import PyQt4.Qt as Qt
+
+try:
+    import PyQt4.QtCore as Core
+    import PyQt4.QtNetwork as QtNetwork
+    import PyQt4.Qt as Qt
+except ImportError:
+    import PyQt5.QtCore as Core
+    import PyQt5.QtNetwork as QtNetwork
+    import PyQt5.Qt as Qt
 
 from xmeml import iter as xmemliter
 
@@ -47,8 +54,8 @@ class UrlWorker(Core.QThread):
     def run(self):
         logging.info('urlworker working on url %s with data %s', self.url, self.data)
         try:
-            req = urllib2.Request(self.url, self.data, headers=self.headers)
-            con = urllib2.urlopen(req, timeout=self.timeout)
+            req = request.request(self.url, self.data, headers=self.headers)
+            con = request.urlopen(req, timeout=self.timeout)
 
             self.finished.emit(con)
         except Exception as e:

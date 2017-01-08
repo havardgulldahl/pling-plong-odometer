@@ -2,26 +2,33 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2016
 
+from builtins import str
 import os
 import os.path
 import hashlib
 import logging
-import cPickle as pickle
+import pickle
 import random
-import urllib, urllib2
+import urllib
+from six.moves.urllib import request
 import time
 import datetime
 import re
 import json
-import HTMLParser
+from six.moves import html_parser
 
-import PyQt4.QtCore as Core
-import PyQt4.QtGui as Gui
-import PyQt4.QtWebKit as Web
+try:
+    import PyQt4.QtCore as Core
+    import PyQt4.QtGui as Gui
+    import PyQt4.QtWebKit as Web
+except ImportError:
+    import PyQt5.QtCore as Core
+    import PyQt5.QtGui as Gui
+    import PyQt5.QtWebEngine as Web
 
 
 import lookupWorkers
-from model import TrackMetadata
+from .model import TrackMetadata
 
 def findResolver(filename):
     resolvers = [DMAResolver(),
@@ -52,7 +59,7 @@ def getResolverPatterns():
 
 
 def htmlunescape(s):
-    return HTMLParser.HTMLParser().unescape(s)
+    return html_parser.HTMLParser().unescape(s)
 
 
 def getmusicid(filename):
@@ -68,8 +75,12 @@ class webdoc(Core.QObject):
         super(webdoc, self).__init__(parent)
         self.filename = filename
         self.url = url
-        self.page = Web.QWebPage(self)
-        self.frame = self.page.mainFrame()
+        try:
+            self.page = Web.QWebPage(self)
+            self.frame = self.page.mainFrame()
+        except AttributeError: # qt4 /qt5 
+            self.page = Web.QWebEnginePage(self)
+            self.frame = self.page
         self.settings = self.page.settings()
         self.settings.setAttribute(Web.QWebSettings.JavascriptEnabled, False)
         self.settings.setAttribute(Web.QWebSettings.AutoLoadImages, False)
@@ -85,11 +96,11 @@ class ResolverBase(Core.QObject):
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     labelmap = [] # a list of labels that this music service carries
     name = 'general'
-    error = Core.pyqtSignal(unicode, unicode, name="error" ) # filename,  error message
-    trackFailed = Core.pyqtSignal(unicode, name="trackFailed" ) # filename
-    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" ) # filename, metadataobj
-    trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" ) # filename, progress 0-100
-    warning = Core.pyqtSignal(unicode, name="warning") # warning message
+    error = Core.pyqtSignal(str, str, name="error" ) # filename,  error message
+    trackFailed = Core.pyqtSignal(str, name="trackFailed" ) # filename
+    trackResolved = Core.pyqtSignal(str, TrackMetadata, name="trackResolved" ) # filename, metadataobj
+    trackProgress = Core.pyqtSignal(str, int, name="trackProgress" ) # filename, progress 0-100
+    warning = Core.pyqtSignal(str, name="warning") # warning message
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
     def __init__(self, parent=None):
@@ -101,17 +112,17 @@ class ResolverBase(Core.QObject):
 
     def accepts(self, filename):
         for f in self.prefixes:
-            if unicode(filename).upper().startswith(f):
+            if str(filename).upper().startswith(f):
                 return True
         for f in self.postfixes:
-            if unicode(filename).upper().endswith(f):
+            if str(filename).upper().endswith(f):
                 return True
         return False
 
     def testresolve(self, filename):
         self.filename = filename
         i = random.randint(0,1000)
-        md = TrackMetadata( filename = unicode(filename),
+        md = TrackMetadata( filename = str(filename),
                             musiclibrary = self.name,
                             title = "Funky title %i" % i,
                             length = random.randint(30,500),
@@ -184,7 +195,7 @@ class ResolverBase(Core.QObject):
         try:
             metadata =  pickle.loads(loc.read())
             loc.close()
-        except Exception, (e):
+        except Exception as e:
             # something went wrong, cache invalid
             self.warning.emit('fromcache error: %s' % e)
             return None
@@ -202,14 +213,14 @@ class ResolverBase(Core.QObject):
     def cachelocation(self):
         "Return a dir suitable for storage"
         dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
-        ourdir = os.path.join(os.path.abspath(unicode(dir)), 'no.nrk.odometer')
+        ourdir = os.path.join(os.path.abspath(str(dir)), 'no.nrk.odometer')
         if not os.path.exists(ourdir):
            os.makedirs(ourdir)
                #return os.path.join(ourdir, self.filename)
         try:
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
         except UnicodeEncodeError:
-            print repr(self.filename), type(self.filename)
+            logging.warning("cachelocation warn: %r - %r", repr(self.filename), type(self.filename))
 
     def cleanup(self, filename, *args):
         "Remove objects to prevent hanging threads"
@@ -217,7 +228,7 @@ class ResolverBase(Core.QObject):
             if hasattr(self, 'doc'):
                 self.doc.deleteLater()
         except Exception as e:
-            print "cleanup failed:", e
+            logging.warning("cleanup failed: %r", e)
             pass
 
     def setlogincookie(self, cookie):
@@ -268,8 +279,8 @@ class GenericFileResolver(ResolverBase):
 
     def id3parse(self, filename):
         'Parse metadata from id3 tags and return TrackMetadata object or False'
-	# disable mp3 scanning
-	return False
+        # disable mp3 scanning
+        return False
         try:
             _filev1 = tagger.ID3v1(filename)
             _filev2 = tagger.ID3v2(filename)
@@ -345,7 +356,7 @@ class DMAResolver(ResolverBase):
         # return placeholder metadata
         # to be replaced by a gluon/DMA lookup later in the process
         self.filename = filename
-        dummymetadata = TrackMetadata(filename=unicode(filename),
+        dummymetadata = TrackMetadata(filename=str(filename),
                                       musiclibrary='DMA',
                                       title = 'Kommer fra DMA',
                                       composer = 'Kommer fra DMA',
@@ -374,7 +385,7 @@ class DMAResolver(ResolverBase):
     def quicklookup(ltype, substring):
         url = 'http://dma/getUnitNames.do?type=%s&limit=10' % ltype
         data = urllib.urlencode( ('in', substring ), )
-        return json.loads(urllib.urlopen(url, data).read())
+        return json.loads(request.urlopen(url, data).read())
 
     @staticmethod
     def performerlookup(substring):
@@ -762,7 +773,7 @@ class ExtremeMusicResolver(ResolverBase):
         #0. Get session token
         #curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
         ENVURL = 'https://www.extrememusic.com/env'
-        env = json.loads(urllib.urlopen(ENVURL).read())
+        env = json.loads(request.urlopen(ENVURL).read())
         self.setlogincookie(env['env']['API_AUTH'])
 
 
@@ -781,9 +792,9 @@ class ExtremeMusicResolver(ResolverBase):
         """
         if self.logincookie is None:
             self.fetchlogincookie()
-        req = urllib2.Request('https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series')
+        req = request.request('https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series')
         req.add_header('X-API-Auth', self.logincookie)
 
-        labels = json.loads(urllib2.urlopen(req).read())
+        labels = json.loads(request.urlopen(req).read())
         r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
         return r
