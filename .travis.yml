@@ -37,8 +37,8 @@ before_install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
 
 install:
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install python3; fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip3 install py2app; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pyenv install 3.5.2; pyenv local 3.5.2; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
 - pip3 install -r requirements.txt
 - pip3 install .
 - ls
