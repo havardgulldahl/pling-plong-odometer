@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2016
@@ -74,4 +74,4 @@ if __name__ == '__main__':
     run(_pyrcc, '-py2', '-o', 'src/gui/odometer_rc.py', 'src/gui/odometer.qrc')
 
 
-    puts(colored.green('All PyQt4 resources built'))
+    puts(colored.green('All PyQt5 resources built'))
