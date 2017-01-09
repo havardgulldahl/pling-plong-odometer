@@ -78,3 +78,5 @@ VERSIONWIN
 src/metadata/*.wav
 src/metadata/*.mp3
 
+
+.python-version
