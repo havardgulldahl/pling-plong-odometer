@@ -1,27 +1,20 @@
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2016
+# (C) 2016-2017
 
 from builtins import str
 import PyQt5.QtCore as Core
 import logging
 from datetime import datetime
 
-
-import urllib
-from urllib.parse import urlencode
-from six.moves.urllib import request
+import urllib.parse 
+import urllib.request
 import json
 from io import StringIO
 
 from .model import TrackMetadata
-try:
-    from . import resolvers
-    from . import gluon
-except ImportError:
-    import resolvers
-    import gluon
-
+from . import resolvers
+from . import gluon
 
 GLUON_HTTP_LOOKUP="http://mamcdma02/DMA/"
 
@@ -59,7 +52,7 @@ class GluonLookupWorker(Core.QThread):
     def request(self, musicid):
         "do an http post request with given gluon xml payload"
         try:
-            req = request.urlopen(GLUON_HTTP_LOOKUP +  musicid + '.xml')
+            req = urllib.request.urlopen(GLUON_HTTP_LOOKUP +  musicid + '.xml')
         except IOError as e:
             # e.g. dns lookup failed
             self.trackFailed.emit()
@@ -188,7 +181,7 @@ class ApollomusicLookupWorker(Core.QThread):
         "do an http post request to apollomusic.dk"
         try:
             _lbl, _albumid, _trackno = self.musicid.split('_')
-            postdata = urlencode({'label_fk':_lbl,
+            postdata = urllib.parse.urlencode({'label_fk':_lbl,
                                          'album_num':_albumid,
                                          # 'track_num':_trackno,
                                          'type_query':'tracks',
@@ -206,8 +199,8 @@ class ApollomusicLookupWorker(Core.QThread):
                                          })
             # logging.debug('postdata: %s', postdata)
             headers = {'Cookie':logincookie}
-            r = request.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
-            req = request.urlopen(r)
+            r = urllib.request.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
+            req = urllib.request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
@@ -370,8 +363,8 @@ class UniPPMLookupWorker(Core.QThread):
             data = ( ('method','workaudiodetails'),
                      ('workAudioId', musicid)
                    )
-            r = request.Request(endpoint + '?' + urlencode(data))
-            req = request.urlopen(r)
+            r = urllib.request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            req = urllib.request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
@@ -502,8 +495,8 @@ class UprightmusicLookupWorker(Core.QThread):
             data = ( ('handler','load'),
                      ('tid', musicid)
                    )
-            r = request.Request(endpoint + '?' + urlencode(data))
-            req = request.urlopen(r)
+            r = urllib.request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            req = urllib.request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
@@ -608,8 +601,8 @@ class ExtremeMusicLookupWorker(Core.QThread):
 
             try:
                 headers = {'X-API-Auth':logincookie}
-                r = request.Request(url, headers)
-                req = request.urlopen(r)
+                r = urllib.request.Request(url, headers)
+                req = urllib.request.urlopen(r)
 
             except IOError as e:
                 # e.g. dns lookup failed
@@ -826,8 +819,8 @@ class AUXLookupWorker(Core.QThread):
                      ('country', 'NO'),
                      ('cdkurz', musicid)
                    )
-            r = request.Request(endpoint + '?' + urlencode(data))
-            req = request.urlopen(r)
+            r = urllib.request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            req = urllib.request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed

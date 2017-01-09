@@ -10,13 +10,12 @@ import logging
 import pickle
 import random
 import urllib
-import six
-from six.moves.urllib import request
+import urllib.request
 import time
 import datetime
 import re
 import json
-from six.moves import html_parser
+import html.parser
 
 import PyQt5.QtCore as Core
 import PyQt5.QtGui as Gui
@@ -55,7 +54,7 @@ def getResolverPatterns():
 
 
 def htmlunescape(s):
-    return html_parser.HTMLParser().unescape(s)
+    return html.parser.HTMLParser().unescape(s)
 
 
 def getmusicid(filename):
@@ -92,11 +91,11 @@ class ResolverBase(Core.QObject):
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     labelmap = [] # a list of labels that this music service carries
     name = 'general'
-    error = Core.pyqtSignal(six.text_type, six.text_type, name="error" ) # filename,  error message
-    trackFailed = Core.pyqtSignal(six.text_type, name="trackFailed" ) # filename
-    trackResolved = Core.pyqtSignal(six.text_type, TrackMetadata, name="trackResolved" ) # filename, metadataobj
-    trackProgress = Core.pyqtSignal(six.text_type, int, name="trackProgress" ) # filename, progress 0-100
-    warning = Core.pyqtSignal(six.text_type, name="warning") # warning message
+    error = Core.pyqtSignal(str, str, name="error" ) # filename,  error message
+    trackFailed = Core.pyqtSignal(str, name="trackFailed" ) # filename
+    trackResolved = Core.pyqtSignal(str, TrackMetadata, name="trackResolved" ) # filename, metadataobj
+    trackProgress = Core.pyqtSignal(str, int, name="trackProgress" ) # filename, progress 0-100
+    warning = Core.pyqtSignal(str, name="warning") # warning message
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
     def __init__(self, parent=None):
@@ -381,8 +380,8 @@ class DMAResolver(ResolverBase):
     @staticmethod
     def quicklookup(ltype, substring):
         url = 'http://dma/getUnitNames.do?type=%s&limit=10' % ltype
-        data = urllib.urlencode( ('in', substring ), )
-        return json.loads(request.urlopen(url, data).read())
+        data = urllib.parse.urlencode( ('in', substring ), )
+        return json.loads(urllib.request.urlopen(url, data).read())
 
     @staticmethod
     def performerlookup(substring):
@@ -770,7 +769,7 @@ class ExtremeMusicResolver(ResolverBase):
         #0. Get session token
         #curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
         ENVURL = 'https://www.extrememusic.com/env'
-        env = json.loads(request.urlopen(ENVURL).read())
+        env = json.loads(urllib.request.urlopen(ENVURL).read())
         self.setlogincookie(env['env']['API_AUTH'])
 
 
@@ -789,9 +788,9 @@ class ExtremeMusicResolver(ResolverBase):
         """
         if self.logincookie is None:
             self.fetchlogincookie()
-        req = request.request('https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series')
+        req = urllib.request.Request('https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series')
         req.add_header('X-API-Auth', self.logincookie)
 
-        labels = json.loads(request.urlopen(req).read())
+        labels = json.loads(urllib.request.urlopen(req).read())
         r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
         return r

@@ -7,7 +7,7 @@ from builtins import str
 import sys, os, os.path
 import time
 import datetime
-import urllib
+import urllib.parse
 import json
 from io import StringIO
 import configparser 

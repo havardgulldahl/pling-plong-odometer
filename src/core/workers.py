@@ -5,8 +5,8 @@
 # workers.py: a collection of different threaded workers
 
 import sys
-import urllib
-from six.moves.urllib import request
+import urllib.parse
+import urllib.request
 import logging
 
 
@@ -37,7 +37,7 @@ class UrlWorker(Core.QThread):
             if isinstance(data, basestring):
                 self.data = data
             else:
-                self.data = urllib.urlencode(data)
+                self.data = urllib.parse.urlencode(data)
         else:
             self.data = None
         self.headers = {'X_REQUESTED_WITH' :'XMLHttpRequest',
@@ -49,8 +49,8 @@ class UrlWorker(Core.QThread):
     def run(self):
         logging.info('urlworker working on url %s with data %s', self.url, self.data)
         try:
-            req = request.Request(self.url, self.data, headers=self.headers)
-            con = request.urlopen(req, timeout=self.timeout)
+            req = urllib.request.Request(self.url, self.data, headers=self.headers)
+            con = urllib.request.urlopen(req, timeout=self.timeout)
 
             self.finished.emit(con)
         except Exception as e:
