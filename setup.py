@@ -47,16 +47,14 @@ if sys.platform == 'darwin':
              argv_emulation=False,
              iconfile='odometer.icns',
              packages=['lxml'],
-             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip', 'PyQt4._qt'],
-      	     excludes=["Tkconstants","Tkinter","tcl",
-                 'PyQt4.QtDesigner', 'PyQt4.QtOpenGL', 'PyQt4.QtScript',
-                 'PyQt4.QtSql', 'PyQt4.QtTest', 'PyQt4.QtXml', 'PyQt4.phonon'],
+             includes=['sip','PyQt5','PyQt5.QtWidgets'],
+      	     excludes=["Tkconstants","Tkinter","tcl"],
              plist=dict(CFBundleIdentifier='no.nrk.odometer',
                         ##CFBundleDisplayName='♫ ♪ Odometer',
                         #CFBundleDisplayName=u'\u266b \u266a Odometer',
                         CFBundleShortVersionString='Odometer, version %s' % getversion(),
                         NSSupportsSuddenTermination=True,
-                        NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011-2016')
+                        NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011-2017')
              )
          ),
      )
@@ -77,7 +75,7 @@ elif sys.platform == 'win32':
 		 options=dict(py2exe=dict(
              packages=['lxml', 'xmeml'],
 	     excludes=["Tkconstants","Tkinter","tcl"],
-             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'])
+             includes=['sip','PyQt5','PyQt5.QtWidgets','gzip'])
 		)
     )
 else:
