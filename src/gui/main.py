@@ -157,6 +157,7 @@ class Odometer(QMainWindow):
         if not self.buildflags.getboolean('ui', 'errorbutton'):
             self.ui.errorButton.hide()
 
+        self.ui.information.hide()
         #self.metadataLoaded.connect(self.checkUsage)
         Core.QTimer.singleShot(5, self.updateAUXRepertoire)
 
@@ -251,15 +252,26 @@ class Odometer(QMainWindow):
         if isinstance(msg, Exception): #unwrap exception
             msg=str(msg)
 
+        infoLayout = self.ui.information.layout()
         b = QLabel(msg, self.ui.information)
+        infoLayout.addWidget(b)
         self._laststatusmsg = str(msg)
         self.logMessage(msg, msgtype)
-        self.ui.information.show()
         return b
 
     def showerror(self, msg):
         'Show error message'
         return self.showstatus(msg, msgtype=Status.ERROR)
+
+    def clearstatus(self):
+        'empty message list'
+
+        infoLayout = self.ui.information.layout()
+        while infoLayout.count() > 0:
+            child = infoLayout.takeAt(0)
+            widget = child.widget()
+            del widget
+            del child
 
     def getVersion(self):
         if sys.platform == 'darwin':
@@ -285,15 +297,16 @@ class Odometer(QMainWindow):
         ui.setupUi(HelpDialog)
         HelpDialog.setWindowTitle(self.tr('Help'))
         ui.buttonBox.hide()
-        ui.webView.load(Core.QUrl(self.buildflags.get('release', 'helpUrl')))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        ui.webEngineView.load(Core.QUrl(self.buildflags.get('release', 'helpUrl')))
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadProgress.connect(ui.progressBar.setValue)
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
         def helpdocloaded(success):
             logging.debug("help doc loaded: %s", success)
             # TODO: Add offline fallback
             if not success:
                 self.showerror(self.tr("Could not load help document, sorry. :("))
-        ui.webView.loadFinished.connect(helpdocloaded)
+        ui.webEngineView.loadFinished.connect(helpdocloaded)
         return HelpDialog.exec_()
 
     def showLicenses(self):
@@ -694,6 +707,7 @@ class Odometer(QMainWindow):
             unicxmemlfile = xmemlfile
         else:
             unicxmemlfile = xmemlfile.decode(sys.getfilesystemencoding())
+        self.clearstatus()
         msgbox = self.showstatus(str(self.tr("Loading %s...")) % unicxmemlfile, autoclose=self.loaded)
         self.loadingbar()
         self.loaded.connect(self.removeLoadingbar)
@@ -994,36 +1008,30 @@ class Odometer(QMainWindow):
         s = ""
         for r in self.itercheckedrows():
             if r.metadata.musiclibrary == "AUX Publishing":
-                s = s + u"%s x %s sek \r\n" % (r.metadata.identifier, r.clip['durationsecs'])
+                s = s + "%s x %s sek \r\n" % (r.metadata.identifier, r.clip['durationsecs'])
         AUXDialog = QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(AUXDialog)
-        ui.webView.load(Core.QUrl('http://auxlicensing.com/Forms/Express%20Rapportering/index.html'))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadProgress.connect(ui.progressBar.setValue)
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
+        page = ui.webEngineView.page()
+        def callback(msg):
+            logging.debug('callback from js land: %r', msg)
         def reportloaded(boolean):
             logging.debug("report loaded: %s", boolean)
-            html = ui.webView.page().mainFrame()
-            submit = html.findFirstElement('input[type=submit]')
-            submit.setAttribute('style', 'visibility:hidden')
-            business = html.findFirstElement('input[name="foretag"]')
-            business.setAttribute("value", self.settings.value('AUX/foretag', "NRK <avdeling>"))
-            contact = html.findFirstElement('input[name=kontakt]')
-            contact.setAttribute("value", self.settings.value('AUX/kontakt', "<ditt eller prosjektleders navn>"))
-            phone = html.findFirstElement('input[name="telefon"]')
-            phone.setAttribute("value", self.settings.value('AUX/telefon', "<ditt eller prosjektleders telefonnummer>"))
-            email = html.findFirstElement('input[name="email"]')
-            email.setAttribute("value", self.settings.value('AUX/email', "<ditt eller prosjektleders epostadresse>"))
-            productionname = html.findFirstElement('input[name="produktionsnamn"]')
-            productionname.setAttribute("value", self.ui.prodno.text())
-            check_tv = html.findFirstElement('input[name="checkbox2"]')
-            check_tv.setAttribute("checked", "checked")
-            text = html.findFirstElement("textarea")
-            text.setPlainText(s)
-        ui.webView.loadFinished.connect(reportloaded)
+            #page.runJavaScript("""document.title""", callback)
+            page.runJavaScript("""document.querySelector('input[name="foretag"]').value='%s'""" % self.settings.value('AUX/foretag', "NRK <avdeling>"))
+            page.runJavaScript("""document.querySelector('input[name="kontakt"]').value='%s'""" %  self.settings.value('AUX/kontakt', "<ditt eller prosjektleders navn>"))
+            page.runJavaScript("""document.querySelector('input[name="telefon"]').value='%s'""" % self.settings.value('AUX/telefon', "<ditt eller prosjektleders telefonnummer>"))
+            page.runJavaScript("""document.querySelector('input[name="email"]').value='%s'""" %  self.settings.value('AUX/email', "<ditt eller prosjektleders epostadresse>"))
+            page.runJavaScript("""document.querySelector('input[name="produktionsnamn"]').value='%s'""" %  self.ui.prodno.text())
+            page.runJavaScript("""document.querySelector('input[name="checkbox2"]').checked=1;""")
+            logging.debug('setting aux report: %r', s)
+            page.runJavaScript('''document.querySelector("textarea").value="%r";''' % s)
+        ui.webEngineView.loadFinished.connect(reportloaded)
         def reportsubmit():
             logging.debug("report submitting")
-            html = ui.webView.page().mainFrame()
             for el in ['foretag', 'kontakt', 'telefon', 'email', 'produktionsnamn']:
                 htmlel = html.findFirstElement('input[name=%s]' % el)
                 val = htmlel.evaluateJavaScript("this.value")
@@ -1036,6 +1044,7 @@ class Odometer(QMainWindow):
             submit.evaluateJavaScript('this.click()')
             #return AUXDialog.accept()
         ui.buttonBox.accepted.connect(reportsubmit)
+        ui.webEngineView.load(Core.QUrl('http://auxlicensing.com/Forms/Express%20Rapportering/index.html'))
         return AUXDialog.exec_()
 
     def apollomusicReport(self):
