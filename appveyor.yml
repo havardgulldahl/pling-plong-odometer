@@ -11,7 +11,7 @@ environment:
       MSVCP: "https://www.dropbox.com/s/57tqa3oiqqf7s4j/msvcp90.dll?dl=1"
       REQUIREMENTS: "requirements.txt"
       PIP: "%PYTHON%/Scripts/pip.exe"
-    - PYTHON: "C:/Python36/python3.exe"
+    - PYTHON: "C:/Python36/python.exe"
       PPATH: "C:/Python36"
       LXML: "lxml"
       PY2EXE: "py2exe"
