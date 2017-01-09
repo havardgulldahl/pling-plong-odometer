@@ -9,6 +9,7 @@ from datetime import datetime
 
 
 import urllib
+from urllib.parse import urlencode
 from six.moves.urllib import request
 import json
 from io import StringIO
@@ -187,7 +188,7 @@ class ApollomusicLookupWorker(Core.QThread):
         "do an http post request to apollomusic.dk"
         try:
             _lbl, _albumid, _trackno = self.musicid.split('_')
-            postdata = urllib.parse.urlencode({'label_fk':_lbl,
+            postdata = urlencode({'label_fk':_lbl,
                                          'album_num':_albumid,
                                          # 'track_num':_trackno,
                                          'type_query':'tracks',
@@ -369,7 +370,7 @@ class UniPPMLookupWorker(Core.QThread):
             data = ( ('method','workaudiodetails'),
                      ('workAudioId', musicid)
                    )
-            r = request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            r = request.Request(endpoint + '?' + urlencode(data))
             req = request.urlopen(r)
 
         except IOError as e:
@@ -501,7 +502,7 @@ class UprightmusicLookupWorker(Core.QThread):
             data = ( ('handler','load'),
                      ('tid', musicid)
                    )
-            r = request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            r = request.Request(endpoint + '?' + urlencode(data))
             req = request.urlopen(r)
 
         except IOError as e:
@@ -825,7 +826,7 @@ class AUXLookupWorker(Core.QThread):
                      ('country', 'NO'),
                      ('cdkurz', musicid)
                    )
-            r = request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            r = request.Request(endpoint + '?' + urlencode(data))
             req = request.urlopen(r)
 
         except IOError as e:
