@@ -37,20 +37,9 @@ before_install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
 
 install:
-#- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install homebrew/boneyard/pyqt; fi
-- wget https://homebrew.bintray.com/bottles/qt-4.8.7_2.el_capitan.bottle.tar.gz -O "/tmp/qt.tar.gz"
-- wget https://homebrew.bintray.com/bottles/sip-4.18.1.el_capitan.bottle.tar.gz -O /tmp/sip.tar.gz
-- pushd /usr/local/Cellar && sudo tar xf /tmp/qt.tar.gz && popd
-- export PATH="$PATH:/usr/local/Cellar/qt/4.8.7_2/bin"
-- pushd /usr/local/Cellar && sudo tar xf /tmp/sip.tar.gz && popd
-- export PATH="$PATH:/usr/local/Cellar/sip/4.18.1/bin"
-- wget http://downloads.sf.net/project/pyqt/PyQt4/PyQt-4.11.4/PyQt-mac-gpl-4.11.4.tar.gz -O /tmp/pyqt.tar.gz
-- tar xf /tmp/pyqt.tar.gz
-- pushd PyQt-mac-gpl-4.11.4 && python ./configure-ng.py --confirm-license --verbose --bindir=/usr/local/bin --destdir=/usr/local/lib/python2.7/site-packages --sipdir=/usr/local/share/sip && make && sudo make install && popd
-#- if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./setup-pyqt-osx.sh; fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
-- pip install -r requirements.txt
-- pip install .
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip3 install py2app; fi
+- pip3 install -r requirements.txt
+- pip3 install .
 - ls
 
 script:

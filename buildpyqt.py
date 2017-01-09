@@ -34,30 +34,30 @@ if __name__ == '__main__':
     for _p in sys.path:
         if not _p.endswith('site-packages'):
             continue
-        if os.path.exists(os.path.join(_p, "PyQt4")):
-            _sp = os.path.join(_p, "PyQt4")
+        if os.path.exists(os.path.join(_p, "PyQt5")):
+            _sp = os.path.join(_p, "PyQt5")
 
     if not os.path.exists(_sp):
-        puts(colored.red("Couldnt find PyQt4 installation (looked at {path}".format(path=_sp)))
+        puts(colored.red("Couldnt find PyQt5 installation (looked at {path}".format(path=_sp)))
         sys.exit(1)
 
     version = date.today().isoformat()
-    puts(colored.blue("Building PyQt4 resources for Odometer version {v}".format(v=version)))
+    puts(colored.blue("Building PyQt5 resources for Odometer version {v}".format(v=version)))
 
     puts(colored.blue("Checking project settings"))
 
     if sys.platform == 'darwin':
         # osx
-        _pylupdate = run('which', 'pylupdate4').strip()
+        _pylupdate = run('which', 'pylupdate5').strip()
         _lrelease = run('which', 'lrelease').strip()
-        _pyuic = run('which', 'pyuic4').strip()
-        _pyrcc = run('which', 'pyrcc4').strip()
+        _pyuic = run('which', 'pyuic5').strip()
+        _pyrcc = run('which', 'pyrcc5').strip()
         _versionfile = os.path.join('.', 'VERSIONMAC')
     elif sys.platform == 'win32':
-        _pylupdate = os.path.join(_sp, 'pylupdate4.exe')
+        _pylupdate = os.path.join(_sp, 'pylupdate5.exe')
         _lrelease = os.path.join(_sp, 'lrelease.exe')
-        _pyuic = os.path.join(_sp, 'pyuic4.bat')
-        _pyrcc = os.path.join(_sp, 'pyrcc4.exe')
+        _pyuic = os.path.join(_sp, 'pyuic5.bat')
+        _pyrcc = os.path.join(_sp, 'pyrcc5.exe')
         _versionfile = os.path.join('.', 'VERSIONWIN')
 
     puts(colored.blue("Generating translations for UX"))
