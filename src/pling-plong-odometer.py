@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- enc: utf-8 -*-
 
 import sys, logging
