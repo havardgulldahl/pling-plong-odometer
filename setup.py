@@ -41,14 +41,17 @@ if sys.platform == 'darwin':
      extra_options = dict(
          setup_requires=['py2app'],
          app=[mainscript],
+         zip_safe=False,
          # Cross-platform applications generally expect sys.argv to
          # be used for opening files.
          options=dict(py2app=dict(
              argv_emulation=False,
              iconfile='odometer.icns',
              packages=['lxml'],
-             includes=['sip','PyQt5','PyQt5.QtWidgets'],
-      	     excludes=["Tkconstants","Tkinter","tcl"],
+             includes=['sip','PyQt5','PyQt5.QtWidgets', 'PyQt5.QtCore', 'PyQt5.QtGui'],
+      	     excludes=["Tkconstants","Tkinter","tcl",
+                       "PyQt5.QtBluetooth", "PyQt5.QtMultimedia", "PyQt5.QtPrintSupport", "PyQt5.QtQml", 
+                       "PyQt5.QtQuick", "PyQt5.QtSensors", "PyQt5.QtSql", "PyQt5.QtWebSockets", ],
              plist=dict(CFBundleIdentifier='no.nrk.odometer',
                         ##CFBundleDisplayName='♫ ♪ Odometer',
                         #CFBundleDisplayName=u'\u266b \u266a Odometer',
@@ -73,9 +76,9 @@ elif sys.platform == 'win32':
 		              #'xmeml':'src/xmeml'
 					  },
 		 options=dict(py2exe=dict(
-             packages=['lxml', 'xmeml'],
-	     excludes=["Tkconstants","Tkinter","tcl"],
-             includes=['sip','PyQt5','PyQt5.QtWidgets','gzip'])
+            packages=['lxml', 'xmeml'],
+            excludes=["Tkconstants","Tkinter","tcl"],
+            includes=['sip','PyQt5','PyQt5.QtWidgets','gzip'])
 		)
     )
 else:

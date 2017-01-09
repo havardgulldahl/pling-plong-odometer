@@ -3,22 +3,22 @@ build: false
 
 environment:
   matrix:
-    - PYTHON: "C:/Python27/python.exe" # this is win32
-      PPATH: "C:/Python27"
-      LXML: "test/contrib/lxml-3.6.4-cp27-cp27m-win32.whl"
-      PY2EXE: "py2exe_py2"
-      PYQT: "https://www.dropbox.com/s/vrzlipbjocuiofb/PyQt4-4.11.4-cp27-none-win32.whl?dl=1"
-      MSVCP: "https://www.dropbox.com/s/57tqa3oiqqf7s4j/msvcp90.dll?dl=1"
-      REQUIREMENTS: "requirements.txt"
-      PIP: "%PPATH%/Scripts/pip.exe"
+    #- PYTHON: "C:/Python27/python.exe" # this is win32
+      #PPATH: "C:/Python27"
+      #LXML: "test/contrib/lxml-3.6.4-cp27-cp27m-win32.whl"
+      #PY2EXE: "py2exe_py2"
+      #PYQT: "https://www.dropbox.com/s/vrzlipbjocuiofb/PyQt4-4.11.4-cp27-none-win32.whl?dl=1"
+      #MSVCP: "https://www.dropbox.com/s/57tqa3oiqqf7s4j/msvcp90.dll?dl=1"
+      #REQUIREMENTS: "requirements.txt"
+      #PIP: "%PPATH%/Scripts/pip.exe"
     - PYTHON: "C:/Python36/python.exe"
       PPATH: "C:/Python36"
       LXML: "lxml"
       PY2EXE: "py2exe"
       PYQT: "PyQt5"
-      #REQUIREMENTS: "tests/requirements.win.txt"
       REQUIREMENTS: "requirements.txt"
       PIP: "%PPATH%/Scripts/pip.exe"
+      MSVCP: "https://www.dropbox.com/s/57tqa3oiqqf7s4j/msvcp90.dll?dl=1"
     #- PYTHON: "C:\\Python27-x64" #TODO: enable x64 build
     #  PYTHON_VERSION: "2.7.x" # currently 2.7.9
     #  PYTHON_ARCH: "64"
@@ -26,7 +26,6 @@ init:
   - "ECHO %PYTHON%"
   - "SET PYTHONPATH=%PYTHONPATH%;tests;%CD%\\tests"
   - "SET PATH=%PPATH%;%PPATH%\\Scripts;%PATH%"
-  #- "ECHO %LXML%"
   #- ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:/ez_setup.py"
   #- ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:/get-pip.py"
   - ps: "git config --global core.autocrlf false" # always use unix lineendings
@@ -44,7 +43,7 @@ install:
 
 build_script:
   - echo Building..
-  - #build-win.sh
+  #- build-win.sh
   - "%PYTHON% buildpyqt.py"
   - "%PYTHON% setup.py py2exe"
   - "%PYTHON% dist.py zip"
