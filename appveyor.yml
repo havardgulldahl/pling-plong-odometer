@@ -4,7 +4,7 @@ build: false
 environment:
   matrix:
     - PYTHON: "C:/Python27/python.exe" # this is win32
-      PPATH=: "C:/Python27"
+      PPATH: "C:/Python27"
       LXML: "test/contrib/lxml-3.6.4-cp27-cp27m-win32.whl"
       PY2EXE: "py2exe_py2"
       PYQT: "https://www.dropbox.com/s/vrzlipbjocuiofb/PyQt4-4.11.4-cp27-none-win32.whl?dl=1"
@@ -12,7 +12,7 @@ environment:
       REQUIREMENTS: "requirements.txt"
       PIP: "%PYTHON%/Scripts/pip.exe"
     - PYTHON: "C:/Python35/python3.exe"
-      PPATH=: "C:/Python27"
+      PPATH: "C:/Python27"
       LXML: "tests/contrib/lxml-3.6.4-cp35-cp35m-win32.whl"
       PY2EXE: "tests/contrib/py2exe.whl"
       PYQT: "PyQt5"
