@@ -10,7 +10,7 @@ environment:
       PYQT: "https://www.dropbox.com/s/vrzlipbjocuiofb/PyQt4-4.11.4-cp27-none-win32.whl?dl=1"
       MSVCP: "https://www.dropbox.com/s/57tqa3oiqqf7s4j/msvcp90.dll?dl=1"
       REQUIREMENTS: "requirements.txt"
-      PIP: "%PYTHON%/Scripts/pip.exe
+      PIP: "%PYTHON%/Scripts/pip.exe"
     - PYTHON: "C:/Python35/python3.exe"
       PPATH=: "C:/Python27"
       LXML: "tests/contrib/lxml-3.6.4-cp35-cp35m-win32.whl"
@@ -18,7 +18,7 @@ environment:
       PYQT: "PyQt5"
       #REQUIREMENTS: "tests/requirements.win.txt"
       REQUIREMENTS: "requirements.txt"
-      PIP: "%PYTHON%/Scripts/pip3.exe
+      PIP: "%PYTHON%/Scripts/pip3.exe"
     #- PYTHON: "C:\\Python27-x64" #TODO: enable x64 build
     #  PYTHON_VERSION: "2.7.x" # currently 2.7.9
     #  PYTHON_ARCH: "64"
