@@ -3,48 +3,54 @@ build: false
 
 environment:
   matrix:
-    - PYTHON: "C:/Python27" # this is win32
+    - PYTHON: "C:/Python27/python.exe" # this is win32
+      PPATH=: "C:/Python27"
       LXML: "test/contrib/lxml-3.6.4-cp27-cp27m-win32.whl"
       PY2EXE: "py2exe_py2"
       PYQT: "https://www.dropbox.com/s/vrzlipbjocuiofb/PyQt4-4.11.4-cp27-none-win32.whl?dl=1"
       MSVCP: "https://www.dropbox.com/s/57tqa3oiqqf7s4j/msvcp90.dll?dl=1"
       REQUIREMENTS: "requirements.txt"
-    #- PYTHON: "C:/Python35"
-    #  LXML: "tests/contrib/lxml-3.6.4-cp35-cp35m-win32.whl"
-    #  PY2EXE: "tests/contrib/py2exe.whl"
-    #  REQUIREMENTS: "tests/requirements.win.txt"
+      PIP: "%PYTHON%/Scripts/pip.exe
+    - PYTHON: "C:/Python35/python3.exe"
+      PPATH=: "C:/Python27"
+      LXML: "tests/contrib/lxml-3.6.4-cp35-cp35m-win32.whl"
+      PY2EXE: "tests/contrib/py2exe.whl"
+      PYQT: "PyQt5"
+      #REQUIREMENTS: "tests/requirements.win.txt"
+      REQUIREMENTS: "requirements.txt"
+      PIP: "%PYTHON%/Scripts/pip3.exe
     #- PYTHON: "C:\\Python27-x64" #TODO: enable x64 build
     #  PYTHON_VERSION: "2.7.x" # currently 2.7.9
     #  PYTHON_ARCH: "64"
 init:
   - "ECHO %PYTHON%"
   - "SET PYTHONPATH=%PYTHONPATH%;tests;%CD%\tests"
-  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - "ECHO %LXML%"
+  - "SET PATH=%PPATH%;%PPATH%\\Scripts;%PATH%"
+  #- "ECHO %LXML%"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:/ez_setup.py"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/get-pip.py" -OutFile "c:/get-pip.py"
   - ps: "git config --global core.autocrlf false" # always use unix lineendings
 
 
 install:
-  - "%PYTHON%/python.exe c:/ez_setup.py > NUL"
-  - "%PYTHON%/python.exe c:/get-pip.py"
-  - "%PYTHON%/Scripts/pip.exe install %LXML%"
-  - "%PYTHON%/Scripts/pip.exe install %PY2EXE%"
-  - "%PYTHON%/Scripts/pip.exe install %PYQT%"
+  - "%PYTHON% c:/ez_setup.py > NUL"
+  - "%PYTHON% c:/get-pip.py"
+  - "%PIP% install %LXML%"
+  - "%PIP% install %PY2EXE%"
+  - "%PIP% install %PYQT%"
   #- "python -c \"import site; print site.getsitepackages()\""
-  - "python -c \"from PyQt4 import QtGui\""
-  - "%PYTHON%/Scripts/pip.exe install -r %REQUIREMENTS%"
-  - "%PYTHON%/Scripts/pip.exe install ."
+  #- "python -c \"from PyQt4 import QtGui\""
+  - "%PIP% install -r %REQUIREMENTS%"
+  - "%PIP% install ."
   - ps: Invoke-WebRequest "$env:MSVCP" -OutFile "C:\projects\pling-plong-odometer\MSVCP90.dll"
-  - dir "%PYTHON%/Lib/site-packages/PyQt4"
+  #- dir "%PYTHON%/Lib/site-packages/PyQt4"
 
 build_script:
   - echo Building..
   - #build-win.sh
-  - "%PYTHON%/python.exe buildpyqt.py"
-  - "%PYTHON%/python.exe setup.py py2exe"
-  - "%PYTHON%/python.exe dist.py zip"
+  - "%PYTHON% buildpyqt.py"
+  - "%PYTHON% setup.py py2exe"
+  - "%PYTHON% dist.py zip"
   - dir dist\
 
 #test_script:
