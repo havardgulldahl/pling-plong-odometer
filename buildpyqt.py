@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # encoding: utf-8
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2016
+# (C) 2016-2017
 
 # 1. make sure embedded project settings are sane
 # 2. generate code: translations, gui, resources
@@ -30,16 +30,9 @@ def run(cmd, *args):
                                                                                       errno=_errno)))
 
 if __name__ == '__main__':
-    _sp = None
-    for _p in sys.path:
-        if not _p.endswith('site-packages'):
-            continue
-        if os.path.exists(os.path.join(_p, "PyQt5")):
-            _sp = os.path.join(_p, "PyQt5")
-
-    if not os.path.exists(_sp):
-        puts(colored.red("Couldnt find PyQt5 installation (looked at {path}".format(path=_sp)))
-        sys.exit(1)
+    from distutils.sysconfig import get_python_lib
+    site_packages_dir = get_python_lib()
+    _sp = os.path.join(site_packages_dir, "PyQt5")
 
     version = date.today().isoformat()
     puts(colored.blue("Building PyQt5 resources for Odometer version {v}".format(v=version)))
@@ -71,7 +64,7 @@ if __name__ == '__main__':
     run(_pyuic, '-o', 'src/gui/onlinelogin_ui.py', 'src/gui/pling-plong-onlinelogin.ui')  # compile
 
     puts(colored.blue("Compiling resource file"))
-    run(_pyrcc, '-py2', '-o', 'src/gui/odometer_rc.py', 'src/gui/odometer.qrc')
+    run(_pyrcc, '-o', 'src/gui/odometer_rc.py', 'src/gui/odometer.qrc')
 
 
     puts(colored.green('All PyQt5 resources built'))
