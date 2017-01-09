@@ -18,13 +18,13 @@ environment:
       PYQT: "PyQt5"
       #REQUIREMENTS: "tests/requirements.win.txt"
       REQUIREMENTS: "requirements.txt"
-      PIP: "%PYTHON%/Scripts/pip3.exe"
+      PIP: "%PYTHON%/Scripts/pip.exe"
     #- PYTHON: "C:\\Python27-x64" #TODO: enable x64 build
     #  PYTHON_VERSION: "2.7.x" # currently 2.7.9
     #  PYTHON_ARCH: "64"
 init:
   - "ECHO %PYTHON%"
-  - "SET PYTHONPATH=%PYTHONPATH%;tests;%CD%\tests"
+  - "SET PYTHONPATH=%PYTHONPATH%;tests;%CD%\\tests"
   - "SET PATH=%PPATH%;%PPATH%\\Scripts;%PATH%"
   #- "ECHO %LXML%"
   - ps: Invoke-WebRequest "https://bootstrap.pypa.io/ez_setup.py" -OutFile "c:/ez_setup.py"
@@ -33,8 +33,8 @@ init:
 
 
 install:
-  - "%PYTHON% c:/ez_setup.py > NUL"
-  - "%PYTHON% c:/get-pip.py"
+  #- "%PYTHON% c:/ez_setup.py > NUL"
+  #- "%PYTHON% c:/get-pip.py"
   - "%PIP% install %LXML%"
   - "%PIP% install %PY2EXE%"
   - "%PIP% install %PYQT%"
