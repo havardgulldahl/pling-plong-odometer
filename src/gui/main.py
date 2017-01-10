@@ -406,7 +406,7 @@ class Odometer(QMainWindow):
                 _s += "</tr>"
                 clips[sc['in']].append(_s)
         # sort all clips by inpoint
-        inpoints = clips.keys()
+        inpoints = list(clips.keys())
         inpoints.sort()
         s = s + "".join(["".join(clips[inpoint]) for inpoint in inpoints])
         s = s + '</table>'
