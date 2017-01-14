@@ -37,7 +37,7 @@ before_install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
 
 install:
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install pyenv || true; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install pyenv || brew upgrade pyenv; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pyenv install 3.5.2; pyenv local 3.5.2; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
 - pip install -r requirements.txt
