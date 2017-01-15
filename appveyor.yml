@@ -11,10 +11,10 @@ environment:
       #MSVCP: "https://www.dropbox.com/s/57tqa3oiqqf7s4j/msvcp90.dll?dl=1"
       #REQUIREMENTS: "requirements.txt"
       #PIP: "%PPATH%/Scripts/pip.exe"
-    - PYTHON: "C:/Python34/python.exe"
-      PPATH: "C:/Python34"
-      #LXML: "lxml"
-      LXML: "https://www.dropbox.com/s/0set0he3faci14e/lxml-3.7.2-cp34-cp34m-win32.whl?dl=1"
+    - PYTHON: "C:/Python35/python.exe"
+      PPATH: "C:/Python35"
+      LXML: "lxml"
+      #LXML: "https://www.dropbox.com/s/0set0he3faci14e/lxml-3.7.2-cp34-cp34m-win32.whl?dl=1"
       PY2EXE: "py2exe"
       PYQT: "PyQt5"
       REQUIREMENTS: "requirements.txt"
@@ -36,9 +36,10 @@ install:
   #- "%PYTHON% c:/ez_setup.py > NUL"
   #- "%PYTHON% c:/get-pip.py"
   - "%PIP% install %LXML%"
-  - "%PIP% install %PY2EXE%"
+  #- "%PIP% install %PY2EXE%"
   - "%PIP% install %PYQT%"
   - "%PIP% install -r %REQUIREMENTS%"
+  - "%PIP% install pyinstaller"
   - "%PIP% install ."
   - ps: Invoke-WebRequest "$env:MSVCP" -OutFile "C:\projects\pling-plong-odometer\MSVCP90.dll"
 
@@ -46,7 +47,8 @@ build_script:
   - echo Building..
   #- build-win.sh
   - "%PYTHON% buildpyqt.py"
-  - "%PYTHON% setup.py py2exe"
+  #- "%PYTHON% setup.py py2exe"
+  - "pyinstaller -y pling-plong-odometer.spec"
   - "%PYTHON% dist.py zip"
   - dir dist\
 
