@@ -4,4 +4,3 @@ lxml
 pytest
 clint
 six
-future
