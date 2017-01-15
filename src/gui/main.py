@@ -27,7 +27,7 @@ import PyQt5.QtNetwork as QtNetwork
 import PyQt5.Qt as Qt
 import PyQt5.QtSvg as Svg
 from PyQt5.QtWidgets import (QWidget, QMainWindow, QDialog, QTreeWidgetItem,
-    QLineEdit, QMessageBox, QInputDialog, 
+    QLineEdit, QMessageBox, QInputDialog, QDoubleSpinBox,
     QDialogButtonBox, QApplication, QFileDialog, QLabel, QProgressBar)
 
 from xmeml import iter as xmemliter
@@ -437,7 +437,7 @@ class Odometer(QMainWindow):
             logging.debug("Storing cookie for %s: %s", service, data.info().get('Set-Cookie', None))
             logging.debug("Service returned %s", data.getcode())
             #logging.debug("Headers: %s", data.info())
-            b = data.read()
+            b = data.read().decode()
             logging.debug("body: %s", b)
             login = False
             if service == 'AUX':
@@ -510,8 +510,8 @@ class Odometer(QMainWindow):
             logging.info('Getting auth (session id) from AUX')
             def getauth(resp):
                 'extract session id from response json'
-                body = resp.read()
-                sid =json.loads(body)['sid'] 
+                body = resp.read().decode()
+                sid = json.loads(body)['sid'] 
                 logging.debug('aux sid: %s', sid)
                 self.settings.setValue('AUXSID', sid)
                 self.settings.setValue('AUXcookie', resp.info()['Set-Cookie'])
@@ -591,7 +591,7 @@ class Odometer(QMainWindow):
             logging.info('Getting auth from Extreme Music')
             def getauth(resp):
                 'extract json from response body'
-                body = resp.read()
+                body = resp.read().decode()
                 logging.debug('auth: %s', body)
                 self.settings.setValue('ExtremeAUTH', json.loads(body)['env']['API_AUTH'])
             startBusy()

@@ -42,7 +42,7 @@ class GluonLookupWorker(Core.QThread):
             return
         self.progress.emit(50)
         gp = gluon.GluonMetadataResponseParser()
-        metadata = gp.parse(StringIO.StringIO(response), factory=TrackMetadata)
+        metadata = gp.parse(StringIO(response), factory=TrackMetadata)
         self.progress.emit(70)
         self.trackResolved.emit(metadata)
         self.progress.emit(100)
@@ -63,7 +63,7 @@ class GluonLookupWorker(Core.QThread):
             self.trackFailed.emit()
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
-        response = req.read()
+        response = req.read().decode()
         return response
 
 class ApollomusicLookupWorker(Core.QThread):
@@ -559,6 +559,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
         version_duration = -1
         version_musicid = None
 
+        logging.debug('Got following trackdata from Extreme: %r', trackdata)
         for version in trackdata['track_sounds']:
             if self.musicid == version['track_sound_no']: # this is the one
                 version_title = '%s (%s)' % (version['title'], version['version_type'])
