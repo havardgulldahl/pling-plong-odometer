@@ -12,6 +12,7 @@ import os.path
 import subprocess
 from clint.textui import puts, colored
 from datetime import date
+import sysconfig
 
 def run(cmd, *args):
     try:
@@ -30,8 +31,9 @@ def run(cmd, *args):
                                                                                       errno=_errno)))
 
 if __name__ == '__main__':
-    from distutils.sysconfig import get_python_lib
-    site_packages_dir = get_python_lib()
+    site_packages_dir = sysconfig.get_path('purelib')
+    scripts_dir =  sysconfig.get_path('scripts')
+
     _sp = os.path.join(site_packages_dir, "PyQt5")
 
     version = date.today().isoformat()
@@ -47,10 +49,10 @@ if __name__ == '__main__':
         _pyrcc = run('which', 'pyrcc5').strip()
         _versionfile = os.path.join('.', 'VERSIONMAC')
     elif sys.platform == 'win32':
-        _pylupdate = os.path.join(_sp, 'pylupdate5.exe')
+        _pylupdate = os.path.join(scripts_dir, 'pylupdate5.exe')
         _lrelease = os.path.join(_sp, 'lrelease.exe')
-        _pyuic = os.path.join(_sp, 'pyuic5.bat')
-        _pyrcc = os.path.join(_sp, 'pyrcc5.exe')
+        _pyuic = os.path.join(scripts_dir, 'pyuic5.exe')
+        _pyrcc = os.path.join(scripts_dir, 'pyrcc5.exe')
         _versionfile = os.path.join('.', 'VERSIONWIN')
 
     puts(colored.blue("Generating translations for UX"))
