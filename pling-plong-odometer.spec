@@ -2,9 +2,10 @@
 
 block_cipher = None
 
+import sys
 
-a = Analysis(['src\\pling-plong-odometer.py'],
-             pathex=['c:\\python\\lib\\site-packages\\pyqt5\\qt\\bin', 'c:\\dev\\pling-plong-odometer\\src\\gui', 'C:\\dev\\pling-plong-odometer'],
+a = Analysis(['src/pling-plong-odometer.py'],
+             pathex=['c:\\python\\lib\\site-packages\\pyqt5\\qt\\bin', './src/gui', './'],
              binaries=None,
              datas=None,
              hiddenimports=[],
