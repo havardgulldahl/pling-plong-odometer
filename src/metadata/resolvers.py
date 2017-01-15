@@ -381,7 +381,7 @@ class DMAResolver(ResolverBase):
     def quicklookup(ltype, substring):
         url = 'http://dma/getUnitNames.do?type=%s&limit=10' % ltype
         data = urllib.parse.urlencode( ('in', substring ), )
-        return json.loads(urllib.request.urlopen(url, data).read())
+        labels = json.loads(urllib.request.urlopen(req).read().decode())
 
     @staticmethod
     def performerlookup(substring):
@@ -769,7 +769,7 @@ class ExtremeMusicResolver(ResolverBase):
         #0. Get session token
         #curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
         ENVURL = 'https://www.extrememusic.com/env'
-        env = json.loads(urllib.request.urlopen(ENVURL).read())
+        env = json.loads(urllib.request.urlopen(ENVURL).read().decode())
         self.setlogincookie(env['env']['API_AUTH'])
 
 
@@ -791,6 +791,6 @@ class ExtremeMusicResolver(ResolverBase):
         req = urllib.request.Request('https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series')
         req.add_header('X-API-Auth', self.logincookie)
 
-        labels = json.loads(urllib.request.urlopen(req).read())
+        labels = json.loads(urllib.request.urlopen(req).read().decode())
         r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
         return r
