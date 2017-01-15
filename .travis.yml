@@ -39,10 +39,12 @@ before_install:
 install:
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install pyenv || brew upgrade pyenv; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pyenv install 3.5.2; pyenv local 3.5.2; fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip3 install py2app; fi
 - python -V && pip -V 
-- pip install -r requirements.txt
-- pip install .
+- python3 -V && pip3 -V 
+- pip3 install -r requirements.txt
+- pyinstaller -y pling-plong-odometer.spec || true
+- pip3 install .
 - ls
 
 script:
