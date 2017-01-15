@@ -40,7 +40,7 @@ install:
   - "%PIP% install %PYQT%"
   - "%PIP% install -r %REQUIREMENTS%"
   - "%PIP% install pyinstaller"
-  - "%PIP% install ."
+  #- "%PIP% install ."
   - ps: Invoke-WebRequest "$env:MSVCP" -OutFile "C:\projects\pling-plong-odometer\MSVCP90.dll"
 
 build_script:
