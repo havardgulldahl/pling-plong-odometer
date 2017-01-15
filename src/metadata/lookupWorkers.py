@@ -199,7 +199,7 @@ class ApollomusicLookupWorker(Core.QThread):
                                          })
             # logging.debug('postdata: %s', postdata)
             headers = {'Cookie':logincookie}
-            r = urllib.request.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
+            r = urllib.request.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers=headers)
             req = urllib.request.urlopen(r)
 
         except IOError as e:
@@ -601,7 +601,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
 
             try:
                 headers = {'X-API-Auth':logincookie}
-                r = urllib.request.Request(url, headers)
+                r = urllib.request.Request(url, headers=headers)
                 req = urllib.request.urlopen(r)
 
             except IOError as e:
