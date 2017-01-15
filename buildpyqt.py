@@ -60,10 +60,10 @@ if __name__ == '__main__':
     run(_lrelease, 'src/gui/gui.pro')  # compile
 
     puts(colored.blue("Generating UI"))
-    run(_pyuic, '-o', 'src/gui/odometer_ui.py', 'src/gui/pling-plong-odometer.ui')  # compile
-    run(_pyuic, '-o', 'src/gui/auxreport_ui.py', 'src/gui/pling-plong-auxreport.ui')  # compile
-    run(_pyuic, '-o', 'src/gui/prfreport_ui.py', 'src/gui/pling-plong-prfreport.ui')  # compile
-    run(_pyuic, '-o', 'src/gui/onlinelogin_ui.py', 'src/gui/pling-plong-onlinelogin.ui')  # compile
+    run(_pyuic, '--from-imports', '-o', 'src/gui/odometer_ui.py', 'src/gui/pling-plong-odometer.ui')  # compile
+    run(_pyuic, '--from-imports', '-o', 'src/gui/auxreport_ui.py', 'src/gui/pling-plong-auxreport.ui')  # compile
+    run(_pyuic, '--from-imports', '-o', 'src/gui/prfreport_ui.py', 'src/gui/pling-plong-prfreport.ui')  # compile
+    run(_pyuic, '--from-imports', '-o', 'src/gui/onlinelogin_ui.py', 'src/gui/pling-plong-onlinelogin.ui')  # compile
 
     puts(colored.blue("Compiling resource file"))
     run(_pyrcc, '-o', 'src/gui/odometer_rc.py', 'src/gui/odometer.qrc')
