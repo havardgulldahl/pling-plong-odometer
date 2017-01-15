@@ -1335,10 +1335,12 @@ def rungui(argv):
     if sys.platform == 'win32':
         def setfont(fontname):
             app.setFont(Gui.QFont(fontname, 9))
-            return app.font().split(',')[0] == fontname
+            return app.font().toString().split(',')[0] == fontname
         # default win32 looks awful, make it pretty
+        logging.debug('current window font is %r', app.font().toString())
         for z in ['Lucida Sans Unicode', 'Arial Unicode MS', 'Verdana']:
             if setfont(z): break
+        logging.debug('new window font is %r', app.font().toString())
     if f is not None: o = Odometer(app, f)
     else: o = Odometer(app)
     o.run(app)
