@@ -1,11 +1,10 @@
 #-*- encoding: utf-8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011-2012
+# (C) 2011-2017
 """
 py2app/py2exe build script for odometer.
 
 Will automatically ensure that all build prerequisites are available
-via ez_setup
 
 Usage (Mac OS X):
     python setup.py py2app
@@ -13,14 +12,16 @@ Usage (Mac OS X):
 Usage (Windows):
     python setup.py py2exe
 """
-#import ez_setup
-#ez_setup.use_setuptools()
 
 import sys, os.path
-from setuptools import setup
+#from setuptools import setup
+from cx_Freeze import setup, Executable
 
 if sys.platform == 'win32':
-    import py2exe
+    #import py2exe
+    base = "Win32GUI" # for win32 guis 
+else:
+    base = None
 
 def getversion():
     if sys.platform == 'darwin':
@@ -76,7 +77,7 @@ elif sys.platform == 'win32':
 		              #'xmeml':'src/xmeml'
 					  },
 		 options=dict(py2exe=dict(
-            packages=['lxml', 'xmeml'],
+            packages=['lxml'],
             excludes=["Tkconstants","Tkinter","tcl"],
             includes=['sip','PyQt5','PyQt5.QtWidgets','gzip'])
 		)
@@ -88,11 +89,21 @@ else:
          scripts=[mainscript],
      )
 
+cx_options = dict( # cx_freeze
+    options = {"build_exe": {"packages": ["gui", "metadata", "core"], 
+                             "excludes": ["Tkinter"],
+                             "includes": ["traceback", 'sip','PyQt5','PyQt5.QtWidgets','gzip'],
+                             "path": ['src']
+                            },
+    },
+    executables = [Executable(mainscript, base=base)]
+)
+
 setup(
     name="Pling Plong Odometer",
     version=getversion(),
-    author=u'Håvard Gulldahl',
+    author='Håvard Gulldahl',
     author_email='havard.gulldahl@nrk.no',
     description='Pling Plong Odometer is a tool to automatically calculate audio usage in a Adobe Premiere or Final Cut Pro project',
-    **extra_options
+    **cx_options
 )
