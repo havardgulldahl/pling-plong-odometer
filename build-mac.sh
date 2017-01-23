@@ -25,11 +25,11 @@ echo "$VERSION" > ./VERSIONMAC
 
 # update all generated code
 
-python ./buildpyqt.py
+python3 ./buildpyqt.py
 
 # build the castle
 echo "Building the app (see build.log)"
-python setup.py py2app > build.log || error "py2app failed"
+python3 setup.py py2app > build.log || error "py2app failed"
 
 # changing back defaults
 sed -i .bk "s/beta=.*/beta=1/" BUILDFLAGS

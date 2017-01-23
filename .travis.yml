@@ -1,52 +1,48 @@
 sudo: true
 language: python
 
-#osx version matrix per september 2016
+#osx version matrix per January 2017
 #<osx_tag>                <xcode version>   <osx version>
-#osx_image: xcode8	      Xcode 8beta6	    OS X 10.12
-#osx_image: xcode7.3	    Xcode 7.3.1	      OS X 10.11
-#osx_image: xcode7.2	    Xcode 7.2.1	      OS X 10.11
-#osx_image: xcode7.1	    Xcode 7.1.1 GM	  OS X 10.10
-#osx_image: xcode7	      Xcode	            OS X 10.10
-#osx_image: xcode6.4	    Xcode	            OS X 10.10
-#osx_image: beta-xcode6.3	Xcode	            OS X 10.10
-#osx_image: beta-xcode6.2	Xcode	            OS X 10.9
-#osx_image: beta-xcode6.1 Default	Xcode	    OS X 10.9
+#osx_image: xcode8.2	    Xcode 8.2	        OS X 10.12
+#osx_image: xcode8.1	    Xcode 8.1	        OS X 10.12
+#osx_image: xcode8     	  Xcode 8	          OS X 10.11
+#osx_image: xcode7.3      Xcode 7.3.1	      OS X 10.11
+#osx_image: xcode6.4	    Xcode 6.4	        OS X 10.10
+
 matrix:
   include:
   - os: osx
-    osx_image: xcode8
+    osx_image: xcode8.2
     language: generic
     env: OSX=OSX10.12
   - os: osx
-    osx_image: xcode7.3
+    osx_image: xcode8
     language: generic
     env: OSX=OSX10.11
   - os: osx
     osx_image: xcode6.4
     language: generic
     env: OSX=OSX10.10
-  - os: osx
-    osx_image: beta-xcode6.2
-    language: generic
-    env: OSX=OSX10.9
 
 branches:
   only:
   - master
 
 before_install:
-- echo "Booting Mac ${OSX} "
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then echo "Booting Mac ${OSX}"; sw_vers; fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "Booting linux "; lsb_release -a; fi
 - export TAG="${TRAVIS_TAG:-dev}"
 - echo "$PATH"
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
 
 install:
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install python pyqt; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install pyenv || brew upgrade pyenv; fi
+- pyenv install 3.5.2; pyenv local 3.5.2; export PATH="~/.pyenv/shims:$PATH"
+- python -V && pip -V 
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
-#- if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./setup-python-osx.sh; fi
 - pip install -r requirements.txt
+- pyinstaller -y pling-plong-odometer.spec || true
 - pip install .
 - ls
 

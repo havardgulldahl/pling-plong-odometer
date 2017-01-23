@@ -41,38 +41,44 @@ if sys.platform == 'darwin':
      extra_options = dict(
          setup_requires=['py2app'],
          app=[mainscript],
+         zip_safe=False,
          # Cross-platform applications generally expect sys.argv to
          # be used for opening files.
          options=dict(py2app=dict(
              argv_emulation=False,
              iconfile='odometer.icns',
              packages=['lxml'],
-             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip', 'PyQt4._qt'],
+             includes=['sip','PyQt5','PyQt5.QtWidgets', 'PyQt5.QtCore', 'PyQt5.QtGui'],
       	     excludes=["Tkconstants","Tkinter","tcl",
-                 'PyQt4.QtDesigner', 'PyQt4.QtOpenGL', 'PyQt4.QtScript',
-                 'PyQt4.QtSql', 'PyQt4.QtTest', 'PyQt4.QtXml', 'PyQt4.phonon'],
+                       "PyQt5.QtBluetooth", "PyQt5.QtMultimedia", "PyQt5.QtPrintSupport", "PyQt5.QtQml", 
+                       "PyQt5.QtQuick", "PyQt5.QtSensors", "PyQt5.QtSql", "PyQt5.QtWebSockets", ],
              plist=dict(CFBundleIdentifier='no.nrk.odometer',
                         ##CFBundleDisplayName='♫ ♪ Odometer',
                         #CFBundleDisplayName=u'\u266b \u266a Odometer',
                         CFBundleShortVersionString='Odometer, version %s' % getversion(),
                         NSSupportsSuddenTermination=True,
-                        NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011-2016')
+                        NSHumanReadableCopyright='havard.gulldahl@nrk.no 2011-2017')
              )
          ),
      )
 elif sys.platform == 'win32':
      extra_options = dict(
          setup_requires=['py2exe'],
-         windows=[mainscript],
-		 packages=['gui','metadata'],
+         windows=[ 
+             {"script": mainscript,
+              "icon_resources": [(0, "odometer.ico")]     ### Icon to embed into the PE file.
+             }
+         ],
+		 packages=['gui','metadata', 'core'],
 		 package_dir={'metadata':'src/metadata',
 		              'gui':'src/gui',
+                      'core': 'src/core',
 		              #'xmeml':'src/xmeml'
 					  },
 		 options=dict(py2exe=dict(
-             packages=['lxml', 'xmeml'],
-	     excludes=["Tkconstants","Tkinter","tcl"],
-             includes=['sip','PyQt4', 'PyQt4.QtNetwork','gzip'])
+            packages=['lxml', 'xmeml'],
+            excludes=["Tkconstants","Tkinter","tcl"],
+            includes=['sip','PyQt5','PyQt5.QtWidgets','gzip'])
 		)
     )
 else:
@@ -87,6 +93,6 @@ setup(
     version=getversion(),
     author=u'Håvard Gulldahl',
     author_email='havard.gulldahl@nrk.no',
-    description='Pling Plong Odometer is a tool to automatically calculate audio usage in an fcp project',
+    description='Pling Plong Odometer is a tool to automatically calculate audio usage in a Adobe Premiere or Final Cut Pro project',
     **extra_options
 )
