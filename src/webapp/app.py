@@ -34,12 +34,9 @@ class resolvableClip:
         self.service = service
     def to_dict(self):
         return {'clipname': self.filename, 
-                 'total_length': self.audible_length, 
-                 'resolve':'/resolve/{}'.format(quote(self.filename))
-                 }
-
-class InvalidXmeml(Exception):
-    pass
+                'total_length': self.audible_length, 
+                'resolve':'/resolve/{}'.format(quote(self.filename))
+                }
 
 async def parse_xmeml(xmemlfile):
     """Background task to parse Xmeml with python-xmeml"""
@@ -58,7 +55,6 @@ def is_resolvable(audioname):
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
     audioname = request.match_info.get('audioname', None)
-
     # find resolver
     resolver = findResolver(audioname)
     # run resolver
