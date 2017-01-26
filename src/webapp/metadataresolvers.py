@@ -226,157 +226,6 @@ class ResolverBase:
         "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
         return self.labelmap.get(hint, hint) # return hint verbatim if it's not in map
 
-
-class ResolverBaseOLD(Core.QObject):
-
-    prefixes = [] # a list of file prefixes that this resolver recognizes
-    postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
-    labelmap = [] # a list of labels that this music service carries
-    name = 'general'
-    error = Core.pyqtSignal(str, str, name="error" ) # filename,  error message
-    trackFailed = Core.pyqtSignal(str, name="trackFailed" ) # filename
-    trackResolved = Core.pyqtSignal(str, TrackMetadata, name="trackResolved" ) # filename, metadataobj
-    trackProgress = Core.pyqtSignal(str, int, name="trackProgress" ) # filename, progress 0-100
-    warning = Core.pyqtSignal(str, name="warning") # warning message
-    cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
-
-    def __init__(self, parent=None):
-        super(ResolverBase, self).__init__(parent)
-        self.trackResolved.connect(lambda f,md: self.cache(md))
-        self.trackResolved.connect(self.cleanup)
-        self.trackFailed.connect(self.cleanup)
-        self.logincookie = None
-
-    def accepts(self, filename):
-        for f in self.prefixes:
-            if str(filename).upper().startswith(f):
-                return True
-        for f in self.postfixes:
-            if str(filename).upper().endswith(f):
-                return True
-        return False
-
-    def testresolve(self, filename):
-        self.filename = filename
-        i = random.randint(0,1000)
-        md = TrackMetadata( filename = str(filename),
-                            musiclibrary = self.name,
-                            title = "Funky title %i" % i,
-                            length = random.randint(30,500),
-                            composer = "Mr. Composer %i" % i,
-                            artist = "Mr. Performer %i" % i,
-                            year = random.randint(1901,2011) )
-        #time.sleep(random.random() * 4)
-        self.trackResolved.emit(self.filename, md)
-
-    async def resolve(self, filename, fromcache=True):
-        self.filename = filename
-        if fromcache:
-            md = self.fromcache()
-            if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return False
-        url = self.url(filename)
-        if not url: # invalid url, dont load it
-            self.error.emit(filename, 'Invalid url for filename %s' % filename)
-            self.trackFailed.emit(filename)
-            return False
-        logging.debug('ResolverBase.resolve traversing the INTERNET: %s => %s', filename, url)
-        self.doc = webdoc(self.filename, url, parent=None)
-        self.doc.frame.loadFinished.connect(self.parse)
-        self.doc.page.loadProgress.connect(self.progress)
-        self.doc.load()
-        return True
-
-    def progress(self, i):
-        self.trackProgress.emit(self.filename, i)
-
-    def url(self, filename): # return url from filename
-        _id = self.musicid(filename)
-        if _id is None:
-            return False
-        return self.urlbase % _id
-
-    def parse(self):
-        # reimplement this to emit a signal with a TrackMetadata object when found
-        #self.trackResolved.emit(self.filename, md)
-        pass
-
-    @staticmethod
-    def musicid(filename):
-        "Returns musicid from filename. Reimplement for different resolvers"
-        return os.path.splitext(filename)[0]
-
-    def cache(self, metadata):
-        "Add metadata for a filename to a local cache to prevent constant network lookups"
-        if None in [metadata.title, metadata.recordnumber]:
-            # invalid cached object, we dont cache it
-            return False
-        loc = self.cachelocation()
-        if self.incache() and self.fromcache() is not None:
-            #print "CACHE HIT", loc
-            return False
-        #print "caching metadata to ", loc
-        f = open(loc, "wb")
-        f.write(pickle.dumps(metadata))
-        f.close()
-        return True
-
-    def fromcache(self):
-        "Get metadata from local cache, or None if it's not cached or too old"
-        try:
-            loc = open(self.cachelocation(), "rb")
-        except IOError: #file doesn't exist -> not cached
-            return None
-        try:
-            metadata =  pickle.loads(loc.read())
-            loc.close()
-        except Exception as e:
-            # something went wrong, cache invalid
-            self.warning.emit('fromcache error: %s' % e)
-            return None
-        if None in [metadata.title, metadata.recordnumber]:
-            # invalid cached object:
-            return None
-        if metadata._retrieved + self.cacheTimeout < time.mktime(time.localtime()):
-            return None
-        return metadata
-
-    def incache(self):
-        "Checks to see if the metadata is in cache"
-        return os.path.exists(self.cachelocation())
-
-    def cachelocation(self):
-        "Return a dir suitable for storage"
-        #dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
-        _dir = Core.QStandardPaths.writableLocation(Core.QStandardPaths.CacheLocation)
-        ourdir = os.path.join(os.path.abspath(_dir), 'no.nrk.odometer')
-        if not os.path.exists(ourdir):
-            os.makedirs(ourdir)
-               #return os.path.join(ourdir, self.filename)
-        try:
-            return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
-        except UnicodeEncodeError:
-            logging.warning("cachelocation warn: %r - %r", repr(self.filename), type(self.filename))
-
-    def cleanup(self, filename, *args):
-        "Remove objects to prevent hanging threads"
-        try:
-            if hasattr(self, 'doc'):
-                self.doc.deleteLater()
-        except Exception as e:
-            logging.warning("cleanup failed: %r", e)
-            pass
-
-    def setlogincookie(self, cookie):
-        "Add login cookie to service. Only applicable for some services"
-        self.logincookie = cookie
-
-    def getlabel(self, hint):
-        "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
-        return self.labelmap.get(hint, hint) # return hint verbatim if it's not in map
-
-
 class GenericFileResolver(ResolverBase):
     'Resolve file based on embedded metadata, i.e. id3 tags, vorbis tags, bwf'
     name = 'file'
@@ -785,32 +634,10 @@ class ApollomusicResolver(ResolverBase):
         del(albumdata['tracks'])
         return albumdata, trackdata
 
-
-    def resolveOLD(self, filename, fullpath, fromcache=True):
-        self.filename = filename
-        self.fullpath = fullpath
-        if fromcache:
-            md = self.fromcache()
-            if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return
-        self.worker = lookupWorkers.ApollomusicLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
-        # check login cookie, without it we get nothing from the service
-        if self.logincookie is None:
-            self.error.emit(self.filename, u"You need to log in to ApolloMusic before we can look something up")
-            self.trackFailed.emit(self.filename)
-            return
-
-        self.worker.load(filename, self.logincookie)
-
 class UniPPMResolver(ResolverBase):
     prefixes = [ ]
     name = 'UniPPM'
-    urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={trackid}' # HTTP GET interface, returns json
+    urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={musicid}' # HTTP GET interface, returns json
     labelmap = {  'AA':'Atmosphere Archive ',
                   'AK':'Atmosphere Kitsch ',
                   'AM':'Access Music ',
@@ -939,18 +766,39 @@ class UniPPMResolver(ResolverBase):
 
     async def resolve(self, filename, fromcache=True):
         self.filename = filename
+        _musicid = self.musicid(filename)
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return
-        self.worker = lookupWorkers.UniPPMLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
+                return md
 
-        self.worker.load(filename)
+        async with self.session.get(self.urlbase.format(musicid=_musicid)) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            composers = [ data.get('shares', []) ]
+
+            metadata = TrackMetadata(filename=self.filename,
+                    musiclibrary=self.name,
+                    title=data.get('WorkName', None),
+                    # length=-1,
+                    composer=data.get('WorkComposers', None),
+                    artist=None,
+                    year=-1,
+                    recordnumber=_musicid,
+                    albumname=data.get('WorkGroupingName', None),
+                    copyright='Universal Publishing Production Music',
+                    # lcnumber=None,
+                    # isrc=None,
+                    # ean=None,
+                    # catalogue=None,
+                    label=data.get('LabelName', ''),
+                    # lyricist=None,
+                    identifier='UniPPMTrack# %s' % _musicid
+                    )
+            metadata.productionmusic = True
+            return metadata
 
 
 class UprightmusicResolver(ResolverBase):
