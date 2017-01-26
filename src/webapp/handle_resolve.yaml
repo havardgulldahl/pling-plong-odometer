@@ -1,0 +1,21 @@
+tags:
+- user
+- top level
+summary: Get an audioname from the request and resolve it from its respective service resolver
+description: Use this for all tracks to get metadata
+operationId: handle_resolve
+consumes:
+- application/json
+produces:
+- application/json
+parameters:
+- name: audioname
+  in: path
+  description: The audio name (file name) to resolve from audio service
+  required: true
+  type: string
+responses:
+  '200': 
+    description: 'Audioname successfully resolved and json metadata is returned'
+  '404': 
+    description: 'Audioname not resolved (not found)'

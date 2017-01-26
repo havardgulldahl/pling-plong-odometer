@@ -65,9 +65,9 @@ async def resolve_metadata(audioname):
     await asyncio.sleep(random.randint(0, 20)*0.1)
     return TrackMetadata(filename=audioname)
 
+@swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
-    _uuid = request.GET.get('uuid', 'World')
     audioname = request.match_info.get('audioname', None)
 
     metadata = await resolve_metadata(audioname)
@@ -93,59 +93,21 @@ async def handle_analyze_get(request):
 
 app.router.add_get('/analyze', handle_analyze_get)
 
+@swagger_path("handle_analyze_post.yaml")
 async def handle_analyze_post(request):
-    """
-    Description end-point
-    ---
-    tags:
-    - user
-    summary: POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.
-    description: This is typically how you start your analysis.
-    operationId: examples.api.api.createUser
-    produces:
-    - application/json
-    parameters:
-    - in: body
-        name: body
-        description: Created user object
-        required: false
-        schema:
-        type: object
-        properties:
-            id:
-            type: integer
-            format: int64
-            username:
-            type:
-                - "string"
-                - "null"
-            firstName:
-            type: string
-            lastName:
-            type: string
-            email:
-            type: string
-            password:
-            type: string
-            phone:
-            type: string
-            userStatus:
-            type: integer
-            format: int32
-            description: User Status
-    responses:
-    "200":
-        description: successful operation
-    """
+    'POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.'
     app.logger.debug('About to parse POST args')
     # WARNING: don't do that if you plan to receive large files! Stores all in memory
-    data = await request.post()
+    data = await request.post() # TODO: switch to request.multipart() to handle big uploads!
     app.logger.debug('Got POST args: {!r}'.format(data))
     #'The Xmeml sequence from Premiere or Final Cut that we want to analyze.',
-    xmeml = data['xmeml']
+    try:
+        xmeml = data['xmeml']
+    except KeyError: # no file uploaded
+        raise web.HTTPBadRequest(reason='multipart/form-data file named <<xmeml>> is missing') # HTTP 400
     # .filename contains the name of the file in string format.
     if not os.path.splitext(xmeml.filename)[1].lower() == '.xml':
-        raise InvalidXmeml('Invalid file extension, expexting .xml')
+        raise web.HTTPBadRequest(reason='Invalid file extension, expecting .xml') # HTTP 400
 
     # .file contains the actual file data that needs to be stored somewhere.
     with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as xmemlfile:
@@ -153,12 +115,13 @@ async def handle_analyze_post(request):
         f = pathlib.Path(xmemlfile.name)
         app.logger.info('uploaded file: {!r}'.format(f))
         audioclips, audiofiles = await parse_xmeml(xmemlfile.name)
-        #return web.Response(status=200, text='created task: {!r}'.format(task))
         _r = []
         for clipname, ranges in audioclips.items():
             if not is_resolvable(clipname):
                 continue
             _r.append(resolvableClip(clipname, len(ranges), None))
+        if len(_r) == 0:
+            raise web.HTTPBadRequest(reason='No audible clips found. Use /report_error to report an error.') # HTTP 400
         return web.json_response(data={
             'audible': [
                 c.to_dict() for c in _r
@@ -170,8 +133,13 @@ app.router.add_post('/analyze', handle_analyze_post)
 
 @coroutine
 def index(request):
-    return web.Response(text='Welcome!')
+    return web.HTTPFound('/doc') # forward to docs
+
 app.router.add_get('/', index)
+
+
+# TODO app.router.add_get('/report_error', handle_report_error)
+# TODO app.router.add_get('/report_missing', handle_report_missing)
 
 setup_swagger(app,
               swagger_url="/doc",
