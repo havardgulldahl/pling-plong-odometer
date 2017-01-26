@@ -8,6 +8,7 @@ from urllib.parse import quote
 
 
 from metadataresolvers import findResolver
+from model import TrackMetadata
 from xmeml import iter as xmemliter
 
 import asyncio
@@ -24,7 +25,6 @@ loop = asyncio.get_event_loop()
 app = web.Application(loop=loop)
 
 APIVERSION = '0.1'
-
 
 class resolvableClip:
     def __init__(self, filename, audible_length, service):
@@ -53,29 +53,28 @@ def is_resolvable(audioname):
     'Look at the filename and say if it is resolvable from one or the other service. Returns bool'
     return findResolver(audioname) != False
 
-
-async def resolve_metadata(audioname, fileref, ranges):
+async def resolve_metadata(audioname):
     'Resolve metadata for some audioname (filename). Returns Trackmetadata object or None'
-    frames = len(ranges)
-    app.logger.info("======= %s: %s -> %s======= ", audioname, ranges.r, frames)
-    secs = ranges.seconds()
     # find resolver
+    resolver = findResolver(audioname)
     # run resolver
     # return metadata
+    app.logger.info("pretending to resove audio {!r} with resolver {!r}".format(audioname, resolver))
     import random
-    app.logger.info("pretending to resove audio %r", audioname)
     await asyncio.sleep(random.randint(0, 20)*0.1)
-    return audioname
+    return TrackMetadata(filename=audioname)
 
-async def handle_status(request):
-    'Get a report on how the analysis of that uuid is going'
+async def handle_resolve(request):
+    'Get an audioname from the request and resolve it from its respective service resolver'
     _uuid = request.GET.get('uuid', 'World')
+    audioname = request.match_info.get('audioname', None)
+
+    metadata = await resolve_metadata(audioname)
     return web.json_response({
-        'message': 'Hello ' + _uuid
+        'metadata': vars(metadata)
     })
 
-app.router.add_get('/status/{taskid}', handle_status)
-#api.add_resource(AnalysisStatus, '/status/<uuid:task>', endpoint='status')
+app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
 
 analyze_args = {
     #'The Xmeml sequence from Premiere or Final Cut that we want to analyze.',
