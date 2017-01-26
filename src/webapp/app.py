@@ -6,6 +6,7 @@ import time
 import pathlib
 from urllib.parse import quote
 
+from aiohttp_swagger import *
 
 from metadataresolvers import findResolver
 from model import TrackMetadata
@@ -76,11 +77,6 @@ async def handle_resolve(request):
 
 app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
 
-analyze_args = {
-    #'The Xmeml sequence from Premiere or Final Cut that we want to analyze.',
-    'xmeml': webfields.Str(location='files', missing='crikey')
-}
-
 #'Methods and endpoints to receive an xmeml file and start analyzing it'
 async def handle_analyze_get(request):
     return web.Response(body="""
@@ -98,11 +94,54 @@ async def handle_analyze_get(request):
 app.router.add_get('/analyze', handle_analyze_get)
 
 async def handle_analyze_post(request):
-    'POST an xmeml sequence to start the music report analysis. Returns a unique identifier'
+    """
+    Description end-point
+    ---
+    tags:
+    - user
+    summary: POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.
+    description: This is typically how you start your analysis.
+    operationId: examples.api.api.createUser
+    produces:
+    - application/json
+    parameters:
+    - in: body
+        name: body
+        description: Created user object
+        required: false
+        schema:
+        type: object
+        properties:
+            id:
+            type: integer
+            format: int64
+            username:
+            type:
+                - "string"
+                - "null"
+            firstName:
+            type: string
+            lastName:
+            type: string
+            email:
+            type: string
+            password:
+            type: string
+            phone:
+            type: string
+            userStatus:
+            type: integer
+            format: int32
+            description: User Status
+    responses:
+    "200":
+        description: successful operation
+    """
     app.logger.debug('About to parse POST args')
     # WARNING: don't do that if you plan to receive large files! Stores all in memory
     data = await request.post()
     app.logger.debug('Got POST args: {!r}'.format(data))
+    #'The Xmeml sequence from Premiere or Final Cut that we want to analyze.',
     xmeml = data['xmeml']
     # .filename contains the name of the file in string format.
     if not os.path.splitext(xmeml.filename)[1].lower() == '.xml':
@@ -134,13 +173,13 @@ def index(request):
     return web.Response(text='Welcome!')
 app.router.add_get('/', index)
 
-#Contentnegotiation
-#negotiation.setup(
-    #app, renderers={
-        #'application/json': negotiation.render_json
-    #}
-#)
-
+setup_swagger(app,
+              swagger_url="/doc",
+              description='API to parse and resolve audio metadata from XMEML files, i.e. Adobe Premiere projects',
+              title='Pling Plong Odometer Online',
+              api_version=APIVERSION,
+              contact="havard.gulldahl@nrk.no"
+)
 
 if __name__ == '__main__':
     import logging

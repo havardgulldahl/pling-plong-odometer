@@ -1,3 +1,2 @@
-webargs
 aiohttp
-aiohttp_utils
+aiohttp_swagger
