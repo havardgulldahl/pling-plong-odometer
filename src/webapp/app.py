@@ -6,6 +6,7 @@ import time
 import pathlib
 
 
+from metadataresolvers import findResolver
 from xmeml import iter as xmemliter
 
 import asyncio
@@ -33,60 +34,22 @@ app.router.add_get('/', index)
 class InvalidXmeml(Exception):
     pass
 
-class XmemlAnalysisTask:
-    'The task of running an xmeml file through audio analysis'
-
-    def __init__(self, fileupload):
-        app.logger.debug('New Xmeml task with fileupload: %r', fileupload)
-        self.fileupload = fileupload # a webargs file upload
-        self.task = None # being set in .run()
-        self.xmemlfile = None # being set in .register()
-        self.filename = None # being set in .register()
-
-    @property
-    def taskId(self):
-        'Get unique task id'
-        return uuid.uuid4()
-
-    @property
-    def status(self):
-        'Get status'
-        if self.task is not None:
-            return self.task.state
-        else:
-            return 'UNKNOWN'
-
-    def register(self):
-        'Do some basic checks and, if they pass put this task into the queue'
-        return self.run()
-
-    def audiblefiles(self):
-        'Get all the audible files'
-        return []
-
-    async def run(self):
-        'Start analysis task'
-        global app
-        (audioclips, audiofiles) = await parse_xmeml(self.xmemlfile.file)
-        subtasks = []
-        for aname, cliprange in audioclips.items():
-            if len(cliprange) > 0:
-                subtasks.append(resolve_metadata(aname, audiofiles[aname], cliprange))
-
-        analysis = app.loop.run_until_complete(asyncio.gather(*subtasks))
-
-        return analysis
-
 async def parse_xmeml(xmemlfile):
     """Background task to parse Xmeml with python-xmeml"""
     app.logger.info('Parsing the xmemlf ile with xmemliter: %r', xmemlfile)
     app.logger.info('exists? %s', os.path.exists(xmemlfile))
     xmeml = xmemliter.XmemlParser(xmemlfile)
-    audioclips, audiofiles = await xmeml.audibleranges()
+    audioclips, audiofiles = xmeml.audibleranges()
     app.logger.info('Analyzing the audible parts: %r, files: %r', audioclips, audiofiles)
     return (audioclips, audiofiles) 
 
+def is_resolvable(audioname):
+    'Look at the filename and say if it is resolvable from one or the other service. Returns bool'
+    return findResolver(audioname) != False
+
+
 async def resolve_metadata(audioname, fileref, ranges):
+    'Resolve metadata for some audioname (filename). Returns Trackmetadata object or None'
     frames = len(ranges)
     app.logger.info("======= %s: %s -> %s======= ", audioname, ranges.r, frames)
     secs = ranges.seconds()
@@ -141,13 +104,20 @@ async def handle_analyze_post(request):
         raise InvalidXmeml('Invalid file extension, expexting .xml')
 
     # .file contains the actual file data that needs to be stored somewhere.
-    with tempfile.NamedTemporaryFile(suffix='.xml') as xmemlfile:
+    with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as xmemlfile:
         xmemlfile.write(xmeml.file.read())
         f = pathlib.Path(xmemlfile.name)
         app.logger.info('uploaded file: {!r}'.format(f))
-        task = XmemlAnalysisTask(xmemlfile.name)
-        app.logger.info('New task created: %r', task.task)
-        return web.Response(status=201, text='created task: {!r}'.format(task))
+        audioclips, audiofiles = await parse_xmeml(xmemlfile.name)
+        #return web.Response(status=200, text='created task: {!r}'.format(task))
+        _r = []
+        for clipname, ranges in audioclips.items():
+            if not is_resolvable(clipname):
+                continue
+            _r.append({'clipname': clipname, 'total_length':len(ranges)})
+        return web.json_response(data={
+            'audible': _r
+        })
 
 
 app.router.add_post('/analyze', handle_analyze_post)
@@ -161,6 +131,8 @@ app.router.add_post('/analyze', handle_analyze_post)
 
 
 if __name__ == '__main__':
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
     # Development server
     web.run_app(
         app,

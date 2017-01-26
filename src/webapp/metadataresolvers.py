@@ -2,7 +2,6 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2016
 
-from builtins import str
 import os
 import os.path
 import hashlib
@@ -18,12 +17,9 @@ import json
 import html.parser
 
 import PyQt5.QtCore as Core
-import PyQt5.QtGui as Gui
-import PyQt5.QtWebEngine as Web
 
 
-from . import lookupWorkers
-from .model import TrackMetadata
+from model import TrackMetadata
 
 def findResolver(filename):
     resolvers = [DMAResolver(),
@@ -32,7 +28,8 @@ def findResolver(filename):
              UniPPMResolver(),
              UprightmusicResolver(),
              ExtremeMusicResolver(),
-             GenericFileResolver()]
+             #GenericFileResolver()
+             ]
     for resolver in resolvers:
         # print "%s accepts: %s" % (resolver, resolver.accepts(filename))
         if resolver.accepts(filename):
