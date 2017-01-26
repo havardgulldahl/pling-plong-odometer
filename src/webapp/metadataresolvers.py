@@ -10,6 +10,7 @@ import pickle
 import random
 import urllib
 import urllib.request
+from io import StringIO
 import time
 import datetime
 import re
@@ -19,6 +20,7 @@ import html.parser
 import aiohttp
 
 import PyQt5.QtCore as Core
+import xml.etree.ElementTree as ET
 
 import appdirs 
 
@@ -487,34 +489,67 @@ class DMAResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def xresolve(self, filename):
-        # return placeholder metadata
-        # to be replaced by a gluon/DMA lookup later in the process
-        self.filename = filename
-        dummymetadata = TrackMetadata(filename=str(filename),
-                                      musiclibrary='DMA',
-                                      title = 'Kommer fra DMA',
-                                      composer = 'Kommer fra DMA',
-                                      artist = 'Kommer fra DMA',
-                                      year = 2011,
-                                      length = 23)
-        self.progress(100)
-        self.trackResolved.emit(self.filename, dummymetadata)
-
     async def resolve(self, filename, fromcache=True):
         self.filename = filename
+        _musicid = self.musicid(filename)
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return
-        self.worker = lookupWorkers.GluonLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(filename, msg))
-        self.worker.load(filename)
+                return md
 
+        endpoint="http://mamcdma02/DMA/{musicid}.xml"
+        async with self.session.get(endpoint.format(musicid=_musicid)) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.text()
+            metadata = await self.parse_gluon_xml(StringIO(data))
+            return metadata
+
+    async def parse_gluon_xml(self, xmlsource):
+        'Get a string of xml from gluon and parse it into TrackMetadata'
+
+        # GLUON XML CONVENIENCE METHODS AND STUFF
+        GLUON_NAMESPACE='{http://gluon.nrk.no/gluon2}'
+        GLUONDICT_NAMESPACE='{http://gluon.nrk.no/gluonDict}'
+        def glns(tag):
+            s = []
+            for ss in tag.split("/"):
+                s.append('%s%s' % (GLUON_NAMESPACE, ss))
+            return "/".join(s)
+
+        self.tree = ET.parse(xmlsource)
+        obj = self.tree.find('.//'+glns('object'))
+        md = TrackMetadata()
+        md.identifier = obj.find('.//'+glns('identifier')).text
+        md.title = obj.find('.//'+glns('title')).text
+        md.albumname = obj.find('.//'+glns('titleAlternative')).text
+        for creator in obj.findall('.//'+glns('creator')):
+            if creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V34':
+                # Komponist
+                md.composer = creator.find('./'+glns('name')).text
+            elif creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V811':
+                # Tekstforfatter
+                md.lyricist = creator.find('./'+glns('name')).text
+        _a = []
+        for contributor in obj.findall('.//'+glns('contributor')):
+            if contributor.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V35':
+                # Utøver
+                _a.append(contributor.find('./'+glns('name')).text)
+        md.artist = '; '.join(_a)
+        for date in obj.findall('.//'+glns('dateAlternative')):
+            if date.get('%sdatesGroupType' % GLUONDICT_NAMESPACE) == 'dateIssued':
+                md.year = date.find('./'+glns('start')).get('startYear')
+        for ref in obj.findall('.//'+glns('relationIsReferencedBy')):
+            if ref.get('link') == 'http://gluon.nrk.no/dataordbok.xml#recordNumber':
+                _recordnumber = ref.text
+                try:
+                    md.label, md.recordnumber = [ x.strip() for x in _recordnumber.split(';')]
+                except ValueError:
+                    md.recordnumber = _recordnumber
+                    md.label = 'Unknown'
+        return md
+
+    """
     @staticmethod
     def quicklookup(ltype, substring):
         url = 'http://dma/getUnitNames.do?type=%s&limit=10' % ltype
@@ -529,6 +564,7 @@ class DMAResolver(ResolverBase):
     def creatorlookup(substring):
         return self.quicklookup('creator', substring)
 
+    """
 
 class AUXResolver(ResolverBase):
     prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD']
@@ -568,7 +604,6 @@ class AUXResolver(ResolverBase):
                 'WD': 'Wild Diesel',
                }
     name = 'AUX Publishing'
-    #urlbase = 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr&lyr=0'
     urlbase = 'http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=%s&ac=track&country=NO'
 
     @staticmethod
