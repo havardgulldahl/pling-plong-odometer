@@ -2,7 +2,6 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2016
 
-from builtins import str
 import os
 import os.path
 import hashlib
