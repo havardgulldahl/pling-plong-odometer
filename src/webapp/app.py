@@ -54,22 +54,16 @@ def is_resolvable(audioname):
     'Look at the filename and say if it is resolvable from one or the other service. Returns bool'
     return findResolver(audioname) != False
 
-async def resolve_metadata(audioname):
-    'Resolve metadata for some audioname (filename). Returns Trackmetadata object or None'
-    # find resolver
-    resolver = findResolver(audioname)
-    # run resolver
-    app.logger.info("resolve audioname {!r} with resolver {!r}".format(audioname, resolver))
-    metadata = await resolver.resolve(audioname)
-    # return metadata
-    return metadata
-
 @swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
     audioname = request.match_info.get('audioname', None)
 
-    metadata = await resolve_metadata(audioname)
+    # find resolver
+    resolver = findResolver(audioname)
+    # run resolver
+    app.logger.info("resolve audioname {!r} with resolver {!r}".format(audioname, resolver))
+    metadata = await resolver.resolve(audioname)
     return web.json_response({
         'metadata': vars(metadata)
     })
