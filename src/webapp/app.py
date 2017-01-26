@@ -59,11 +59,10 @@ async def resolve_metadata(audioname):
     # find resolver
     resolver = findResolver(audioname)
     # run resolver
+    app.logger.info("resolve audioname {!r} with resolver {!r}".format(audioname, resolver))
+    metadata = await resolver.resolve(audioname)
     # return metadata
-    app.logger.info("pretending to resove audio {!r} with resolver {!r}".format(audioname, resolver))
-    import random
-    await asyncio.sleep(random.randint(0, 20)*0.1)
-    return TrackMetadata(filename=audioname)
+    return metadata
 
 @swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
@@ -128,7 +127,6 @@ async def handle_analyze_post(request):
             ]
         })
 
-
 app.router.add_post('/analyze', handle_analyze_post)
 
 @coroutine
@@ -137,9 +135,9 @@ def index(request):
 
 app.router.add_get('/', index)
 
-
-# TODO app.router.add_get('/report_error', handle_report_error)
-# TODO app.router.add_get('/report_missing', handle_report_missing)
+# TODO app.router.add_get('/report_error', handle_report_error) # report an error
+# TODO app.router.add_get('/report_missing', handle_report_missing) # report a missing audio pattern
+# TODO app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
 
 setup_swagger(app,
               swagger_url="/doc",

@@ -16,7 +16,11 @@ import re
 import json
 import html.parser
 
+import aiohttp
+
 import PyQt5.QtCore as Core
+
+import appdirs 
 
 
 from model import TrackMetadata
@@ -31,7 +35,6 @@ def findResolver(filename):
              #GenericFileResolver()
              ]
     for resolver in resolvers:
-        # print "%s accepts: %s" % (resolver, resolver.accepts(filename))
         if resolver.accepts(filename):
             return resolver
     return False
@@ -43,16 +46,15 @@ def getResolverPatterns():
              UniPPMResolver(),
              ExtremeMusicResolver(),
              UprightmusicResolver(),
-             GenericFileResolver()]
+             #GenericFileResolver()
+             ]
     r = {}
     for resolver in resolvers:
         r[resolver.name] = {'prefixes':resolver.prefixes, 'postfixes':resolver.postfixes}
     return r
 
-
 def htmlunescape(s):
     return html.parser.HTMLParser().unescape(s)
-
 
 def getmusicid(filename):
     "Return a music id from filename"
@@ -81,8 +83,149 @@ class webdoc(Core.QObject):
         #print "loading url: ", self.url
         self.frame.load(Core.QUrl(self.url))
 
+class ResolverBase:
 
-class ResolverBase(Core.QObject):
+    prefixes = [] # a list of file prefixes that this resolver recognizes
+    postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
+    labelmap = [] # a list of labels that this music service carries
+    name = 'general'
+    #error = Core.pyqtSignal(str, str, name="error" ) # filename,  error message
+    #trackFailed = Core.pyqtSignal(str, name="trackFailed" ) # filename
+    #trackResolved = Core.pyqtSignal(str, TrackMetadata, name="trackResolved" ) # filename, metadataobj
+    #trackProgress = Core.pyqtSignal(str, int, name="trackProgress" ) # filename, progress 0-100
+    #warning = Core.pyqtSignal(str, name="warning") # warning message
+    cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
+
+    def __init__(self, session=None):
+        #super(ResolverBase, self).__init__(parent)
+        #self.trackResolved.connect(lambda f,md: self.cache(md))
+        #self.trackResolved.connect(self.cleanup)
+        #self.trackFailed.connect(self.cleanup)
+        self.session = session or aiohttp.ClientSession()
+        self.logincookie = None
+
+    def accepts(self, filename):
+        for f in self.prefixes:
+            if str(filename).upper().startswith(f):
+                return True
+        for f in self.postfixes:
+            if str(filename).upper().endswith(f):
+                return True
+        return False
+
+    async def resolve(self, filename, fromcache=True):
+        self.filename = filename
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                self.trackResolved.emit(self.filename, md)
+                return False
+        url = self.url(filename)
+        if not url: # invalid url, dont load it
+            #self.error.emit(filename, 'Invalid url for filename %s' % filename)
+            #self.trackFailed.emit(filename)
+            return False
+        logging.debug('ResolverBase.resolve traversing the INTERNET: %s => %s', filename, url)
+        async with session.get(url) as response:
+            logging.debug('INTERNET got us %r', response)
+            return await response.text()
+
+        #self.doc = webdoc(self.filename, url, parent=None)
+        #self.doc.frame.loadFinished.connect(self.parse)
+        #self.doc.page.loadProgress.connect(self.progress)
+        #self.doc.load()
+        #return True
+
+    def progress(self, i):
+        #self.trackProgress.emit(self.filename, i)
+        pass
+
+    def url(self, filename): # return url from filename
+        _id = self.musicid(filename)
+        if _id is None:
+            return False
+        return self.urlbase % _id
+
+    def parse(self):
+        # reimplement this to emit a signal with a TrackMetadata object when found
+        #self.trackResolved.emit(self.filename, md)
+        pass
+
+    @staticmethod
+    def musicid(filename):
+        "Returns musicid from filename. Reimplement for different resolvers"
+        return os.path.splitext(filename)[0]
+
+    def cache(self, metadata):
+        "Add metadata for a filename to a local cache to prevent constant network lookups"
+        if None in [metadata.title, metadata.recordnumber]:
+            # invalid cached object, we dont cache it
+            return False
+        loc = self.cachelocation()
+        if self.incache() and self.fromcache() is not None:
+            #print "CACHE HIT", loc
+            return False
+        #print "caching metadata to ", loc
+        f = open(loc, "wb")
+        f.write(pickle.dumps(metadata))
+        f.close()
+        return True
+
+    def fromcache(self):
+        "Get metadata from local cache, or None if it's not cached or too old"
+        try:
+            loc = open(self.cachelocation(), "rb")
+        except IOError: #file doesn't exist -> not cached
+            return None
+        try:
+            metadata =  pickle.loads(loc.read())
+            loc.close()
+        except Exception as e:
+            # something went wrong, cache invalid
+            self.warning.emit('fromcache error: %s' % e)
+            return None
+        if None in [metadata.title, metadata.recordnumber]:
+            # invalid cached object:
+            return None
+        if metadata._retrieved + self.cacheTimeout < time.mktime(time.localtime()):
+            return None
+        return metadata
+
+    def incache(self):
+        "Checks to see if the metadata is in cache"
+        return os.path.exists(self.cachelocation())
+
+    def cachelocation(self):
+        "Return a dir suitable for storage"
+        ourdir = appdirs.user_cache_dir('odometer', 'no.nrk.odometer')
+        if not os.path.exists(ourdir):
+            os.makedirs(ourdir)
+               #return os.path.join(ourdir, self.filename)
+        try:
+            return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
+        except UnicodeEncodeError:
+            logging.warning("cachelocation warn: %r - %r", repr(self.filename), type(self.filename))
+
+    def cleanup(self, filename, *args):
+        "Remove objects to prevent hanging threads"
+        return True
+        try:
+            if hasattr(self, 'doc'):
+                self.doc.deleteLater()
+        except Exception as e:
+            logging.warning("cleanup failed: %r", e)
+            pass
+
+    def setlogincookie(self, cookie):
+        "Add login cookie to service. Only applicable for some services"
+        self.logincookie = cookie
+
+    def getlabel(self, hint):
+        "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
+        return self.labelmap.get(hint, hint) # return hint verbatim if it's not in map
+
+
+class ResolverBaseOLD(Core.QObject):
 
     prefixes = [] # a list of file prefixes that this resolver recognizes
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
@@ -124,9 +267,8 @@ class ResolverBase(Core.QObject):
         #time.sleep(random.random() * 4)
         self.trackResolved.emit(self.filename, md)
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
@@ -359,9 +501,8 @@ class DMAResolver(ResolverBase):
         self.progress(100)
         self.trackResolved.emit(self.filename, dummymetadata)
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
@@ -440,27 +581,98 @@ class AUXResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def resolve(self, filename, fullpath, fromcache=True):
-        self.filename = filename
-        self.fullpath = fullpath
-        if fromcache:
-            md = self.fromcache()
-            if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return
-        self.worker = lookupWorkers.AUXLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
-        self.worker.load(filename)
-
     def updateRepertoire(self, labelmap):
         """Takes an updated label map, e.g. from auxjson.appspot.com, and updates the internal list"""
         self.labelmap.update(labelmap)
         for prefix in labelmap.keys():
             if not prefix in self.prefixes:
                 self.prefixes.append(prefix)
+
+    async def resolve(self, filename, fromcache=True):
+        self.filename = filename
+        _musicid = self.musicid(filename)
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                return md
+
+        """do an http get request to http://search.auxmp.co//search/html/ajax/axExtData.php
+
+        look up musicid, e.g ROCK015601
+
+        by doing a get request to
+        http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=ROCK015601&ac=track&country=NO'
+
+        and parse the json we get back
+
+        """
+        endpoint = 'http://search.auxmp.com//search/html/ajax/axExtData.php'
+        params = {'ac': 'track',
+                  'country': 'NO',
+                  'cdkurz': _musicid
+        }
+        async with self.session.get(endpoint, params=params) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            trackdata = data.get('tracks')[0]
+
+            metadata = TrackMetadata(filename=self.filename,
+                    musiclibrary=self.name,
+                    title=trackdata.get('title', None),
+                    length=trackdata.get('nZeit', -1),
+                    composer=trackdata.get('allkomp', None),
+                    artist=trackdata.get('artists', None),
+                    year=-1,
+                    recordnumber=_musicid,
+                    albumname=trackdata.get('cd_title', None),
+                    copyright='SONOTON Music GmbH & Co. KG',
+                    lcnumber=trackdata.get('lc', None),
+                    isrc=trackdata.get('isrc', None),
+                    ean=trackdata.get('ean', None),
+                    catalogue=trackdata.get('p_nummer', None),
+                    label=trackdata.get('label', None),
+                    lyricist=trackdata.get('lyrics', None),
+                    identifier=trackdata.get('cdkurz', self.musicid)
+                    )
+            metadata.productionmusic = True
+            try:
+                dt = datetime.datetime.strptime(trackdata.get('releasedat', None), '%Y-%m-%d') #SIC, 
+                logging.debug('Got datetime %r for musicid %r', dt, self.musicid)            
+                metadata.year = dt.year
+            except (ValueError, TypeError) as e:
+                logging.exception(e)
+                pass # the data does not fit our expectations, so we let it slide
+            except Exception as e:
+                # this is unexpected
+                logging.exception(e)
+
+            if metadata.title is not None:
+                metadata.title = metadata.title.title() # all AUX titles are ALL CAPS. Noisy!
+            return metadata
+
+        """
+        except IOError as e:
+            # e.g. dns lookup failed
+            logging.exception(e)
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but DNS lookup failed. ' % (musicid,))
+
+        if req.getcode() in (404, 403, 401, 400, 500):
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but failed. Please try again' % (musicid,))
+        if len(response) == 0 or response.get('ax_success') != 1:
+            # empty response,
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but failed. Please try again' % (musicid,))
+        elif len(response.get('errmsg', '')) > 0:
+            # we got an error message from auxmp.com
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but received an error from AUX: %r' % (musicid, response.errmsg))
+        elif response.get('trackcnt') == 0:
+            # auxmp.com didnt return any tracks for our search term
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but the AUX server returned no tracks with that id' % (musicid, ))
+        else:
+            raise web.HTTPBadRequest(reason='unknow error')
+        """
+
 
 
 class ApollomusicResolver(ResolverBase):
@@ -483,7 +695,63 @@ class ApollomusicResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def resolve(self, filename, fromcache=True):
+        self.filename = filename
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                self.trackResolved.emit(self.filename, md)
+                return
+        #self.worker = lookupWorkers.ApollomusicLookupWorker()
+        #"do an http post request to apollomusic.dk"
+        try:
+            _lbl, _albumid, _trackno = self.musicid.split('_')
+            postdata = urllib.parse.urlencode({'label_fk':_lbl,
+                                         'album_num':_albumid,
+                                         # 'track_num':_trackno,
+                                         'type_query':'tracks',
+                                         'sound_type':'0',
+                                         'query':'',
+                                         'genre':'',
+                                         'min_length':'00:00:00',
+                                         'max_length':'99:99:99',
+                                         'composer':'',
+                                         'track_num':'',
+                                         'cur_page':'1',
+                                         'per_page':'100',
+                                         'offset':'0',
+                                         'limit':'100',
+                                         })
+            # logging.debug('postdata: %s', postdata)
+            headers = {'Cookie':logincookie}
+            r = urllib.request.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers=headers)
+            req = urllib.request.urlopen(r)
+
+        except IOError as e:
+            # e.g. dns lookup failed
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
+            return None
+
+        if req.getcode() in (404, 403, 401, 400, 500):
+            self.trackFailed.emit()
+            self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
+            return None
+
+        response = json.loads(req.read().decode('utf-8')) # it's a json array
+        if len(response) == 0:
+            # empty response, likely not logged in or expired login cookie
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but failed. Please try to log in to Apollo again' % (musicid,))
+            return None
+        albumdata = response.pop()        # of 1 albumdict
+
+        trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
+        del(albumdata['tracks'])
+        return albumdata, trackdata
+
+
+    def resolveOLD(self, filename, fullpath, fromcache=True):
         self.filename = filename
         self.fullpath = fullpath
         if fromcache:
@@ -634,9 +902,8 @@ class UniPPMResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
@@ -671,9 +938,8 @@ class UprightmusicResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
@@ -742,9 +1008,8 @@ class ExtremeMusicResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
