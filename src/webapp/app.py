@@ -4,6 +4,7 @@ import os.path
 import tempfile
 import time
 import pathlib
+import json
 
 
 from metadataresolvers import findResolver
@@ -15,7 +16,6 @@ import uuid
 from asyncio import coroutine
 
 from aiohttp import web
-#from aiohttp_utils import Response, routing, negotiation, path_norm
 
 from webargs.aiohttpparser import parser as webargsparser
 from webargs import fields as webfields
@@ -25,11 +25,17 @@ app = web.Application(loop=loop)
 
 APIVERSION = '0.1'
 
-@coroutine
-def index(request):
-    return web.Response(text='Welcome!')
-app.router.add_get('/', index)
 
+class resolvableClip:
+    def __init__(self, filename, audible_length, service):
+        self.filename = filename
+        self.audible_length = audible_length
+        self.service = service
+    def to_dict(self):
+        return {'clipname': self.filename, 
+                 'total_length': self.audible_length, 
+                 'resolve':'/resolve/{}'.format(self.filename) 
+                 }
 
 class InvalidXmeml(Exception):
     pass
@@ -114,13 +120,20 @@ async def handle_analyze_post(request):
         for clipname, ranges in audioclips.items():
             if not is_resolvable(clipname):
                 continue
-            _r.append({'clipname': clipname, 'total_length':len(ranges)})
+            _r.append(resolvableClip(clipname, len(ranges), None))
         return web.json_response(data={
-            'audible': _r
+            'audible': [
+                c.to_dict() for c in _r
+            ]
         })
 
 
 app.router.add_post('/analyze', handle_analyze_post)
+
+@coroutine
+def index(request):
+    return web.Response(text='Welcome!')
+app.router.add_get('/', index)
 
 #Contentnegotiation
 #negotiation.setup(
