@@ -4,7 +4,7 @@ import os.path
 import tempfile
 import time
 import pathlib
-import json
+from urllib.parse import quote
 
 
 from metadataresolvers import findResolver
@@ -34,7 +34,7 @@ class resolvableClip:
     def to_dict(self):
         return {'clipname': self.filename, 
                  'total_length': self.audible_length, 
-                 'resolve':'/resolve/{}'.format(self.filename) 
+                 'resolve':'/resolve/{}'.format(quote(self.filename))
                  }
 
 class InvalidXmeml(Exception):
