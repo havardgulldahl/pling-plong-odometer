@@ -8,7 +8,7 @@ from urllib.parse import quote
 
 from aiohttp_swagger import *
 
-from metadataresolvers import findResolver, getResolverPatterns
+from metadataresolvers import findResolver, getResolvers
 from model import TrackMetadata
 from xmeml import iter as xmemliter
 
@@ -122,9 +122,8 @@ app.router.add_post('/analyze', handle_analyze_post)
 @swagger_path("handle_supported_resolvers.yaml")
 async def handle_supported_resolvers(request):
     'GET a request and return a dict of currently suppported resolvers and their file patterns'
-    patterns = getResolverPatterns()
     return web.json_response(data={
-        'resolvers': patterns
+        'resolvers': getResolvers()
     })
 
 app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns

@@ -24,20 +24,27 @@ import xml.etree.ElementTree as ET
 
 import appdirs 
 
-
 from model import TrackMetadata
 
-
 def findResolver(filename):
-    for resolver in CURRENT_RESOLVERS:
-        if resolver().accepts(filename):
+    for resolver in [x() for x in CURRENT_RESOLVERS]:
+        if not resolver.enabled: continue
+        if resolver.accepts(filename):
             return resolver
     return False
 
-def getResolverPatterns():
-    r = {}
+def getResolvers():
+    r = [] 
     for resolver in [x() for x in CURRENT_RESOLVERS]:
-        r[resolver.name] = {'prefixes':resolver.prefixes, 'postfixes':resolver.postfixes}
+        r.append({'name': resolver.name, 
+                  'prefixes':resolver.prefixes, 
+                  'postfixes':resolver.postfixes,
+                  'enabled': resolver.enabled,
+                  'prettyname': resolver.prettyname,
+                  'description': resolver.description,
+                  'website': resolver.website,
+                  'contractdetails': resolver.contractdetails,
+        })
     return r
 
 def htmlunescape(s):
@@ -67,8 +74,8 @@ class webdoc(Core.QObject):
         self.settings.setAttribute(Web.QWebSettings.AutoLoadImages, False)
 
     def load(self):
-        #print "loading url: ", self.url
-        self.frame.load(Core.QUrl(self.url))
+        print("loading url: ", self.url)
+        #self.frame.load(Core.QUrl(self.url))
 
 class ResolverBase:
 
@@ -76,6 +83,11 @@ class ResolverBase:
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     labelmap = [] # a list of labels that this music service carries
     name = 'general'
+    description = ''
+    prettyname = 'General'
+    enabled = True
+    website = ''
+    contractdetails = ''
     #error = Core.pyqtSignal(str, str, name="error" ) # filename,  error message
     #trackFailed = Core.pyqtSignal(str, name="trackFailed" ) # filename
     #trackResolved = Core.pyqtSignal(str, TrackMetadata, name="trackResolved" ) # filename, metadataobj
@@ -105,8 +117,8 @@ class ResolverBase:
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return False
+                #self.trackResolved.emit(self.filename, md)
+                return md
         url = self.url(filename)
         if not url: # invalid url, dont load it
             #self.error.emit(filename, 'Invalid url for filename %s' % filename)
@@ -215,6 +227,7 @@ class GenericFileResolver(ResolverBase):
     'Resolve file based on embedded metadata, i.e. id3 tags, vorbis tags, bwf'
     name = 'file'
     postfixes = ['MP3','WAV']
+    enabled = False
 
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
@@ -312,6 +325,9 @@ class DMAResolver(ResolverBase):
     #
     prefixes = ['NRKO_', 'NRKT_', 'NONRO', 'NONRT', 'NONRE' ]
     name = 'DMA'
+    prettyname = 'NRKs Digitale Musikkarkiv'
+    website = 'http://dma/'
+    enabled = True
     #cacheTimeout = 1
 
     @staticmethod
@@ -438,6 +454,8 @@ class AUXResolver(ResolverBase):
                 'WD': 'Wild Diesel',
                }
     name = 'AUX Publishing'
+    prettyname = 'AUX Publishing (inkluderer Sonoton)'
+    website = 'http://search.auxmp.com/'
     urlbase = 'http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=%s&ac=track&country=NO'
 
     @staticmethod
@@ -547,6 +565,8 @@ class AUXResolver(ResolverBase):
 class ApollomusicResolver(ResolverBase):
     prefixes = [ 'APOLLO_',]
     name = 'ApolloMusic'
+    prettyname = 'Apollo Music'
+    website = 'http://findthethune.com/'
     urlbase = 'http://www.findthetune.com/action/search_tracks_action/' # HTTP POST interface, returns json
     labelmap = { } # TODO: get list of labels
 
@@ -629,6 +649,8 @@ class ApollomusicResolver(ResolverBase):
 class UniPPMResolver(ResolverBase):
     prefixes = [ ]
     name = 'UniPPM'
+    prettyname = 'Universal Production Publising Music'
+    website = 'http://www.unippm.se/'
     urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={musicid}' # HTTP GET interface, returns json
     labelmap = {  'AA':'Atmosphere Archive ',
                   'AK':'Atmosphere Kitsch ',
@@ -796,6 +818,8 @@ class UniPPMResolver(ResolverBase):
 class UprightmusicResolver(ResolverBase):
     prefixes = [ '_UPRIGHT',]
     name = 'UprightMusic'
+    prettyname = 'Upright Music'
+    website = 'http://www.upright-music.com/'
     urlbase = 'http://search.upright-music.com/sites/all/modules/up/session.php?handler=load&tid={trackid}' # HTTP GET interface, returns json
     labelmap = { } # TODO: get list of labels
 
@@ -837,6 +861,8 @@ class UprightmusicResolver(ResolverBase):
 class ExtremeMusicResolver(ResolverBase):
     prefixes = [ ]
     name = 'ExtremeMusic'
+    prettyname = 'Extreme Music'
+    website = 'https://www.extrememusic.com/'
     urlbase = 'https://lapi.extrememusic.com/' # JSON REST interface
     labelmap = {'XCD': 'X-Series',
 'DCD': 'Directors Cuts',
@@ -940,5 +966,5 @@ CURRENT_RESOLVERS = [
     UniPPMResolver,
     UprightmusicResolver,
     ExtremeMusicResolver,
-    #GenericFileResolver
+    GenericFileResolver
 ]
