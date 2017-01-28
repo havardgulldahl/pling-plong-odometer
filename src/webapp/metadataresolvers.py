@@ -770,9 +770,9 @@ class UniPPMResolver(ResolverBase):
                   'ZONES':'Zones',
                   'ZTS':'Zero To Sixty',} # TODO: get list of labels automatically
 
-    def __init__(self, parent=None):
+    def __init__(self):
         self.prefixes = ['%s_' % x for x in self.labelmap.keys()] # prfix is <LABEL> + _
-        super(UniPPMResolver, self).__init__(parent)
+        super(UniPPMResolver, self).__init__()
 
 
     @staticmethod
@@ -903,9 +903,9 @@ class ExtremeMusicResolver(ResolverBase):
 'SCS': 'Scoreganics',
 'MDE': 'Made', } # TODO: get list of labels automatically
 
-    def __init__(self, parent=None):
+    def __init__(self):
         self.prefixes = [x.upper() for x in self.labelmap.keys()] # prfix is <LABEL> + _
-        super(ExtremeMusicResolver, self).__init__(parent)
+        super(ExtremeMusicResolver, self).__init__()
 
     @staticmethod
     def musicid(filename):
