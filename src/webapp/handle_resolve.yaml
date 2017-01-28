@@ -1,6 +1,5 @@
 tags:
-- user
-- top level
+- analysis
 summary: Get an audioname from the request and resolve it from its respective service resolver
 description: Use this for all tracks to get metadata
 operationId: handle_resolve

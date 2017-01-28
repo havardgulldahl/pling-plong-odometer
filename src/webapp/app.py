@@ -8,7 +8,7 @@ from urllib.parse import quote
 
 from aiohttp_swagger import *
 
-from metadataresolvers import findResolver
+from metadataresolvers import findResolver, getResolverPatterns
 from model import TrackMetadata
 from xmeml import iter as xmemliter
 
@@ -119,15 +119,26 @@ async def handle_analyze_post(request):
 
 app.router.add_post('/analyze', handle_analyze_post)
 
+@swagger_path("handle_supported_resolvers.yaml")
+async def handle_supported_resolvers(request):
+    'GET a request and return a dict of currently suppported resolvers and their file patterns'
+    patterns = getResolverPatterns()
+    return web.json_response(data={
+        'resolvers': patterns
+    })
+
+app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
+
+
 @coroutine
 def index(request):
     return web.HTTPFound('/doc') # forward to docs
 
 app.router.add_get('/', index)
 
+# TODO app.router.add_get('/submit_runsheet', handle_submit_runsheet) # submit a runsheet to applicable services
 # TODO app.router.add_get('/report_error', handle_report_error) # report an error
 # TODO app.router.add_get('/report_missing', handle_report_missing) # report a missing audio pattern
-# TODO app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
 
 setup_swagger(app,
               swagger_url="/doc",

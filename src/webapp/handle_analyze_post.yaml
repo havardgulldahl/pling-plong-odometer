@@ -1,6 +1,5 @@
 tags:
-- user
-- top level
+- analysis
 summary: POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.
 description: This is typically how you start your analysis.
 operationId: handle_analyze_post
