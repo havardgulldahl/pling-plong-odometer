@@ -27,6 +27,7 @@ import appdirs
 
 from model import TrackMetadata
 
+
 def findResolver(filename):
     resolvers = [DMAResolver(),
              AUXResolver(),
@@ -587,85 +588,59 @@ class ApollomusicResolver(ResolverBase):
             if md is not None:
                 return md
         #"do an http post request to apollomusic.dk"
-        try:
-            _lbl, _albumid, _trackno = _musicid.split('_')
-            postdata = {'label_fk':_lbl,
-                                         'album_num':_albumid,
-                                         # 'track_num':_trackno,
-                                         'type_query':'tracks',
-                                         'sound_type':'0',
-                                         'query':'',
-                                         'genre':'',
-                                         'min_length':'00:00:00',
-                                         'max_length':'99:99:99',
-                                         'composer':'',
-                                         'track_num':'',
-                                         'cur_page':'1',
-                                         'per_page':'100',
-                                         'offset':'0',
-                                         'limit':'100',
-                                         }
-            # logging.debug('postdata: %s', postdata)
-            headers = {'Cookie':logincookie}
-            endpoint = 'http://www.findthetune.com/action/search_albums_action/'
-            async with self.session.get(endpoint, params=postdata, headers=headers) as resp:
-                logging.debug('hitting endpoint url: %r', resp.url)
-                resp.raise_for_status() # bomb on errors
-                data = await resp.json()
-                logging.info('got data: %r', data)
+        _lbl, _albumid, _trackno = _musicid.split('_')
+        postdata = {'label_fk':_lbl,
+                                        'album_num':_albumid,
+                                        # 'track_num':_trackno,
+                                        'type_query':'tracks',
+                                        'sound_type':'0',
+                                        'query':'',
+                                        'genre':'',
+                                        'min_length':'00:00:00',
+                                        'max_length':'99:99:99',
+                                        'composer':'',
+                                        'track_num':'',
+                                        'cur_page':'1',
+                                        'per_page':'100',
+                                        'offset':'0',
+                                        'limit':'100',
+                                        }
+        # logging.debug('postdata: %s', postdata)
+        headers = {'Cookie':logincookie}
+        endpoint = 'http://www.findthetune.com/action/search_albums_action/'
+        async with self.session.get(endpoint, params=postdata, headers=headers) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
 
-                albumdata = data.pop()        # of 1 albumdict
+            albumdata = data.pop()        # of 1 albumdict
 
-                trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
-                del(albumdata['tracks'])
-                try: _yr = int(trackdata.get('recorded', -1), 10)
-                except:  _yr = -1
-                metadata = TrackMetadata(filename=self.filename,
-                            musiclibrary=self.name,
-                            title=trackdata.get('primary_title', None),
-                            # length=-1,
-                            composer=trackdata.get('composer', None),
-                            artist=trackdata.get('performer', None),
-                            year=_yr,
-                            recordnumber=_musicid,
-                            albumname=albumdata.get('album_title', None),
-                            copyright='Apollo Music',
-                            # lcnumber=None,
-                            # isrc=None,
-                            # ean=None,
-                            # catalogue=None,
-                            label=trackdata.get('label_fk', None),
-                            # lyricist=None,
-                            identifier='apollotrack# %s' % trackdata.get('track_id', -1),
-                            )
-                metadata.productionmusic = True
-                return metadata
+            trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
+            del(albumdata['tracks'])
+            try: _yr = int(trackdata.get('recorded', -1), 10)
+            except:  _yr = -1
+            metadata = TrackMetadata(filename=self.filename,
+                        musiclibrary=self.name,
+                        title=trackdata.get('primary_title', None),
+                        # length=-1,
+                        composer=trackdata.get('composer', None),
+                        artist=trackdata.get('performer', None),
+                        year=_yr,
+                        recordnumber=_musicid,
+                        albumname=albumdata.get('album_title', None),
+                        copyright='Apollo Music',
+                        # lcnumber=None,
+                        # isrc=None,
+                        # ean=None,
+                        # catalogue=None,
+                        label=trackdata.get('label_fk', None),
+                        # lyricist=None,
+                        identifier='apollotrack# %s' % trackdata.get('track_id', -1),
+                        )
+            metadata.productionmusic = True
+            return metadata
 
-
-        """
-        except IOError as e:
-            # e.g. dns lookup failed
-            self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
-            return None
-
-        if req.getcode() in (404, 403, 401, 400, 500):
-            self.trackFailed.emit()
-            self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
-            return None
-
-        response = json.loads(req.read().decode('utf-8')) # it's a json array
-        if len(response) == 0:
-            # empty response, likely not logged in or expired login cookie
-            self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Please try to log in to Apollo again' % (musicid,))
-            return None
-        albumdata = response.pop()        # of 1 albumdict
-
-        trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
-        del(albumdata['tracks'])
-        return albumdata, trackdata
-        """
 
 class UniPPMResolver(ResolverBase):
     prefixes = [ ]
@@ -929,8 +904,8 @@ class ExtremeMusicResolver(ResolverBase):
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return
+                return md
+
         self.worker = lookupWorkers.ExtremeMusicLookupWorker()
         self.worker.progress.connect(self.progress)
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
