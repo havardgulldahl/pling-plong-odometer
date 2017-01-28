@@ -95,12 +95,12 @@ class ResolverBase:
     #warning = Core.pyqtSignal(str, name="warning") # warning message
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
-    def __init__(self, session=None):
+    def __init__(self):
         #super(ResolverBase, self).__init__(parent)
         #self.trackResolved.connect(lambda f,md: self.cache(md))
         #self.trackResolved.connect(self.cleanup)
         #self.trackFailed.connect(self.cleanup)
-        self.session = session or aiohttp.ClientSession()
+        self.session = None # set it in .setSession() or lazy create in .resolve()
         self.logincookie = None
 
     def accepts(self, filename):
@@ -111,6 +111,10 @@ class ResolverBase:
             if str(filename).upper().endswith(f):
                 return True
         return False
+
+    def setSession(self, session):
+        'add existing aiohttp.ClientSession() to object for transparent cookie handling and resource reuse'
+        self.session = session
 
     async def resolve(self, filename, fromcache=True):
         self.filename = filename
@@ -125,7 +129,9 @@ class ResolverBase:
             #self.trackFailed.emit(filename)
             return False
         logging.debug('ResolverBase.resolve traversing the INTERNET: %s => %s', filename, url)
-        async with session.get(url) as response:
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        async with self.session.get(url) as response:
             logging.debug('INTERNET got us %r', response)
             return await response.text()
 
@@ -348,6 +354,8 @@ class DMAResolver(ResolverBase):
                 return md
 
         endpoint="http://mamcdma02/DMA/{musicid}.xml"
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
         async with self.session.get(endpoint.format(musicid=_musicid)) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
@@ -498,6 +506,8 @@ class AUXResolver(ResolverBase):
                   'country': 'NO',
                   'cdkurz': _musicid
         }
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
         async with self.session.get(endpoint, params=params) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
@@ -612,6 +622,8 @@ class ApollomusicResolver(ResolverBase):
         # logging.debug('postdata: %s', postdata)
         headers = {'Cookie':logincookie}
         endpoint = 'http://www.findthetune.com/action/search_albums_action/'
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
         async with self.session.get(endpoint, params=postdata, headers=headers) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
@@ -786,6 +798,8 @@ class UniPPMResolver(ResolverBase):
             if md is not None:
                 return md
 
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
         async with self.session.get(self.urlbase.format(musicid=_musicid)) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
