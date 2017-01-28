@@ -29,30 +29,14 @@ from model import TrackMetadata
 
 
 def findResolver(filename):
-    resolvers = [DMAResolver(),
-             AUXResolver(),
-             ApollomusicResolver(),
-             UniPPMResolver(),
-             UprightmusicResolver(),
-             ExtremeMusicResolver(),
-             #GenericFileResolver()
-             ]
-    for resolver in resolvers:
-        if resolver.accepts(filename):
+    for resolver in CURRENT_RESOLVERS:
+        if resolver().accepts(filename):
             return resolver
     return False
 
 def getResolverPatterns():
-    resolvers = [DMAResolver(),
-             AUXResolver(),
-             ApollomusicResolver(),
-             UniPPMResolver(),
-             ExtremeMusicResolver(),
-             UprightmusicResolver(),
-             #GenericFileResolver()
-             ]
     r = {}
-    for resolver in resolvers:
+    for resolver in [x() for x in CURRENT_RESOLVERS]:
         r[resolver.name] = {'prefixes':resolver.prefixes, 'postfixes':resolver.postfixes}
     return r
 
@@ -947,3 +931,14 @@ class ExtremeMusicResolver(ResolverBase):
         labels = json.loads(urllib.request.urlopen(req).read().decode())
         r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
         return r
+
+# a list of supported resolvers, for easy disabling etc
+CURRENT_RESOLVERS = [
+    DMAResolver,
+    AUXResolver,
+    ApollomusicResolver,
+    UniPPMResolver,
+    UprightmusicResolver,
+    ExtremeMusicResolver,
+    #GenericFileResolver
+]
