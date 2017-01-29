@@ -945,20 +945,27 @@ class ExtremeMusicResolver(ResolverBase):
 
                 # Extreme Music has different versions of each song
                 # e.g. "full version", "30 seconds", "bass only", etc.
-                # and the different variants share the track_id, but
-                # the track_sound_no will be different and equal to
-                # self.musicid
+                #
+                # Each version has three associated id-like identifiers, e.g:
+                # 
+                # 'id': 124233,                     #### <- the internal, unique id for each version
+                # 'track_sound_no': 'DCD131_02_5',  #### <- the external, unique id for each version
+                # 'track_id': 45384,                #### <- the internal id of the "default" version. 
+                #                                           this id is shared between variants
+                # 
 
-                version_title = None
+                version_title = None        # same for all versions
                 version_duration = -1
-                version_musicid = None
+                version_internal_id = None  # unique for each version
 
-                logging.debug('Got following trackversions from Extreme: %r', trackversions)
+                #logging.debug('Got following trackversions from Extreme: %r', trackversions)
                 for version in trackversions:
                     if musicid == version['track_sound_no']: # this is the one
                         version_title = '%s (%s)' % (version['title'], version['version_type'])
                         version_duration = version['duration']
+                        version_internal_id = version['id']
 
+                #logging.debug('Got version info: %r, %r, %r', version_title, version_duration, version_internal_id)
 
                 composers = ['%s (%s)' % (c['name'], c['society']) for c in trackdata['composers']]
                 arrangers = ['%s' % (c['name'],) for c in trackdata['arrangers']]
@@ -971,7 +978,7 @@ class ExtremeMusicResolver(ResolverBase):
                         artist=None,
                         year=-1,
                         recordnumber=musicid,
-                        albumname=albumdata.get('album_title', None),
+                        albumname=trackdata.get('album_title', None),
                         copyright=', '.join([c['name'] for c in trackdata['collecting_publishers']]),
                         # lcnumber=None,
                         # isrc=None,
@@ -979,7 +986,7 @@ class ExtremeMusicResolver(ResolverBase):
                         # catalogue=None,
                         label=musicid[0:3],
                         # lyricist=None,
-                        identifier='extremetrack# %s' % trackdata.get('track_id', -1),
+                        identifier='extremetrack#%s' % version_internal_id or musicid,
                         )
                 metadata.productionmusic = True
                 return metadata
