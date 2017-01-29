@@ -24,25 +24,27 @@ class TrackMetadata(object):
                  lyricist=None,
                  identifier=None,
                  ):
+
+        def tit(val):
+            'Return title case strings or None if val is None'
+            return val.title() if isinstance(val, str) else val
+
         self.filename = filename
         self.musiclibrary = musiclibrary
-        self.title = title
+        self.title = tit(title)
         self.length = length # in seconds
-        self.composer = composer
-        self.artist = artist
+        self.composer = tit(composer)
+        self.artist = tit(artist)
         self.year = year
         self.recordnumber = recordnumber
-        self.albumname = albumname
+        self.albumname = tit(albumname)
         self.copyright = copyright
         self.lcnumber = lcnumber # library of congress id
         self.isrc = isrc # International Standard Recording Code
         self.ean = ean # ean-13 (barcode)
-        self.catalogue = catalogue
+        self.catalogue = tit(catalogue)
         self.label = label
-        self.lyricist = lyricist
+        self.lyricist = tit(lyricist)
         self.identifier = identifier # system-specific identifier
         self.productionmusic = False
         self._retrieved = time.mktime(time.localtime())
-
-    def getmusicid(self):
-        raise NotImplementedError('Breaking change. Run metadata.resolvers.getmusicid()')
