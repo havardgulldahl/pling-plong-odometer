@@ -1031,6 +1031,81 @@ class ExtremeMusicResolver(ResolverBase):
             r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
             return r
 
+class WarnerChappellResolver(ResolverBase):
+    prefixes = [ ]
+    enabled = False # TODO ENABLE THIS
+    name = 'WarnerChappell'
+    prettyname = 'Warner Chappell Production Music'
+    website = 'http://www.warnerchappellpm.com/sw/'
+    urlbase = 'http://search.warnerchappellpm.com/player/trackavailable' # JSON interface
+    labelmap = { } # TODO: get list of labels automatically
+
+    def __init__(self):
+        self.prefixes = [x.upper() for x in self.labelmap.keys()] # prfix is <LABEL> + _
+        super(WarnerChappellResolver, self).__init__()
+
+    @staticmethod
+    def musicid(filename):
+        """Returns musicid from filename.
+
+        """
+        raise NotImplemented
+        prefixes = [x.upper() for x in WarnerChappellResolver.labelmap.keys()]
+        rex = re.compile(r'') #^((%s)\d{2,5}_\d{2,3}(_\d{1,3})?)\s.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
+        g = rex.search(filename)
+        try:
+            return g.group(1)
+        except AttributeError: #no match
+            return None
+
+    #async def get_session_cookie(self):
+        #'Ping Extreme Music webserver to get a valid session cookie'
+        #url = 'https://www.extrememusic.com/env'
+        #async with self.session.get(url) as resp:
+            #logging.debug('hitting endpoint url: %r', resp.url)
+            #resp.raise_for_status() # bomb on errors
+            #data = await resp.json()
+            #logging.info('got data: %r', data)
+            #logincookie = data['env']['API_AUTH']
+            #return logincookie
+
+    async def resolve(self, filename, fromcache=True):
+        raise NotImplemented
+        self.filename = filename
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                return md
+
+    async def fetchlabels(self):
+        raise NotImplemented
+        """get a new list of labels online
+
+        0. Get session token
+        curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
+
+        1. Get label/"series"
+        curl 'https://lapi.extrememusic.com/grid_items?range=0%2C24&view=series' -H 'Origin: https://www.extrememusic.com' -H 'Accept-Encoding: gzip, deflate, sdch, br' -H 'X-API-Auth: 2347c6f3f3ea9cc6e3405f54a3789a6ada9e7631d2e92b0d50cecc8401a360d2' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' -H 'Accept-Language: en-US,en;q=0.8,nb;q=0.6,sv;q=0.4,da;q=0.2' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels' -H 'Connection: keep-alive' -H 'X-Site-Id: 1' --compressed
+
+        -> image_detail_url:
+        "https://d2oet5a29f64lj.cloudfront.net/IMAGES/series/detail/dcd.jpg"
+                                                                    ^^^ <- label abbreviation
+        """
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        # check login cookie, without it we get nothing from the service
+        if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
+            self.session.logincookie = await self.get_session_cookie() 
+        url = 'https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series'
+        headers = {'X-API-Auth':self.session.logincookie}
+        async with self.session.get(url, headers=headers) as resp:
+            logging.debug('update labels. hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            labels = await resp.json()
+            logging.info('got labels: %r', labels)
+            r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
+            return r
+
 # a list of supported resolvers, for easy disabling etc
 CURRENT_RESOLVERS = [
     DMAResolver,
@@ -1039,5 +1114,6 @@ CURRENT_RESOLVERS = [
     UniPPMResolver,
     UprightmusicResolver,
     ExtremeMusicResolver,
+    WarnerChappellResolver,
     GenericFileResolver
 ]
