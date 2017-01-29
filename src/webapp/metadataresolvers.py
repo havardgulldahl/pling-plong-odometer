@@ -889,16 +889,114 @@ class ExtremeMusicResolver(ResolverBase):
             if md is not None:
                 return md
 
-        self.worker = lookupWorkers.ExtremeMusicLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
+        # extreme music procedure
+        # 1. login and get cookie
+        # 2. figure out internal id of track, using the id from the filename
+        # 3. get the actual metadata for the track, using the id from 2
+
+        async def login(session):
+            'Login to Extreme Music to get a valid login cookie'
+            url = ''
+            async with self.session.get(url) as resp:
+                logging.debug('hitting endpoint url: %r', resp.url)
+                resp.raise_for_status() # bomb on errors
+                data = await resp.json()
+                logging.info('got data: %r', data)
+                composers = [ data.get('shares', []) ]
+                session.logincookie = logincookie
+                return logincookie
+
+        async def get_internal_musicid(session, musicid):
+            'Figure out the internal Extreme music id from the musicid from the file name'
+            url = 'https://lapi.extrememusic.com/search/tracks?query={musicid}&mode=filter'.format(musicid=musicid)
+            headers = {'X-API-Auth':session.logincookie}
+            async with self.session.get(url, headers=headers) as resp:
+                logging.debug('hitting endpoint url: %r', resp.url)
+                resp.raise_for_status() # bomb on errors
+                data = await resp.json()
+                logging.info('got data: %r', data)
+                if len(data) == 0:
+                    # empty response, likely not logged in or expired login cookie
+                    return None
+                if not len(data['track_search_result_items']) > 0:
+                    # something is wrong, no results
+                    logging.warning('The Extreme Music catalogue does not seem to know anything about this music id: %s' % (musicid, ))
+                    return None
+        
+        async def get_metadata(session, internal_musicid):
+            'Get the actual metadata from the Extreme Music internal musicid'
+            url = 'https://lapi.extrememusic.com/tracks/{exid}'.format(exid=internal_musicid)
+
+            headers = {'X-API-Auth':session.logincookie}
+            async with self.session.get(url, headers=headers) as resp:
+                logging.debug('hitting endpoint url: %r', resp.url)
+                resp.raise_for_status() # bomb on errors
+                data = await resp.json()
+                logging.info('got data: %r', data)
+                extrack_id = data['track_search_result_items'][0]['track_id']
+                if data['track'] is None:
+                    # something is wrong, no results
+                    logging.warning('The Extreme Music catalogue does not seem to know anything about this music id: %s (internal music id: %s)' % (musicid, extrack_id))
+                    return None
+
+                # Extreme Music has different versions of each song
+                # e.g. "full version", "30 seconds", "bass only", etc.
+                # and the different variants share the track_id, but
+                # the track_sound_no will be different and equal to
+                # self.musicid
+
+                version_title = None
+                version_duration = -1
+                version_musicid = None
+
+                logging.debug('Got following trackdata from Extreme: %r', trackdata)
+                for version in trackdata['track_sounds']:
+                    if self.musicid == version['track_sound_no']: # this is the one
+                        version_title = '%s (%s)' % (version['title'], version['version_type'])
+                        version_duration = version['duration']
+
+
+                composers = ['%s (%s)' % (c['name'], c['society']) for c in trackdata['composers']]
+                arrangers = ['%s' % (c['name'],) for c in trackdata['arrangers']]
+
+                metadata = TrackMetadata(filename=self.filename,
+                        musiclibrary=resolvers.ExtremeMusicResolver.name,
+                        title=version_title or trackdata.get('title', None),
+                        length=version_duration or trackdata.get('duration', -1),
+                        composer=', '.join(composers),
+                        artist=None,
+                        year=-1,
+                        recordnumber=self.musicid,
+                        albumname=albumdata.get('album_title', None),
+                        copyright=', '.join([c['name'] for c in trackdata['collecting_publishers']]),
+                        # lcnumber=None,
+                        # isrc=None,
+                        # ean=None,
+                        # catalogue=None,
+                        label=self.musicid[0:3],
+                        # lyricist=None,
+                        identifier='extremetrack# %s' % trackdata.get('track_id', -1),
+                        )
+                metadata.productionmusic = True
+                return metadata
+
+
+        async with self.session.get(self.urlbase.format(musicid=_musicid)) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            composers = [ data.get('shares', []) ]
+
         # check login cookie, without it we get nothing from the service
         if self.logincookie is None:
             self.fetchlogincookie()
 
-        self.worker.load(filename, self.logincookie)
+
+    def request(self, musicid, logincookie):
+        "do http requests to lapi.extrememusic.com to get track metadata"
+
+        # get internal music id
 
     def fetchlogincookie(self):
         "get loging cookie / session token"
