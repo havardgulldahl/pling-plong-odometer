@@ -150,7 +150,7 @@ setup_swagger(app,
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    # Development server
+    # start server
     web.run_app(
         app,
         #reload=True,

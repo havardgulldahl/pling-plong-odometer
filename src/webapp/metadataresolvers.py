@@ -34,10 +34,10 @@ def findResolver(filename):
     return False
 
 def getResolvers():
-    r = [] 
+    r = []
     for resolver in [x() for x in CURRENT_RESOLVERS]:
-        r.append({'name': resolver.name, 
-                  'prefixes':resolver.prefixes, 
+        r.append({'name': resolver.name,
+                  'prefixes':resolver.prefixes,
                   'postfixes':resolver.postfixes,
                   'enabled': resolver.enabled,
                   'prettyname': resolver.prettyname,
@@ -57,26 +57,6 @@ def getmusicid(filename):
         return ResolverBase.musicid(filename)
     return res.musicid(filename)
 
-class webdoc(Core.QObject):
-    '''A helper class to load urls in Qt'''
-    def __init__(self, filename, url, parent=None):
-        super(webdoc, self).__init__(parent)
-        self.filename = filename
-        self.url = url
-        try:
-            self.page = Web.QWebPage(self)
-            self.frame = self.page.mainFrame()
-        except AttributeError: # qt4 /qt5 
-            self.page = Web.QWebEnginePage(self)
-            self.frame = self.page
-        self.settings = self.page.settings()
-        self.settings.setAttribute(Web.QWebSettings.JavascriptEnabled, False)
-        self.settings.setAttribute(Web.QWebSettings.AutoLoadImages, False)
-
-    def load(self):
-        print("loading url: ", self.url)
-        #self.frame.load(Core.QUrl(self.url))
-
 class ResolverBase:
 
     prefixes = [] # a list of file prefixes that this resolver recognizes
@@ -88,18 +68,9 @@ class ResolverBase:
     enabled = True
     website = ''
     contractdetails = ''
-    #error = Core.pyqtSignal(str, str, name="error" ) # filename,  error message
-    #trackFailed = Core.pyqtSignal(str, name="trackFailed" ) # filename
-    #trackResolved = Core.pyqtSignal(str, TrackMetadata, name="trackResolved" ) # filename, metadataobj
-    #trackProgress = Core.pyqtSignal(str, int, name="trackProgress" ) # filename, progress 0-100
-    #warning = Core.pyqtSignal(str, name="warning") # warning message
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
     def __init__(self):
-        #super(ResolverBase, self).__init__(parent)
-        #self.trackResolved.connect(lambda f,md: self.cache(md))
-        #self.trackResolved.connect(self.cleanup)
-        #self.trackFailed.connect(self.cleanup)
         self.session = None # set it in .setSession() or lazy create in .resolve()
         self.logincookie = None
 
@@ -121,12 +92,9 @@ class ResolverBase:
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                #self.trackResolved.emit(self.filename, md)
                 return md
         url = self.url(filename)
         if not url: # invalid url, dont load it
-            #self.error.emit(filename, 'Invalid url for filename %s' % filename)
-            #self.trackFailed.emit(filename)
             return False
         logging.debug('ResolverBase.resolve traversing the INTERNET: %s => %s', filename, url)
         if self.session is None:
@@ -135,14 +103,7 @@ class ResolverBase:
             logging.debug('INTERNET got us %r', response)
             return await response.text()
 
-        #self.doc = webdoc(self.filename, url, parent=None)
-        #self.doc.frame.loadFinished.connect(self.parse)
-        #self.doc.page.loadProgress.connect(self.progress)
-        #self.doc.load()
-        #return True
-
     def progress(self, i):
-        #self.trackProgress.emit(self.filename, i)
         pass
 
     def url(self, filename): # return url from filename
@@ -153,7 +114,6 @@ class ResolverBase:
 
     def parse(self):
         # reimplement this to emit a signal with a TrackMetadata object when found
-        #self.trackResolved.emit(self.filename, md)
         pass
 
     @staticmethod
@@ -856,21 +816,20 @@ class UprightmusicResolver(ResolverBase):
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
                 return
-        self.worker = lookupWorkers.UprightmusicLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        async with self.session.get(self.urlbase.format(musicid=_musicid)) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            composers = [ data.get('shares', []) ]
+
+        #self.worker = lookupWorkers.UprightmusicLookupWorker()
         # check login cookie, without it we get nothing from the service
         if self.logincookie is None:
-            self.error.emit(self.filename, u"You need to log in to UprightMusic before we can look something up")
-            self.trackFailed.emit(self.filename)
             return
-
-        self.worker.load(filename, self.logincookie)
-
 
 class ExtremeMusicResolver(ResolverBase):
     prefixes = [ ]
