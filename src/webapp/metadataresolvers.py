@@ -890,26 +890,27 @@ class ExtremeMusicResolver(ResolverBase):
                 return md
 
         # extreme music procedure
-        # 1. login and get cookie
+        # 1. get session cookie
         # 2. figure out internal id of track, using the id from the filename
         # 3. get the actual metadata for the track, using the id from 2
 
-        async def login(session):
-            'Login to Extreme Music to get a valid login cookie'
-            url = ''
+        async def get_session_cookie():
+            'Ping Extreme Music webserver to get a valid session cookie'
+            url = 'https://www.extrememusic.com/env'
+            #env = json.loads(urllib.request.urlopen(ENVURL).read().decode())
+            #self.setlogincookie(env['env']['API_AUTH'])
             async with self.session.get(url) as resp:
                 logging.debug('hitting endpoint url: %r', resp.url)
                 resp.raise_for_status() # bomb on errors
                 data = await resp.json()
                 logging.info('got data: %r', data)
-                composers = [ data.get('shares', []) ]
-                session.logincookie = logincookie
+                logincookie = data['env']['API_AUTH']
                 return logincookie
 
-        async def get_internal_musicid(session, musicid):
+        async def get_internal_musicid(musicid):
             'Figure out the internal Extreme music id from the musicid from the file name'
             url = 'https://lapi.extrememusic.com/search/tracks?query={musicid}&mode=filter'.format(musicid=musicid)
-            headers = {'X-API-Auth':session.logincookie}
+            headers = {'X-API-Auth':self.session.logincookie}
             async with self.session.get(url, headers=headers) as resp:
                 logging.debug('hitting endpoint url: %r', resp.url)
                 resp.raise_for_status() # bomb on errors
@@ -922,22 +923,26 @@ class ExtremeMusicResolver(ResolverBase):
                     # something is wrong, no results
                     logging.warning('The Extreme Music catalogue does not seem to know anything about this music id: %s' % (musicid, ))
                     return None
+                extrack_id = data['track_search_result_items'][0]['track_id']
+                return extrack_id
         
-        async def get_metadata(session, internal_musicid):
+        async def get_metadata(internal_musicid):
             'Get the actual metadata from the Extreme Music internal musicid'
             url = 'https://lapi.extrememusic.com/tracks/{exid}'.format(exid=internal_musicid)
 
-            headers = {'X-API-Auth':session.logincookie}
+            headers = {'X-API-Auth':self.session.logincookie}
             async with self.session.get(url, headers=headers) as resp:
                 logging.debug('hitting endpoint url: %r', resp.url)
                 resp.raise_for_status() # bomb on errors
                 data = await resp.json()
                 logging.info('got data: %r', data)
-                extrack_id = data['track_search_result_items'][0]['track_id']
                 if data['track'] is None:
                     # something is wrong, no results
                     logging.warning('The Extreme Music catalogue does not seem to know anything about this music id: %s (internal music id: %s)' % (musicid, extrack_id))
                     return None
+
+                trackdata = data['track']
+                trackversions = data['track_sounds']
 
                 # Extreme Music has different versions of each song
                 # e.g. "full version", "30 seconds", "bass only", etc.
@@ -949,8 +954,8 @@ class ExtremeMusicResolver(ResolverBase):
                 version_duration = -1
                 version_musicid = None
 
-                logging.debug('Got following trackdata from Extreme: %r', trackdata)
-                for version in trackdata['track_sounds']:
+                logging.debug('Got following trackversions from Extreme: %r', trackversions)
+                for version in trackversions:
                     if self.musicid == version['track_sound_no']: # this is the one
                         version_title = '%s (%s)' % (version['title'], version['version_type'])
                         version_duration = version['duration']
@@ -981,30 +986,24 @@ class ExtremeMusicResolver(ResolverBase):
                 return metadata
 
 
-        async with self.session.get(self.urlbase.format(musicid=_musicid)) as resp:
-            logging.debug('hitting endpoint url: %r', resp.url)
-            resp.raise_for_status() # bomb on errors
-            data = await resp.json()
-            logging.info('got data: %r', data)
-            composers = [ data.get('shares', []) ]
+        #async with self.session.get(self.urlbase.format(musicid=_musicid)) as resp:
+            #logging.debug('hitting endpoint url: %r', resp.url)
+            ##resp.raise_for_status() # bomb on errors
+            #data = await resp.json()
+            #logging.info('got data: %r', data)
+            #composers = [ data.get('shares', []) ]
 
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
         # check login cookie, without it we get nothing from the service
-        if self.logincookie is None:
-            self.fetchlogincookie()
-
-
-    def request(self, musicid, logincookie):
-        "do http requests to lapi.extrememusic.com to get track metadata"
-
+        if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
+            self.session.logincookie = await get_session_cookie()
         # get internal music id
+        exid = await get_internal_musicid(self.musicid(filename))
+        # look up internal music id to get metadata
+        metadata  = await get_metadata(exid) 
 
-    def fetchlogincookie(self):
-        "get loging cookie / session token"
-        #0. Get session token
-        #curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
-        ENVURL = 'https://www.extrememusic.com/env'
-        env = json.loads(urllib.request.urlopen(ENVURL).read().decode())
-        self.setlogincookie(env['env']['API_AUTH'])
+        return metadata
 
 
     def fetchlabels(self):
