@@ -320,10 +320,10 @@ class DMAResolver(ResolverBase):
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
             data = await resp.text()
-            metadata = await self.parse_gluon_xml(StringIO(data))
+            metadata = await self.parse_gluon_xml(StringIO(data), filename)
             return metadata
 
-    async def parse_gluon_xml(self, xmlsource):
+    async def parse_gluon_xml(self, xmlsource, filename):
         'Get a string of xml from gluon and parse it into TrackMetadata'
 
         # GLUON XML CONVENIENCE METHODS AND STUFF
@@ -337,7 +337,7 @@ class DMAResolver(ResolverBase):
 
         self.tree = ET.parse(xmlsource)
         obj = self.tree.find('.//'+glns('object'))
-        md = TrackMetadata()
+        md = TrackMetadata(filename=filename, musiclibrary='DMA')
         md.identifier = obj.find('.//'+glns('identifier')).text
         md.title = obj.find('.//'+glns('title')).text
         md.albumname = obj.find('.//'+glns('titleAlternative')).text

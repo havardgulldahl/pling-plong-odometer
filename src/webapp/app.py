@@ -54,7 +54,7 @@ def is_resolvable(audioname):
 @swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
-    audioname = request.match_info.get('audioname', None)
+    audioname = request.match_info.get('audioname', None) # match path string, see the respective route
     # find resolver
     resolver = findResolver(audioname)
     # run resolver
