@@ -990,7 +990,7 @@ class ExtremeMusicResolver(ResolverBase):
         if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
             self.session.logincookie = await self.get_session_cookie()
         # get internal music id
-        musicid = self.musicid(filename))
+        musicid = self.musicid(filename)
         exid = await get_internal_musicid(musicid)
         # look up internal music id to get metadata
         metadata  = await get_metadata(exid, musicid)
