@@ -19,7 +19,6 @@ import html.parser
 
 import aiohttp
 
-import PyQt5.QtCore as Core
 import xml.etree.ElementTree as ET
 
 import appdirs 
