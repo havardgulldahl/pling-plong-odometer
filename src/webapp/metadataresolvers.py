@@ -20,6 +20,7 @@ import html.parser
 import aiohttp
 
 import xml.etree.ElementTree as ET
+import lxml.html
 
 import appdirs 
 
@@ -798,17 +799,55 @@ class UprightmusicResolver(ResolverBase):
 
     @staticmethod
     def musicid(filename):
-        """Returns musicid from filename.
+        """Returns filename, since that is the closest thing we get to an offline, external musicid.
 
-        _UPRIGHT_EDS_016_006_Downplay_(Main).WAV -> 6288627e-bae8-49c8-9f3c-f6ed024eb698
+        Upright Music keeps their own, internal guid based unique keys for each track. So for this service, 
+        you need to do call self.get_guid(filename)  to get the internal id.
+
+        _UPRIGHT_EDS_016_006_Downplay_(Main).WAV ---> 6288627e-bae8-49c8-9f3c-f6ed024eb698
+        _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV ---> 
 
         """
-        rex = re.compile(r'^_UPRIGHT_([A-Z]+_\d+_\d+)_.*') # _<label>_<albumid>_<trackno>__
-        g = rex.search(filename)
-        try:
-            return g.group(1)
-        except AttributeError: #no match
-            return None
+        return filename
+
+    async def get_guid(self, filename):
+        'Search for filename on website and hope we get the unique guid back'
+        url = 'https://search.upright-music.com/search?phrase[0]={filename}'
+
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        async with self.session.get(url.format(filename=filename)) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.text()
+            logging.info('got data: %r', data)
+
+            # check to see if we have something
+            html = lxml.html.fromstring(data)
+
+            searchcount = '//div[@class="search-results-count"]'
+            searchcount = 'search-results-count'
+            countnode = html.find_class(searchcount)[0]
+            logging.debug('lxml result: %r', countnode)
+
+            if not countnode.text_content() == 'Showing track 1 to 1 of 1 tracks':
+                # no luck
+                return False
+
+            # get the first row of table[class='tracks'] 
+            # alternatively
+            # //*[@id="jp_playlist_1_item_0"]/td[1]
+            # this is what it looks like:
+            #
+            #<td class="icon playable playable-processed" dur="141662" 
+            # fid="e5d3b215-3810-4cf9-9e89-7cc3218b2cc7" 
+            # tid="6288627e-bae8-49c8-9f3c-f6ed024eb698"></td>
+            #
+            # where tid = internal track id
+            itemnode = html.get_element_by_id('jp_playlist_1_item_0').find('td') # get first td
+            logging.debug('lxml result: %r', itemnode)
+            return itemnode.get('tid', default=None)
+
 
     async def resolve(self, filename, fromcache=True):
         self.filename = filename
@@ -816,19 +855,45 @@ class UprightmusicResolver(ResolverBase):
             md = self.fromcache()
             if md is not None:
                 return
+        internal_guid = await self.get_guid(filename)
+        logging.debug('got internal guid: %r', internal_guid)
         if self.session is None:
             self.session = aiohttp.ClientSession()
-        async with self.session.get(self.urlbase.format(musicid=_musicid)) as resp:
+        async with self.session.get(self.urlbase.format(trackid=internal_guid)) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
             data = await resp.json()
             logging.info('got data: %r', data)
-            composers = [ data.get('shares', []) ]
+            trackdata = data['track']
+            composers = [ s['stakeholder']['name'] for s in trackdata.get('shares', []) ]
 
-        #self.worker = lookupWorkers.UprightmusicLookupWorker()
-        # check login cookie, without it we get nothing from the service
-        if self.logincookie is None:
-            return
+            rex = re.compile(r'^_UPRIGHT_([A-Z]+_\d+_\d+)_.*') # _<label>_<albumid>_<trackno>__
+            g = rex.search(filename)
+            try:
+                recordno = g.group(1)
+            except AttributeError: #no match
+                recordno = None
+            metadata = TrackMetadata(filename=filename,
+                    musiclibrary=self.name,
+                    title=trackdata.get('title', None),
+                    # length=-1,
+                    composer=", ".join(composers),
+                    artist=None,
+                    year=-1,
+                    recordnumber=recordno,
+                    albumname=trackdata['album']['title'],
+                    copyright='Upright Music',
+                    # lcnumber=None,
+                    # isrc=None,
+                    # ean=None,
+                    # catalogue=None,
+                    label=trackdata['album']['library']['name'],
+                    # lyricist=None,
+                    identifier='Upright#%s' % trackdata.get('id', -1),
+                    )
+            metadata.productionmusic = True
+            return metadata
+
 
 class ExtremeMusicResolver(ResolverBase):
     prefixes = [ ]
