@@ -805,7 +805,7 @@ class UprightmusicResolver(ResolverBase):
         you need to do call self.get_guid(filename)  to get the internal id.
 
         _UPRIGHT_EDS_016_006_Downplay_(Main).WAV ---> 6288627e-bae8-49c8-9f3c-f6ed024eb698
-        _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV ---> 
+        _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV ---> 4ceb1f37-8ecc-42e7-a4d8-79ba4336715a 
 
         """
         return filename
@@ -820,15 +820,14 @@ class UprightmusicResolver(ResolverBase):
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
             data = await resp.text()
-            logging.info('got data: %r', data)
+            #logging.info('got data: %r', data)
 
             # check to see if we have something
             html = lxml.html.fromstring(data)
 
-            searchcount = '//div[@class="search-results-count"]'
             searchcount = 'search-results-count'
             countnode = html.find_class(searchcount)[0]
-            logging.debug('lxml result: %r', countnode)
+            #logging.debug('lxml result: %r', countnode)
 
             if not countnode.text_content() == 'Showing track 1 to 1 of 1 tracks':
                 # no luck
@@ -845,7 +844,7 @@ class UprightmusicResolver(ResolverBase):
             #
             # where tid = internal track id
             itemnode = html.get_element_by_id('jp_playlist_1_item_0').find('td') # get first td
-            logging.debug('lxml result: %r', itemnode)
+            #logging.debug('lxml result: %r', itemnode)
             return itemnode.get('tid', default=None)
 
 
@@ -863,10 +862,11 @@ class UprightmusicResolver(ResolverBase):
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
             data = await resp.json()
-            logging.info('got data: %r', data)
+            #logging.info('got data: %r', data)
             trackdata = data['track']
             composers = [ s['stakeholder']['name'] for s in trackdata.get('shares', []) ]
 
+            # try to get a nicely looking recordnumber
             rex = re.compile(r'^_UPRIGHT_([A-Z]+_\d+_\d+)_.*') # _<label>_<albumid>_<trackno>__
             g = rex.search(filename)
             try:
@@ -893,7 +893,6 @@ class UprightmusicResolver(ResolverBase):
                     )
             metadata.productionmusic = True
             return metadata
-
 
 class ExtremeMusicResolver(ResolverBase):
     prefixes = [ ]
