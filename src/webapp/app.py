@@ -19,8 +19,7 @@ from asyncio import coroutine
 
 from aiohttp import web
 
-from webargs.aiohttpparser import parser as webargsparser
-from webargs import fields as webfields
+from envparse import env
 
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop)
@@ -57,6 +56,9 @@ async def handle_resolve(request):
     audioname = request.match_info.get('audioname', None) # match path string, see the respective route
     # find resolver
     resolver = findResolver(audioname)
+    # add passwords for services that need it for lookup to succeed
+    if resolver.name == 'ApolloMusic':
+        resolver.setlogin(**app.apollologin)
     # run resolver
     app.logger.info("resolve audioname {!r} with resolver {!r}".format(audioname, resolver))
     metadata = await resolver.resolve(audioname)
@@ -150,6 +152,11 @@ setup_swagger(app,
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
+    try:
+        env.read_envfile('_passwords.txt')
+    except Exception as e:
+        print(e)
+    app.apollologin = env.dict('APOLLOLOGIN')
     # start server
     web.run_app(
         app,

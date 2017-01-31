@@ -58,7 +58,6 @@ def getmusicid(filename):
     return res.musicid(filename)
 
 class ResolverBase:
-
     prefixes = [] # a list of file prefixes that this resolver recognizes
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     labelmap = [] # a list of labels that this music service carries
@@ -103,18 +102,11 @@ class ResolverBase:
             logging.debug('INTERNET got us %r', response)
             return await response.text()
 
-    def progress(self, i):
-        pass
-
     def url(self, filename): # return url from filename
         _id = self.musicid(filename)
         if _id is None:
             return False
         return self.urlbase % _id
-
-    def parse(self):
-        # reimplement this to emit a signal with a TrackMetadata object when found
-        pass
 
     @staticmethod
     def musicid(filename):
@@ -143,7 +135,7 @@ class ResolverBase:
         except IOError: #file doesn't exist -> not cached
             return None
         try:
-            metadata =  pickle.loads(loc.read())
+            metadata = pickle.loads(loc.read())
             loc.close()
         except Exception as e:
             # something went wrong, cache invalid
@@ -165,7 +157,6 @@ class ResolverBase:
         ourdir = appdirs.user_cache_dir('odometer', 'no.nrk.odometer')
         if not os.path.exists(ourdir):
             os.makedirs(ourdir)
-               #return os.path.join(ourdir, self.filename)
         try:
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
         except UnicodeEncodeError:
@@ -173,17 +164,7 @@ class ResolverBase:
 
     def cleanup(self, filename, *args):
         "Remove objects to prevent hanging threads"
-        return True
-        try:
-            if hasattr(self, 'doc'):
-                self.doc.deleteLater()
-        except Exception as e:
-            logging.warning("cleanup failed: %r", e)
-            pass
-
-    def setlogincookie(self, cookie):
-        "Add login cookie to service. Only applicable for some services"
-        self.logincookie = cookie
+        pass
 
     def getlabel(self, hint):
         "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
@@ -540,6 +521,11 @@ class ApollomusicResolver(ResolverBase):
     urlbase = 'http://www.findthetune.com/action/search_tracks_action/' # HTTP POST interface, returns json
     labelmap = { } # TODO: get list of labels
 
+    def setlogin(self, username, password):
+        'this service only accepts lookups from authenticated sessions, so we need to log in'
+        self.username = username
+        self.password = password
+
     @staticmethod
     def musicid(filename):
         """Returns musicid from filename.
@@ -554,6 +540,25 @@ class ApollomusicResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
+    async def get_login_cookie(self):
+        'Login to apollo to get login cookie. returns string'
+        url = 'http://www.findthetune.com/online/login/ajax_authentication/'
+        postdata = {'user':self.username,
+                    'pass':self.password
+        }
+        async with self.session.post(url, data=postdata) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            logging.info('got cookies: %r', resp.cookies)
+            if data.get('success', None) == 1:
+                return resp.cookies
+            else:
+                logging.error('Apollo login failed: %s', result.get('message', 'No fail message provided'))
+                return None
+        
+
     async def resolve(self, filename, fromcache=True):
         self.filename = filename
         _musicid = self.musicid(filename)
@@ -561,37 +566,38 @@ class ApollomusicResolver(ResolverBase):
             md = self.fromcache()
             if md is not None:
                 return md
+        # login to apollo
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
+            self.session.logincookie = await self.get_login_cookie()
         #"do an http post request to apollomusic.dk"
         _lbl, _albumid, _trackno = _musicid.split('_')
         postdata = {'label_fk':_lbl,
-                                        'album_num':_albumid,
-                                        # 'track_num':_trackno,
-                                        'type_query':'tracks',
-                                        'sound_type':'0',
-                                        'query':'',
-                                        'genre':'',
-                                        'min_length':'00:00:00',
-                                        'max_length':'99:99:99',
-                                        'composer':'',
-                                        'track_num':'',
-                                        'cur_page':'1',
-                                        'per_page':'100',
-                                        'offset':'0',
-                                        'limit':'100',
-                                        }
+                    'album_num':_albumid,
+                    'track_num':_trackno,
+                    'type_query':'tracks',
+                    'sound_type':'0',
+                    'query':'',
+                    'genre':'',
+                    'min_length':'00:00:00',
+                    'max_length':'99:99:99',
+                    'composer':'',
+                    'track_num':'',
+                    'cur_page':'1',
+                    'per_page':'100',
+                    'offset':'0',
+                    'limit':'100',
+                    }
         # logging.debug('postdata: %s', postdata)
-        headers = {'Cookie':logincookie}
+        headers = {'Cookie':self.session.logincookie}
         endpoint = 'http://www.findthetune.com/action/search_albums_action/'
-        if self.session is None:
-            self.session = aiohttp.ClientSession()
-        async with self.session.get(endpoint, params=postdata, headers=headers) as resp:
+        async with self.session.post(endpoint, data=postdata, headers=headers) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
             data = await resp.json()
             logging.info('got data: %r', data)
-
             albumdata = data.pop()        # of 1 albumdict
-
             trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
             del(albumdata['tracks'])
             try: _yr = int(trackdata.get('recorded', -1), 10)
