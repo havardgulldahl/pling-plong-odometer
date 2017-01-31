@@ -80,3 +80,7 @@ src/metadata/*.mp3
 
 
 .python-version
+
+# deploy configuration
+##
+_passwords.txt
