@@ -522,7 +522,7 @@ class ApollomusicResolver(ResolverBase):
     labelmap = { } # TODO: get list of labels
 
     def setlogin(self, username, password):
-        'this service only accepts lookups from authenticated sessions, so we need to log in'
+        'set username and password for .get_login_cookie()'
         self.username = username
         self.password = password
 
@@ -539,6 +539,15 @@ class ApollomusicResolver(ResolverBase):
             return g.group(1)
         except AttributeError: #no match
             return None
+
+    async def get_session_cookie(self):
+        'Ping Apoollo Music webserver to get a valid session cookie'
+        url = 'http://www.findthetune.com/guests/'
+        async with self.session.get(url) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            logging.info('got cookies: %r', resp.cookies)
+            return resp.cookies
 
     async def get_login_cookie(self):
         'Login to apollo to get login cookie. returns string'
@@ -570,7 +579,7 @@ class ApollomusicResolver(ResolverBase):
         if self.session is None:
             self.session = aiohttp.ClientSession()
         if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
-            self.session.logincookie = await self.get_login_cookie()
+            self.session.logincookie = await self.get_session_cookie()
         #"do an http post request to apollomusic.dk"
         _lbl, _albumid, _trackno = _musicid.split('_')
         postdata = {'label_fk':_lbl,

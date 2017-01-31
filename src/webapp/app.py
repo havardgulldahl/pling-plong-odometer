@@ -19,7 +19,7 @@ from asyncio import coroutine
 
 from aiohttp import web
 
-from envparse import env
+from envparse import env, ConfigurationError
 
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop)
@@ -57,7 +57,7 @@ async def handle_resolve(request):
     # find resolver
     resolver = findResolver(audioname)
     # add passwords for services that need it for lookup to succeed
-    if resolver.name == 'ApolloMusic':
+    if resolver.name == 'ApolloMusic' and app.apollologin is not None:
         resolver.setlogin(**app.apollologin)
     # run resolver
     app.logger.info("resolve audioname {!r} with resolver {!r}".format(audioname, resolver))
@@ -156,7 +156,7 @@ if __name__ == '__main__':
         env.read_envfile('_passwords.txt')
     except Exception as e:
         print(e)
-    app.apollologin = env.dict('APOLLOLOGIN')
+    app.apollologin = env.dict('APOLLOLOGIN', default=None)
     # start server
     web.run_app(
         app,
