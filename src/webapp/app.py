@@ -57,8 +57,6 @@ async def handle_resolve(request):
     # find resolver
     resolver = findResolver(audioname)
     # add passwords for services that need it for lookup to succeed
-    if resolver.name == 'ApolloMusic' and app.apollologin is not None:
-        resolver.setlogin(**app.apollologin)
     # run resolver
     app.logger.info("resolve audioname {!r} with resolver {!r}".format(audioname, resolver))
     metadata = await resolver.resolve(audioname)
