@@ -156,7 +156,6 @@ if __name__ == '__main__':
         env.read_envfile('_passwords.txt')
     except Exception as e:
         print(e)
-    app.apollologin = env.dict('APOLLOLOGIN', default=None)
     # start server
     web.run_app(
         app,

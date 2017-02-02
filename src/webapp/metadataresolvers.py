@@ -540,16 +540,6 @@ class ApollomusicResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    async def get_session_cookie(self):
-        'Ping Apoollo Music webserver to get a valid session cookie'
-        url = 'http://www.findthetune.com/guests/'
-        async with self.session.get(url) as resp:
-            logging.debug('hitting endpoint url: %r', resp.url)
-            resp.raise_for_status() # bomb on errors
-            logging.info('got cookies: %r', resp.cookies)
-            #logging.debug('got text %s', await resp.text())
-            return resp.cookies
-
     async def get_login_cookie(self):
         'Login to apollo to get login cookie. returns string'
         url = 'http://www.findthetune.com/online/login/ajax_authentication/'
@@ -581,7 +571,7 @@ class ApollomusicResolver(ResolverBase):
             self.session = aiohttp.ClientSession()
         #if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
         #    self.session.logincookie = await self.get_login_cookie()
-        #"do an http post request to apollomusic.dk"
+        #get details from filename, look up with http get 
         _lbl, _albumid, _trackno = _musicid.split('_')
         params = {
             'label': _lbl,
@@ -589,29 +579,8 @@ class ApollomusicResolver(ResolverBase):
             'track': _trackno
         }
         endpoint = 'http://www.findthetune.com/guests/search/label={label}&album={album}&track={track}'.format(**params)
-        postdata = {'label_fk':_lbl,
-                    'album_num':_albumid,
-                    'track_num':_trackno,
-                    'type_query':'tracks',
-                    'sound_type':'0',
-                    'query':'',
-                    'genre':'',
-                    'min_length':'00:00:00',
-                    'max_length':'99:99:99',
-                    'composer':'',
-                    'track_num':'',
-                    'cur_page':'1',
-                    'per_page':'100',
-                    'offset':'0',
-                    'limit':'100',
-                    }
-        # logging.debug('postdata: %s', postdata)
-        #headers = {'Cookie':'PHPSESSID=%s' %(self.session.logincookie.get('PHPSESSID').value)}
-
-        #logging.debug('apolo headers: %s', headers)
-        #endpoint = 'http://www.findthetune.com/action/search_albums_action/'
-        #async with self.session.post(endpoint, data=postdata, headers=headers) as resp:
         def get_sec(time_str):
+            'helper method to get seconds from a time string, e.g. "01:04" -> 64'
             try:
                 m, s = time_str.split(':')
                 return int(m) * 60 + int(s)
@@ -622,12 +591,8 @@ class ApollomusicResolver(ResolverBase):
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
             data = await resp.json()
-            #data = await resp.text()
             logging.info('got data: %r', data)
-            #albumdata = data.pop()        # of 1 albumdict
-            #trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
             trackdata = data['tracks'][0]
-            #del(albumdata['tracks'])
             try: _yr = int(trackdata.get('recorded', -1), 10)
             except:  _yr = -1
             metadata = TrackMetadata(filename=self.filename,
