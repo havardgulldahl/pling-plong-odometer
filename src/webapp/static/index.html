@@ -1,0 +1,119 @@
+<html>
+<head><title>Pling Plong Odometer Online</title>
+
+<script type="text/javascript">
+
+
+function main() {
+    var form = document.getElementById('file-form');
+    var fileSelect = document.getElementById('file-select');
+    var uploadButton = document.getElementById('upload-button');
+
+
+    form.onsubmit = function(event) {
+        event.preventDefault();
+
+        // Update button text.
+        uploadButton.innerHTML = 'Uploading...';
+
+        // The rest of the code will go here...
+        // Get the selected files from the input.
+        var files = fileSelect.files;
+        // Create a new FormData object.
+        var formData = new FormData();
+        // Loop through each of the selected files.
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+
+            // Add the file to the request.
+            formData.append('xmeml', file, file.name);
+        }
+        submit(formData)
+        return false;
+    }
+}
+
+function submit(formData) {
+    // Set up the request.
+    var xhr = new XMLHttpRequest();
+    // Open the connection.
+    xhr.open('POST', '/analyze', true);
+
+    var uploadButton = document.getElementById('upload-button');
+    // Set up a handler for when the request finishes.
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            // File(s) uploaded.
+            uploadButton.innerHTML = 'Upload';
+            var audible = JSON.parse(xhr.response);
+            return formatAudible(audible["audible"]);
+        } else {
+            alert('An error occurred!');
+        }
+    };
+
+    // Send the Data.
+    xhr.send(formData);
+}
+
+function formatAudible(audible) {
+    var filelist = document.getElementById('files-list');
+    for(var i=0; i<audible.length; i++) {
+        console.log(audible[i]);
+        var c = audible[i].clipname;
+        var r = audible[i].resolve;
+        filelist.innerHTML += "<li>"+c+"<button onclick=resolve('"+r+"')>--8</button><span id='o-"+window.btoa(r)+"'></span></li>";
+
+    }
+}
+
+function resolve(url) {
+    // Set up the request.
+    var xhr = new XMLHttpRequest();
+    // Open the connection.
+    xhr.open('GET', url, true);
+
+    var output = document.getElementById('o-'+window.btoa(url));
+    // Set up a handler for when the request finishes.
+    console.log('output element %o', output);
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            // File(s) uploaded.
+            var metadata = JSON.parse(xhr.response);
+            console.log('got metadata %o', metadata);
+            output.innerText = metadata['metadata'].title;
+        } else {
+            alert('An error occurred!');
+        }
+    };
+
+    // Send 
+    xhr.send();
+}
+
+
+
+
+</script>
+
+</head>
+<body>
+
+    <h1>Pling Plong Odometer Online</h1>
+
+    <form id="file-form" enctype="multipart/form-data" action="/analyze" method="POST">
+    <input type="file" id="file-select" name="xmeml" />
+    <button type="submit" id="upload-button">Upload</button>
+    </form>
+
+    <ul id=files-list>
+
+    </ul>
+
+    <a href="/docs">JSON Rest API docs</a>
+<script type="text/javascript">
+main()
+</script>
+</body>
+
+</html>

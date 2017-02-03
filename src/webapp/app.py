@@ -129,9 +129,9 @@ async def handle_supported_resolvers(request):
 app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
 
 
-@coroutine
 def index(request):
-    return web.HTTPFound('/doc') # forward to docs
+    with open('static/index.html') as f:
+        return web.Response(text=f.read(), content_type='text/html')
 
 app.router.add_get('/', index)
 
