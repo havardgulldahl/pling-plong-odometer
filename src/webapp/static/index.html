@@ -8,6 +8,7 @@ function main() {
     var form = document.getElementById('file-form');
     var fileSelect = document.getElementById('file-select');
     var uploadButton = document.getElementById('upload-button');
+    var fileList = document.getElementById('files-list');
 
 
     form.onsubmit = function(event) {
@@ -15,6 +16,11 @@ function main() {
 
         // Update button text.
         uploadButton.innerHTML = 'Uploading...';
+
+        // empty files table
+        while(fileList.hasChildNodes()) {
+            fileList.removeChild(fileList.firstChild);
+        }
 
         // The rest of the code will go here...
         // Get the selected files from the input.
@@ -59,11 +65,11 @@ function submit(formData) {
 function formatAudible(audible) {
     var filelist = document.getElementById('files-list');
     for(var i=0; i<audible.length; i++) {
-        console.log(audible[i]);
+        var tr = document.createElement('tr');
         var c = audible[i].clipname;
         var r = audible[i].resolve;
-        filelist.innerHTML += "<li>"+c+"<button onclick=resolve('"+r+"')>--8</button><span id='o-"+window.btoa(r)+"'></span></li>";
-
+        tr.innerHTML = "<td>"+c+"<td><button onclick=resolve('"+r+"')>&rarr;</button><td id='o-"+window.btoa(r)+"'>";
+        filelist.appendChild(tr);
     }
 }
 
@@ -75,13 +81,13 @@ function resolve(url) {
 
     var output = document.getElementById('o-'+window.btoa(url));
     // Set up a handler for when the request finishes.
-    console.log('output element %o', output);
+    output.innerText = "Getting metadata..."
     xhr.onload = function () {
         if (xhr.status === 200) {
             // File(s) uploaded.
             var metadata = JSON.parse(xhr.response);
             console.log('got metadata %o', metadata);
-            output.innerText = metadata['metadata'].title;
+            output.innerHTML = "<b>"+metadata['metadata'].title + "</b>";
         } else {
             alert('An error occurred!');
         }
@@ -106,9 +112,22 @@ function resolve(url) {
     <button type="submit" id="upload-button">Upload</button>
     </form>
 
-    <ul id=files-list>
+    <table style="width: 80%">
+        <thead>
+            <th>name</th>
+            <th>&reg;</th>
+            <th>metadata</th>
+        </thead>
+        <tbody id=files-list>
 
-    </ul>
+
+
+        </tbody>
+
+
+        
+
+    </table>
 
     <a href="/docs">JSON Rest API docs</a>
 <script type="text/javascript">
