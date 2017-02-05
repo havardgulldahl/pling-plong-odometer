@@ -82,6 +82,14 @@ async def handle_analyze_get(request):
 
 app.router.add_get('/analyze', handle_analyze_get)
 
+class FakeFileUpload:
+    
+    filename = 'static/test_all_services.xml'
+
+    def __init__(self):
+        self.file = open(self.filename, mode='rb')
+
+
 @swagger_path("handle_analyze_post.yaml")
 async def handle_analyze_post(request):
     'POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.'
@@ -93,7 +101,11 @@ async def handle_analyze_post(request):
     try:
         xmeml = data['xmeml']
     except KeyError: # no file uploaded
-        raise web.HTTPBadRequest(reason='multipart/form-data file named <<xmeml>> is missing') # HTTP 400
+        if 'usetestfile' in data and data['usetestfile'] == '1':
+            # use our own, server side test file instead of a file upload
+            xmeml = FakeFileUpload()
+        else:
+            raise web.HTTPBadRequest(reason='multipart/form-data file named <<xmeml>> is missing') # HTTP 400
     # .filename contains the name of the file in string format.
     if not os.path.splitext(xmeml.filename)[1].lower() == '.xml':
         raise web.HTTPBadRequest(reason='Invalid file extension, expecting .xml') # HTTP 400

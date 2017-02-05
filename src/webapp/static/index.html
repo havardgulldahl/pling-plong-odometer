@@ -8,8 +8,16 @@ function main() {
     var form = document.getElementById('file-form');
     var fileSelect = document.getElementById('file-select');
     var uploadButton = document.getElementById('upload-button');
+    var uploadTestfileButton = document.getElementById('upload-testfile-button');
     var fileList = document.getElementById('files-list');
 
+    uploadTestfileButton.onclick = function(event) {
+        event.preventDefault();
+        var formData = new FormData();
+        formData.append('usetestfile', '1');
+        submit(formData);
+        return false;
+    }
 
     form.onsubmit = function(event) {
         event.preventDefault();
@@ -108,8 +116,10 @@ function resolve(url) {
     <h1>Pling Plong Odometer Online</h1>
 
     <form id="file-form" enctype="multipart/form-data" action="/analyze" method="POST">
-    <input type="file" id="file-select" name="xmeml" />
+    <input type="file" id="file-select" name="xmeml">
+    <input type="hidden" name="usetestfile" value="0">
     <button type="submit" id="upload-button">Upload</button>
+    <button type="submit" id="upload-testfile-button">Use testfile</button>
     </form>
 
     <table style="width: 80%">
