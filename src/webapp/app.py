@@ -26,15 +26,32 @@ app = web.Application(loop=loop)
 
 APIVERSION = '0.1'
 
-class resolvableClip:
-    def __init__(self, filename, audible_length, service):
+class AudioClip:
+    def __init__(self, filename):
         self.filename = filename
-        self.audible_length = audible_length
-        self.service = service
+        self.service = None  # set in is_resolvable
+
+    def set_ranges(self, ranges):
+        self.ranges = ranges
+
+    def is_audible(self):
+        return len(self.ranges) > 0
+
+    def is_resolvable(self):
+        'Look at the filename and say if it is resolvable from one or the other service. Returns bool'
+        resolver =  findResolver(self.filename) 
+        if resolver == False:
+            return False
+        self.service = resolver.name
+        return True
+
     def to_dict(self):
         return {'clipname': self.filename, 
-                'total_length': self.audible_length, 
-                'resolve':'/resolve/{}'.format(quote(self.filename))
+                'audible_length': len(self.ranges),
+                'resolvable': self.is_resolvable(),
+                'music_service': self.service,
+                'resolve':'/resolve/{}'.format(quote(self.filename)),
+                'add_missing':'/add_missing/{}'.format(quote(self.filename)),
                 }
 
 async def parse_xmeml(xmemlfile):
@@ -45,10 +62,6 @@ async def parse_xmeml(xmemlfile):
     audioclips, audiofiles = xmeml.audibleranges()
     app.logger.info('Analyzing the audible parts: %r, files: %r', audioclips, audiofiles)
     return (audioclips, audiofiles) 
-
-def is_resolvable(audioname):
-    'Look at the filename and say if it is resolvable from one or the other service. Returns bool'
-    return findResolver(audioname) != False
 
 @swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
@@ -83,12 +96,9 @@ async def handle_analyze_get(request):
 app.router.add_get('/analyze', handle_analyze_get)
 
 class FakeFileUpload:
-    
     filename = 'static/test_all_services.xml'
-
     def __init__(self):
         self.file = open(self.filename, mode='rb')
-
 
 @swagger_path("handle_analyze_post.yaml")
 async def handle_analyze_post(request):
@@ -118,13 +128,13 @@ async def handle_analyze_post(request):
         audioclips, audiofiles = await parse_xmeml(xmemlfile.name)
         _r = []
         for clipname, ranges in audioclips.items():
-            if not is_resolvable(clipname):
-                continue
-            _r.append(resolvableClip(clipname, len(ranges), None))
+            ac = AudioClip(clipname)
+            ac.set_ranges(ranges)
+            _r.append(ac)
         if len(_r) == 0:
             raise web.HTTPBadRequest(reason='No audible clips found. Use /report_error to report an error.') # HTTP 400
         return web.json_response(data={
-            'audible': [
+            'audioclips': [
                 c.to_dict() for c in _r
             ]
         })

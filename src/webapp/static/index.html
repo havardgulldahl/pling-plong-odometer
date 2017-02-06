@@ -59,8 +59,9 @@ function submit(formData) {
         if (xhr.status === 200) {
             // File(s) uploaded.
             uploadButton.innerHTML = 'Upload';
-            var audible = JSON.parse(xhr.response);
-            return formatAudible(audible["audible"]);
+            var audio = JSON.parse(xhr.response);
+            console.log('got audio response: %o', audio);
+            return formatAudible(audio["audioclips"]);
         } else {
             alert('An error occurred!');
         }
@@ -74,9 +75,13 @@ function formatAudible(audible) {
     var filelist = document.getElementById('files-list');
     for(var i=0; i<audible.length; i++) {
         var tr = document.createElement('tr');
-        var c = audible[i].clipname;
-        var r = audible[i].resolve;
-        tr.innerHTML = "<td>"+c+"<td><button onclick=resolve('"+r+"')>&rarr;</button><td id='o-"+window.btoa(r)+"'>";
+        var elm = audible[i];
+        var c = elm.clipname;
+        var r = elm.resolve;
+        var secs = elm.audible_length;
+        var service = elm.music_service || "<i>Unknown</i>";
+        var resolvable = elm.resolvable ? "&rarr;" : "&times;"
+        tr.innerHTML = "<td>"+c+"<td>"+secs+"<td>"+service+"<td><button onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
         filelist.appendChild(tr);
     }
 }
@@ -114,6 +119,9 @@ function resolve(url) {
 <body>
 
     <h1>Pling Plong Odometer Online</h1>
+    <div style="font-size: smaller">
+        <a href="/docs">JSON Rest API docs</a>
+    </div>
 
     <form id="file-form" enctype="multipart/form-data" action="/analyze" method="POST">
     <input type="file" id="file-select" name="xmeml">
@@ -125,21 +133,17 @@ function resolve(url) {
     <table style="width: 80%">
         <thead>
             <th>name</th>
+            <th>audible length</th>
             <th>&reg;</th>
+            <th>resolvable?</th>
             <th>metadata</th>
         </thead>
         <tbody id=files-list>
 
-
-
         </tbody>
-
-
-        
 
     </table>
 
-    <a href="/docs">JSON Rest API docs</a>
 <script type="text/javascript">
 main()
 </script>
