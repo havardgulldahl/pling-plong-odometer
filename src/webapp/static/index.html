@@ -3,6 +3,12 @@
 
 <script type="text/javascript">
 
+function secs2timestring(duration) {
+    // takes an integer of seconds, responds with a "mm:ss" timestring
+    var mins = parseInt(duration / 60);
+    var secs = duration % 60;
+    return mins.toString() + ":" + secs.toString();
+}
 
 function main() {
     var form = document.getElementById('file-form');
@@ -78,7 +84,7 @@ function formatAudible(audible) {
         var elm = audible[i];
         var c = elm.clipname;
         var r = elm.resolve;
-        var secs = elm.audible_length;
+        var secs = secs2timestring(elm.audible_length);
         var service = elm.music_service || "<i>Unknown</i>";
         var resolvable = elm.resolvable ? "&rarr;" : "&times;"
         tr.innerHTML = "<td>"+c+"<td>"+secs+"<td>"+service+"<td><button onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
@@ -111,7 +117,7 @@ function resolve(url) {
 
         } else {
             console.error("server returned %o -> %o", xhr.status, xhr.statusText);
-            output.innerHTML = '<b>An error occurred!</b> <i>'+xhr.statusText+'</i>';
+            output.innerHTML = '<i style="color:red">'+xhr.statusText+'</i>';
         }
     };
 
