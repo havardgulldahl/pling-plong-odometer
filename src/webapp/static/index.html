@@ -100,9 +100,18 @@ function resolve(url) {
             // File(s) uploaded.
             var metadata = JSON.parse(xhr.response);
             console.log('got metadata %o', metadata);
-            output.innerHTML = "<b>"+metadata['metadata'].title + "</b>";
+            var md = metadata['metadata'];
+            if(md.productionmusic === true) {
+                output.innerHTML = "<i>"+md.copyright+"</i> &reg; <b>"+md.label+"</b>";
+
+            } else {
+                output.innerHTML = "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year;
+                //s += u'%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s\r\n\r\n' % vars(r.metadata)
+            }
+
         } else {
-            alert('An error occurred!');
+            console.error("server returned %o -> %o", xhr.status, xhr.statusText);
+            output.innerHTML = '<b>An error occurred!</b> <i>'+xhr.statusText+'</i>';
         }
     };
 
