@@ -1,5 +1,5 @@
 tags:
-- status
+- support
 summary: Get a list of currently suppported resolvers and their file patterns
 description: Use this to check whwat music resolvers are active, and what their file names look like
 operationId: handle_supported_resovers
