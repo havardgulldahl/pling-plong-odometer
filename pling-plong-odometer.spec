@@ -27,10 +27,10 @@ exe = EXE(pyz,
           a.scripts,
           exclude_binaries=True,
           name='pling-plong-odometer',
-          debug=False,
+          debug=True,
           strip=False,
           upx=True,
-          console=False , icon='odometer.ico')
+          console=True, icon='odometer.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
