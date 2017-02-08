@@ -48,7 +48,7 @@ build_script:
   #- build-win.sh
   - "%PYTHON% buildpyqt.py"
   #- "%PYTHON% setup.py py2exe"
-  - "pyinstaller -y pling-plong-odometer.spec"
+  - "pyinstaller --path=C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin -y pling-plong-odometer.spec"
   - "%PYTHON% dist.py zip"
   - dir dist\
 

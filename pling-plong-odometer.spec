@@ -4,8 +4,14 @@ block_cipher = None
 
 import sys
 
+added_files = [
+               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Core.dll', '.'),
+               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Gui.dll', '.'),
+               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Widgets.dll', '.')
+              ]
+
 a = Analysis(['src/pling-plong-odometer.py'],
-             pathex=['c:\\python\\lib\\site-packages\\pyqt5\\qt\\bin', './src/gui', './'],
+             pathex=['c:\\python35\\lib\\site-packages\\pyqt5\\qt\\bin', './src/gui', './'],
              binaries=None,
              datas=None,
              hiddenimports=[],
@@ -21,10 +27,10 @@ exe = EXE(pyz,
           a.scripts,
           exclude_binaries=True,
           name='pling-plong-odometer',
-          debug=False,
+          debug=True,
           strip=False,
           upx=True,
-          console=False , icon='odometer.ico')
+          console=True, icon='odometer.ico')
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
