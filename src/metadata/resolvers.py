@@ -9,6 +9,7 @@ import logging
 import pickle
 import random
 import urllib
+import urllib.parse
 import urllib.request
 import time
 import datetime
@@ -126,7 +127,7 @@ class ResolverBase(Core.QObject):
         #time.sleep(random.random() * 4)
         self.trackResolved.emit(self.filename, md)
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    def newresolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
         self.fullpath = fullpath
         if fromcache:
@@ -150,10 +151,7 @@ class ResolverBase(Core.QObject):
         self.trackProgress.emit(self.filename, i)
 
     def url(self, filename): # return url from filename
-        _id = self.musicid(filename)
-        if _id is None:
-            return False
-        return self.urlbase % _id
+        return 'http://malxodometer01:8000/%s' % urllib.parse.quote(filename)
 
     def parse(self):
         # reimplement this to emit a signal with a TrackMetadata object when found
