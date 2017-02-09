@@ -98,6 +98,7 @@ class ApollomusicLookupWorker(LogThread):
         self.musicid = resolvers.ApollomusicResolver.musicid(filename)
         self.start()
 
+    def get_sec(self, time_str):
         'helper method to get seconds from a time string, e.g. "01:04" -> 64'
         try:
             m, s = time_str.split(':')
@@ -118,6 +119,7 @@ class ApollomusicLookupWorker(LogThread):
         metadata = TrackMetadata(filename=self.filename,
                  musiclibrary=resolvers.ApollomusicResolver.name,
                  title=trackdata.get('primary_title', None),
+                 length=self.get_sec(trackdata.get('duration', '')),
                  composer=trackdata.get('composer', None),
                  artist=trackdata.get('performer', None),
                  year=_yr,
