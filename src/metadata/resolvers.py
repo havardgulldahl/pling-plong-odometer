@@ -19,7 +19,7 @@ import html.parser
 
 import PyQt5.QtCore as Core
 import PyQt5.QtGui as Gui
-import PyQt5.QtWebEngine as Web
+import PyQt5.QtNetwork as Net
 
 
 from . import lookupWorkers
@@ -70,19 +70,13 @@ class webdoc(Core.QObject):
         super(webdoc, self).__init__(parent)
         self.filename = filename
         self.url = url
-        try:
-            self.page = Web.QWebPage(self)
-            self.frame = self.page.mainFrame()
-        except AttributeError: # qt4 /qt5 
-            self.page = Web.QWebEnginePage(self)
-            self.frame = self.page
-        self.settings = self.page.settings()
-        self.settings.setAttribute(Web.QWebSettings.JavascriptEnabled, False)
-        self.settings.setAttribute(Web.QWebSettings.AutoLoadImages, False)
+        self.manager = Net.QNetworkAccessManager()
 
     def load(self):
         #print "loading url: ", self.url
-        self.frame.load(Core.QUrl(self.url))
+        req = Net.QNetworkRequest(Core.QUrl(self.url))
+        self.response = self.manager.get(req)
+        return self.response
 
 
 class ResolverBase(Core.QObject):
@@ -142,21 +136,32 @@ class ResolverBase(Core.QObject):
             return False
         logging.debug('ResolverBase.resolve traversing the INTERNET: %s => %s', filename, url)
         self.doc = webdoc(self.filename, url, parent=None)
-        self.doc.frame.loadFinished.connect(self.parse)
-        self.doc.page.loadProgress.connect(self.progress)
-        self.doc.load()
+        self.doc.manager.finished.connect(self.parse)
+        response = self.doc.load()
+        response.downloadProgress.connect(self.progress)
         return True
 
-    def progress(self, i):
-        self.trackProgress.emit(self.filename, i)
+    def progress(self, received, total):
+        _progress = 100*received / total
+        self.trackProgress.emit(self.filename, _progress)
 
     def url(self, filename): # return url from filename
-        return 'http://malxodometer01:8000/%s' % urllib.parse.quote(filename)
+        return 'http://malxodometer01:8000/resolve/%s' % urllib.parse.quote(filename)
 
-    def parse(self):
-        # reimplement this to emit a signal with a TrackMetadata object when found
-        #self.trackResolved.emit(self.filename, md)
-        pass
+    def parse(self, response): # QNetworkReply
+        data = bytes(self.doc.response.readAll()).decode()
+        logging.debug('Got data from internet: %r', data)
+        statuscode = response.attribute(Net.QNetworkRequest.HttpStatusCodeAttribute)
+        if statuscode == 404:
+            self.trackFailed.emit(self.filename)
+            self.error.emit(self.filename, 'Not found')
+        try:
+            md = json.loads(data).get('metadata', None)
+            del(md['_retrieved'])
+            self.trackResolved.emit(self.filename, TrackMetadata(**md))
+        except json.decoder.JSONDecodeError:
+            self.trackFailed.emit(self.filename)
+            self.error.emit(self.filename, 'Not found')
 
     @staticmethod
     def musicid(filename):

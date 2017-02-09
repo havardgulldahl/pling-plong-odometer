@@ -23,6 +23,7 @@ class TrackMetadata(object):
                  label=None,
                  lyricist=None,
                  identifier=None,
+                 productionmusic=False,
                  ):
         self.filename = filename
         self.musiclibrary = musiclibrary
@@ -41,7 +42,7 @@ class TrackMetadata(object):
         self.label = label
         self.lyricist = lyricist
         self.identifier = identifier # system-specific identifier
-        self.productionmusic = False
+        self.productionmusic = productionmusic
         self._retrieved = time.mktime(time.localtime())
 
     def getmusicid(self):
