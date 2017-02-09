@@ -790,7 +790,7 @@ class Odometer(QMainWindow):
                 w.trackProgress.connect(self.showProgress)
                 w.trackFailed.connect(lambda x: self.showProgress(x, 100)) # dont leave progress bar dangling
                 w.error.connect(lambda f, e: self.setRowInfo(row=f, text=e, warning=True))
-                w.error.connect(lambda f, e: self.showerror(e))
+                w.error.connect(lambda s: self.logMessage(s, msgtype=Status.ERROR))
                 w.warning.connect(lambda s: self.logMessage(s, msgtype=Status.WARNING))
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files

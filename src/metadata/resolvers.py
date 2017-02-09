@@ -499,13 +499,7 @@ class ApollomusicResolver(ResolverBase):
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
         self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
-        # check login cookie, without it we get nothing from the service
-        if self.logincookie is None:
-            self.error.emit(self.filename, u"You need to log in to ApolloMusic before we can look something up")
-            self.trackFailed.emit(self.filename)
-            return
-
-        self.worker.load(filename, self.logincookie)
+        self.worker.load(filename)
 
 class UniPPMResolver(ResolverBase):
     prefixes = [ ]
