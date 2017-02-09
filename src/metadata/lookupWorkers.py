@@ -541,11 +541,11 @@ class ExtremeMusicLookupWorker(Core.QThread):
 
     def run(self):
         try:
-            trackdata = self.request(self.musicid, self.logincookie)
+            data = self.request(self.musicid, self.logincookie)
         except TypeError: # self.request will return None on login errors
-            trackdata = None
+            data = None
         # print trackdata
-        if trackdata is None:
+        if data is None:
             return
         self.progress.emit(75)
 
@@ -559,13 +559,15 @@ class ExtremeMusicLookupWorker(Core.QThread):
         version_duration = -1
         version_musicid = None
 
-        logging.debug('Got following trackdata from Extreme: %r', trackdata)
-        for version in trackdata['track_sounds']:
+        from pprint import pformat, pprint
+        logging.debug('Got following trackdata from Extreme: %s', pformat(data))
+        for version in data['track_sounds']:
             if self.musicid == version['track_sound_no']: # this is the one
                 version_title = '%s (%s)' % (version['title'], version['version_type'])
                 version_duration = version['duration']
 
 
+        trackdata = data['track']
         composers = ['%s (%s)' % (c['name'], c['society']) for c in trackdata['composers']]
         arrangers = ['%s' % (c['name'],) for c in trackdata['arrangers']]
 
@@ -577,7 +579,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
                  artist=None,
                  year=-1,
                  recordnumber=self.musicid,
-                 albumname=albumdata.get('album_title', None),
+                 albumname=trackdata.get('album_title', None),
                  copyright=', '.join([c['name'] for c in trackdata['collecting_publishers']]),
                  # lcnumber=None,
                  # isrc=None,
@@ -641,7 +643,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
             self.trackFailed.emit()
             self.error.emit('The Extreme Music catalogue does not seem to know anything about this music id: %s (internal music id: %s)' % (musicid, extrack_id))
             return None
-        return trackdata['track']
+        return trackdata
 
 
 
