@@ -158,6 +158,7 @@ class Odometer(QMainWindow):
             self.ui.errorButton.hide()
 
         self.ui.information.hide()
+        self.resize(Core.QSize(1200,1000))
         #self.metadataLoaded.connect(self.checkUsage)
         Core.QTimer.singleShot(5, self.updateAUXRepertoire)
 
@@ -1327,20 +1328,7 @@ def rungui(argv):
             #argv = argv[0:-1]
     except IndexError:
         pass
-    if sys.platform == 'win32':
-        # default win32 looks awful, make it pretty
-        # docs advise to do this before QApplication() is started
-        QApplication.setStyle("cleanlooks")
     app = QApplication(argv)
-    if sys.platform == 'win32':
-        def setfont(fontname):
-            app.setFont(Gui.QFont(fontname, 9))
-            return app.font().toString().split(',')[0] == fontname
-        # default win32 looks awful, make it pretty
-        logging.debug('current window font is %r', app.font().toString())
-        for z in ['Lucida Sans Unicode', 'Arial Unicode MS', 'Verdana']:
-            if setfont(z): break
-        logging.debug('new window font is %r', app.font().toString())
     if f is not None: o = Odometer(app, f)
     else: o = Odometer(app)
     o.run(app)
@@ -1348,4 +1336,3 @@ def rungui(argv):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     rungui(sys.argv)
-
