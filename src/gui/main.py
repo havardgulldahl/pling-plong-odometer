@@ -1164,11 +1164,9 @@ class Odometer(QMainWindow):
 
         def reportloaded(boolean):
             logging.debug("report loaded: %s" % boolean)
-            html = ui.webEngineView.page().mainFrame()
-            fn = html.findFirstElement('input[id="entry_0"]')
-            fn.setAttribute("value", filename)
-            text = html.findFirstElement("textarea")
-            text.setPlainText(str(vars(resolvedmetadata)))
+            page = ui.webEngineView.page()
+            page.runJavaScript("""document.getElementById('entry_0').value='%s'""" % filename)
+            page.runJavaScript("""document.querySelector('textarea').value='%s'""" % str(vars(resolvedmetadata)))
         ui.webEngineView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()
 
@@ -1205,7 +1203,7 @@ class Odometer(QMainWindow):
 
     def reportError(self):
         'Report program error to an online form'
-        _url = 'https://docs.google.com/a/lurtgjort.no/spreadsheet/viewform?formkey=dHFtZHFFMlkydmRPTnFNM2l3SHZFcFE6MQ'
+        _url = 'https://goo.gl/forms/vasvfQWR1o1MMetj1'
         GdocsDialog = QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(GdocsDialog)
@@ -1219,8 +1217,8 @@ class Odometer(QMainWindow):
         def reportloaded(boolean):
             logging.debug("reporterror loaded: %s", boolean)
             log = html.escape(''.join(self.log))
-            page.runJavaScript('''var x = document.getElementById('entry_1000005'); if (x) {x.value="%s"};''' % log)
-            page.runJavaScript("""document.querySelector('input[aria-label="Programversjon  "]').value='%s'""" % self.getVersion())
+            page.runJavaScript('''var x = document.querySelector('textarea[aria-label="Programlogg"]'); if (x) {x.value="%s"};''' % log)
+            page.runJavaScript("""document.querySelector('input[aria-label="Programversjon"]').value='%s'""" % self.getVersion())
         ui.webEngineView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()
 
