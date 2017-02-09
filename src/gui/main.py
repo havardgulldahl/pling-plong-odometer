@@ -16,6 +16,7 @@ import traceback
 import subprocess
 import hashlib
 import functools
+import html
 
 from enum import Enum
 from collections import defaultdict
@@ -1070,10 +1071,9 @@ class Odometer(QMainWindow):
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(apollomusicDialog)
         apollomusicDialog.setWindowTitle(self.tr('Apollo Music report'))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadProgress.connect(ui.progressBar.setValue)
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
-
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadProgress.connect(ui.progressBar.setValue)
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
         requestq = [ # a last in, first out queue of requests
                      # ('http://www.findthetune.com/online/#projects', None), # the last request: show project page
                      (None, '<html><body><h1>Tracks added to Apollo Music Project</h1><p>Please log on to findthetune.com and finish your report</p></body></html>'),
@@ -1093,19 +1093,19 @@ class Odometer(QMainWindow):
                 return # queue empty
             logging.debug("next url: %s, data:%s", _url, _data)
             if _url is None: # display _data, which is html
-                ui.webView.setHtml(_data)
+                ui.webEngineView.setHtml(_data)
                 return
 
             r = createRequest(_url)
 
             if _data is None: # do a http GET
-                ui.webView.load(r, QtNetwork.QNetworkAccessManager.GetOperation)
+                ui.webEngineView.load(r, QtNetwork.QNetworkAccessManager.GetOperation)
             else: # do a http POST
                 body = urllib.parse.urlencode(_data)
                 r.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, 'application/x-www-form-urlencoded')
-                ui.webView.load(r, QtNetwork.QNetworkAccessManager.PostOperation, body)
+                ui.webEngineView.load(r, QtNetwork.QNetworkAccessManager.PostOperation, body)
 
-        ui.webView.loadFinished.connect(next)
+        ui.webEngineView.loadFinished.connect(next)
         next()
         return apollomusicDialog.exec_()
 
@@ -1150,9 +1150,9 @@ class Odometer(QMainWindow):
         ui.setupUi(GdocsDialog)
         GdocsDialog.setWindowTitle(self.tr('Submit missing filename'))
         ui.buttonBox.hide()
-        ui.webView.load(Core.QUrl(_url))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        ui.webEngineView.load(Core.QUrl(_url))
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
         if resolvedmetadata is None:
             # take metadata from current row
             try:
@@ -1164,12 +1164,12 @@ class Odometer(QMainWindow):
 
         def reportloaded(boolean):
             logging.debug("report loaded: %s" % boolean)
-            html = ui.webView.page().mainFrame()
+            html = ui.webEngineView.page().mainFrame()
             fn = html.findFirstElement('input[id="entry_0"]')
             fn.setAttribute("value", filename)
             text = html.findFirstElement("textarea")
             text.setPlainText(str(vars(resolvedmetadata)))
-        ui.webView.loadFinished.connect(reportloaded)
+        ui.webEngineView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()
 
     def credits(self):
@@ -1211,17 +1211,17 @@ class Odometer(QMainWindow):
         ui.setupUi(GdocsDialog)
         ui.buttonBox.hide()
         GdocsDialog.setWindowTitle(self.tr('Report an error'))
-        ui.webView.load(Core.QUrl(_url))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        ui.webEngineView.load(Core.QUrl(_url))
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadProgress.connect(ui.progressBar.setValue)
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
+        page = ui.webEngineView.page()
         def reportloaded(boolean):
             logging.debug("reporterror loaded: %s", boolean)
-            html = ui.webView.page().mainFrame()
-            log = html.findFirstElement('textarea[aria-label="Programlogg Dette er loggen fra Odometer "]')
-            log.setPlainText(''.join(self.log))
-            log = html.findFirstElement('input[aria-label="Programversjon  "]')
-            log.setAttribute('value', self.getVersion())
-        ui.webView.loadFinished.connect(reportloaded)
+            log = html.escape(''.join(self.log))
+            page.runJavaScript('''var x = document.getElementById('entry_1000005'); if (x) {x.value="%s"};''' % log)
+            page.runJavaScript("""document.querySelector('input[aria-label="Programversjon  "]').value='%s'""" % self.getVersion())
+        ui.webEngineView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()
 
     def editDuration(self, row, col): # called when double clicked
