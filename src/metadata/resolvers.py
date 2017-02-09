@@ -608,6 +608,7 @@ class UniPPMResolver(ResolverBase):
                   'STFTA': 'Selectedtracks Unknown',
                   'SUN': 'Unknown',
                   'ULS':'Ultimate Latin Series ',
+                  'UPM': 'Universal filename prefix', ### standard file name prefix???? observed late 2016
                   'US':'Ultimate Series ',
                   'UTS':'Universal Trailer Series ',
                   'VL':'Velocity',
@@ -626,14 +627,24 @@ class UniPPMResolver(ResolverBase):
     def musicid(filename):
         """Returns musicid from filename.
 
+
+        # old format
         KOS_397_3_Exploit_Kalfayan_Sarkissian_710023.wav -> 710023
         BER_1216B_76_Silent_Movie_Theme_Mersch_433103.wav -> 433103
+        # new format, observed late 2016
+        UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
         """
-        rex = re.compile(r'^(%s)_\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
-            re.UNICODE) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
+        # first, try new format
+        rex = re.compile(r'^(UPM_)?(%s)\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+            re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
         g = rex.search(filename)
+        if g is None:
+            # try old format
+            rex = re.compile(r'^(%s)_\d{1,4}[A-Z]?_\d{1,4}_(\w+)_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+                re.UNICODE) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
+            g = rex.search(filename)
         try:
-            return g.group(2)
+            return g.group(3)
         except AttributeError: #no match
             return None
 
