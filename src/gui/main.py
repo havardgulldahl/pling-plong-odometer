@@ -28,7 +28,7 @@ import PyQt5.QtNetwork as QtNetwork
 import PyQt5.Qt as Qt
 import PyQt5.QtSvg as Svg
 from PyQt5.QtWidgets import (QWidget, QMainWindow, QDialog, QTreeWidgetItem,
-    QLineEdit, QMessageBox, QInputDialog, QDoubleSpinBox,
+    QLineEdit, QMessageBox, QInputDialog, QDoubleSpinBox, QErrorMessage,
     QDialogButtonBox, QApplication, QFileDialog, QLabel, QProgressBar)
 
 from xmeml import iter as xmemliter
@@ -261,9 +261,16 @@ class Odometer(QMainWindow):
         self.logMessage(msg, msgtype)
         return b
 
-    def showerror(self, msg):
+    def showerror(self, msg, errtype=None):
         'Show error message'
-        return self.showstatus(msg, msgtype=Status.ERROR)
+        _errormsg = QErrorMessage()
+        if errtype is not None:
+            _errormsg.showMessage(msg, errtype)
+        else:
+            _errormsg.showMessage(msg)
+
+        _errormsg.exec()
+        self.logMessage(msg, msgtype=Status.ERROR)
 
     def clearstatus(self):
         'empty message list'
@@ -290,7 +297,7 @@ class Odometer(QMainWindow):
     def showAbout(self):
         'Show "About" text'
         _aboutText = readResourceFile(':/txt/about')
-        _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', self.getVersion()))
+        _aboutbox = QMessageBox.about(None, 'About Odometer', _aboutText.replace(u'✪', self.getVersion()))
 
     def showHelp(self):
         'Show help document from online resource'
@@ -472,11 +479,13 @@ class Odometer(QMainWindow):
                 #  <div class="result" ssoToken="xxx">True</div>
                 # but if pasword failed, instead we get
                 # <div class="error failedlogin">You have 5 password attempts remaining.</div>
+                # or
+                # <div class="error"><li>Please enter a valid email address.</li></div>
                 if b.startswith('''<div class="result" ssoToken="'''):
                     self.settings.setValue('Universalcookie', data.info()['Set-Cookie'])
                     self.showstatus(self.tr('Logged in to Universal'))
                 else:
-                    m = self.tr('%s login failed: %s') % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, b)
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Extreme':
