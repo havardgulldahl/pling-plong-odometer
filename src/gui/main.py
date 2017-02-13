@@ -321,7 +321,7 @@ class Odometer(QMainWindow):
     def showLicenses(self):
         'Show a dialog to display licenses and terms'
         _licenseText = readResourceFile(':/txt/license')
-        _box = Gui.QMessageBox(self)
+        _box = QMessageBox(self)
         _box.setText(self.tr('This project is free software'))
         _box.setInformativeText(self.tr('You may use and redistribute it according to the GPL license, version 3'))
         _box.setDetailedText(_licenseText)
