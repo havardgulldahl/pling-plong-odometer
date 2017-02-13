@@ -163,12 +163,6 @@ class Odometer(QMainWindow):
         #self.metadataLoaded.connect(self.checkUsage)
         Core.QTimer.singleShot(5, self.updateAUXRepertoire)
 
-    def keyPressEvent(self, event):
-        'React to keyboard keys being pressed'
-        if event.key() == Core.Qt.Key_Escape:
-            # self.close()
-            self.deleteLater()
-
     def dragEnterEvent(self, event):
         'React to file being dragged inside gui'
         self.ui.dropIcon.load(':/gfx/star')
