@@ -7,7 +7,8 @@ import sys
 added_files = [
                ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Core.dll', '.'),
                ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Gui.dll', '.'),
-               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Widgets.dll', '.')
+               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Widgets.dll', '.'),
+               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\QtWebEngineProcess.exe', '.')
               ]
 
 a = Analysis(['src/pling-plong-odometer.py'],
