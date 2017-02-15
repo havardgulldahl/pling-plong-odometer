@@ -127,6 +127,11 @@ class ResolverBase(Core.QObject):
         #time.sleep(random.random() * 4)
         self.trackResolved.emit(self.filename, md)
 
+    def delayresolve(self, filename, fullpath, fromcache=True):
+        def r():
+            self.resolve(filename, fullpath, fromcache)
+        Core.QTimer.singleShot(0, r)
+
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
         self.fullpath = fullpath
