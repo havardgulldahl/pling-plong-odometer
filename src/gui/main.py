@@ -178,7 +178,7 @@ class Odometer(QMainWindow):
         if xmemlfileFromEvent(event):
             event.accept()
             return
-        self.showerror(self.tr("This does not seem to be a valid FCP XML file. Sorry."))
+        self.showerror(self.tr("This does not seem to be a valid FCP XML file. Sorry."), errtype='invalid file')
         event.ignore()
 
     def dropEvent(self, event):
@@ -308,7 +308,7 @@ class Odometer(QMainWindow):
             logging.debug("help doc loaded: %s", success)
             # TODO: Add offline fallback
             if not success:
-                self.showerror(self.tr("Could not load help document, sorry. :("))
+                self.showerror(self.tr("Could not load help document, sorry. :("), errtype='offline')
         ui.webEngineView.loadFinished.connect(helpdocloaded)
         return HelpDialog.exec_()
 
@@ -739,6 +739,7 @@ class Odometer(QMainWindow):
 
     def load(self, xmemlparser):
         'Load audio clips from xmeml parser into the gui'
+        logging.debug('Got xmemlparser: %r', xmemlparser)
         try:
             self.audioclips, self.audiofiles = xmemlparser.audibleranges(self.volumethreshold)
         except Exception as e:
@@ -797,7 +798,7 @@ class Odometer(QMainWindow):
                 w.error.connect(lambda s: self.logMessage(s, msgtype=Status.ERROR))
                 w.warning.connect(lambda s: self.logMessage(s, msgtype=Status.WARNING))
                 self.workers.append(w) # keep track of the worker
-                w.resolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
+                w.delayresolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
             if self.showsubclips:
                 i = 1
                 for range in ranges:
@@ -1141,7 +1142,7 @@ class Odometer(QMainWindow):
         # pop up a dialog to submit this filename to us, since it clearly is missing from our lists
         resolver.trackResolved.connect(self.submitMissingFilename) 
         resolver.trackProgress.connect(lambda fn, p: self.showProgress(fn, p))
-        resolver.error.connect(lambda f, e: self.showerror(e))
+        resolver.error.connect(lambda f, e: self.showerror(e, errtype='resover error %s' % resolver.name))
         self.workers.append(resolver) # keep track of the worker
         resolver.resolve(str(manualPattern), filepath.pathurl) # put the worker to work async
 
