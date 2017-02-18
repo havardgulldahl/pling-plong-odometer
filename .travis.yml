@@ -33,11 +33,12 @@ before_install:
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then echo "Booting linux "; lsb_release -a; fi
 - export TAG="${TRAVIS_TAG:-dev}"
 - echo "$PATH"
-- export PYTHON_CONFIGURE_OPTS="--enable-shared" 
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
+- export PYTHON_CONFIGURE_OPTS="--enable-framework" 
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install pyenv || brew upgrade pyenv; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install qt5; fi
+- export PATH="/usr/local/opt/qt5/bin:$PATH"
 
 install:
 - pyenv install 3.5.2; pyenv local 3.5.2; export PATH="~/.pyenv/shims:$PATH"
@@ -49,7 +50,6 @@ install:
 - ls
 
 script:
-- pyinstaller -y pling-plong-odometer.spec || true
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./build-mac.sh ${OSX}-${TAG}; fi
 
 deploy:

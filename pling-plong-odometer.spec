@@ -32,6 +32,18 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=True, icon='odometer.ico')
+app = BUNDLE(exe,
+             name='Pling plong odometer.app',
+             icon='odometer.icns',
+             bundle_identifier='no.nrk.odometer',
+             info_plist={
+                 # create osx Info.plist 
+                 # https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
+                'NSHighResolutionCapable': 'True',
+                'CFBundleDisplayName': '♫ ♪ Odometer',
+                'NSHumanReadableCopyright': 'Copyright 2011-2017 havard.gulldahl@nrk.no',
+             },
+             )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,

@@ -29,7 +29,8 @@ python3 ./buildpyqt.py
 
 # build the castle
 echo "Building the app (see build.log)"
-python3 setup.py py2app > build.log || error "py2app failed"
+#python3 setup.py py2app > build.log || error "py2app failed"
+pyinstaller -y pling-plong-odometer.spec || error "pyinstaller failed"
 
 # changing back defaults
 sed -i .bk "s/beta=.*/beta=1/" BUILDFLAGS
@@ -41,6 +42,15 @@ echo -e "[Paths]\nPlugins = plugins" > dist/Pling\ Plong\ Odometer.app/Contents/
 
 # rename to maximase brand name exposure (badges to come!)
 mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
+
+#TODO: add to Info.plist
+#
+#               'CFBundleDocumentTypes': [{
+#                    # https://developer.apple.com/library/content/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html#//apple_ref/doc/uid/20001431-101685
+#                    'CFBundleTypeRole': 'Viewer',
+#                    'CFBundleTypeMIMETypes': ['text/xml', 'application/xml'],
+#                    'CFBundleTypeExtensions': ['xml',],
+#                }]
 
 # create dmg images since all mac heads like to mount archives
 echo "Creating dmg image"
