@@ -4,6 +4,13 @@
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
 
+<style type="text/css">
+    .duration { text-align: right; 
+                padding-right: 1em;
+                font-family: Courier New, Courier, monospace;
+              }
+</style>
+
 <script type="text/javascript">
 
 function secs2timestring(duration) {
@@ -11,6 +18,12 @@ function secs2timestring(duration) {
     var mins = parseInt(duration / 60);
     var secs = duration % 60;
     return mins.toString() + ":" + secs.toString();
+}
+
+function removeChildren(node) {
+    while(node.hasChildNodes()) {
+        node.removeChild(node.firstChild);
+    }
 }
 
 function main() {
@@ -22,6 +35,8 @@ function main() {
 
     uploadTestfileButton.onclick = function(event) {
         event.preventDefault();
+        // empty files table
+        removeChildren(fileList);
         var formData = new FormData();
         formData.append('usetestfile', '1');
         submit(formData);
@@ -35,9 +50,7 @@ function main() {
         uploadButton.innerHTML = 'Uploading...';
 
         // empty files table
-        while(fileList.hasChildNodes()) {
-            fileList.removeChild(fileList.firstChild);
-        }
+        removeChildren(fileList);
 
         // The rest of the code will go here...
         // Get the selected files from the input.
@@ -90,7 +103,7 @@ function formatAudible(audible) {
         var secs = secs2timestring(elm.audible_length);
         var service = elm.music_service || "<i>Unknown</i>";
         var resolvable = elm.resolvable ? "&rarr;" : "&times;"
-        tr.innerHTML = "<td>"+c+"<td>"+secs+"<td>"+service+"<td><button onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
+        tr.innerHTML = "<td>"+c+"<td class=duration>"+secs+"<td>"+service+"<td><button onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
         filelist.appendChild(tr);
     }
 }
