@@ -14,12 +14,14 @@ pyqtlibpath=os.path.join(pyqtpath, 'lib')
 thispath=os.getcwd()
 
 _platform = distutils.util.get_platform()
-if _platform == 'win-amd64':
+if 'win' in _platform:
     platform = 'win'
 elif _platform == 'linux-x86_64':
     platform = 'nix64'
 elif "macosx" and "x86_64" in _platform:
     platform = 'mac'
+else:
+    platform = 'unknown'
 
 added_files = [
                (os.path.join(pyqtbinpath, 'Qt5Core.dll'), '.'),
