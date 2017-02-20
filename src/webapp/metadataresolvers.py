@@ -57,11 +57,7 @@ def getmusicid(filename):
         return ResolverBase.musicid(filename)
     return res.musicid(filename)
 
-<<<<<<< HEAD
-class ResolverBase(object):
-=======
 class ResolverBase:
->>>>>>> origin/webapp
     prefixes = [] # a list of file prefixes that this resolver recognizes
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     labelmap = [] # a list of labels that this music service carries
@@ -73,14 +69,8 @@ class ResolverBase:
     contractdetails = ''
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
-<<<<<<< HEAD
-    def __init__(self, parent=None):
-        super(ResolverBase, self).__init__(parent)
-=======
     def __init__(self):
         self.session = None # set it in .setSession() or lazy create in .resolve()
->>>>>>> origin/webapp
-        self.logincookie = None
 
     def accepts(self, filename):
         for f in self.prefixes:
@@ -166,29 +156,13 @@ class ResolverBase:
 
     def cachelocation(self):
         "Return a dir suitable for storage"
-<<<<<<< HEAD
-        return '/tmp' # TODO: implement this when the celery queue is working
-        dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
-        ourdir = os.path.join(os.path.abspath(unicode(dir)), 'no.nrk.odometer')
-=======
         ourdir = appdirs.user_cache_dir('odometer', 'no.nrk.odometer')
->>>>>>> origin/webapp
         if not os.path.exists(ourdir):
             os.makedirs(ourdir)
         try:
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
         except UnicodeEncodeError:
             logging.warning("cachelocation warn: %r - %r", repr(self.filename), type(self.filename))
-
-<<<<<<< HEAD
-    def setlogincookie(self, cookie):
-        "Add login cookie to service. Only applicable for some services"
-        self.logincookie = cookie
-=======
-    def cleanup(self, filename, *args):
-        "Remove objects to prevent hanging threads"
-        pass
->>>>>>> origin/webapp
 
     def getlabel(self, hint):
         "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
