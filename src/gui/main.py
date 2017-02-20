@@ -277,12 +277,7 @@ class Odometer(QMainWindow):
             del child
 
     def getVersion(self):
-        if sys.platform == 'darwin':
-            _version = readResourceFile(':/txt/version_mac')
-        elif sys.platform == 'win32':
-            _version = readResourceFile(':/txt/version_win')
-        else: # unknown platform
-            _version = ''
+        _version = self.buildflags.get('release', 'version')
         if self.buildflags.getboolean('release', 'beta'):
             _version = str(_version).strip() + ' NEXT'
         logging.debug("got version:  ---%s---", _version)

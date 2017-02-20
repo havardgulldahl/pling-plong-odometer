@@ -371,114 +371,114 @@
         <translation>Metadata</translation>
     </message>
     <message>
-        <location filename="main.py" line="1205"/>
+        <location filename="main.py" line="1202"/>
         <source>Credits</source>
         <translation>Rulletekst</translation>
     </message>
     <message>
-        <location filename="main.py" line="109"/>
+        <location filename="main.py" line="110"/>
         <source>Edit</source>
         <translation>Redigér</translation>
     </message>
     <message>
-        <location filename="main.py" line="671"/>
+        <location filename="main.py" line="670"/>
         <source>Manual lookup</source>
         <translation>Manuelt oppslag</translation>
     </message>
     <message>
-        <location filename="main.py" line="144"/>
+        <location filename="main.py" line="145"/>
         <source>Drop your xml file here</source>
         <translation>Slipp xml-fila di her</translation>
     </message>
     <message>
-        <location filename="main.py" line="185"/>
+        <location filename="main.py" line="181"/>
         <source>This does not seem to be a valid FCP XML file. Sorry.</source>
         <translation>Dette ser ikke ut til å være en gyldig FCP XML-fil. Beklager.</translation>
     </message>
     <message>
-        <location filename="main.py" line="216"/>
+        <location filename="main.py" line="212"/>
         <source>No XMEML loaded</source>
         <translation>Ingen XMEML lest</translation>
     </message>
     <message>
-        <location filename="main.py" line="243"/>
+        <location filename="main.py" line="239"/>
         <source>Unexpected error: %s</source>
         <translation>Uventet feil: %s</translation>
     </message>
     <message>
-        <location filename="main.py" line="309"/>
+        <location filename="main.py" line="306"/>
         <source>Could not load help document, sorry. :(</source>
         <translation>Kunne ikke laste hjelp-dokumentet, beklager :(</translation>
     </message>
     <message>
-        <location filename="main.py" line="317"/>
+        <location filename="main.py" line="314"/>
         <source>This project is free software</source>
         <translation>Dette prosjektet er fri programvare</translation>
     </message>
     <message>
-        <location filename="main.py" line="318"/>
+        <location filename="main.py" line="315"/>
         <source>You may use and redistribute it according to the GPL license, version 3</source>
         <translation>Du kan bruke og redistribuere det i samsvar med versjon 3 av GPL-lisensen</translation>
     </message>
     <message>
-        <location filename="main.py" line="337"/>
+        <location filename="main.py" line="334"/>
         <source>Could not look up the most recent version online. Check your internet connection</source>
         <translation>Kunne ikke slå opp siste versjon på nett. Sjekk internett-tilkoblinga di</translation>
     </message>
     <message>
-        <location filename="main.py" line="347"/>
+        <location filename="main.py" line="344"/>
         <source>Oooooo!</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="main.py" line="347"/>
+        <location filename="main.py" line="344"/>
         <source>Odometer is out of date. 
 Get the new version: %s</source>
         <translation>Odometer er utdatert. 
 Hent den nye versjonen: %s</translation>
     </message>
     <message>
-        <location filename="main.py" line="349"/>
+        <location filename="main.py" line="346"/>
         <source>Relax</source>
         <translation>Slapp av</translation>
     </message>
     <message>
-        <location filename="main.py" line="349"/>
+        <location filename="main.py" line="346"/>
         <source>Odometer is up to date</source>
         <translation>Odometer er siste versjon</translation>
     </message>
     <message>
-        <location filename="main.py" line="629"/>
+        <location filename="main.py" line="628"/>
         <source>Updating AUX repertoire</source>
         <translation>Oppdaterer AUX-repertoaret</translation>
     </message>
     <message>
-        <location filename="main.py" line="639"/>
+        <location filename="main.py" line="638"/>
         <source>Found fresh AUX repertoire list in cache</source>
         <translation>Fant et nytt AUX-repertoar i cache</translation>
     </message>
     <message>
-        <location filename="main.py" line="645"/>
+        <location filename="main.py" line="644"/>
         <source>AUX repertoire cache is too old, fetch new online</source>
         <translation>AUX-repertoaret i cachen er for gammelt, henter nytt fra nett</translation>
     </message>
     <message>
-        <location filename="main.py" line="692"/>
+        <location filename="main.py" line="691"/>
         <source>Open an xmeml file (FCP export)</source>
         <translation>Åpne en xmeml-fil (eksportert fra FCP)</translation>
     </message>
     <message>
-        <location filename="main.py" line="692"/>
+        <location filename="main.py" line="691"/>
         <source>Xmeml files (*.xml)</source>
         <translation>Xmeml-filer (*.xml)</translation>
     </message>
     <message>
-        <location filename="main.py" line="712"/>
+        <location filename="main.py" line="711"/>
         <source>Loading %s...</source>
         <translation>Leser %s...</translation>
     </message>
     <message>
-        <location filename="main.py" line="716"/>
+        <location filename="main.py" line="715"/>
         <source>&lt;b&gt;Loaded:&lt;/b&gt; %s</source>
         <translation>&lt;b&gt;Leste:&lt;/b&gt; %s</translation>
     </message>
@@ -573,12 +573,12 @@ Hent den nye versjonen: %s</translation>
         <translation type="obsolete">&quot;%s&quot; kan ikke være blank</translation>
     </message>
     <message>
-        <location filename="main.py" line="1123"/>
+        <location filename="main.py" line="1122"/>
         <source>Music ID</source>
         <translation>Musikk-ID</translation>
     </message>
     <message>
-        <location filename="main.py" line="1123"/>
+        <location filename="main.py" line="1122"/>
         <source>Enter the correct music ID:</source>
         <translation>Skriv inn korrekt musikk-ID</translation>
     </message>
@@ -588,17 +588,17 @@ Hent den nye versjonen: %s</translation>
         <translation type="obsolete">Lagre rulletekst</translation>
     </message>
     <message>
-        <location filename="main.py" line="1201"/>
+        <location filename="main.py" line="1198"/>
         <source>End credits saved</source>
         <translation>Rulletekst lagret</translation>
     </message>
     <message>
-        <location filename="main.py" line="1257"/>
+        <location filename="main.py" line="1254"/>
         <source>Need production number</source>
         <translation>Trenger produksjonsnummer</translation>
     </message>
     <message>
-        <location filename="main.py" line="1257"/>
+        <location filename="main.py" line="1254"/>
         <source>You must enter the production number</source>
         <translation>Du må oppgi produksjonsnummeret</translation>
     </message>
@@ -658,12 +658,12 @@ Hent den nye versjonen: %s</translation>
         <translation>Lagre prf-rapporten (som HTML)</translation>
     </message>
     <message>
-        <location filename="main.py" line="1197"/>
+        <location filename="main.py" line="1194"/>
         <source>HTML document (*.html)</source>
         <translation>HTML-dokument (*.html)</translation>
     </message>
     <message>
-        <location filename="main.py" line="1197"/>
+        <location filename="main.py" line="1194"/>
         <source>Save credits (as HTML)</source>
         <translation>Lagre rulletekst (som HTML)</translation>
     </message>
@@ -678,7 +678,7 @@ Hent den nye versjonen: %s</translation>
         <translation>Finner ingen logincookie fra Apollo Music.</translation>
     </message>
     <message>
-        <location filename="main.py" line="655"/>
+        <location filename="main.py" line="654"/>
         <source>AUX repertoire: %s catalogs</source>
         <translation>AUX-repertoar: %s kataloger</translation>
     </message>
@@ -688,77 +688,77 @@ Hent den nye versjonen: %s</translation>
         <translation>Hopper over klippet &quot;%s&quot;, fordi ingen rammer (frames) er hørbare</translation>
     </message>
     <message>
-        <location filename="main.py" line="389"/>
+        <location filename="main.py" line="386"/>
         <source>&lt;h1&gt;Tracks by order of entry on timeline&lt;/h1&gt;</source>
         <translation>&lt;h1&gt;Spor i rekkefølgen som de kommer på tidslinja&lt;/h1&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="391"/>
+        <location filename="main.py" line="388"/>
         <source>&lt;th&gt;In&lt;/th&gt;</source>
         <translation>&lt;th&gt;Inn&lt;/th&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="392"/>
+        <location filename="main.py" line="389"/>
         <source>&lt;th&gt;Out&lt;/th&gt;</source>
         <translation>&lt;th&gt;Ut&lt;/th&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="393"/>
+        <location filename="main.py" line="390"/>
         <source>&lt;th&gt;Duration&lt;/th&gt;</source>
         <translation>&lt;th&gt;Varighet&lt;/th&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="394"/>
+        <location filename="main.py" line="391"/>
         <source>&lt;th&gt;Clip details&lt;/th&gt;</source>
         <translation>&lt;th&gt;Detaljer&lt;/th&gt;</translation>
     </message>
     <message>
-        <location filename="main.py" line="415"/>
+        <location filename="main.py" line="412"/>
         <source>Detailed run sheet</source>
         <translation>Detaljert kjøreplan</translation>
     </message>
     <message>
-        <location filename="main.py" line="1152"/>
+        <location filename="main.py" line="1151"/>
         <source>Submit missing filename</source>
         <translation>Send inn manglende filnavn</translation>
     </message>
     <message>
-        <location filename="main.py" line="299"/>
+        <location filename="main.py" line="296"/>
         <source>Help</source>
         <translation type="unfinished">Hjelp</translation>
     </message>
     <message>
-        <location filename="main.py" line="447"/>
+        <location filename="main.py" line="444"/>
         <source>Logged in to AUX</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="488"/>
+        <location filename="main.py" line="487"/>
         <source>%s login failed: %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="456"/>
+        <location filename="main.py" line="453"/>
         <source>Logged in to Apollo</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="464"/>
+        <location filename="main.py" line="461"/>
         <source>Logged in to Upright</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="476"/>
+        <location filename="main.py" line="475"/>
         <source>Logged in to Universal</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="493"/>
+        <location filename="main.py" line="492"/>
         <source>Logged in to Extreme</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="503"/>
+        <location filename="main.py" line="502"/>
         <source>Login failed. Check your password at the website.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -773,17 +773,17 @@ Hent den nye versjonen: %s</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1133"/>
+        <location filename="main.py" line="1132"/>
         <source>Please log in to the Apollo Music service from the login menu</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1134"/>
+        <location filename="main.py" line="1133"/>
         <source>Tried to manually resolve apollo track, but no logincookie found.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="main.py" line="1215"/>
+        <location filename="main.py" line="1212"/>
         <source>Report an error</source>
         <translation type="unfinished">Meld en feil</translation>
     </message>
