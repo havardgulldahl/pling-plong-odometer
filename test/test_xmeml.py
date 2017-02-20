@@ -1,7 +1,6 @@
 # encoding: utf-8
 # tests of xmeml logic
 
-from __future__ import unicode_literals
 from distutils import dir_util
 from pytest import fixture
 import os

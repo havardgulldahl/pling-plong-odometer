@@ -35,11 +35,16 @@ before_install:
 - echo "$PATH"
 - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update || brew update; fi
+- export PYTHON_CONFIGURE_OPTS="--enable-framework" 
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install pyenv || brew upgrade pyenv; fi
+- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install qt5; fi
+- export PATH="/usr/local/opt/qt5/bin:$PATH"
 
 install:
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install pyenv; fi
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pyenv install 3.5.2; pyenv local 3.5.2; fi
+- pyenv install 3.5.2; pyenv local 3.5.2; export PATH="~/.pyenv/shims:$PATH"
+- python -V && pip -V 
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
+- pip install pyinstaller || true;
 - pip install -r requirements.txt
 - pip install .
 - ls

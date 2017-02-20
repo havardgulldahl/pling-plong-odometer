@@ -34,10 +34,10 @@ class UrlWorker(Core.QThread):
         self.timeout = timeout
         if data is not None:
             logging.warning("urlworker load data %r", data)
-            if isinstance(data, basestring):
-                self.data = data
+            if isinstance(data, str):
+                self.data = data.encode('utf-8')
             else:
-                self.data = urllib.parse.urlencode(data)
+                self.data = urllib.parse.urlencode(data).encode('utf-8')
         else:
             self.data = None
         self.headers = {'X_REQUESTED_WITH' :'XMLHttpRequest',
@@ -47,7 +47,7 @@ class UrlWorker(Core.QThread):
         self.start()
 
     def run(self):
-        logging.info('urlworker working on url %s with data %s', self.url, self.data)
+        logging.debug('urlworker working on url %r with data %r', self.url, self.data)
         try:
             req = urllib.request.Request(self.url, self.data, headers=self.headers)
             con = urllib.request.urlopen(req, timeout=self.timeout)

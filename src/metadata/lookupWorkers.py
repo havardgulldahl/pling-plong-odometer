@@ -16,9 +16,24 @@ from .model import TrackMetadata
 from . import resolvers
 from . import gluon
 
+from pprint import pformat, pprint
 GLUON_HTTP_LOOKUP="http://mamcdma02/DMA/"
 
-class GluonLookupWorker(Core.QThread):
+class LogThread(Core.QThread):
+    'QThread subclass to log all exceptions and not bomb out on them'
+
+    def __init__(self, parent, **kwargs):
+        super(LogThread, self).__init__(parent, **kwargs)
+        self._real_run = self.run
+        self.run = self._wrap_run
+
+    def _wrap_run(self):
+        try:
+            self._real_run()
+        except Exception as e:
+            logging.exception('Exception during LogThread.run: %r', e)
+
+class GluonLookupWorker(LogThread):
     'Lookup a DMA track on gluon and retrieve metadata'
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
@@ -42,7 +57,7 @@ class GluonLookupWorker(Core.QThread):
             return
         self.progress.emit(50)
         gp = gluon.GluonMetadataResponseParser()
-        metadata = gp.parse(StringIO.StringIO(response), factory=TrackMetadata)
+        metadata = gp.parse(StringIO(response), factory=TrackMetadata)
         self.progress.emit(70)
         self.trackResolved.emit(metadata)
         self.progress.emit(100)
@@ -63,10 +78,10 @@ class GluonLookupWorker(Core.QThread):
             self.trackFailed.emit()
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
-        response = req.read()
+        response = req.read().decode()
         return response
 
-class ApollomusicLookupWorker(Core.QThread):
+class ApollomusicLookupWorker(LogThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
@@ -78,89 +93,38 @@ class ApollomusicLookupWorker(Core.QThread):
     def __del__(self):
         self.wait()
 
-    def load(self, filename, logincookie):
+    def load(self, filename):
         self.filename = filename
         self.musicid = resolvers.ApollomusicResolver.musicid(filename)
-        self.logincookie = logincookie
         self.start()
 
-    def run(self):
+    def get_sec(self, time_str):
+        'helper method to get seconds from a time string, e.g. "01:04" -> 64'
         try:
-            albumdata, trackdata = self.request(self.musicid, self.logincookie)
-        except TypeError: # self.request will return None on login errors
-            albumdata, trackdata = (None, None)
-        # print trackdata
+            m, s = time_str.split(':')
+            return int(m) * 60 + int(s)
+        except ValueError:
+            return -1
+
+    def run(self):
+        trackdata = self.request(self.musicid)
+        logging.debug('got apollo track data: %r', trackdata)
         if trackdata is None:
-            return
+            self.trackFailed.emit()
+            self.error.emit('Tried to look up %s, but got failed -- dont know why, sorry' % (self.musicid))
+            return None
         self.progress.emit(50)
-        # albumdata is a dict, like:
-        # {u'active': u'1',
-        # u'album_desc': u'A superb selection of music tracks particularly suitable to spice up any media such as websites - online videos - slide shows - etc.',
-        # u'album_num': u'360',
-        # u'album_title': u'WEBTRAXX',
-        # u'comment_ext': u'',
-        # u'comment_int': u'',
-        # u'country': u'BE',
-        # u'created': u'2013-11-04 16:27:06',
-        # u'deleted': u'0',
-        # u'isNewest': u'0',
-        # u'label_fk': u'SMI',
-        # u'published': u'2011',
-        # u'rating': u'8',
-        # u'registered_album': u'',
-        # u'score': u'8',
-        # u'society': u'',
-        # u'sound_type': u'0',
-        # u'upload_fk': u'808'}
-        #
-        # trackdata is a dict, e.g.:
-        # {u'album_num': u'360',
-        #  u'bpm': u'99',
-        #  u'composer': u'MIKE KNELLER STEPHAN NORTH      ',
-        #  u'country': u'',
-        #  u'created': u'2013-11-04 16:27:06',
-        #  u'deleted': u'0',
-        #  u'description': u'Uplifting carefree piano melody',
-        #  u'downloaded_score': u'0',
-        #  u'duration': u'01:00',
-        #  u'instrumentation': None,
-        #  u'keywords': [u''],
-        #  u'keywords_internal': u'Uplifting carefree piano melody',
-        #  u'label_fk': u'SMI',
-        #  u'performer': None,
-        #  u'primary_title': u'HOLD ON TO YOUR DREAMS',
-        #  u'published_score': u'20',
-        #  u'rating_score': u'40',
-        #  u'recorded': u'2011',
-        #  u'registered_track': None,
-        #  u'secondary_title': u'',
-        #  u'serialized_composers': [{u'album_num': u'360',
-        #                             u'composer': u'MIKE KNELLER STEPHAN NORTH      ',
-        #                             u'ipi_id': None,
-        #                             u'label_fk': u'SMI',
-        #                             u'role': None,
-        #                             u'share': 0,
-        #                             u'track_num': u'2',
-        #                             u'upload_fk': 808}],
-        #  u'sort_score': None,
-        #  u'sound_type': u'0',
-        #  u'tempo': u'Medium-Slow',
-        #  u'time_score': u'0',
-        #  u'track_id': u'391529',
-        #  u'track_num': u'2',
-        #  u'upload_fk': u'808',
-        #  u'wave_created': u'1'}
         try: _yr = int(trackdata.get('recorded', -1), 10)
         except:  _yr = -1
         metadata = TrackMetadata(filename=self.filename,
                  musiclibrary=resolvers.ApollomusicResolver.name,
                  title=trackdata.get('primary_title', None),
-                 # length=-1,
+                 length=self.get_sec(trackdata.get('duration', '')),
                  composer=trackdata.get('composer', None),
                  artist=trackdata.get('performer', None),
                  year=_yr,
                  recordnumber=self.musicid,
-                 albumname=albumdata.get('album_title', None),
+                 albumname=trackdata.get('album_title', None),
                  copyright='Apollo Music',
                  # lcnumber=None,
                  # isrc=None,
@@ -174,41 +138,29 @@ class ApollomusicLookupWorker(Core.QThread):
         self.progress.emit(70)
         self.trackResolved.emit(metadata)
         self.progress.emit(100)
-        #self.terminate()
-        #self.deleteLater()
 
-    def request(self, musicid, logincookie):
+    def request(self, musicid):
         "do an http post request to apollomusic.dk"
         try:
             _lbl, _albumid, _trackno = self.musicid.split('_')
-            postdata = urllib.parse.urlencode({'label_fk':_lbl,
-                                         'album_num':_albumid,
-                                         # 'track_num':_trackno,
-                                         'type_query':'tracks',
-                                         'sound_type':'0',
-                                         'query':'',
-                                         'genre':'',
-                                         'min_length':'00:00:00',
-                                         'max_length':'99:99:99',
-                                         'composer':'',
-                                         'track_num':'',
-                                         'cur_page':'1',
-                                         'per_page':'100',
-                                         'offset':'0',
-                                         'limit':'100',
-                                         })
-            # logging.debug('postdata: %s', postdata)
-            headers = {'Cookie':logincookie}
-            r = urllib.request.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
+            params = {
+                'label': _lbl,
+                'album': _albumid,
+                'track': _trackno
+            }
+            endpoint = 'http://www.findthetune.com/guests/search/label={label}&album={album}&track={track}'.format(**params)
+            r = urllib.request.Request(endpoint)
             req = urllib.request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
+            logging.exception(e)
             self.trackFailed.emit()
             self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):
+            logging.warning('apollo lookup returned %r', req.getcode())
             self.trackFailed.emit()
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
@@ -216,18 +168,17 @@ class ApollomusicLookupWorker(Core.QThread):
         response = json.loads(req.read().decode('utf-8')) # it's a json array
         if len(response) == 0:
             # empty response, likely not logged in or expired login cookie
+            logging.warning('apollo lookup returned empty response')
             self.trackFailed.emit()
             self.error.emit('Tried to lookup %s, but failed. Please try to log in to Apollo again' % (musicid,))
             return None
-        albumdata = response.pop()        # of 1 albumdict
-
-        trackdata = albumdata['tracks'][int(_trackno, 10)-1] # return correct track, from the array of 'tracks' on the album dict
-        del(albumdata['tracks'])
-        return albumdata, trackdata
+        logging.debug('apolllo %s json data: %s', musicid, pformat(response))
+        trackdata = response['tracks'][0]
+        return trackdata
 
 
 
-class UniPPMLookupWorker(Core.QThread):
+class UniPPMLookupWorker(LogThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
@@ -388,7 +339,7 @@ class UniPPMLookupWorker(Core.QThread):
         return albumdata, trackdata
 
 
-class UprightmusicLookupWorker(Core.QThread):
+class UprightmusicLookupWorker(LogThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
@@ -521,7 +472,7 @@ class UprightmusicLookupWorker(Core.QThread):
 
 
 
-class ExtremeMusicLookupWorker(Core.QThread):
+class ExtremeMusicLookupWorker(LogThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
@@ -541,11 +492,11 @@ class ExtremeMusicLookupWorker(Core.QThread):
 
     def run(self):
         try:
-            trackdata = self.request(self.musicid, self.logincookie)
+            data = self.request(self.musicid, self.logincookie)
         except TypeError: # self.request will return None on login errors
-            trackdata = None
+            data = None
         # print trackdata
-        if trackdata is None:
+        if data is None:
             return
         self.progress.emit(75)
 
@@ -559,12 +510,14 @@ class ExtremeMusicLookupWorker(Core.QThread):
         version_duration = -1
         version_musicid = None
 
-        for version in trackdata['track_sounds']:
+        logging.debug('Got following trackdata from Extreme: %s', pformat(data))
+        for version in data['track_sounds']:
             if self.musicid == version['track_sound_no']: # this is the one
                 version_title = '%s (%s)' % (version['title'], version['version_type'])
                 version_duration = version['duration']
 
 
+        trackdata = data['track']
         composers = ['%s (%s)' % (c['name'], c['society']) for c in trackdata['composers']]
         arrangers = ['%s' % (c['name'],) for c in trackdata['arrangers']]
 
@@ -576,7 +529,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
                  artist=None,
                  year=-1,
                  recordnumber=self.musicid,
-                 albumname=albumdata.get('album_title', None),
+                 albumname=trackdata.get('album_title', None),
                  copyright=', '.join([c['name'] for c in trackdata['collecting_publishers']]),
                  # lcnumber=None,
                  # isrc=None,
@@ -601,7 +554,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
 
             try:
                 headers = {'X-API-Auth':logincookie}
-                r = urllib.request.Request(url, headers)
+                r = urllib.request.Request(url, headers=headers)
                 req = urllib.request.urlopen(r)
 
             except IOError as e:
@@ -640,11 +593,11 @@ class ExtremeMusicLookupWorker(Core.QThread):
             self.trackFailed.emit()
             self.error.emit('The Extreme Music catalogue does not seem to know anything about this music id: %s (internal music id: %s)' % (musicid, extrack_id))
             return None
-        return trackdata['track']
+        return trackdata
 
 
 
-class AUXLookupWorker(Core.QThread):
+class AUXLookupWorker(LogThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )

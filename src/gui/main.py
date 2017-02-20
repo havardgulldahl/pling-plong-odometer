@@ -16,6 +16,7 @@ import traceback
 import subprocess
 import hashlib
 import functools
+import html
 
 from enum import Enum
 from collections import defaultdict
@@ -27,7 +28,7 @@ import PyQt5.QtNetwork as QtNetwork
 import PyQt5.Qt as Qt
 import PyQt5.QtSvg as Svg
 from PyQt5.QtWidgets import (QWidget, QMainWindow, QDialog, QTreeWidgetItem,
-    QLineEdit, QMessageBox, QInputDialog, 
+    QLineEdit, QMessageBox, QInputDialog, QDoubleSpinBox, QErrorMessage,
     QDialogButtonBox, QApplication, QFileDialog, QLabel, QProgressBar)
 
 from xmeml import iter as xmemliter
@@ -158,14 +159,9 @@ class Odometer(QMainWindow):
             self.ui.errorButton.hide()
 
         self.ui.information.hide()
+        self.resize(Core.QSize(1200,1000))
         #self.metadataLoaded.connect(self.checkUsage)
         Core.QTimer.singleShot(5, self.updateAUXRepertoire)
-
-    def keyPressEvent(self, event):
-        'React to keyboard keys being pressed'
-        if event.key() == Core.Qt.Key_Escape:
-            # self.close()
-            self.deleteLater()
 
     def dragEnterEvent(self, event):
         'React to file being dragged inside gui'
@@ -182,7 +178,7 @@ class Odometer(QMainWindow):
         if xmemlfileFromEvent(event):
             event.accept()
             return
-        self.showerror(self.tr("This does not seem to be a valid FCP XML file. Sorry."))
+        self.showerror(self.tr("This does not seem to be a valid FCP XML file. Sorry."), errtype='invalid file')
         event.ignore()
 
     def dropEvent(self, event):
@@ -259,9 +255,16 @@ class Odometer(QMainWindow):
         self.logMessage(msg, msgtype)
         return b
 
-    def showerror(self, msg):
+    def showerror(self, msg, errtype=None):
         'Show error message'
-        return self.showstatus(msg, msgtype=Status.ERROR)
+        _errormsg = QErrorMessage()
+        if errtype is not None:
+            _errormsg.showMessage(msg, errtype)
+        else:
+            _errormsg.showMessage(msg)
+
+        _errormsg.exec()
+        self.logMessage(msg, msgtype=Status.ERROR)
 
     def clearstatus(self):
         'empty message list'
@@ -288,7 +291,7 @@ class Odometer(QMainWindow):
     def showAbout(self):
         'Show "About" text'
         _aboutText = readResourceFile(':/txt/about')
-        _aboutbox = Gui.QMessageBox.about(self, u'About Odometer', _aboutText.replace(u'✪', self.getVersion()))
+        _aboutbox = QMessageBox.about(None, 'About Odometer', _aboutText.replace(u'✪', self.getVersion()))
 
     def showHelp(self):
         'Show help document from online resource'
@@ -305,14 +308,14 @@ class Odometer(QMainWindow):
             logging.debug("help doc loaded: %s", success)
             # TODO: Add offline fallback
             if not success:
-                self.showerror(self.tr("Could not load help document, sorry. :("))
+                self.showerror(self.tr("Could not load help document, sorry. :("), errtype='offline')
         ui.webEngineView.loadFinished.connect(helpdocloaded)
         return HelpDialog.exec_()
 
     def showLicenses(self):
         'Show a dialog to display licenses and terms'
         _licenseText = readResourceFile(':/txt/license')
-        _box = Gui.QMessageBox(self)
+        _box = QMessageBox(self)
         _box.setText(self.tr('This project is free software'))
         _box.setInformativeText(self.tr('You may use and redistribute it according to the GPL license, version 3'))
         _box.setDetailedText(_licenseText)
@@ -437,7 +440,7 @@ class Odometer(QMainWindow):
             logging.debug("Storing cookie for %s: %s", service, data.info().get('Set-Cookie', None))
             logging.debug("Service returned %s", data.getcode())
             #logging.debug("Headers: %s", data.info())
-            b = data.read()
+            b = data.read().decode()
             logging.debug("body: %s", b)
             login = False
             if service == 'AUX':
@@ -470,11 +473,13 @@ class Odometer(QMainWindow):
                 #  <div class="result" ssoToken="xxx">True</div>
                 # but if pasword failed, instead we get
                 # <div class="error failedlogin">You have 5 password attempts remaining.</div>
+                # or
+                # <div class="error"><li>Please enter a valid email address.</li></div>
                 if b.startswith('''<div class="result" ssoToken="'''):
                     self.settings.setValue('Universalcookie', data.info()['Set-Cookie'])
                     self.showstatus(self.tr('Logged in to Universal'))
                 else:
-                    m = self.tr('%s login failed: %s') % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, b)
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Extreme':
@@ -510,8 +515,8 @@ class Odometer(QMainWindow):
             logging.info('Getting auth (session id) from AUX')
             def getauth(resp):
                 'extract session id from response json'
-                body = resp.read()
-                sid =json.loads(body)['sid'] 
+                body = resp.read().decode()
+                sid = json.loads(body)['sid'] 
                 logging.debug('aux sid: %s', sid)
                 self.settings.setValue('AUXSID', sid)
                 self.settings.setValue('AUXcookie', resp.info()['Set-Cookie'])
@@ -591,7 +596,7 @@ class Odometer(QMainWindow):
             logging.info('Getting auth from Extreme Music')
             def getauth(resp):
                 'extract json from response body'
-                body = resp.read()
+                body = resp.read().decode()
                 logging.debug('auth: %s', body)
                 self.settings.setValue('ExtremeAUTH', json.loads(body)['env']['API_AUTH'])
             startBusy()
@@ -734,6 +739,7 @@ class Odometer(QMainWindow):
 
     def load(self, xmemlparser):
         'Load audio clips from xmeml parser into the gui'
+        logging.debug('Got xmemlparser: %r', xmemlparser)
         try:
             self.audioclips, self.audiofiles = xmemlparser.audibleranges(self.volumethreshold)
         except Exception as e:
@@ -789,10 +795,10 @@ class Odometer(QMainWindow):
                 w.trackProgress.connect(self.showProgress)
                 w.trackFailed.connect(lambda x: self.showProgress(x, 100)) # dont leave progress bar dangling
                 w.error.connect(lambda f, e: self.setRowInfo(row=f, text=e, warning=True))
-                w.error.connect(lambda f, e: self.showerror(e))
+                w.error.connect(lambda s: self.logMessage(s, msgtype=Status.ERROR))
                 w.warning.connect(lambda s: self.logMessage(s, msgtype=Status.WARNING))
                 self.workers.append(w) # keep track of the worker
-                w.resolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
+                w.delayresolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
             if self.showsubclips:
                 i = 1
                 for range in ranges:
@@ -1069,10 +1075,9 @@ class Odometer(QMainWindow):
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(apollomusicDialog)
         apollomusicDialog.setWindowTitle(self.tr('Apollo Music report'))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadProgress.connect(ui.progressBar.setValue)
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
-
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadProgress.connect(ui.progressBar.setValue)
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
         requestq = [ # a last in, first out queue of requests
                      # ('http://www.findthetune.com/online/#projects', None), # the last request: show project page
                      (None, '<html><body><h1>Tracks added to Apollo Music Project</h1><p>Please log on to findthetune.com and finish your report</p></body></html>'),
@@ -1092,19 +1097,19 @@ class Odometer(QMainWindow):
                 return # queue empty
             logging.debug("next url: %s, data:%s", _url, _data)
             if _url is None: # display _data, which is html
-                ui.webView.setHtml(_data)
+                ui.webEngineView.setHtml(_data)
                 return
 
             r = createRequest(_url)
 
             if _data is None: # do a http GET
-                ui.webView.load(r, QtNetwork.QNetworkAccessManager.GetOperation)
+                ui.webEngineView.load(r, QtNetwork.QNetworkAccessManager.GetOperation)
             else: # do a http POST
                 body = urllib.parse.urlencode(_data)
                 r.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, 'application/x-www-form-urlencoded')
-                ui.webView.load(r, QtNetwork.QNetworkAccessManager.PostOperation, body)
+                ui.webEngineView.load(r, QtNetwork.QNetworkAccessManager.PostOperation, body)
 
-        ui.webView.loadFinished.connect(next)
+        ui.webEngineView.loadFinished.connect(next)
         next()
         return apollomusicDialog.exec_()
 
@@ -1137,7 +1142,7 @@ class Odometer(QMainWindow):
         # pop up a dialog to submit this filename to us, since it clearly is missing from our lists
         resolver.trackResolved.connect(self.submitMissingFilename) 
         resolver.trackProgress.connect(lambda fn, p: self.showProgress(fn, p))
-        resolver.error.connect(lambda f, e: self.showerror(e))
+        resolver.error.connect(lambda f, e: self.showerror(e, errtype='resover error %s' % resolver.name))
         self.workers.append(resolver) # keep track of the worker
         resolver.resolve(str(manualPattern), filepath.pathurl) # put the worker to work async
 
@@ -1149,9 +1154,9 @@ class Odometer(QMainWindow):
         ui.setupUi(GdocsDialog)
         GdocsDialog.setWindowTitle(self.tr('Submit missing filename'))
         ui.buttonBox.hide()
-        ui.webView.load(Core.QUrl(_url))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        ui.webEngineView.load(Core.QUrl(_url))
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
         if resolvedmetadata is None:
             # take metadata from current row
             try:
@@ -1163,12 +1168,10 @@ class Odometer(QMainWindow):
 
         def reportloaded(boolean):
             logging.debug("report loaded: %s" % boolean)
-            html = ui.webView.page().mainFrame()
-            fn = html.findFirstElement('input[id="entry_0"]')
-            fn.setAttribute("value", filename)
-            text = html.findFirstElement("textarea")
-            text.setPlainText(str(vars(resolvedmetadata)))
-        ui.webView.loadFinished.connect(reportloaded)
+            page = ui.webEngineView.page()
+            page.runJavaScript("""document.getElementById('entry_0').value='%s'""" % filename)
+            page.runJavaScript("""document.querySelector('textarea').value='%s'""" % str(vars(resolvedmetadata)))
+        ui.webEngineView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()
 
     def credits(self):
@@ -1204,23 +1207,23 @@ class Odometer(QMainWindow):
 
     def reportError(self):
         'Report program error to an online form'
-        _url = 'https://docs.google.com/a/lurtgjort.no/spreadsheet/viewform?formkey=dHFtZHFFMlkydmRPTnFNM2l3SHZFcFE6MQ'
+        _url = 'https://goo.gl/forms/vasvfQWR1o1MMetj1'
         GdocsDialog = QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(GdocsDialog)
         ui.buttonBox.hide()
         GdocsDialog.setWindowTitle(self.tr('Report an error'))
-        ui.webView.load(Core.QUrl(_url))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        ui.webEngineView.load(Core.QUrl(_url))
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadProgress.connect(ui.progressBar.setValue)
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
+        page = ui.webEngineView.page()
         def reportloaded(boolean):
             logging.debug("reporterror loaded: %s", boolean)
-            html = ui.webView.page().mainFrame()
-            log = html.findFirstElement('textarea[aria-label="Programlogg Dette er loggen fra Odometer "]')
-            log.setPlainText(''.join(self.log))
-            log = html.findFirstElement('input[aria-label="Programversjon  "]')
-            log.setAttribute('value', self.getVersion())
-        ui.webView.loadFinished.connect(reportloaded)
+            log = html.escape(''.join(self.log))
+            page.runJavaScript('''var x = document.querySelector('textarea[aria-label="Programlogg"]'); if (x) {x.value="%s"};''' % log)
+            page.runJavaScript("""document.querySelector('input[aria-label="Programversjon"]').value='%s'""" % self.getVersion())
+        ui.webEngineView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()
 
     def editDuration(self, row, col): # called when double clicked
@@ -1327,18 +1330,7 @@ def rungui(argv):
             #argv = argv[0:-1]
     except IndexError:
         pass
-    if sys.platform == 'win32':
-        # default win32 looks awful, make it pretty
-        # docs advise to do this before QApplication() is started
-        QApplication.setStyle("cleanlooks")
     app = QApplication(argv)
-    if sys.platform == 'win32':
-        def setfont(fontname):
-            app.setFont(Gui.QFont(fontname, 9))
-            return app.font().split(',')[0] == fontname
-        # default win32 looks awful, make it pretty
-        for z in ['Lucida Sans Unicode', 'Arial Unicode MS', 'Verdana']:
-            if setfont(z): break
     if f is not None: o = Odometer(app, f)
     else: o = Odometer(app)
     o.run(app)
@@ -1346,4 +1338,3 @@ def rungui(argv):
 if __name__ == '__main__':
     logging.basicConfig(level=logging.DEBUG)
     rungui(sys.argv)
-

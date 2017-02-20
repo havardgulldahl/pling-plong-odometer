@@ -9,7 +9,7 @@ import xmeml
 from gui import main
 
 
-if '-d' in sys.argv:
+if True: #'-d' in sys.argv:
     lvl = logging.DEBUG
 else:
     # suppress error messages 

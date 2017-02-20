@@ -127,6 +127,11 @@ class ResolverBase(Core.QObject):
         #time.sleep(random.random() * 4)
         self.trackResolved.emit(self.filename, md)
 
+    def delayresolve(self, filename, fullpath, fromcache=True):
+        def r():
+            self.resolve(filename, fullpath, fromcache)
+        Core.QTimer.singleShot(0, r)
+
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
         self.fullpath = fullpath
@@ -381,7 +386,7 @@ class DMAResolver(ResolverBase):
     def quicklookup(ltype, substring):
         url = 'http://dma/getUnitNames.do?type=%s&limit=10' % ltype
         data = urllib.parse.urlencode( ('in', substring ), )
-        return json.loads(urllib.request.urlopen(url, data).read())
+        labels = json.loads(urllib.request.urlopen(req).read().decode())
 
     @staticmethod
     def performerlookup(substring):
@@ -499,13 +504,7 @@ class ApollomusicResolver(ResolverBase):
         self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
         self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
         self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
-        # check login cookie, without it we get nothing from the service
-        if self.logincookie is None:
-            self.error.emit(self.filename, u"You need to log in to ApolloMusic before we can look something up")
-            self.trackFailed.emit(self.filename)
-            return
-
-        self.worker.load(filename, self.logincookie)
+        self.worker.load(filename)
 
 class UniPPMResolver(ResolverBase):
     prefixes = [ ]
@@ -608,6 +607,7 @@ class UniPPMResolver(ResolverBase):
                   'STFTA': 'Selectedtracks Unknown',
                   'SUN': 'Unknown',
                   'ULS':'Ultimate Latin Series ',
+                  'UPM': 'Universal filename prefix', ### standard file name prefix???? observed late 2016
                   'US':'Ultimate Series ',
                   'UTS':'Universal Trailer Series ',
                   'VL':'Velocity',
@@ -626,14 +626,24 @@ class UniPPMResolver(ResolverBase):
     def musicid(filename):
         """Returns musicid from filename.
 
+
+        # old format
         KOS_397_3_Exploit_Kalfayan_Sarkissian_710023.wav -> 710023
         BER_1216B_76_Silent_Movie_Theme_Mersch_433103.wav -> 433103
+        # new format, observed late 2016
+        UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
         """
-        rex = re.compile(r'^(%s)_\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
-            re.UNICODE) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
+        # first, try new format
+        rex = re.compile(r'^(UPM_)?(%s)\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+            re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
         g = rex.search(filename)
+        if g is None:
+            # try old format
+            rex = re.compile(r'^(%s)_\d{1,4}[A-Z]?_\d{1,4}_(\w+)_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+                re.UNICODE) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
+            g = rex.search(filename)
         try:
-            return g.group(2)
+            return g.group(3)
         except AttributeError: #no match
             return None
 
@@ -769,7 +779,7 @@ class ExtremeMusicResolver(ResolverBase):
         #0. Get session token
         #curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
         ENVURL = 'https://www.extrememusic.com/env'
-        env = json.loads(urllib.request.urlopen(ENVURL).read())
+        env = json.loads(urllib.request.urlopen(ENVURL).read().decode())
         self.setlogincookie(env['env']['API_AUTH'])
 
 
@@ -791,6 +801,6 @@ class ExtremeMusicResolver(ResolverBase):
         req = urllib.request.Request('https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series')
         req.add_header('X-API-Auth', self.logincookie)
 
-        labels = json.loads(urllib.request.urlopen(req).read())
+        labels = json.loads(urllib.request.urlopen(req).read().decode())
         r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
         return r
