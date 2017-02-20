@@ -3,6 +3,9 @@
 block_cipher = None
 
 import sys
+import os.path
+import ntpath
+import PyQt5
 
 added_files = [
                ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Core.dll', '.'),
@@ -12,7 +15,7 @@ added_files = [
               ]
 
 a = Analysis(['src/pling-plong-odometer.py'],
-             pathex=['c:\\python35\\lib\\site-packages\\pyqt5\\qt\\bin', './src/gui', './'],
+             pathex=[os.path.join(ntpath.dirname(PyQt5.__file__), 'Qt', 'bin'), './src/gui', './'],
              binaries=None,
              datas=None,
              hiddenimports=[],
