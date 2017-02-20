@@ -2,9 +2,20 @@
 
 block_cipher = None
 
+import sys
+import os.path
+import ntpath
+import PyQt5
+
+added_files = [
+               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Core.dll', '.'),
+               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Gui.dll', '.'),
+               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Widgets.dll', '.'),
+               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\QtWebEngineProcess.exe', '.')
+              ]
 
 a = Analysis(['src/pling-plong-odometer.py'],
-             pathex=['/Users/n18040/Documents/Utvikling/pling-plong-odometer'],
+             pathex=[os.path.join(ntpath.dirname(PyQt5.__file__), 'Qt', 'bin'), './src/gui', './'],
              binaries=None,
              datas=None,
              hiddenimports=[],
@@ -20,10 +31,22 @@ exe = EXE(pyz,
           a.scripts,
           exclude_binaries=True,
           name='pling-plong-odometer',
-          debug=False,
+          debug=True,
           strip=False,
           upx=True,
-          console=False )
+          console=True, icon='odometer.ico')
+app = BUNDLE(exe,
+             name='Pling plong odometer.app',
+             icon='odometer.icns',
+             bundle_identifier='no.nrk.odometer',
+             info_plist={
+                 # create osx Info.plist 
+                 # https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
+                'NSHighResolutionCapable': 'True',
+                'CFBundleDisplayName': '♫ ♪ Odometer',
+                'NSHumanReadableCopyright': 'Copyright 2011-2017 havard.gulldahl@nrk.no',
+             },
+             )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -31,7 +54,3 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                name='pling-plong-odometer')
-app = BUNDLE(coll,
-             name='pling-plong-odometer.app',
-             icon=None,
-             bundle_identifier=None)
