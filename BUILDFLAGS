@@ -4,6 +4,7 @@ releaseCheck=0
 helpUrl=http://hjelp/pling-plong-odometer
 dropboxUrl=http://dl.dropbox.com/u/12128173/Odometer
 AUXRepertoireUrl=http://auxjson.appspot.com/
+version=1997-12-31
 [ui]
 volumeThreshold=0
 prfbutton=1

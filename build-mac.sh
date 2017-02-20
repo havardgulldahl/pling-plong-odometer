@@ -20,6 +20,7 @@ echo "Generating version: $VERSION";
 # change bulid defaults
 sed -i .bk "s/beta=.*/beta=0/" BUILDFLAGS
 sed -i .bk "s/releaseCheck=.*/releaseCheck=0/" BUILDFLAGS
+sed -i .bk "s/version=.*/version=$VERSION/" BUILDFLAGS
 
 echo "$VERSION" > ./VERSIONMAC
 
@@ -34,6 +35,7 @@ pyinstaller -y pling-plong-odometer.spec || error "pyinstaller failed"
 
 # changing back defaults
 sed -i .bk "s/beta=.*/beta=1/" BUILDFLAGS
+sed -i .bk "s/version=.*/version=1997-12-31/" BUILDFLAGS
 
 # add some missing pieces
 echo "Adding some extra resources"
