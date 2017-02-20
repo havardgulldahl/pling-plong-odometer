@@ -1,24 +1,38 @@
 # -*- mode: python -*-
 
+import sys
+import os, os.path
+import PyQt5
+import distutils.util
+
+
 block_cipher = None
 
-import sys
-import os.path
-import ntpath
-import PyQt5
+pyqtpath=os.path.join(os.path.dirname(PyQt5.__file__), 'Qt')
+pyqtbinpath=os.path.join(pyqtpath, 'bin')
+pyqtlibpath=os.path.join(pyqtpath, 'lib')
+thispath=os.getcwd()
+
+_platform = distutils.util.get_platform()
+if _platform == 'win-amd64':
+    platform = 'win'
+elif _platform == 'linux-x86_64':
+    platform = 'nix64'
+elif "macosx" and "x86_64" in _platform:
+    platform = 'mac'
 
 added_files = [
-               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Core.dll', '.'),
-               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Gui.dll', '.'),
-               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\Qt5Widgets.dll', '.'),
-               ('C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin\\QtWebEngineProcess.exe', '.')
+               (os.path.join(pyqtbinpath, 'Qt5Core.dll'), '.'),
+               (os.path.join(pyqtbinpath, 'Qt5Gui.dll'), '.'),
+               (os.path.join(pyqtbinpath, 'Qt5Widgets.dll'), '.'),
+               (os.path.join(pyqtbinpath, 'QtWebEngineProcess.exe'), '.')
               ]
 
 a = Analysis(['src/pling-plong-odometer.py'],
-             pathex=[os.path.join(ntpath.dirname(PyQt5.__file__), 'Qt', 'bin'), './src/gui', './'],
+             pathex=[os.path.join(thispath, 'src', 'gui'), thispath, pyqtbinpath, pyqtlibpath],
              binaries=None,
              datas=None,
-             hiddenimports=[],
+             hiddenimports=['gui', 'xmeml'],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
@@ -35,18 +49,6 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           console=True, icon='odometer.ico')
-app = BUNDLE(exe,
-             name='Pling plong odometer.app',
-             icon='odometer.icns',
-             bundle_identifier='no.nrk.odometer',
-             info_plist={
-                 # create osx Info.plist 
-                 # https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
-                'NSHighResolutionCapable': 'True',
-                'CFBundleDisplayName': '♫ ♪ Odometer',
-                'NSHumanReadableCopyright': 'Copyright 2011-2017 havard.gulldahl@nrk.no',
-             },
-             )
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
@@ -54,3 +56,21 @@ coll = COLLECT(exe,
                strip=False,
                upx=True,
                name='pling-plong-odometer')
+             
+if platform == 'mac':
+    app = BUNDLE(exe,
+                name='Pling plong odometer.app',
+                icon='odometer.icns',
+                bundle_identifier='no.nrk.odometer',
+                info_plist={
+                    # create osx Info.plist 
+                    # https://developer.apple.com/library/content/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
+                    'NSHighResolutionCapable': 'True',
+                    'CFBundleDisplayName': '♫ ♪ Odometer',
+                    'NSHumanReadableCopyright': 'Copyright 2011-2017 havard.gulldahl@nrk.no',
+                },
+                )
+    # NOTE, you still have to manually copy everything from
+    # dist/pling-plong-odometer/ -> dist/Pling plong odometer.app/Contents/MacOS
+    # pynstaller does not do this
+    # https://github.com/pyinstaller/pyinstaller/issues/2460

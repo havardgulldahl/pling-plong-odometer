@@ -30,7 +30,6 @@ python3 ./buildpyqt.py
 
 # build the castle
 echo "Building the app (see build.log)"
-#python3 setup.py py2app > build.log || error "py2app failed"
 pyinstaller -y pling-plong-odometer.spec || error "pyinstaller failed"
 
 # changing back defaults
@@ -38,9 +37,14 @@ sed -i .bk "s/beta=.*/beta=1/" BUILDFLAGS
 sed -i .bk "s/version=.*/version=1997-12-31/" BUILDFLAGS
 
 # add some missing pieces
+
+# for some reason, pyinstaller does not bundle the .app completely, leaving
+# some parts out. see https://github.com/pyinstaller/pyinstaller/issues/2460
+cp -r dist/pling-plong-odometer/* dist/Pling\ Plong\ Odometer.app/Contents/MacOS/ || error "Could not add crucial app resource"
 echo "Adding some extra resources"
 cp -r "$NIB" dist/Pling\ Plong\ Odometer.app/Contents/Resources/ || error "Could not copy crucial qt resource"
 echo -e "[Paths]\nPlugins = plugins" > dist/Pling\ Plong\ Odometer.app/Contents/Resources/qt.conf
+# TODO: add Info.plist
 
 # rename to maximase brand name exposure (badges to come!)
 mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
