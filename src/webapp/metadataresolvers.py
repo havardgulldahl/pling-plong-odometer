@@ -6,48 +6,49 @@ import os
 import os.path
 import hashlib
 import logging
-import cPickle as pickle
+import pickle
 import random
-import urllib, urllib2
+import urllib
+import urllib.request
+from io import StringIO
 import time
 import datetime
 import re
 import json
-import HTMLParser
+import html.parser
 
-from ..model import TrackMetadata
+import aiohttp
+
+import xml.etree.ElementTree as ET
+import lxml.html
+
+import appdirs 
+
+from model import TrackMetadata
 
 def findResolver(filename):
-    resolvers = [DMAResolver(),
-             AUXResolver(),
-             ApollomusicResolver(),
-             UniPPMResolver(),
-             UprightmusicResolver(),
-             ExtremeMusicResolver(),
-             GenericFileResolver()]
-    for resolver in resolvers:
-        # print "%s accepts: %s" % (resolver, resolver.accepts(filename))
+    for resolver in [x() for x in CURRENT_RESOLVERS]:
+        if not resolver.enabled: continue
         if resolver.accepts(filename):
             return resolver
     return False
 
-def getResolverPatterns():
-    resolvers = [DMAResolver(),
-             AUXResolver(),
-             ApollomusicResolver(),
-             UniPPMResolver(),
-             ExtremeMusicResolver(),
-             UprightmusicResolver(),
-             GenericFileResolver()]
-    r = {}
-    for resolver in resolvers:
-        r[resolver.name] = {'prefixes':resolver.prefixes, 'postfixes':resolver.postfixes}
+def getResolvers():
+    r = []
+    for resolver in [x() for x in CURRENT_RESOLVERS]:
+        r.append({'name': resolver.name,
+                  'prefixes':resolver.prefixes,
+                  'postfixes':resolver.postfixes,
+                  'enabled': resolver.enabled,
+                  'prettyname': resolver.prettyname,
+                  'description': resolver.description,
+                  'website': resolver.website,
+                  'contractdetails': resolver.contractdetails,
+        })
     return r
 
-
 def htmlunescape(s):
-    return HTMLParser.HTMLParser().unescape(s)
-
+    return html.parser.HTMLParser().unescape(s)
 
 def getmusicid(filename):
     "Return a music id from filename"
@@ -56,77 +57,65 @@ def getmusicid(filename):
         return ResolverBase.musicid(filename)
     return res.musicid(filename)
 
+<<<<<<< HEAD
 class ResolverBase(object):
+=======
+class ResolverBase:
+>>>>>>> origin/webapp
     prefixes = [] # a list of file prefixes that this resolver recognizes
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
     labelmap = [] # a list of labels that this music service carries
     name = 'general'
-    error = Core.pyqtSignal(unicode, unicode, name="error" ) # filename,  error message
-    trackFailed = Core.pyqtSignal(unicode, name="trackFailed" ) # filename
-    trackResolved = Core.pyqtSignal(unicode, TrackMetadata, name="trackResolved" ) # filename, metadataobj
-    trackProgress = Core.pyqtSignal(unicode, int, name="trackProgress" ) # filename, progress 0-100
-    warning = Core.pyqtSignal(unicode, name="warning") # warning message
+    description = ''
+    prettyname = 'General'
+    enabled = True
+    website = ''
+    contractdetails = ''
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
 
+<<<<<<< HEAD
     def __init__(self, parent=None):
         super(ResolverBase, self).__init__(parent)
+=======
+    def __init__(self):
+        self.session = None # set it in .setSession() or lazy create in .resolve()
+>>>>>>> origin/webapp
         self.logincookie = None
 
     def accepts(self, filename):
         for f in self.prefixes:
-            if unicode(filename).upper().startswith(f):
+            if str(filename).upper().startswith(f):
                 return True
         for f in self.postfixes:
-            if unicode(filename).upper().endswith(f):
+            if str(filename).upper().endswith(f):
                 return True
         return False
 
-    def testresolve(self, filename):
-        self.filename = filename
-        i = random.randint(0,1000)
-        md = TrackMetadata( filename = unicode(filename),
-                            musiclibrary = self.name,
-                            title = "Funky title %i" % i,
-                            length = random.randint(30,500),
-                            composer = "Mr. Composer %i" % i,
-                            artist = "Mr. Performer %i" % i,
-                            year = random.randint(1901,2011) )
-        #time.sleep(random.random() * 4)
-        self.trackResolved.emit(self.filename, md)
+    def setSession(self, session):
+        'add existing aiohttp.ClientSession() to object for transparent cookie handling and resource reuse'
+        self.session = session
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return False
+                return md
         url = self.url(filename)
         if not url: # invalid url, dont load it
-            self.error.emit(filename, 'Invalid url for filename %s' % filename)
-            self.trackFailed.emit(filename)
             return False
         logging.debug('ResolverBase.resolve traversing the INTERNET: %s => %s', filename, url)
-        self.doc = webdoc(self.filename, url, parent=None)
-        self.doc.frame.loadFinished.connect(self.parse)
-        self.doc.page.loadProgress.connect(self.progress)
-        self.doc.load()
-        return True
-
-    def progress(self, i):
-        self.trackProgress.emit(self.filename, i)
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        async with self.session.get(url) as response:
+            logging.debug('INTERNET got us %r', response)
+            return await response.text()
 
     def url(self, filename): # return url from filename
         _id = self.musicid(filename)
         if _id is None:
             return False
         return self.urlbase % _id
-
-    def parse(self):
-        # reimplement this to emit a signal with a TrackMetadata object when found
-        #self.trackResolved.emit(self.filename, md)
-        pass
 
     @staticmethod
     def musicid(filename):
@@ -157,9 +146,9 @@ class ResolverBase(object):
         except IOError: #file doesn't exist -> not cached
             return None
         try:
-            metadata =  pickle.loads(loc.read())
+            metadata = pickle.loads(loc.read())
             loc.close()
-        except Exception, (e):
+        except Exception as e:
             # something went wrong, cache invalid
             self.warning.emit('fromcache error: %s' % e)
             return None
@@ -177,30 +166,39 @@ class ResolverBase(object):
 
     def cachelocation(self):
         "Return a dir suitable for storage"
+<<<<<<< HEAD
         return '/tmp' # TODO: implement this when the celery queue is working
         dir = Gui.QDesktopServices.storageLocation(Gui.QDesktopServices.CacheLocation)
         ourdir = os.path.join(os.path.abspath(unicode(dir)), 'no.nrk.odometer')
+=======
+        ourdir = appdirs.user_cache_dir('odometer', 'no.nrk.odometer')
+>>>>>>> origin/webapp
         if not os.path.exists(ourdir):
-           os.makedirs(ourdir)
-               #return os.path.join(ourdir, self.filename)
+            os.makedirs(ourdir)
         try:
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
         except UnicodeEncodeError:
-            print repr(self.filename), type(self.filename)
+            logging.warning("cachelocation warn: %r - %r", repr(self.filename), type(self.filename))
 
+<<<<<<< HEAD
     def setlogincookie(self, cookie):
         "Add login cookie to service. Only applicable for some services"
         self.logincookie = cookie
+=======
+    def cleanup(self, filename, *args):
+        "Remove objects to prevent hanging threads"
+        pass
+>>>>>>> origin/webapp
 
     def getlabel(self, hint):
         "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
         return self.labelmap.get(hint, hint) # return hint verbatim if it's not in map
 
-
 class GenericFileResolver(ResolverBase):
     'Resolve file based on embedded metadata, i.e. id3 tags, vorbis tags, bwf'
     name = 'file'
     postfixes = ['MP3','WAV']
+    enabled = False
 
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
@@ -211,9 +209,9 @@ class GenericFileResolver(ResolverBase):
                 self.trackResolved.emit(self.filename, md)
                 return True
         parsed = False
-        if isinstance(fullpath, basestring) and os.path.exists(fullpath) and fullpath.upper().endswith('.MP3'):
+        if isinstance(fullpath, str) and os.path.exists(fullpath) and fullpath.upper().endswith('.MP3'):
             parsed = self.id3parse(fullpath)
-        elif isinstance(fullpath, basestring) and os.path.exists(fullpath) and fullpath.upper().endswith('.WAV'):
+        elif isinstance(fullpath, str) and os.path.exists(fullpath) and fullpath.upper().endswith('.WAV'):
             parsed = self.wavparse(fullpath)
         if not parsed:
             if fullpath is None: # clip is offline
@@ -236,8 +234,8 @@ class GenericFileResolver(ResolverBase):
 
     def id3parse(self, filename):
         'Parse metadata from id3 tags and return TrackMetadata object or False'
-	# disable mp3 scanning
-	return False
+        # disable mp3 scanning
+        return False
         try:
             _filev1 = tagger.ID3v1(filename)
             _filev2 = tagger.ID3v2(filename)
@@ -278,7 +276,7 @@ class GenericFileResolver(ResolverBase):
         if _filev1.album.decode('latin1') == u'NRK P3 Urørt':
             md.musiclibrary = u'Urørt'
         # try to fix things
-        if isinstance(md.year, basestring):
+        if isinstance(md.year, str):
             try:
                 _y = md.year
                 md.year = datetime.datetime.strptime(_y, '%Y-%m-%dT%H:%M:%SZ').year
@@ -298,6 +296,9 @@ class DMAResolver(ResolverBase):
     #
     prefixes = ['NRKO_', 'NRKT_', 'NONRO', 'NONRT', 'NONRE' ]
     name = 'DMA'
+    prettyname = 'NRKs Digitale Musikkarkiv'
+    website = 'http://dma/'
+    enabled = True
     #cacheTimeout = 1
 
     @staticmethod
@@ -309,40 +310,74 @@ class DMAResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def xresolve(self, filename):
-        # return placeholder metadata
-        # to be replaced by a gluon/DMA lookup later in the process
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        dummymetadata = TrackMetadata(filename=unicode(filename),
-                                      musiclibrary='DMA',
-                                      title = 'Kommer fra DMA',
-                                      composer = 'Kommer fra DMA',
-                                      artist = 'Kommer fra DMA',
-                                      year = 2011,
-                                      length = 23)
-        self.progress(100)
-        self.trackResolved.emit(self.filename, dummymetadata)
-
-    def resolve(self, filename, fullpath, fromcache=True):
-        self.filename = filename
-        self.fullpath = fullpath
+        _musicid = self.musicid(filename)
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return
-        self.worker = lookupWorkers.GluonLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(filename, msg))
-        self.worker.load(filename)
+                return md
 
+        endpoint="http://mamcdma02/DMA/{musicid}.xml"
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        async with self.session.get(endpoint.format(musicid=_musicid)) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.text()
+            metadata = await self.parse_gluon_xml(StringIO(data), filename)
+            return metadata
+
+    async def parse_gluon_xml(self, xmlsource, filename):
+        'Get a string of xml from gluon and parse it into TrackMetadata'
+
+        # GLUON XML CONVENIENCE METHODS AND STUFF
+        GLUON_NAMESPACE='{http://gluon.nrk.no/gluon2}'
+        GLUONDICT_NAMESPACE='{http://gluon.nrk.no/gluonDict}'
+        def glns(tag):
+            s = []
+            for ss in tag.split("/"):
+                s.append('%s%s' % (GLUON_NAMESPACE, ss))
+            return "/".join(s)
+
+        self.tree = ET.parse(xmlsource)
+        obj = self.tree.find('.//'+glns('object'))
+        md = TrackMetadata(filename=filename, musiclibrary='DMA')
+        md.identifier = obj.find('.//'+glns('identifier')).text
+        md.title = obj.find('.//'+glns('title')).text
+        md.albumname = obj.find('.//'+glns('titleAlternative')).text
+        for creator in obj.findall('.//'+glns('creator')):
+            if creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V34':
+                # Komponist
+                md.composer = creator.find('./'+glns('name')).text
+            elif creator.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V811':
+                # Tekstforfatter
+                md.lyricist = creator.find('./'+glns('name')).text
+        _a = []
+        for contributor in obj.findall('.//'+glns('contributor')):
+            if contributor.find('./'+glns('role')).get('link') == 'http://gluon.nrk.no/nrkRoller.xml#V35':
+                # Utøver
+                _a.append(contributor.find('./'+glns('name')).text)
+        md.artist = '; '.join(_a)
+        for date in obj.findall('.//'+glns('dateAlternative')):
+            if date.get('%sdatesGroupType' % GLUONDICT_NAMESPACE) == 'dateIssued':
+                md.year = date.find('./'+glns('start')).get('startYear')
+        for ref in obj.findall('.//'+glns('relationIsReferencedBy')):
+            if ref.get('link') == 'http://gluon.nrk.no/dataordbok.xml#recordNumber':
+                _recordnumber = ref.text
+                try:
+                    md.label, md.recordnumber = [ x.strip() for x in _recordnumber.split(';')]
+                except ValueError:
+                    md.recordnumber = _recordnumber
+                    md.label = 'Unknown'
+        return md
+
+    """
     @staticmethod
     def quicklookup(ltype, substring):
         url = 'http://dma/getUnitNames.do?type=%s&limit=10' % ltype
-        data = urllib.urlencode( ('in', substring ), )
-        return json.loads(urllib.urlopen(url, data).read())
+        data = urllib.parse.urlencode( ('in', substring ), )
+        labels = json.loads(urllib.request.urlopen(req).read().decode())
 
     @staticmethod
     def performerlookup(substring):
@@ -352,6 +387,7 @@ class DMAResolver(ResolverBase):
     def creatorlookup(substring):
         return self.quicklookup('creator', substring)
 
+    """
 
 class AUXResolver(ResolverBase):
     prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD']
@@ -391,7 +427,9 @@ class AUXResolver(ResolverBase):
                 'WD': 'Wild Diesel',
                }
     name = 'AUX Publishing'
-    urlbase = 'http://search.auxmp.com/search/html/popup_cddetails_i.php?cdkurz=%s&w=tr&lyr=0'
+    prettyname = 'AUX Publishing (inkluderer Sonoton)'
+    website = 'http://search.auxmp.com/'
+    urlbase = 'http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=%s&ac=track&country=NO'
 
     @staticmethod
     def musicid(filename):
@@ -403,59 +441,6 @@ class AUXResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def resolve(self, filename, fullpath, fromcache=True):
-        # first try to get metadata from online sources.
-        if super(AUXResolver, self).resolve(filename, fullpath, fromcache):
-            return True
-        # then try to read id3 data from mp3 file, if we have a path
-        # (if the clip is offline, there won't be a path available)
-        if fullpath is not None:
-            _mp3 = GenericFileResolver()
-            return _mp3.resolve(filename, fullpath)
-        return False
-
-    def parse(self):
-        metadatabox = unicode(self.doc.frame.findFirstElement("#csinfo").toInnerXml())
-        #logging.debug('metadatabox: %s', metadatabox)
-        if len(metadatabox.strip()) == 0:
-            self.trackFailed.emit(self.filename)
-            self.error.emit(self.filename, "Could not get info on %s. Lookup failed" % self.filename)
-            return None
-        metadata = TrackMetadata(filename=self.doc.filename,
-                                 recordnumber=self.musicid(self.doc.filename),
-                                 musiclibrary=self.name)
-        try:
-            duration = unicode(self.doc.frame.findAllElements("div[style='top:177px;']")[1].toInnerXml())
-            mins, secs = [int(s.strip()) for s in duration.split(' ')[0].split(":")]
-            metadata.length=mins*60+secs
-        except:
-            pass
-        mapping = { 'Track name': 'title', #REMEMBER LAST SUMMER
-                    'Track number': 'identifier', #SCD 821 20.0
-                    'Composer': 'composer', #Mladen Franko
-                    'Artist': 'artist', #(N/A for production music)
-                    'Album name': 'albumname',#ORCHESTRAL LANDSCAPES 2
-                    'Catalogue number': 'catalogue', #821
-                    'Label': '_label', #SCD
-                    'Copyright owner': 'copyright', #(This information requires login)
-                    'LC number': 'lcnumber', #07573 - Library of Congress id
-                    'EAN/GTIN': 'ean', # 4020771100217 - ean-13 (barcode)
-                    'ISRC': 'isrc', # DE-B63-10-021-20 - International Standard Recording Code
-                  }
-        for l in metadatabox.split('\n'):
-            if not len(l.strip()): continue
-            meta, data = [s.strip() for s in l.split(':', 1)]
-            logging.debug('metadata: %s=%s', meta, htmlunescape(data))
-            try:
-                setattr(metadata, mapping[meta], htmlunescape(data))
-            except KeyError:
-                logging.error('Unknown metadata field received from AUX: -%s-, skipping to next', meta)
-
-        metadata.productionmusic = True
-        metadata.label = self.getlabel(metadata._label)
-        self.trackResolved.emit(self.filename, metadata)
-
-
     def updateRepertoire(self, labelmap):
         """Takes an updated label map, e.g. from auxjson.appspot.com, and updates the internal list"""
         self.labelmap.update(labelmap)
@@ -463,12 +448,107 @@ class AUXResolver(ResolverBase):
             if not prefix in self.prefixes:
                 self.prefixes.append(prefix)
 
+    async def resolve(self, filename, fromcache=True):
+        self.filename = filename
+        _musicid = self.musicid(filename)
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                return md
+
+        """do an http get request to http://search.auxmp.co//search/html/ajax/axExtData.php
+
+        look up musicid, e.g ROCK015601
+
+        by doing a get request to
+        http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=ROCK015601&ac=track&country=NO'
+
+        and parse the json we get back
+
+        """
+        endpoint = 'http://search.auxmp.com//search/html/ajax/axExtData.php'
+        params = {'ac': 'track',
+                  'country': 'NO',
+                  'cdkurz': _musicid
+        }
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        async with self.session.get(endpoint, params=params) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            trackdata = data.get('tracks')[0]
+
+            metadata = TrackMetadata(filename=self.filename,
+                    musiclibrary=self.name,
+                    title=trackdata.get('title', None),
+                    length=trackdata.get('nZeit', -1),
+                    composer=trackdata.get('allkomp', None),
+                    artist=trackdata.get('artists', None),
+                    year=-1,
+                    recordnumber=_musicid,
+                    albumname=trackdata.get('cd_title', None),
+                    copyright='SONOTON Music GmbH & Co. KG',
+                    lcnumber=trackdata.get('lc', None),
+                    isrc=trackdata.get('isrc', None),
+                    ean=trackdata.get('ean', None),
+                    catalogue=trackdata.get('p_nummer', None),
+                    label=trackdata.get('label', None),
+                    lyricist=trackdata.get('lyrics', None),
+                    identifier=trackdata.get('cdkurz', self.musicid)
+                    )
+            metadata.productionmusic = True
+            try:
+                dt = datetime.datetime.strptime(trackdata.get('releasedat', None), '%Y-%m-%d') #SIC, 
+                logging.debug('Got datetime %r for musicid %r', dt, self.musicid)            
+                metadata.year = dt.year
+            except (ValueError, TypeError) as e:
+                logging.exception(e)
+                pass # the data does not fit our expectations, so we let it slide
+            except Exception as e:
+                # this is unexpected
+                logging.exception(e)
+
+            if metadata.title is not None:
+                metadata.title = metadata.title.title() # all AUX titles are ALL CAPS. Noisy!
+            return metadata
+
+        """
+        except IOError as e:
+            # e.g. dns lookup failed
+            logging.exception(e)
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but DNS lookup failed. ' % (musicid,))
+
+        if req.getcode() in (404, 403, 401, 400, 500):
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but failed. Please try again' % (musicid,))
+        if len(response) == 0 or response.get('ax_success') != 1:
+            # empty response,
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but failed. Please try again' % (musicid,))
+        elif len(response.get('errmsg', '')) > 0:
+            # we got an error message from auxmp.com
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but received an error from AUX: %r' % (musicid, response.errmsg))
+        elif response.get('trackcnt') == 0:
+            # auxmp.com didnt return any tracks for our search term
+            raise web.HTTPBadRequest(reason='Tried to lookup %s, but the AUX server returned no tracks with that id' % (musicid, ))
+        else:
+            raise web.HTTPBadRequest(reason='unknow error')
+        """
+
+
 
 class ApollomusicResolver(ResolverBase):
     prefixes = [ 'APOLLO_',]
     name = 'ApolloMusic'
+    prettyname = 'Apollo Music'
+    website = 'http://findthethune.com/'
     urlbase = 'http://www.findthetune.com/action/search_tracks_action/' # HTTP POST interface, returns json
     labelmap = { } # TODO: get list of labels
+
+    def setlogin(self, username, password):
+        'set username and password for .get_login_cookie()'
+        self.username = username
+        self.password = password
 
     @staticmethod
     def musicid(filename):
@@ -484,31 +564,89 @@ class ApollomusicResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def get_login_cookie(self):
+        'Login to apollo to get login cookie. returns string'
+        url = 'http://www.findthetune.com/online/login/ajax_authentication/'
+        postdata = {'user':self.username,
+                    'pass':self.password
+        }
+        async with self.session.post(url, data=postdata) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            logging.info('got cookies: %r', resp.cookies)
+            if data.get('success', None) == 1:
+                return resp.cookies
+            else:
+                logging.error('Apollo login failed: %s', result.get('message', 'No fail message provided'))
+                return None
+        
+
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
+        _musicid = self.musicid(filename)
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return
-        self.worker = lookupWorkers.ApollomusicLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
-        # check login cookie, without it we get nothing from the service
-        if self.logincookie is None:
-            self.error.emit(self.filename, u"You need to log in to ApolloMusic before we can look something up")
-            self.trackFailed.emit(self.filename)
-            return
+                return md
+        # login to apollo
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        #if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
+        #    self.session.logincookie = await self.get_login_cookie()
+        #get details from filename, look up with http get 
+        _lbl, _albumid, _trackno = _musicid.split('_')
+        params = {
+            'label': _lbl,
+            'album': _albumid,
+            'track': _trackno
+        }
+        endpoint = 'http://www.findthetune.com/guests/search/label={label}&album={album}&track={track}'.format(**params)
+        def get_sec(time_str):
+            'helper method to get seconds from a time string, e.g. "01:04" -> 64'
+            try:
+                m, s = time_str.split(':')
+                return int(m) * 60 + int(s)
+            except ValueError:
+                return -1
 
-        self.worker.load(filename, self.logincookie)
+        async with self.session.get(endpoint) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            trackdata = data['tracks'][0]
+            try: _yr = int(trackdata.get('recorded', -1), 10)
+            except:  _yr = -1
+            metadata = TrackMetadata(filename=self.filename,
+                        musiclibrary=self.name,
+                        title=trackdata.get('primary_title', None),
+                        length=get_sec(trackdata.get('duration', '')),
+                        composer=trackdata.get('composers', None),
+                        artist=trackdata.get('performer', None),
+                        year=_yr,
+                        recordnumber=_musicid,
+                        albumname=trackdata.get('album_title', None),
+                        copyright='Apollo Music',
+                        # lcnumber=None,
+                        # isrc=None,
+                        # ean=None,
+                        # catalogue=None,
+                        label=trackdata.get('label_fk', None),
+                        # lyricist=None,
+                        identifier='apollotrack# %s' % trackdata.get('track_id', -1),
+                        )
+            metadata.productionmusic = True
+            return metadata
+
 
 class UniPPMResolver(ResolverBase):
     prefixes = [ ]
     name = 'UniPPM'
-    urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={trackid}' # HTTP GET interface, returns json
+    prettyname = 'Universal Production Publising Music'
+    website = 'http://www.unippm.se/'
+    urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={musicid}' # HTTP GET interface, returns json
     labelmap = {  'AA':'Atmosphere Archive ',
                   'AK':'Atmosphere Kitsch ',
                   'AM':'Access Music ',
@@ -518,7 +656,7 @@ class UniPPMResolver(ResolverBase):
                   'BBCPM':'BBCPM',
                   'BCC':'Bruton Classical Series ',
                   'BEE':'Bruton Bee Stings ',
-                  'BER':'BER',
+                  'BER':'Berlin Production Music',
                   'BEST4':'Best4',
                   'BIGS':'Big Shorts ',
                   'BPM':'BPM',
@@ -606,6 +744,7 @@ class UniPPMResolver(ResolverBase):
                   'STFTA': 'Selectedtracks Unknown',
                   'SUN': 'Unknown',
                   'ULS':'Ultimate Latin Series ',
+                  'UPM': 'Universal filename prefix', ### standard file name prefix???? observed late 2016
                   'US':'Ultimate Series ',
                   'UTS':'Universal Trailer Series ',
                   'VL':'Velocity',
@@ -615,87 +754,184 @@ class UniPPMResolver(ResolverBase):
                   'ZONES':'Zones',
                   'ZTS':'Zero To Sixty',} # TODO: get list of labels automatically
 
-    def __init__(self, parent=None):
+    def __init__(self):
         self.prefixes = ['%s_' % x for x in self.labelmap.keys()] # prfix is <LABEL> + _
-        super(UniPPMResolver, self).__init__(parent)
+        super(UniPPMResolver, self).__init__()
 
 
     @staticmethod
     def musicid(filename):
         """Returns musicid from filename.
 
+        # old format
         KOS_397_3_Exploit_Kalfayan_Sarkissian_710023.wav -> 710023
-
+        BER_1216B_76_Silent_Movie_Theme_Mersch_433103.wav -> 433103
+        # new format, observed late 2016
+        UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
         """
-        rex = re.compile(r'^(%s)_\d{1,4}_\d{1,4}_.*_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys())) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
+        # first, try new format
+        rex = re.compile(r'^(UPM_)?(%s)\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+            re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
         g = rex.search(filename)
+        if g is None:
+            # try old format
+            rex = re.compile(r'^(%s)_\d{1,4}[A-Z]?_\d{1,4}_(\w+)_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+                re.UNICODE) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
+            g = rex.search(filename)
         try:
-            return g.group(2)
+            return g.group(3)
         except AttributeError: #no match
             return None
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
+        _musicid = self.musicid(filename)
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return
-        self.worker = lookupWorkers.UniPPMLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
+                return md
 
-        self.worker.load(filename)
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        async with self.session.get(self.urlbase.format(musicid=_musicid)) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            composers = [ data.get('shares', []) ]
+
+            metadata = TrackMetadata(filename=self.filename,
+                    musiclibrary=self.name,
+                    title=data.get('WorkName', None),
+                    # length=-1,
+                    composer=data.get('WorkComposers', None),
+                    artist=None,
+                    year=-1,
+                    recordnumber=_musicid,
+                    albumname=data.get('WorkGroupingName', None),
+                    copyright='Universal Publishing Production Music',
+                    # lcnumber=None,
+                    # isrc=None,
+                    # ean=None,
+                    # catalogue=None,
+                    label=data.get('LabelName', ''),
+                    # lyricist=None,
+                    identifier='UniPPMTrack# %s' % _musicid
+                    )
+            metadata.productionmusic = True
+            return metadata
 
 
 class UprightmusicResolver(ResolverBase):
     prefixes = [ '_UPRIGHT',]
     name = 'UprightMusic'
+    prettyname = 'Upright Music'
+    website = 'http://www.upright-music.com/'
     urlbase = 'http://search.upright-music.com/sites/all/modules/up/session.php?handler=load&tid={trackid}' # HTTP GET interface, returns json
     labelmap = { } # TODO: get list of labels
 
     @staticmethod
     def musicid(filename):
-        """Returns musicid from filename.
+        """Returns filename, since that is the closest thing we get to an offline, external musicid.
 
-        _UPRIGHT_EDS_016_006_Downplay_(Main).WAV -> 6288627e-bae8-49c8-9f3c-f6ed024eb698
+        Upright Music keeps their own, internal guid based unique keys for each track. So for this service, 
+        you need to do call self.get_guid(filename)  to get the internal id.
+
+        _UPRIGHT_EDS_016_006_Downplay_(Main).WAV ---> 6288627e-bae8-49c8-9f3c-f6ed024eb698
+        _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV ---> 4ceb1f37-8ecc-42e7-a4d8-79ba4336715a 
 
         """
-        rex = re.compile(r'^_UPRIGHT_([A-Z]+_\d+_\d+)_.*') # _<label>_<albumid>_<trackno>__
-        g = rex.search(filename)
-        try:
-            return g.group(1)
-        except AttributeError: #no match
-            return None
+        return filename
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def get_guid(self, filename):
+        'Search for filename on website and hope we get the unique guid back'
+        url = 'https://search.upright-music.com/search?phrase[0]={filename}'
+
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        async with self.session.get(url.format(filename=filename)) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.text()
+            #logging.info('got data: %r', data)
+
+            # check to see if we have something
+            html = lxml.html.fromstring(data)
+
+            searchcount = 'search-results-count'
+            countnode = html.find_class(searchcount)[0]
+            #logging.debug('lxml result: %r', countnode)
+
+            if not countnode.text_content() == 'Showing track 1 to 1 of 1 tracks':
+                # no luck
+                return False
+
+            # get the first row of table[class='tracks'] 
+            # alternatively
+            # //*[@id="jp_playlist_1_item_0"]/td[1]
+            # this is what it looks like:
+            #
+            #<td class="icon playable playable-processed" dur="141662" 
+            # fid="e5d3b215-3810-4cf9-9e89-7cc3218b2cc7" 
+            # tid="6288627e-bae8-49c8-9f3c-f6ed024eb698"></td>
+            #
+            # where tid = internal track id
+            itemnode = html.get_element_by_id('jp_playlist_1_item_0').find('td') # get first td
+            #logging.debug('lxml result: %r', itemnode)
+            return itemnode.get('tid', default=None)
+
+
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
                 return
-        self.worker = lookupWorkers.UprightmusicLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
-        # check login cookie, without it we get nothing from the service
-        if self.logincookie is None:
-            self.error.emit(self.filename, u"You need to log in to UprightMusic before we can look something up")
-            self.trackFailed.emit(self.filename)
-            return
+        internal_guid = await self.get_guid(filename)
+        logging.debug('got internal guid: %r', internal_guid)
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        async with self.session.get(self.urlbase.format(trackid=internal_guid)) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            #logging.info('got data: %r', data)
+            trackdata = data['track']
+            composers = [ s['stakeholder']['name'] for s in trackdata.get('shares', []) ]
 
-        self.worker.load(filename, self.logincookie)
-
+            # try to get a nicely looking recordnumber
+            rex = re.compile(r'^_UPRIGHT_([A-Z]+_\d+_\d+)_.*') # _<label>_<albumid>_<trackno>__
+            g = rex.search(filename)
+            try:
+                recordno = g.group(1)
+            except AttributeError: #no match
+                recordno = None
+            metadata = TrackMetadata(filename=filename,
+                    musiclibrary=self.name,
+                    title=trackdata.get('title', None),
+                    # length=-1,
+                    composer=", ".join(composers),
+                    artist=None,
+                    year=-1,
+                    recordnumber=recordno,
+                    albumname=trackdata['album']['title'],
+                    copyright='Upright Music',
+                    # lcnumber=None,
+                    # isrc=None,
+                    # ean=None,
+                    # catalogue=None,
+                    label=trackdata['album']['library']['name'],
+                    # lyricist=None,
+                    identifier='Upright#%s' % trackdata.get('id', -1),
+                    )
+            metadata.productionmusic = True
+            return metadata
 
 class ExtremeMusicResolver(ResolverBase):
     prefixes = [ ]
     name = 'ExtremeMusic'
+    prettyname = 'Extreme Music'
+    website = 'https://www.extrememusic.com/'
     urlbase = 'https://lapi.extrememusic.com/' # JSON REST interface
     labelmap = {'XCD': 'X-Series',
 'DCD': 'Directors Cuts',
@@ -722,9 +958,9 @@ class ExtremeMusicResolver(ResolverBase):
 'SCS': 'Scoreganics',
 'MDE': 'Made', } # TODO: get list of labels automatically
 
-    def __init__(self, parent=None):
+    def __init__(self):
         self.prefixes = [x.upper() for x in self.labelmap.keys()] # prfix is <LABEL> + _
-        super(ExtremeMusicResolver, self).__init__(parent)
+        super(ExtremeMusicResolver, self).__init__()
 
     @staticmethod
     def musicid(filename):
@@ -742,35 +978,128 @@ class ExtremeMusicResolver(ResolverBase):
         except AttributeError: #no match
             return None
 
-    def resolve(self, filename, fullpath, fromcache=True):
+    async def get_session_cookie(self):
+        'Ping Extreme Music webserver to get a valid session cookie'
+        url = 'https://www.extrememusic.com/env'
+        async with self.session.get(url) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.json()
+            logging.info('got data: %r', data)
+            logincookie = data['env']['API_AUTH']
+            return logincookie
+
+    async def resolve(self, filename, fromcache=True):
         self.filename = filename
-        self.fullpath = fullpath
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
-                return
-        self.worker = lookupWorkers.ExtremeMusicLookupWorker()
-        self.worker.progress.connect(self.progress)
-        self.worker.trackResolved.connect(lambda md: self.trackResolved.emit(self.filename, md))
-        self.worker.trackFailed.connect(lambda: self.trackFailed.emit(self.filename))
-        self.worker.error.connect(lambda msg: self.error.emit(self.filename, msg))
+                return md
+
+        # extreme music procedure
+        # 1. get session cookie
+        # 2. figure out internal id of track, using the id from the filename
+        # 3. get the actual metadata for the track, using the id from 2
+
+        # Define helper functions 
+        async def get_internal_musicid(musicid):
+            'Figure out the internal Extreme music id from the musicid from the file name'
+            url = 'https://lapi.extrememusic.com/search/tracks?query={musicid}&mode=filter'.format(musicid=musicid)
+            headers = {'X-API-Auth':self.session.logincookie}
+            async with self.session.get(url, headers=headers) as resp:
+                logging.debug('hitting endpoint url: %r', resp.url)
+                resp.raise_for_status() # bomb on errors
+                data = await resp.json()
+                logging.info('got data: %r', data)
+                if len(data) == 0:
+                    # empty response, likely not logged in or expired login cookie
+                    return None
+                if not len(data['track_search_result_items']) > 0:
+                    # something is wrong, no results
+                    logging.warning('The Extreme Music catalogue does not seem to know anything about this music id: %s' % (musicid, ))
+                    return None
+                extrack_id = data['track_search_result_items'][0]['track_id']
+                return extrack_id
+        
+        async def get_metadata(internal_musicid, musicid):
+            'Get the actual metadata from the Extreme Music internal musicid'
+            url = 'https://lapi.extrememusic.com/tracks/{exid}'.format(exid=internal_musicid)
+
+            headers = {'X-API-Auth':self.session.logincookie}
+            async with self.session.get(url, headers=headers) as resp:
+                logging.debug('hitting endpoint url: %r', resp.url)
+                resp.raise_for_status() # bomb on errors
+                data = await resp.json()
+                logging.info('got data: %r', data)
+                if data['track'] is None:
+                    # something is wrong, no results
+                    logging.warning('The Extreme Music catalogue does not seem to know anything about this music id: %s (internal music id: %s)' % (musicid, extrack_id))
+                    return None
+
+                trackdata = data['track']
+                trackversions = data['track_sounds']
+
+                # Extreme Music has different versions of each song
+                # e.g. "full version", "30 seconds", "bass only", etc.
+                #
+                # Each version has three associated id-like identifiers, e.g:
+                # 
+                # 'id': 124233,                     #### <- the internal, unique id for each version
+                # 'track_sound_no': 'DCD131_02_5',  #### <- the external, unique id for each version
+                # 'track_id': 45384,                #### <- the internal id of the "default" version. 
+                #                                           this id is shared between variants
+                # 
+
+                version_title = None        # same for all versions
+                version_duration = -1
+                version_internal_id = None  # unique for each version
+
+                #logging.debug('Got following trackversions from Extreme: %r', trackversions)
+                for version in trackversions:
+                    if musicid == version['track_sound_no']: # this is the one
+                        version_title = '%s (%s)' % (version['title'], version['version_type'])
+                        version_duration = version['duration']
+                        version_internal_id = version['id']
+
+                #logging.debug('Got version info: %r, %r, %r', version_title, version_duration, version_internal_id)
+
+                composers = ['%s (%s)' % (c['name'], c['society']) for c in trackdata['composers']]
+                arrangers = ['%s' % (c['name'],) for c in trackdata['arrangers']]
+
+                metadata = TrackMetadata(filename=self.filename,
+                        musiclibrary=self.name,
+                        title=version_title or trackdata.get('title', None),
+                        length=version_duration or trackdata.get('duration', -1),
+                        composer=', '.join(composers),
+                        artist=None,
+                        year=-1,
+                        recordnumber=musicid,
+                        albumname=trackdata.get('album_title', None),
+                        copyright=', '.join([c['name'] for c in trackdata['collecting_publishers']]),
+                        # lcnumber=None,
+                        # isrc=None,
+                        # ean=None,
+                        # catalogue=None,
+                        label=musicid[0:3],
+                        # lyricist=None,
+                        identifier='extremetrack#%s' % version_internal_id or musicid,
+                        )
+                metadata.productionmusic = True
+                return metadata
+
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
         # check login cookie, without it we get nothing from the service
-        if self.logincookie is None:
-            self.fetchlogincookie()
+        if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
+            self.session.logincookie = await self.get_session_cookie()
+        # get internal music id
+        musicid = self.musicid(filename)
+        exid = await get_internal_musicid(musicid)
+        # look up internal music id to get metadata
+        metadata  = await get_metadata(exid, musicid)
+        return metadata
 
-        self.worker.load(filename, self.logincookie)
-
-    def fetchlogincookie(self):
-        "get loging cookie / session token"
-        #0. Get session token
-        #curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
-        ENVURL = 'https://www.extrememusic.com/env'
-        env = json.loads(urllib.urlopen(ENVURL).read())
-        self.setlogincookie(env['env']['API_AUTH'])
-
-
-    def fetchlabels(self):
+    async def fetchlabels(self):
         """get a new list of labels online
 
         0. Get session token
@@ -783,121 +1112,104 @@ class ExtremeMusicResolver(ResolverBase):
         "https://d2oet5a29f64lj.cloudfront.net/IMAGES/series/detail/dcd.jpg"
                                                                     ^^^ <- label abbreviation
         """
-        if self.logincookie is None:
-            self.fetchlogincookie()
-        req = urllib2.Request('https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series')
-        req.add_header('X-API-Auth', self.logincookie)
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        # check login cookie, without it we get nothing from the service
+        if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
+            self.session.logincookie = await self.get_session_cookie() 
+        url = 'https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series'
+        headers = {'X-API-Auth':self.session.logincookie}
+        async with self.session.get(url, headers=headers) as resp:
+            logging.debug('update labels. hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            labels = await resp.json()
+            logging.info('got labels: %r', labels)
+            r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
+            return r
 
-        labels = json.loads(urllib2.urlopen(req).read())
-        r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
-        return r
+class WarnerChappellResolver(ResolverBase):
+    prefixes = [ ]
+    enabled = False # TODO ENABLE THIS
+    name = 'WarnerChappell'
+    prettyname = 'Warner Chappell Production Music'
+    website = 'http://www.warnerchappellpm.com/sw/'
+    urlbase = 'http://search.warnerchappellpm.com/player/trackavailable' # JSON interface
+    labelmap = { } # TODO: get list of labels automatically
 
-"""
-Extreme Music
+    def __init__(self):
+        self.prefixes = [x.upper() for x in self.labelmap.keys()] # prfix is <LABEL> + _
+        super(WarnerChappellResolver, self).__init__()
 
+    @staticmethod
+    def musicid(filename):
+        """Returns musicid from filename.
 
-URLS:
-0. Get session token
-curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
+        """
+        raise NotImplemented
+        prefixes = [x.upper() for x in WarnerChappellResolver.labelmap.keys()]
+        rex = re.compile(r'') #^((%s)\d{2,5}_\d{2,3}(_\d{1,3})?)\s.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
+        g = rex.search(filename)
+        try:
+            return g.group(1)
+        except AttributeError: #no match
+            return None
 
-1. Get label/"series"
-curl 'https://lapi.extrememusic.com/grid_items?range=0%2C24&view=series' -H 'Origin: https://www.extrememusic.com' -H 'Accept-Encoding: gzip, deflate, sdch, br' -H 'X-API-Auth: 2347c6f3f3ea9cc6e3405f54a3789a6ada9e7631d2e92b0d50cecc8401a360d2' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' -H 'Accept-Language: en-US,en;q=0.8,nb;q=0.6,sv;q=0.4,da;q=0.2' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels' -H 'Connection: keep-alive' -H 'X-Site-Id: 1' --compressed
+    #async def get_session_cookie(self):
+        #'Ping Extreme Music webserver to get a valid session cookie'
+        #url = 'https://www.extrememusic.com/env'
+        #async with self.session.get(url) as resp:
+            #logging.debug('hitting endpoint url: %r', resp.url)
+            #resp.raise_for_status() # bomb on errors
+            #data = await resp.json()
+            #logging.info('got data: %r', data)
+            #logincookie = data['env']['API_AUTH']
+            #return logincookie
 
--> image_detail_url:
-"https://d2oet5a29f64lj.cloudfront.net/IMAGES/series/detail/dcd.jpg"
-                                                            ^^^ <- label abbreviation
+    async def resolve(self, filename, fromcache=True):
+        raise NotImplemented
+        self.filename = filename
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                return md
 
-2. Get albums from label/series catalog:
-curl 'https://lapi.extrememusic.com/grid_items?range=0%2C48&order_by=default&order=asc&view=series_albums&series_id=1' -H 'Origin: https://www.extrememusic.com' -H 'Accept-Encoding: gzip, deflate, sdch, br' -H 'X-API-Auth: 1df604ce0a306858cd3f1da00a80a6322170ad361b4c380d040899e8300e8e07' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' -H 'Accept-Language: en-US,en;q=0.8,nb;q=0.6,sv;q=0.4,da;q=0.2' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'Connection: keep-alive' -H 'X-Site-Id: 1' --compressed
+    async def fetchlabels(self):
+        raise NotImplemented
+        """get a new list of labels online
 
-3. Get tracks from albums:
-curl 'https://lapi.extrememusic.com/albums/2861' -H 'Origin: https://www.extrememusic.com' -H 'Accept-Encoding: gzip, deflate, sdch, br' -H 'X-API-Auth: 1df604ce0a306858cd3f1da00a80a6322170ad361b4c380d040899e8300e8e07' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' -H 'Accept-Language: en-US,en;q=0.8,nb;q=0.6,sv;q=0.4,da;q=0.2' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'Connection: keep-alive' -H 'X-Site-Id: 1' --compressed
+        0. Get session token
+        curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
 
-4. Get track metadata:
-curl 'https://lapi.extrememusic.com/search/tracks?query=SCS062_06_3&mode=filter' -H 'Origin: https://www.extrememusic.com' -H 'Accept-Encoding: gzip, deflate, sdch, br' -H 'X-API-Auth: 1df604ce0a306858cd3f1da00a80a6322170ad361b4c380d040899e8300e8e07' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' -H 'Accept-Language: en-US,en;q=0.8,nb;q=0.6,sv;q=0.4,da;q=0.2' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/search?q=%22SCS062_06_3%22' -H 'Cookie: _ga=GA1.2.876280479.1473240093; Token=tYBNWXOnEAA7wFhyo6BMeb7K/kb3LTeO9R1GY9t6DUZDo0x2KpxtVRmC02LfR3tZCE2HNPQODIaHyTiHdj3oJAHD7Ds7JEVSPtnq0flNZli69Fq9QKSJR6XBaQCCdOvm2/EoGPzr/y3bNoP5M9oi6W8VO8ZMoMA3r3TsaEVzHFE=DPrbk9apaHNOcM+4am0AI77+xapKVMjodU2diZqLsUwGZNfpIXghgY4/jGOrR0ZSW5xYt/AXq6gqGXRylsCeGoVXvb8suWsuvxa62k8Uuhr9sJ/yUdaCvGwvWdcnN7zwSvIHg/I/sQUiLoI4gdVuuIYUyCq53drnQCf9dnmcYBw=AH5yQ7H0txhssYfyO1SPV936Wd+VVSiW1fRK+5XB8U3rpgDnASVTMAAur1cQ63X13TWG4zWd6i+aMPQxggE5SNzS3b8RmlNyYrUz244DkK0o4mMjoqkDrgcOw972q2N77ZBYpqyDH2MGOiAzzcNsud14iZzLHOhWjRrUiH3iHiE=6Wrl3a3YmOp0fvOh17E5rR8VwVBqOXTVR6B+s35nr6hjcRwA4e7o+xmOv152QDcZMsXZIir/M29WieO6tCjPaYIete48jJPNCp9U9PywAzHjiOJyqsf33pTiocyEHIyrQ3KtfqDot0ucWg+VhzHw5npWPhxY2TksG8dAvoZmejc=8yhsC1iMNjK95K9L60qjUkc+S1u9wqjTkgQopdwZ13EwskwswVIpWNE6pzd9H76xMiQ1cCiDZKl3K+hk6HMHxutnxpXIl1kgMEdQWQLxrZ94SFyTqwkyGU3URu0euEqfEZnPTjBG3n4TaBnG/gLqMijcC/hjvoUh8iUkhKJ8nyw=FqPVmftu0jxtGk4vncPgetCTEkAhLNxYcyF0gl+AbuLU9AZcSaRIoe3b+r4gQ1sYWiSEHl2t9tsr9U7v4ZzBLqwbsqtk5/H5yB7oOApZ5rXbBwixGCFHtOX7XrKOJGtcIB2p6KU6qFKD9QT9QkljiKKqlLSN+hd2s5F5XnELbl4=nDyISwVCV9uSwaS991PM/M7bIzijyKH4rA2knxMowsI/gO/lfyqKVlffapoPf2fPI98AQVjDabOPUFElmepr56EbWI1YlJ0ZaNQz/N8QSqXo69qitknb+vM+T83tLwcQvUwpPMWe4YSQwYBSl1lWMBei7daeYyspGsuxnXI3LZA=efnlr1P0KYjENtGioBrTVGXcdU4P/Yp4ao+6H058qqNbvSDlb1a/tmqrqGzaxjn2h8ne4+JY523XGxGkHBlsHuK+wlNBRDzR+n6mbgS4/OferOJjlvruP5mSG3LjC8oq5gRaedJSgCNFfYybWAbMr9q0T7oot1X7n8UhM7U9maU=bXwVdCTCnTAx/NpfycXKoZjEu9h+TcWEu9isVPxKFUrel7ibVvzMu/EpzSR6UbMnp+c1kGi7Qmkyk+Cpp9u87XHpIvGP+T2FMiAcYdJjS/AnLB4vN+6t541b3s/eWiyrk5AX05OOLKYEcRZBqCzR40hXHCVzd02wD4m/SIi+Ba8=4SxaN182sfe381VH7sgAcFEvkiFFLowpfLyGPIpm4R4a+7PHesUHI31UlMiz2m5nvonUhE0YRYadwd0EwyVUazx5TRf4Pnd+tnTX1DV12O0ZF7wCEMjafw8DlHzbwIXJHNJzxBf8V9a5zKUpBv12RMpWXSavs+iGgaBbdZiGBjA=aaqLJdErgNW6UR3QQzWi4hNzDj0GDB0/RqPIseXdR4qgiaWg01wCGos9985j2NZFqBTLOEDxW/ieHaOl8DE8ZolAsuafA4XrIc3T5iq9E+tgLZgfC/4vBHw8vfUhw3POVgkh158nP88k8QDbA+sGlBIsdV+OgUcimL5H1uxZFi4=Zmupd1nB/jGmPoPvaeTGOTspM2mfetKaYtSED2Pat2WzOaBB0YLUYR1USRlV/URoyb49yxXSpYe/7rfOUPXREZcilAk6oQ0UKSizw7WCbTGR3ckZpPIo1eyUKYQV9gs1K/caKUDtgq7qIq/W1KlAMYLB4sOCzFHnvLYDKKPmJSw=XalXY6Yf+rFV7WkeAffzZKCYF2Rp4v6ZVTOA7G3phS7HujmC0FZ8ci0K0+bFvUZThPCMPTgITysx/A77WYliE1eTo5MT423K641MM3XPC3XYq8fTjBk+O2HJadTgdYl7oGrXd5PHeoInyS9e0YI6FVPe+Xbfoz+rSuDO4TxMixo=iOSJ1UWqn+/bte01ZZ/1J3xUf1xe6CVkZeeqS+Dln+vdr2+OYKXJ7sRVCZ4aCrJe7Qmg6m5Djrz2hEOZnJyDPnSCWLJGw/7IS3S7p7QeV9m3LO6CflPW6P2r85o3MLTbEAUeBnkVd/DmIxmXsFNaMWmMP+5vNnW4G5wsJnYmmBg=3VvkpJaW37xbyI8T9ChviRApDSkSAZgLV/UhnOgHDQqJAkn43OKQEX5OW5TS+1CXI5lmOA6filVqezOFqftxwO4DzQiMX/U32mMgnIECe2sAxIDVlbsaIlxj5xCrDLnRGagJj45OfMQGwYwejrxB35FhsoNHA5ee91CqElP5ek8=DsPcSthjdV0SyE+UYcCtzJlxKKIdLbWfASI9YWnYJkqKjbf/e/MPYimV1O/82kO7Jisa1zRq4lpY+9+F5T4jFSXv0+d9dy8LpAFHDlXJ3rTqL+uhajRV2zUU6Xj4yx1cQWjD34dzmVq2MmhgUyYTAN5ZtMBeUHcwaLo5NG+DBB4=hvSuiqsw07PMNVydxksTiQDfGsNbhBFnZUVXe5gL4CXUGbCunvXBR3oLtV8jgy4WkN/iwoyqiu1yvZp1dK9KqchqHXXP89d5xRzFrg7TilvGHG3jLBdDba+zqj8GL3roJQ5b1u9heD8cWdZFvSFwY2LX22F3GCQiK87K+Xu18oM=WAtx9iXwHkHxbfTnQwXnRE9j3LkbbhGgxUWke/KLxxyF9DVysqgSJE/BPEAabGZBsdW7WRc41eDM8fo2CI0XdoXFG3RFqC8Qdm9csWaERm2ieNDIPPvpWydhN9zoUMTiQ/CgGAr55rIco/ZTHFUJkmroqr8nHRTIMawFwzI3JQ4=4s2f5KnP0Q6SUQMZ59mU3VdM0JBFwkUb1UXgJ7iZo4OInJweu1ktOluYy0OTq/LcH2bxP50RbsxWKPr+GUx7vz8ZWgpKlGXs/eS0oAs6aDcADf87s+oY+wlDr1MwzS5RLSG5MZae3ZvezdiCWkuHXIHnHBJy26gb2NdB88dT8Yg=s361/k73V/eWMSUqQwxmZvKzZZO7EoqchApaH14YrAvOPdN3XyVcJyvZMmvVIrPqduzQqWFV/osupejkgBTtzxBet+FiogMTevC4JaSM2K9d8uwvqGOkQKdbVd9M7rPGOaEoHLe8lhKMb3h14woFkP9nFQZIcxs+UxcPExviX50=K1P6RKCJJS82eXyJEGpK66lvwGvd0ChqdnVd6Fa81fsJSVsrYmPd0R3+IWl7i1itgN+6s09YhxMaTFFKf505KDXvfWNDksOEesKwRoa1oJxtEXcdz9QmonPI64VOfLPcSogSaifSVfpqUNaK+WbwRGAr9Xu3JLxxfmjfRlFygEw=jqXbcMBQR5EltE3TxMZ+9yd3+PU5WFA6QwZoM1+EvnbFF4OOv5eHPVkutLIxOCYE7jnSNCYMxpvQvKA/kT1Mh48pUXGkeRuwRV4P/P8/Dox6D9a5qQYwsKj0rVurJkXUfr71KYYQ4z52UtvjPeZwdshlfXYtv5AekZFAjlpGjVQ=; RefreshKey=zZfAlVdFrB5cFtB1WdK4L1uVoat5lHaO9eAB5G3s61o9JGXFuTMY1JWIk2q0h5f5oEfyxXXKGVSoK/vbWSuTft9vVU/9iRfUEV2Hpzb6EWgCXl+eNDSbHxi0oQAs851Jnp6wDBMrIXpdDSnuaIRIGQB2c6OCfCQPygJmN47RXn0=1aU8sFCnHRk1S7nS2jIOwNg8nEv87uZ44zo6TZax+tUX1OVZXj08HyiTft1Mho4CxURHbnZU7SzcdCpPH4SmZv0x/BmgWp4kc65HzbDLWXuyMNHgpei5gTNGIuiPv9UZMwZvyNVskUB43/hRGqI6bWSEvh3MKETUUFjYnzgWY4g=PB7Se6kuns6cHVx6e/Mjh1iod9trXNCInXHk9NQo44cawWzATJ1stL0kMZpn+wiDxZYVq0eehsx8BpPPz+iIQaVtghPqxxVqQAHgpuevsQWz4lXMCb6YlDJ6zWG7G85zgfEglPG2D+imdp0BFkHyKQ6qUEydfsiBUcs2wc+zxzM=YzVRaYCNpKQq1rqBkx4AvNz74cYDfXR/E6vDXlyoUt3tcEcsqJ3eNzTcnsFS7GDuwSaojwW3Dhlt6h1UTZ8zcmxrt+iAbuEhgQraXQdgTrgu79TYk43gCcxhJibMVqYyjiPVC+AWfTk68beBED6jwGg9q6HWEPLVniULKIlnYgk=FJYd+cOANH6BWYB3QI467BVVh1YaK/5RgxkHEoK0VbCcB4yNoboiWRzOO1deNH0y+QFfOApOyAHA/WDB03cB5jB8/zsY1e8QfyaGVr3PoN2iTYMpB+sNKE7SfXTZt/HGsZGvHeme4DZZGlT9i+SttlO7tFEZmoXeB/jgFzKbpG4=OOtvFR3lcfqKTrRUa9VIjGluEd3EctQwRoT3z5RzxCE8532DA3DYGHufA9BnZCPvbTEZ3UzkJj12nvz5PnK8N8XSMiDcNg1fQSEovU18dFyny8qAGNLkHV04kPYWkcSYVjHiYbbhvINBkdrj4LztkvL2LjPNtz+ETWxICJZoMDw=1XI5LqOOgGGTvyvKEtzXF8xETwrmJcv1feL9/GGQ4WjcFLE52TLWnY4b0czPol4nR7mr9Jg2gZKsQwORER23xb4wecgWWKGtGlUD/7va1CZRloVMgaYsZ7pkOXd+n5X7VMZH31ey/nM33noJ9wnyzrIVrZa+tCaixbHm7JFRDn0=QdVpLDuQtS/jjSaZ5FGKQyeB+dI+F7vSYhwJJqXJ1dM0e4H0r/eSsKfjOJwNaDTpwQsMUDEKWbSNKdHGgklwLuEzKwrRyVQc5nkX9vy2gzrUJIivicgPje8n0AfwOSAesav+IYlEf8TeQGe5D/bHmU+RDSaXo42QyYkaKF/mIEg=FQB4d7sTeHhOcERd7ozNuHxUzcWdVM7RuxdqYZZEdck0TxGGJ0VlhohWY1D1X7N2J8SJ8fKXY2n08iOyru+Q/eZkzxOY5tKaPjV+0JgJ5UfqoSEZ1Z9RBMArPSMEBqNyptRJefsV/Tq0mzBsU2knyHBAszMHVH/Ep31qu7FL114=wqF2c5A9yHBIzfkxOYicsapPJTq91l2ECemwGtEuHXvM7bP0jlUaFZtw5uvDeVJZBFe04SIFCu8/ZHvV9mfo20bqdTLemmEnoURgy174ggdaXodo27rJjCcUCZ6dULnR/yOo45OgxpBLHqxJStQBs51UEQdkDcNj+P1Umbh1R0k=UnMGdxYFs2MLdV28IaFYBLe5Xcl22R29YPGRH04KgUKpRn45MExJoqi03aqlCc5OG3B57uB3oABuOUnUBmasokwo2KwZ6IghOOc3fVTl6PRCm2+mQ20Y837+RuvhGztAeM0rUIqupcO2rT1EbJOwHl3NomSy5irvXw0REBPXgAw=tlKiml+U9PLxvZRtY0d/WIK2VLymlcF10PqHQFjRvLBIbXYJLte7Zzbsn5YGj3c2x9UTdK/Zeu0eptJ7a5M+FL/PMHwX62I/Q5h/S8uOmBLD/JBVw3lsefwl13I3VO7NKP9DhBWHHcEDEpSIUpuxkmye22RoYgzRr41oWHTQHXk=+u09IpBwTl++jgsgdugR7PW4BuAeinryPa01M0JjV56AbPp04cBZd9nAlo2Ii9peUJbDTaMdXz9nFLnmvymRPDyk+S+nbKCGrfIZgytWk+w7sTC/AaIZm6mEK2DRrkT4RLIJuu2pk8JIuS0gAcBz2BeCwVEP5wtNv5bWXyMK3FY=e84GKywg0PSHzzUqIc/PjpOCMLZEAmcPPi1o2ppA/IumEZG7LlVRxYOHDnj2yJey6nLfvCo4TzbqqhG+HZZbVoVtwE911/kt8yB2NeY9ommQbwKq4mhvwGRutq6qXCgcUhMar/RGylaS959LSu7QrreT6slXgucE+PTeaYn4AQI=33YMzZ7n7TjyCkO0Ku42BJoPWlZgwoVvI9D9y6arsHXeoanaHBcu0TnNW9l9zwfMxkCMUUcM+P33YH0+DLukPqb93BOtd8uenA5TqSC/iB7mtfofzKMplf41tgXpcUsa7NL0wPpY8S6L7nWHpQDQGtToA70j+4s8FhRlOuRZR3M=I3Y53KoHf6fD1aRiCD/4RFi2gFhj83aJrqatCJfekKbGJfpFFdqKs4V6ogkpjD+Pr2FLHUFWpG5oUzaW0ejROCk9kUeK0F75GLDkIl1ItiHSaYxO13GWjhX5goUsy8TIti6xcE+0JYl1mQUyBrVDGkr7fn0tsPyPLTfXPZuudTs=iGg18gtuJRJMiN5wIcbsikRNMnCn9c4JwEhzg+u1wTrHBVK1+rR0ClB6HdetygbbcoidALmghqQoSl/GvXJkB4WL2qR1f7A9aaBSudDKDTKfFhwwqJm+C9lieTgQPjxkLPh4iqcr0EwicIv1FRSHnV4PYjv7AiqDPaW4yxkx5W8=wkOBm6D7OWHoLD0eXhDunJlAYiYye2+G7a1GjI0VJoh0Mtn1v+4EE4Og7O4XSnyMru+tspagOfIV08wASDYWaJbKuLMY3xWxa4EgrwiVKeUXf9iT+P4xSPAa7VCEhy+SJHCdcXlnVXhDj2/X0pEKExUUrN9XRxskrJCWuJQr8KU=MXk/ySpyv5XSyszUn0K0xjVtgabyw94UZGenfa5viOFl2gWoxGEBuf5aITBvZ+TSeozOCEyov6KxyL+ZbO1R9bjRzXDFlPZtBbOecZaDdRpIKyG1IfiOMPdTIS/pmwH9VczG9zUv08dW8DuThCkMm2VUDP25+67ASrWS7Sv4DpM=2BnvXlILS6pJBvTwJSwDvD7XXPC6CSXQSkQeqvweOLfB8bLQ9idxmaGAiB3oDSdfM9N84FadwY6kplH4dom5lyxH0P4Qa7KrOoVNC0+gwHItMx8pJ39NMq47gIxZ7qEeDMXmhVCzHdAKKpNJTczzFVhiJqtuPpNMivJTVCT5aLc=' -H 'Connection: keep-alive' -H 'X-Site-Id: 1' --compressed
+        1. Get label/"series"
+        curl 'https://lapi.extrememusic.com/grid_items?range=0%2C24&view=series' -H 'Origin: https://www.extrememusic.com' -H 'Accept-Encoding: gzip, deflate, sdch, br' -H 'X-API-Auth: 2347c6f3f3ea9cc6e3405f54a3789a6ada9e7631d2e92b0d50cecc8401a360d2' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' -H 'Accept-Language: en-US,en;q=0.8,nb;q=0.6,sv;q=0.4,da;q=0.2' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels' -H 'Connection: keep-alive' -H 'X-Site-Id: 1' --compressed
 
-JSON:
-{
-  "track_search_result_items": [
-    {
-      "id": "41023",
-      "type": "track_search_result_item",
-      "title": "dingo bingo",
-      "album_id": 2415,
-      "album_title": "outback",
-      "resource_type": "track",
-      "track_id": 41023,
-      "tempo": "MEDIUM",
-      "tempo_value": 3,
-      "duration": 65,
-      "stems_avail": false,
-      "customix_avail": false,
-      "score": 0.14856823
-    }
-  ],
-  "meta": {
-    "total_count": 1,
-    "filter_facets": {
-      "ser": [
-        {
-          "count": 1,
-          "id": 19,
-          "label": "SCOREGANICS"
-        }
-      ],
-      "gen": [
-        {
-          "count": 1,
-          "id": 8,
-          "label": "FILMSCORE"
-        }
-      ],
-      "sub_gen": [],
-      "vib": [
-        {
-          "count": 1,
-          "id": 11757,
-          "label": "CONFIDENT"
-        },
-        {
-          "count": 1,
-          "id": 11363,
-          "label": "DETERMINED"
-        }
-      ],
-      "ins": [
-        {
-          "count": 1,
-          "id": 6797,
-          "label": "ACOUSTIC GUITAR"
-        },
-        {
-          "count": 1,
-          "id": 7102,
-          "label": "DIDGERIDOO"
-        }
-      ],
-      "voc": [],
-      "cou": [
-        {
-          "count": 1,
-          "id": 151,
-          "label": "AUSTRALIA"
-        }
-      ],
-      "era": [],
-      "tem": [
-        {
-          "count": 1,
-          "id": 137,
-          "label": "MEDIUM"
-        }
-      ]
-    }
-  }
-}
+        -> image_detail_url:
+        "https://d2oet5a29f64lj.cloudfront.net/IMAGES/series/detail/dcd.jpg"
+                                                                    ^^^ <- label abbreviation
+        """
+        if self.session is None:
+            self.session = aiohttp.ClientSession()
+        # check login cookie, without it we get nothing from the service
+        if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
+            self.session.logincookie = await self.get_session_cookie() 
+        url = 'https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series'
+        headers = {'X-API-Auth':self.session.logincookie}
+        async with self.session.get(url, headers=headers) as resp:
+            logging.debug('update labels. hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            labels = await resp.json()
+            logging.info('got labels: %r', labels)
+            r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
+            return r
 
-
-
-
-"""
+# a list of supported resolvers, for easy disabling etc
+CURRENT_RESOLVERS = [
+    DMAResolver,
+    AUXResolver,
+    ApollomusicResolver,
+    UniPPMResolver,
+    UprightmusicResolver,
+    ExtremeMusicResolver,
+    WarnerChappellResolver,
+    GenericFileResolver
+]

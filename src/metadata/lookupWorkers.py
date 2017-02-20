@@ -1,18 +1,20 @@
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2016
+# (C) 2016-2017
 
-import PyQt4.QtCore as Core
+from builtins import str
+import PyQt5.QtCore as Core
 import logging
+from datetime import datetime
 
-import urllib, urllib2
-
+import urllib.parse 
+import urllib.request
 import json
-import StringIO
+from io import StringIO
 
-from model import TrackMetadata
-import resolvers
-import gluon
+from .model import TrackMetadata
+from . import resolvers
+from . import gluon
 
 GLUON_HTTP_LOOKUP="http://mamcdma02/DMA/"
 
@@ -21,7 +23,7 @@ class GluonLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress")
-    error = Core.pyqtSignal(unicode, name="error")
+    error = Core.pyqtSignal(str, name="error")
 
     def __init__(self, parent=None):
         super(GluonLookupWorker, self).__init__(parent)
@@ -40,7 +42,7 @@ class GluonLookupWorker(Core.QThread):
             return
         self.progress.emit(50)
         gp = gluon.GluonMetadataResponseParser()
-        metadata = gp.parse(StringIO.StringIO(response), factory=TrackMetadata)
+        metadata = gp.parse(StringIO(response), factory=TrackMetadata)
         self.progress.emit(70)
         self.trackResolved.emit(metadata)
         self.progress.emit(100)
@@ -50,25 +52,25 @@ class GluonLookupWorker(Core.QThread):
     def request(self, musicid):
         "do an http post request with given gluon xml payload"
         try:
-            req = urllib.urlopen(GLUON_HTTP_LOOKUP +  musicid + '.xml')
+            req = urllib.request.urlopen(GLUON_HTTP_LOOKUP +  musicid + '.xml')
         except IOError as e:
             # e.g. dns lookup failed
             self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):
             self.trackFailed.emit()
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
-        response = req.read()
+        response = req.read().decode()
         return response
 
 class ApollomusicLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+    error = Core.pyqtSignal(str, name="error") # str : error msg
 
     def __init__(self, parent=None):
         super(ApollomusicLookupWorker, self).__init__(parent)
@@ -179,7 +181,7 @@ class ApollomusicLookupWorker(Core.QThread):
         "do an http post request to apollomusic.dk"
         try:
             _lbl, _albumid, _trackno = self.musicid.split('_')
-            postdata = urllib.urlencode({'label_fk':_lbl,
+            postdata = urllib.parse.urlencode({'label_fk':_lbl,
                                          'album_num':_albumid,
                                          # 'track_num':_trackno,
                                          'type_query':'tracks',
@@ -197,13 +199,13 @@ class ApollomusicLookupWorker(Core.QThread):
                                          })
             # logging.debug('postdata: %s', postdata)
             headers = {'Cookie':logincookie}
-            r = urllib2.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers)
-            req = urllib2.urlopen(r)
+            r = urllib.request.Request('http://www.findthetune.com/action/search_albums_action/', postdata, headers=headers)
+            req = urllib.request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
             self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):
@@ -211,7 +213,7 @@ class ApollomusicLookupWorker(Core.QThread):
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
 
-        response = json.loads(req.read()) # it's a json array
+        response = json.loads(req.read().decode('utf-8')) # it's a json array
         if len(response) == 0:
             # empty response, likely not logged in or expired login cookie
             self.trackFailed.emit()
@@ -229,7 +231,7 @@ class UniPPMLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+    error = Core.pyqtSignal(str, name="error") # str : error msg
 
     def __init__(self, parent=None):
         super(UniPPMLookupWorker, self).__init__(parent)
@@ -361,13 +363,13 @@ class UniPPMLookupWorker(Core.QThread):
             data = ( ('method','workaudiodetails'),
                      ('workAudioId', musicid)
                    )
-            r = urllib2.Request(endpoint + '?' + urllib.urlencode(data))
-            req = urllib2.urlopen(r)
+            r = urllib.request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            req = urllib.request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
             self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):
@@ -375,7 +377,7 @@ class UniPPMLookupWorker(Core.QThread):
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
 
-        response = json.loads(req.read()) # it's a json array
+        response = json.loads(req.read().decode('utf-8')) # it's a json array
         if len(response) == 0:
             # empty response,
             self.trackFailed.emit()
@@ -390,7 +392,7 @@ class UprightmusicLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+    error = Core.pyqtSignal(str, name="error") # str : error msg
 
     def __init__(self, parent=None):
         super(UprightmusicLookupWorker, self).__init__(parent)
@@ -493,13 +495,13 @@ class UprightmusicLookupWorker(Core.QThread):
             data = ( ('handler','load'),
                      ('tid', musicid)
                    )
-            r = urllib2.Request(endpoint + '?' + urllib.urlencode(data))
-            req = urllib2.urlopen(r)
+            r = urllib.request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            req = urllib.request.urlopen(r)
 
         except IOError as e:
             # e.g. dns lookup failed
             self.trackFailed.emit()
-            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
             return None
 
         if req.getcode() in (404, 403, 401, 400, 500):
@@ -507,7 +509,7 @@ class UprightmusicLookupWorker(Core.QThread):
             self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
             return None
 
-        response = json.loads(req.read()) # it's a json array
+        response = json.loads(req.read().decode('utf-8')) # it's a json array
         if len(response) == 0:
             # empty response, likely not logged in or expired login cookie
             self.trackFailed.emit()
@@ -523,7 +525,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
     trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
     trackFailed = Core.pyqtSignal(name="trackFailed" )
     progress = Core.pyqtSignal(int, name="progress" )
-    error = Core.pyqtSignal(unicode, name="error") # unicode : error msg
+    error = Core.pyqtSignal(str, name="error") # str : error msg
 
     def __init__(self, parent=None):
         super(ExtremeMusicLookupWorker, self).__init__(parent)
@@ -557,6 +559,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
         version_duration = -1
         version_musicid = None
 
+        logging.debug('Got following trackdata from Extreme: %r', trackdata)
         for version in trackdata['track_sounds']:
             if self.musicid == version['track_sound_no']: # this is the one
                 version_title = '%s (%s)' % (version['title'], version['version_type'])
@@ -599,13 +602,13 @@ class ExtremeMusicLookupWorker(Core.QThread):
 
             try:
                 headers = {'X-API-Auth':logincookie}
-                r = urllib2.Request(url, headers)
-                req = urllib2.urlopen(r)
+                r = urllib.request.Request(url, headers=headers)
+                req = urllib.request.urlopen(r)
 
             except IOError as e:
                 # e.g. dns lookup failed
                 self.trackFailed.emit()
-                self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, unicode(e)))
+                self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
                 return None
 
             if req.getcode() in (404, 403, 401, 400, 500):
@@ -613,7 +616,7 @@ class ExtremeMusicLookupWorker(Core.QThread):
                 self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
                 return None
 
-            response = json.loads(req.read()) # it's a json array
+            response = json.loads(req.read().decode('utf-8')) # it's a json array
             if len(response) == 0:
                 # empty response, likely not logged in or expired login cookie
                 self.trackFailed.emit()
@@ -641,4 +644,212 @@ class ExtremeMusicLookupWorker(Core.QThread):
         return trackdata['track']
 
 
+
+class AUXLookupWorker(Core.QThread):
+    trackResolved = Core.pyqtSignal(TrackMetadata, name="trackResolved" )
+    trackFailed = Core.pyqtSignal(name="trackFailed" )
+    progress = Core.pyqtSignal(int, name="progress" )
+    error = Core.pyqtSignal(str, name="error") # str : error msg
+
+    def __init__(self, parent=None):
+        super(AUXLookupWorker, self).__init__(parent)
+
+    def __del__(self):
+        self.wait()
+
+    def load(self, filename):
+        self.filename = filename
+        self.musicid = None
+        self.start()
+
+    def run(self):
+        # first, get track id
+        self.progress.emit(10)
+        self.musicid = resolvers.AUXResolver.musicid(self.filename)
+        if self.musicid is None:
+            # could not extract track id from filename
+            self.trackFailed.emit()
+            self.error.emit('Tried to get AUX track id from filename "%s", but failed. Please report this.' % (self.filename, ))
+            return None
+
+        self.progress.emit(50)
+
+        # then, get all metadata
+        albumdata, trackdata = self.request_trackdata(self.musicid)
+        #print trackdata
+        if trackdata is None:
+            return
+        self.progress.emit(75)
+        # trackdata looks like this:
+        # {
+        # "tracks": [
+        #     {
+        #     "cd_samples": "",
+        #     "cd_neu": "1",
+        #     "cd_genre": "",
+        #     "disc": "",
+        #     "cd_title": "SPORTS ATTACK",
+        #     "cd_description": "Aggressive, muscular and tough athletes, triumphant in rousing rock renditions, covering metal, alternative, indie and hard rock styles. Performed by members of the legendary metal band RUNNING WILD.",
+        #     "cd_trackcnt": "37",
+        #     "releasedat": "2016-07-29",
+        #     "cd_webmix": "1",
+        #     "cd_surround": "0",
+        #     "cd_isrc": "",
+        #     "ean": "4020771163564",
+        #     "credits": "Arranged and produced by Peter Jordan. Recorded and mastered at PJ Music & Horus Sound Studio, Hannover, Germany. Sound engineers: Peter Jordan, Arne Neurand and Andre Bollweg. \nPerformed by Peter Jordan (guitars, bass, keyboards & percusssion), Ole Hempelmann (bass) and Michael Wolpers (drums & percussion)\n\nMusic consultant: Robert Narholz (LENA Film Inc., L.A.)\nCover design: Sahar Aharoni\n\nISRC: DE-B63-16-356-01-37  *  GTIN\/UPC: 4020771163564",
+        #     "label": "ROCK",
+        #     "p_nummer": "156",
+        #     "p_cut": "2.0",
+        #     "zeit": "0:30",
+        #     "nZeit": "30",
+        #     "solo": "GIEF",
+        #     "allkomp": "Peter Jordan",
+        #     "besetzb": "1",
+        #     "versionb": "128",
+        #     "tempob": "2",
+        #     "soundb": "2",
+        #     "has_mp3": "1",
+        #     "has_mp3down": "1",
+        #     "has_mp3play": "1",
+        #     "has_wav": "1",
+        #     "has_aiff": "1",
+        #     "expreis": "0",
+        #     "extrail": "0",
+        #     "cdkurz": "ROCK015602",
+        #     "cdcdkurz": "ROCK0156",
+        #     "maintrack": "1.0",
+        #     "webmix": "1",
+        #     "surround": "0",
+        #     "isrc": "DE-B63-16-356-02",
+        #     "funktionen": "G73-G74-G75-G80-G81-G21-G14-INT-AGG-TVN-UNR-PRO-DXN-DRT-ENE-AUF-G17-DTA-ARK-RK1-HEM-COG-EXX-SSP-ARO-PUN-PRK-TLP-ACT-RCP-PSP-WST-",
+        #     "copyrighted": "1",
+        #     "bpm": "176",
+        #     "tonart": "Gbmin",
+        #     "haslyrics": "0",
+        #     "hasstems": "0",
+        #     "lyrics": "",
+        #     "iswc": "",
+        #     "title": "THE HYPE B",
+        #     "description": "Commercial length. Uptempo alternative rock, punk rock with big nasty attitude for rough competition and endurance sports. 176 bpm (Gbmin)",
+        #     "keywords": "Instrumental, Aggressive, Aggression, Combative, Fiery, Furious, In your face, Offensive, Provocative, Punchy, Rage, Raging, Rampaging, hard-hitting, Driving, Restless, Agitated, Agitation, Antsy, Anxious, Fidgety, Propulsive, Driving, Propelling, Dramatic Action, Dramatic, Stirring, Energetic, Dynamic, Exciting, Excite, Excitement, Electrifying, Rousing, Stimulating, Thrilling, Action, Panic, Action Heroes, Action Rock, Adrenalin, Arena, Baseball, Crime Drama, Football, Hockey, Macho, Punchy, Pursuit, Racing, Raging, Reckless, Stadium Rock, Urgency, 2010 Rock, 2010s Rock, Heavy Metal Rock, Death, Hooligan, Provocation, Skinhead, Yob, Videogames, Extreme Sports, Sport - Special Productions, Alternative Rock, Punk, Rebellious, Skinhead, Punk Rock, Skinhead, Trailer - Sports, Action Trailer, Rock promos, Sports - Promos, Commercials, Ads, Advertisements, Jingles, Spots,Guitar-electric,,fast,, ROCK015602, ROCK0156, ROCK",
+        #     "alt_title": "",
+        #     "langcode": "EN",
+        #     "provider": "SON",
+        #     "lc": "30572",
+        #     "verlag": "Rockshop",
+        #     "library": "Rockshop - ROCK",
+        #     "gemadbnr": null,
+        #     "notiz": "",
+        #     "cd_notiz": "",
+        #     "img": "rock\/rock0156.jpg",
+        #     "repertoire": "ROCK",
+        #     "licences": {
+        #         "img": "\/img\/ctryspec\/rightsoc_NO.gif",
+        #         "link": "",
+        #         "text": "Copyright protected"
+        #     },
+        #     "tempotxt": "Fast",
+        #     "soundtxt": "Natural sound",
+        #     "formationtxt": "Small (1-10)",
+        #     "versiontxt": "Commercial 29\/30 sec",
+        #     "instruments": "Guitar-electric",
+        #     "akomp1": "Peter Jordan",
+        #     "artists": "Peter Jordan, Ole Hempelmann, Michael Wolpers",
+        #     "csinfo": "Track name: THE HYPE B\r\nTrack number: ROCK 156  2.0 (Trackcode: ROCK015602)\r\nComposer: Peter Jordan, Artists: Peter Jordan, Ole Hempelmann, Michael Wolpers\r\nEAN\/GTIN: 4020771163564 \r\nISRC: DE-B63-16-356-02\r\nAlbum name: SPORTS ATTACK\r\nCatalogue number: 156  \r\nLabel: ROCK\r\nCopyright owner: SONOTON Music GmbH & Co. KG\r\nLC number: 30572",
+        #     "dSec": "30",
+        #     "dMin": "0"
+        #     }
+        # ],
+        # "trackcnt": 1,
+        # "cnt": 1,
+        # "errmsg": "",
+        # "ax_success": 1
+        # }
+        metadata = TrackMetadata(filename=self.filename,
+                 musiclibrary=resolvers.AUXResolver.name,
+                 title=trackdata.get('title', None),
+                 length=trackdata.get('nZeit', -1),
+                 composer=trackdata.get('allkomp', None),
+                 artist=trackdata.get('artists', None),
+                 year=-1,
+                 recordnumber=self.musicid,
+                 albumname=trackdata.get('cd_title', None),
+                 copyright='SONOTON Music GmbH & Co. KG',
+                 lcnumber=trackdata.get('lc', None),
+                 isrc=trackdata.get('isrc', None),
+                 ean=trackdata.get('ean', None),
+                 catalogue=trackdata.get('p_nummer', None),
+                 label=trackdata.get('label', None),
+                 lyricist=trackdata.get('lyrics', None),
+                 identifier=trackdata.get('cdkurz', self.musicid)
+                 )
+        self.progress.emit(90)
+        metadata.productionmusic = True
+        try:
+            dt = datetime.strptime(trackdata.get('releasedat', None), '%Y-%m-%d') #SIC, 
+            logging.debug('Got datetime %r for musicid %r', dt, self.musicid)            
+            metadata.year = dt.year
+        except (ValueError, TypeError) as e:
+            logging.exception(e)
+            pass # the data does not fit our expectations, so we let it slide
+        except Exception as e:
+            # this is unexpected
+            logging.exception(e)
+
+        if metadata.title is not None:
+            metadata.title = metadata.title.title() # all AUX titles are ALL CAPS. Noisy!
+        self.trackResolved.emit(metadata)
+        self.progress.emit(100)
+        #self.terminate()
+        #self.deleteLater()
+
+    def request_trackdata(self, musicid):
+        """do an http get request to http://search.auxmp.co//search/html/ajax/axExtData.php
+
+        look up musicid, e.g ROCK015601
+
+        by doing a get request to
+        http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=ROCK015601&ac=track&country=NO'
+
+        and parse the json we get back
+
+        """
+        endpoint = 'http://search.auxmp.com//search/html/ajax/axExtData.php'
+        try:
+            data = ( ('ac','track'),
+                     ('country', 'NO'),
+                     ('cdkurz', musicid)
+                   )
+            r = urllib.request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            req = urllib.request.urlopen(r)
+
+        except IOError as e:
+            # e.g. dns lookup failed
+            logging.exception(e)
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but failed. Are you connected to the internet? (%s)' % (musicid, str(e)))
+            return None
+
+        if req.getcode() in (404, 403, 401, 400, 500):
+            self.trackFailed.emit()
+            self.error.emit('Tried to look up %s, but got %s' % (musicid, req.getcode()))
+            return None
+
+        response = json.loads(req.read().decode('utf-8')) # it's a json array
+        if len(response) == 0 or response.get('ax_success') != 1:
+            # empty response,
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but failed. Please try again' % (musicid,))
+            return None
+        elif len(response.get('errmsg', '')) > 0:
+            # we got an error message from auxmp.com
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but received an error from AUX: %r' % (musicid, response.errmsg))
+        elif response.get('trackcnt') == 0:
+            # auxmp.com didnt return any tracks for our search term
+            self.trackFailed.emit()
+            self.error.emit('Tried to lookup %s, but the AUX server returned no tracks with that id' % (musicid, ))
+        trackdata = response.get('tracks')[0]
+        albumdata = None # TODO: get this
+        return albumdata, trackdata
 

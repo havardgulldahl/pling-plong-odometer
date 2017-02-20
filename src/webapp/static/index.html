@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang=en>
+<head><title>Pling Plong Odometer Online</title>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+
+<script type="text/javascript">
+
+function secs2timestring(duration) {
+    // takes an integer of seconds, responds with a "mm:ss" timestring
+    var mins = parseInt(duration / 60);
+    var secs = duration % 60;
+    return mins.toString() + ":" + secs.toString();
+}
+
+function main() {
+    var form = document.getElementById('file-form');
+    var fileSelect = document.getElementById('file-select');
+    var uploadButton = document.getElementById('upload-button');
+    var uploadTestfileButton = document.getElementById('upload-testfile-button');
+    var fileList = document.getElementById('files-list');
+
+    uploadTestfileButton.onclick = function(event) {
+        event.preventDefault();
+        var formData = new FormData();
+        formData.append('usetestfile', '1');
+        submit(formData);
+        return false;
+    }
+
+    form.onsubmit = function(event) {
+        event.preventDefault();
+
+        // Update button text.
+        uploadButton.innerHTML = 'Uploading...';
+
+        // empty files table
+        while(fileList.hasChildNodes()) {
+            fileList.removeChild(fileList.firstChild);
+        }
+
+        // The rest of the code will go here...
+        // Get the selected files from the input.
+        var files = fileSelect.files;
+        // Create a new FormData object.
+        var formData = new FormData();
+        // Loop through each of the selected files.
+        for (var i = 0; i < files.length; i++) {
+            var file = files[i];
+
+            // Add the file to the request.
+            formData.append('xmeml', file, file.name);
+        }
+        submit(formData)
+        return false;
+    }
+}
+
+function submit(formData) {
+    // Set up the request.
+    var xhr = new XMLHttpRequest();
+    // Open the connection.
+    xhr.open('POST', '/analyze', true);
+
+    var uploadButton = document.getElementById('upload-button');
+    // Set up a handler for when the request finishes.
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            // File(s) uploaded.
+            uploadButton.innerHTML = 'Upload';
+            var audio = JSON.parse(xhr.response);
+            console.log('got audio response: %o', audio);
+            return formatAudible(audio["audioclips"]);
+        } else {
+            alert('An error occurred!');
+        }
+    };
+
+    // Send the Data.
+    xhr.send(formData);
+}
+
+function formatAudible(audible) {
+    var filelist = document.getElementById('files-list');
+    for(var i=0; i<audible.length; i++) {
+        var tr = document.createElement('tr');
+        var elm = audible[i];
+        var c = elm.clipname;
+        var r = elm.resolve;
+        var secs = secs2timestring(elm.audible_length);
+        var service = elm.music_service || "<i>Unknown</i>";
+        var resolvable = elm.resolvable ? "&rarr;" : "&times;"
+        tr.innerHTML = "<td>"+c+"<td>"+secs+"<td>"+service+"<td><button onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
+        filelist.appendChild(tr);
+    }
+}
+
+function resolve(url) {
+    // Set up the request.
+    var xhr = new XMLHttpRequest();
+    // Open the connection.
+    xhr.open('GET', url, true);
+
+    var output = document.getElementById('o-'+window.btoa(url));
+    // Set up a handler for when the request finishes.
+    output.innerText = "Getting metadata..."
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            // File(s) uploaded.
+            var metadata = JSON.parse(xhr.response);
+            console.log('got metadata %o', metadata);
+            var md = metadata['metadata'];
+            if(md.productionmusic === true) {
+                output.innerHTML = "<i>"+md.copyright+"</i> &reg; <b>"+md.label+"</b>";
+
+            } else {
+                output.innerHTML = "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year;
+                //s += u'%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s\r\n\r\n' % vars(r.metadata)
+            }
+
+        } else {
+            console.error("server returned %o -> %o", xhr.status, xhr.statusText);
+            output.innerHTML = '<i style="color:red">'+xhr.statusText+'</i>';
+        }
+    };
+
+    // Send 
+    xhr.send();
+}
+
+
+
+
+</script>
+
+</head>
+<body>
+
+    <h1>Pling Plong Odometer Online</h1>
+    <div style="font-size: smaller">
+        <a href="/doc">JSON Rest API docs</a>
+    </div>
+
+    <form id="file-form" enctype="multipart/form-data" action="/analyze" method="POST">
+    <input type="file" id="file-select" name="xmeml">
+    <input type="hidden" name="usetestfile" value="0">
+    <button type="submit" id="upload-button">Upload</button>
+    <button type="submit" id="upload-testfile-button">Use testfile</button>
+    </form>
+
+    <table style="width: 98%">
+        <thead>
+            <th>name</th>
+            <th>audible length</th>
+            <th>&reg;</th>
+            <th>resolvable?</th>
+            <th>metadata</th>
+        </thead>
+        <tbody id=files-list>
+
+        </tbody>
+
+    </table>
+
+<script type="text/javascript">
+main()
+</script>
+</body>
+
+</html>

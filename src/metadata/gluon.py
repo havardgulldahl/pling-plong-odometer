@@ -3,11 +3,12 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2011
 
+from builtins import str
 import sys
+import logging
 import xml.etree.ElementTree as ET
 
-import PyQt4.QtCore as Core
-
+import PyQt5.QtCore as Core
 
 #from metadata import TrackMetadata
 
@@ -26,7 +27,8 @@ def glns(tag):
         s.append('%s%s' % (GLUON_NAMESPACE, ss))
     return "/".join(s)
 
-class glel(ET._ElementInterface):
+#class glel(ET._ElementInterface):
+class glel(ET.Element):
     def add(self, tagName):
         return ET.SubElement(self, glns(tagName))
 
@@ -47,7 +49,7 @@ class Gluon(Core.QObject):
 class GluonReportWorker(Core.QThread):
     'Create a Gluon report (a music metadata usage report) to and submit it to Gluon'
     reported = Core.pyqtSignal(name="reported") # success
-    error = Core.pyqtSignal(unicode, name="error") # failure, with error message
+    error = Core.pyqtSignal(str, name="error") # failure, with error message
 
     def __init__(self, parent=None):
         super(GluonReportWorker, self).__init__(parent)
@@ -77,7 +79,7 @@ class GluonReportWorker(Core.QThread):
         data = urllib.urlencode( {"data":gluonpayload} )
         try:
             req = urllib.urlopen(GLUON_HTTP_REPORT, data)
-        except Exception, (e):
+        except Exception as e:
             self.error.emit(e)
         if req.getcode() in (400, 401, 403, 404, 500):
             self.error.emit('Got error message %s from Gluon server when reporting' % req.getcode())
@@ -91,13 +93,13 @@ class GluonReportWorker(Core.QThread):
 class GluonReportBuilder(object):
     "Build a gluon xml tree from a list of audio clips and their length"
     def __init__(self, prodno, metadatalist):
-        print "gluonbuilder init"
+        logging.debug("gluonbuilder init")
         self.prodno = prodno
         self.objects = metadatalist
         self.build()
 
     def build(self):
-        print "gluonbuilder build"
+        logging.debug( "gluonbuilder build")
         self.root = glel(glns('gluon'), {'priority':'3',
                                    'artID':'odofon-1234',
                                 })
@@ -203,7 +205,7 @@ class GluonRequestParser(object):
         subelements = programmeobj.find('./'+glns('subelements'))
         for obj in subelements.getiterator(glns('object')):
             if obj.get('objecttype') != 'item':
-                print "gaffe"
+                # "gaffe"
                 continue
             md = factory()
             md.programme = programme
@@ -234,7 +236,7 @@ if __name__ == '__main__':
     #print r
     gp = GluonMetadataResponseParser()
     x = gp.parse(sys.argv[1])
-    print vars(x)
+    print(vars(x))
 
 
 

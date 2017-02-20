@@ -1,0 +1,18 @@
+tags:
+- analysis
+summary: Get an audioname (from the file name) from the request and resolve it from its respective service resolver
+description: Use this for the file name on every music track to get all metadata
+operationId: handle_resolve
+produces:
+- application/json
+parameters:
+- name: audioname
+  in: path
+  description: The audio name (file name) to resolve from audio service
+  required: true
+  type: string
+responses:
+  '200': 
+    description: 'Audioname successfully resolved and json metadata is returned'
+  '404': 
+    description: 'Audioname not resolved (not found)'

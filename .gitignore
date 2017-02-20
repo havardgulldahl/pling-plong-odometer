@@ -40,6 +40,7 @@ Icon?
 Thumbs.db
 .cache
 .Python
+*.egg-info/*
 
 # Generated files #
 ###################
@@ -77,3 +78,8 @@ VERSIONWIN
 src/metadata/*.wav
 src/metadata/*.mp3
 
+
+.python-version
+
+# deploy configuration
+##

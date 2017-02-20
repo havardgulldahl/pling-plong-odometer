@@ -1,29 +1,34 @@
 #!/usr/bin/env python
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2011-2014
+# (C) 2011-2017
 
+from builtins import str
 import sys, os, os.path
 import time
 import datetime
-import urllib, urllib2
+import urllib.parse
 import json
-import StringIO
-import ConfigParser
+from io import StringIO
+import configparser 
 import logging
 import traceback
 import subprocess
+import hashlib
+import functools
 
+from enum import Enum
 from collections import defaultdict
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-import PyQt4.QtGui as Gui
-import PyQt4.QtCore as Core
-import PyQt4.QtSvg as Svg
-import PyQt4.QtNetwork as QtNetwork
-import PyQt4.Qt as Qt
+import pickle
+
+import PyQt5.QtCore as Core
+import PyQt5.QtGui as Gui
+import PyQt5.QtNetwork as QtNetwork
+import PyQt5.Qt as Qt
+import PyQt5.QtSvg as Svg
+from PyQt5.QtWidgets import (QWidget, QMainWindow, QDialog, QTreeWidgetItem,
+    QLineEdit, QMessageBox, QInputDialog, QDoubleSpinBox,
+    QDialogButtonBox, QApplication, QFileDialog, QLabel, QProgressBar)
 
 from xmeml import iter as xmemliter
 import metadata.gluon
@@ -33,148 +38,19 @@ from core.workers import UrlWorker, XmemlWorker
 
 
 # import gui
-import odometer_ui
-import odometer_rc
-import auxreport_ui
-import prfreport_ui
-import onlinelogin_ui
+from . import odometer_ui
+from . import odometer_rc
+from . import auxreport_ui
+from . import prfreport_ui
+from . import onlinelogin_ui
 
-# class UrlWorker(Core.QThread):
-#     finished = Core.pyqtSignal(object)
-#     failed = Core.pyqtSignal(tuple)
-
-#     def __init__(self, parent=None):
-#         super(UrlWorker, self).__init__(parent)
-#         self.exiting = False
-
-#     def __del__(self):
-#         self.exiting = True
-#         self.wait()
-
-#     def load(self, url, timeout=10, data=None, headers=None):
-#         self.url = url
-#         self.timeout = timeout
-#         if data is not None:
-#             logging.warning("urlworker load data %r", data)
-#             if isinstance(data, basestring):
-#                 self.data = data
-#             else:
-#                 self.data = urllib.urlencode(data)
-#         else:
-#             self.data = None
-#         self.headers = {'X_REQUESTED_WITH' :'XMLHttpRequest',
-#            'ACCEPT': 'application/json, text/javascript, */*; q=0.01',}
-#         self.headers.update(headers or {})
-#         logging.debug('UrlWorker headers: %r', self.headers)
-#         self.start()
-
-#     def run(self):
-#         logging.info('urlworker working on url %s with data %s', self.url, self.data)
-#         try:
-#             req = urllib2.Request(self.url, self.data, headers=self.headers)
-#             con = urllib2.urlopen(req, timeout=self.timeout)
-
-#             self.finished.emit(con)
-#         except Exception as e:
-#             logging.exception(e)
-#             self.failed.emit(tuple(sys.exc_info()))
-
-# class XmemlWorker(Core.QThread):
-#     loaded = Core.pyqtSignal(xmemliter.XmemlParser, name="loaded")
-#     failed = Core.pyqtSignal(BaseException)
-
-#     def __init__(self, parent=None):
-#         super(XmemlWorker, self).__init__(parent)
-#         self.exiting = False
-
-#     def __del__(self):
-#         self.exiting = True
-#         self.wait()
-
-#     def load(self, filename):
-#         self.xmemlfile = filename
-#         self.start()
-
-#     def run(self):
-#         try:
-#             xmeml = xmemliter.XmemlParser(self.xmemlfile)
-#             self.loaded.emit(xmeml)
-#         except BaseException as e:
-#             #logging.debug("beep"
-#             self.failed.emit(e)
-
-class StatusBox(Gui.QWidget):
+class Status(Enum):
     INFO = 1
     WARNING = 2
     ERROR = 3
 
-    class Emitter(Core.QObject):
-
-        closing = Core.pyqtSignal()
-        def __init__(self):
-            super(StatusBox.Emitter, self).__init__()
-
-
-    def __init__(self, msg, autoclose=True, msgtype=None, parent=None):
-        """autoclose may be a boolean (True == autoclose) or a signal that we
-        connect our close() method to"""
-        super(StatusBox, self).__init__(parent)
-        self.emitter = StatusBox.Emitter()
-        self.parent = parent
-        self.autoclose = autoclose
-        self.stopped = False
-        self.timer = Core.QTimer(parent=self)
-        self.timer.timeout.connect(self.close)
-        self.timer.timeout.connect(self.timer.stop)
-        self.anim = Core.QPropertyAnimation(self, "windowOpacity", self.parent)
-        self.anim.finished.connect(self.delete_)
-        self.setWindowFlags(Core.Qt.Popup)
-        self.setup(msgtype)
-        layout = Gui.QVBoxLayout(self)
-        self.s = Gui.QLabel(msg, self)
-        layout.addWidget(self.s)
-
-    def setup(self, msgtype):
-        self.autoclosetimeout = msgtype==self.ERROR and 3000 or 1000
-        if msgtype in (None, self.INFO):
-            bgcolor = '#ffff7f'
-        elif msgtype == self.WARNING:
-            bgcolor = 'blue'#'#ffff7f'
-        elif msgtype == self.ERROR:
-            bgcolor = 'red'#'#ffff7f'
-
-        self.setStyleSheet(u'QWidget { background-color: %s; }' % bgcolor)
-
-    def show_(self):
-        if self.autoclose == True:
-            self.timer.start(self.autoclosetimeout)
-        elif hasattr(self.autoclose, 'connect'): # it's a qt/pyqt signal
-            self.autoclose.connect(self.close)
-        self.show()
-
-    def delete_(self):
-        self.hide()
-        self.emitter.closing.emit()
-        self.deleteLater()
-
-    def close(self):
-        self.stopped = True
-        self.anim.setDuration(1000)
-        self.anim.setStartValue(1.0)
-        self.anim.setEndValue(0.0)
-        self.anim.start()
-
-    def addMessage(self, s, msgtype):
-        self.setup(msgtype)
-        try:
-            self.anim.stop()
-        except AttributeError:#close animation does not exist because close() was never run
-            pass
-        self.timer.start(self.autoclosetimeout)
-        self.s.setText(unicode(self.s.text()) + "<br>" + s)
-
 def readResourceFile(qrcPath):
-    """Read qrc file and return QString.
+    """Read qrc file and return string
 
     'qrcPath' is ':/path/name', for example ':/txt/about.html'
     """
@@ -183,25 +59,25 @@ def readResourceFile(qrcPath):
         raise IOError(u"Could not read resource '%s'" % qrcPath)
     t = Core.QTextStream(f)
     t.setCodec("UTF-8")
-    s = Core.QString(t.readAll())
+    s = str(t.readAll())
     f.close()
     return s
 
 def readBuildflags():
     "Read build flags from builtin resource file"
-    cp = ConfigParser.ConfigParser()
-    cp.readfp(StringIO.StringIO(unicode(readResourceFile(':/data/buildflags'))))
+    cp = configparser.ConfigParser()
+    cp.readfp(StringIO(str(readResourceFile(':/data/buildflags'))))
     return cp
 
 def formatTC(secs):
     '''Convert floating point /secs/ to a TC label. E.g. 62.1 -> 00:01:02.200
     Returns hh:mm:ss.sss'''
     return "%02d:%02d:%02d.%02d" % \
-        reduce(lambda ll,b : divmod(ll[0],b) + ll[1:],
-               [(secs*1000,),1000,60,60])
+        functools.reduce(lambda ll,b : divmod(ll[0],b) + ll[1:],
+                        [(secs*1000,),1000,60,60])
 
-class Odometer(Gui.QMainWindow):
-    msg = Core.pyqtSignal(unicode, name="msg")
+class Odometer(QMainWindow):
+    msg = Core.pyqtSignal(str, name="msg")
     loaded = Core.pyqtSignal()
     metadataLoaded = Core.pyqtSignal('QTreeWidgetItem')
 
@@ -214,7 +90,6 @@ class Odometer(Gui.QMainWindow):
         self.rows = {}
         self.AUXRepertoire = {}
         self.metadataloaded = 0
-        self.statusboxes = []
         self.showsubclips = True
         self.translator = None
         self.translatorQt = None
@@ -229,13 +104,14 @@ class Odometer(Gui.QMainWindow):
         self.setLanguage(language)
         self.ui.setupUi(self)
         self.ui.detailsBox.hide()
-        self.ui.errors.hide()
         self.ui.volumeThreshold.setValue(self.volumethreshold.gain)
         if self.buildflags.getboolean('ui', 'editbutton'):
-            self.ui.editMetadataButton = self.ui.buttonBox.addButton(self.tr('Edit'), Gui.QDialogButtonBox.ActionRole)
+            self.ui.editMetadataButton = self.ui.buttonBox.addButton(self.tr('Edit'), QDialogButtonBox.ActionRole)
             self.ui.editMetadataButton.clicked.connect(self.editMetadata)
         if self.buildflags.getboolean('ui', 'manuallookupbutton'):
             self.setManualLookupButtonVisible(True)
+            # check the option in the pulldown menu
+            self.ui.actionManualLookup.setChecked(True)
         self.ui.buttonBox.rejected.connect(lambda: self.ui.detailsBox.hide())
         self.ui.loadFileButton.clicked.connect(self.clicked)
         #self.ui.DMAButton.clicked.connect(self.gluon)
@@ -245,6 +121,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.ApolloButton.clicked.connect(self.apollomusicReport)
         self.ui.creditsButton.clicked.connect(self.credits)
         self.ui.errorButton.clicked.connect(self.reportError)
+        self.ui.clips.setIconSize(Core.QSize(16,16))
         self.ui.clips.itemSelectionChanged.connect(lambda: self.hilited(self.ui.clips.selectedItems()))
         self.ui.clips.itemActivated.connect(self.showMetadata)
         self.ui.clips.itemDoubleClicked.connect(self.editDuration) # manually override duration column
@@ -259,6 +136,7 @@ class Odometer(Gui.QMainWindow):
         self.ui.actionTimelineOrderReport.triggered.connect(self.showTimelineOrderReport)
         self.ui.actionAdjustThreshold.toggled.connect(self.setThresholdVisible)
         self.ui.actionManualLookup.toggled.connect(self.setManualLookupButtonVisible)
+        self.ui.actionReportError.triggered.connect(self.reportError)
         self.msg.connect(self.showstatus)
         self.loaded.connect(self.computeAudibleDuration)
         self.ui.dropIcon = Svg.QSvgWidget(':/gfx/graystar', self.ui.clips)
@@ -279,6 +157,7 @@ class Odometer(Gui.QMainWindow):
         if not self.buildflags.getboolean('ui', 'errorbutton'):
             self.ui.errorButton.hide()
 
+        self.ui.information.hide()
         #self.metadataLoaded.connect(self.checkUsage)
         Core.QTimer.singleShot(5, self.updateAUXRepertoire)
 
@@ -320,16 +199,16 @@ class Odometer(Gui.QMainWindow):
         i = self.ui.dropIcon
         i.move(self.width()/2-i.width(), self.height()*0.75-i.height())
 
-    def logMessage(self, msg, msgtype=StatusBox.INFO):
+    def logMessage(self, msg, msgtype=Status.INFO):
         'Add a message to the log'
-        if msgtype == StatusBox.ERROR:
+        if msgtype == Status.ERROR:
             color = 'red'
-        elif msgtype == StatusBox.INFO:
+        elif msgtype == Status.INFO:
             color = '#390'
-        elif msgtype == StatusBox.WARNING:
+        elif msgtype == Status.WARNING:
             color = 'blue'
         try:
-            if isinstance(self.xmemlfile, unicode):
+            if isinstance(self.xmemlfile, str):
                 name = os.path.basename(self.xmemlfile)
             else:
                 name = os.path.basename(self.xmemlfile.decode(sys.getfilesystemencoding()))
@@ -353,7 +232,7 @@ class Odometer(Gui.QMainWindow):
         elif hasattr(e, 'message'):
             msg = e.message
         else:
-            msg = unicode(e)
+            msg = str(e)
         self.log.append('<div style="color:red">')
         for line in traceback.format_exception(etype, e, tb):
             self.log.append(line)
@@ -361,50 +240,38 @@ class Odometer(Gui.QMainWindow):
 
     def showException(self, e):
         self.logException(e)
-        self.showerror(unicode(self.tr('Unexpected error: %s')) % e)
+        self.showerror(str(self.tr('Unexpected error: %s')) % e)
 
-    def showstatus(self, msg, autoclose=True, msgtype=StatusBox.INFO):
-        'Show floating status box'
-        # if you don't autoclose, call self.closestatusboxes()
-        # or keep a reference to this box and .close() it yourself
+    def showstatus(self, msg, autoclose=True, msgtype=Status.INFO):
+        'Popup some info'
 
         if hasattr(self, '_laststatusmsg') and msg == self._laststatusmsg:
             # don't repeat yourself
             return None
 
-        if len(self.statusboxes):
-            b = self.statusboxes[-1]
-            if not b.stopped:
-                b.addMessage(msg, msgtype)
-                return b
-            else:
-                self.closebox(b)
         if isinstance(msg, Exception): #unwrap exception
-            msgtype=StatusBox.ERROR
-            msg=unicode(msg)
-        b = StatusBox(msg, autoclose=autoclose, msgtype=msgtype, parent=self)
-        self.statusboxes.append(b)
-        b.emitter.closing.connect(lambda: self.closebox(b))
-        b.show_()
-        self._laststatusmsg = unicode(msg)
+            msg=str(msg)
+
+        infoLayout = self.ui.information.layout()
+        b = QLabel(msg, self.ui.information)
+        infoLayout.addWidget(b)
+        self._laststatusmsg = str(msg)
         self.logMessage(msg, msgtype)
         return b
 
     def showerror(self, msg):
         'Show error message'
-        return self.showstatus(msg, msgtype=StatusBox.ERROR)
+        return self.showstatus(msg, msgtype=Status.ERROR)
 
-    def closebox(self, b):
-        try:
-            self.statusboxes.remove(b)
-        except:
-            pass
+    def clearstatus(self):
+        'empty message list'
 
-    def closestatusboxes(self):
-        'Close all statusboxes'
-        for b in self.statusboxes:
-            b.close()
-        self.statusboxes = []
+        infoLayout = self.ui.information.layout()
+        while infoLayout.count() > 0:
+            child = infoLayout.takeAt(0)
+            widget = child.widget()
+            del widget
+            del child
 
     def getVersion(self):
         if sys.platform == 'darwin':
@@ -414,7 +281,7 @@ class Odometer(Gui.QMainWindow):
         else: # unknown platform
             _version = ''
         if self.buildflags.getboolean('release', 'beta'):
-            _version = unicode(_version).strip() + ' NEXT'
+            _version = str(_version).strip() + ' NEXT'
         logging.debug("got version:  ---%s---", _version)
         return _version
 
@@ -425,19 +292,21 @@ class Odometer(Gui.QMainWindow):
 
     def showHelp(self):
         'Show help document from online resource'
-        HelpDialog = Gui.QDialog()
+        HelpDialog = QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(HelpDialog)
+        HelpDialog.setWindowTitle(self.tr('Help'))
         ui.buttonBox.hide()
-        ui.webView.load(Core.QUrl(self.buildflags.get('release', 'helpUrl')))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        ui.webEngineView.load(Core.QUrl(self.buildflags.get('release', 'helpUrl')))
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadProgress.connect(ui.progressBar.setValue)
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
         def helpdocloaded(success):
             logging.debug("help doc loaded: %s", success)
             # TODO: Add offline fallback
             if not success:
                 self.showerror(self.tr("Could not load help document, sorry. :("))
-        ui.webView.loadFinished.connect(helpdocloaded)
+        ui.webEngineView.loadFinished.connect(helpdocloaded)
         return HelpDialog.exec_()
 
     def showLicenses(self):
@@ -470,11 +339,11 @@ class Odometer(Gui.QMainWindow):
             _ver, _url = data.read().split('|')
             def _date(s):
                 return datetime.datetime.strptime(s.strip(), "%Y-%m-%d").date()
-            _currentVersion = _date(unicode(readResourceFile(':/txt/version_%s' % _platform)))
+            _currentVersion = _date(str(readResourceFile(':/txt/version_%s' % _platform)))
             _onlineVersion = _date(_ver)
             if _currentVersion < _onlineVersion:
                 # out of date
-                _box = Gui.QMessageBox.warning(self, self.tr('Oooooo!'), unicode(self.tr('Odometer is out of date. \nGet the new version: %s')) % _url)
+                _box = Gui.QMessageBox.warning(self, self.tr('Oooooo!'), str(self.tr('Odometer is out of date. \nGet the new version: %s')) % _url)
             else:
                 _box = Gui.QMessageBox.information(self, self.tr('Relax'), self.tr('Odometer is up to date'))
         async = UrlWorker()
@@ -485,12 +354,12 @@ class Odometer(Gui.QMainWindow):
 
     def showShowPatterns(self):
         'Show a list of recognised Patternes'
-        PatternDialog = Gui.QDialog()
+        PatternDialog = QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(PatternDialog)
-        ui.buttonBox.removeButton(ui.buttonBox.button(Gui.QDialogButtonBox.Save))
+        ui.buttonBox.removeButton(ui.buttonBox.button(QDialogButtonBox.Save))
         r = []
-        for catalog, patterns in metadata.resolvers.getResolverPatterns().iteritems():
+        for catalog, patterns in metadata.resolvers.getResolverPatterns().items():
             r.append('<h1>%s</h1><ul>' % catalog)
             for tok in patterns['prefixes']:
                 r.append('<li>%s...</li>' % tok)
@@ -503,7 +372,7 @@ class Odometer(Gui.QMainWindow):
 
     def showLogs(self):
         'Pop up a dialog to show internal log'
-        LogDialog = Gui.QDialog()
+        LogDialog = QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(LogDialog)
         ui.textBrowser.setHtml(''.join(self.log))
@@ -513,15 +382,15 @@ class Odometer(Gui.QMainWindow):
     def showTimelineOrderReport(self):
         'Pop up a dialog to show a detailed report, showing each subclip in the order they appear on the timeline'
         logging.debug('Pop up a dialog to show detailed run sheet report')
-        ExportDialog = Gui.QDialog()
+        ExportDialog = QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(ExportDialog)
-        s = unicode(self.tr('<h1>Tracks by order of entry on timeline</h1>'))
+        s = str(self.tr('<h1>Tracks by order of entry on timeline</h1>'))
         s = s + '<table cellpadding=10><tr>'
-        s = s + unicode(self.tr('<th>In</th>'))
-        s = s + unicode(self.tr('<th>Out</th>'))
-        s = s + unicode(self.tr('<th>Duration</th>'))
-        s = s + unicode(self.tr('<th>Clip details</th>'))
+        s = s + str(self.tr('<th>In</th>'))
+        s = s + str(self.tr('<th>Out</th>'))
+        s = s + str(self.tr('<th>Duration</th>'))
+        s = s + str(self.tr('<th>Clip details</th>'))
         s = s + '</tr>'
         clips = defaultdict(list)
         for r in self.itercheckedrows():
@@ -537,7 +406,7 @@ class Odometer(Gui.QMainWindow):
                 _s += "</tr>"
                 clips[sc['in']].append(_s)
         # sort all clips by inpoint
-        inpoints = clips.keys()
+        inpoints = list(clips.keys())
         inpoints.sort()
         s = s + "".join(["".join(clips[inpoint]) for inpoint in inpoints])
         s = s + '</table>'
@@ -547,50 +416,53 @@ class Odometer(Gui.QMainWindow):
 
     def showLoginOnline(self):
         'Pop up a dialog to log in to online services like AUX and ApolloMusic'
-        LoginDialog = Gui.QDialog()
+        LoginDialog = QDialog()
         ui = onlinelogin_ui.Ui_PlingPlongOnlineDialog()
         ui.setupUi(LoginDialog)
-        ui.AUXuser.setText(self.settings.value('AUXuser', '').toString())
-        ui.AUXpassword.setText(self.settings.value('AUXpassword', '').toString())
-        ui.Apollouser.setText(self.settings.value('Apollouser', '').toString())
-        ui.Apollopassword.setText(self.settings.value('Apollopassword', '').toString())
-        ui.Universaluser.setText(self.settings.value('Universaluser', '').toString())
-        ui.Universalpassword.setText(self.settings.value('Universalpassword', '').toString())
-        ui.Uprightuser.setText(self.settings.value('Uprightuser', '').toString())
-        ui.Uprightpassword.setText(self.settings.value('Uprightpassword', '').toString())
-        ui.Extremeuser.setText(self.settings.value('Extremeuser', '').toString())
-        ui.Extremepassword.setText(self.settings.value('Extremepassword', '').toString())
+        ui.AUXuser.setText(self.settings.value('AUXuser', ''))
+        ui.AUXpassword.setText(self.settings.value('AUXpassword', ''))
+        ui.Apollouser.setText(self.settings.value('Apollouser', ''))
+        ui.Apollopassword.setText(self.settings.value('Apollopassword', ''))
+        ui.Universaluser.setText(self.settings.value('Universaluser', ''))
+        ui.Universalpassword.setText(self.settings.value('Universalpassword', ''))
+        ui.Uprightuser.setText(self.settings.value('Uprightuser', ''))
+        ui.Uprightpassword.setText(self.settings.value('Uprightpassword', ''))
+        #TODO: enable this when login is implemented
+        ui.Uprightuser.setDisabled(True)
+        ui.Uprightpassword.setDisabled(True)
+        ui.Uprightlogin.setDisabled(True)
+        ui.Extremeuser.setText(self.settings.value('Extremeuser', ''))
+        ui.Extremepassword.setText(self.settings.value('Extremepassword', ''))
         def storeCookie(service, data):
             logging.debug("Storing cookie for %s: %s", service, data.info().get('Set-Cookie', None))
             logging.debug("Service returned %s", data.getcode())
             #logging.debug("Headers: %s", data.info())
-            b = data.read()
-            #logging.debug("body: %s", b)
+            b = data.read().decode()
+            logging.debug("body: %s", b)
             login = False
             if service == 'AUX':
                 result = json.loads(b)
                 if result['ax_success'] == 1:
-                    self.settings.setValue('AUXcookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to AUX')
+                    self.showstatus(self.tr('Logged in to AUX'))
                 else:
-                    m = '%s login failed: %s' % (service, result['ax_errmsg'])
+                    m = self.tr('%s login failed: %s') % (service, result['ax_errmsg'])
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Apollo':
                 result = json.loads(b)
                 if result['success'] == 1:
                     self.settings.setValue('Apollocookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to Apollo')
+                    self.showstatus(self.tr('Logged in to Apollo'))
                 else:
-                    m = '%s login failed: %s' % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Upright':
                 if result['success'] == 1:
                     self.settings.setValue('Uprightcookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to Upright')
+                    self.showstatus(self.tr('Logged in to Upright'))
                 else:
-                    m = '%s login failed: %s' % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Universal':
@@ -600,9 +472,9 @@ class Odometer(Gui.QMainWindow):
                 # <div class="error failedlogin">You have 5 password attempts remaining.</div>
                 if b.startswith('''<div class="result" ssoToken="'''):
                     self.settings.setValue('Universalcookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to Universal')
+                    self.showstatus(self.tr('Logged in to Universal'))
                 else:
-                    m = '%s login failed: %s' % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
             elif service == 'Extreme':
@@ -612,12 +484,12 @@ class Odometer(Gui.QMainWindow):
                 except KeyError:
                     success = True
                 if not success:
-                    m = '%s login failed: %s' % (service, result['message'])
+                    m = self.tr('%s login failed: %s') % (service, result['message'])
                     logging.warning(m)
                     self.showerror(m)
                 else:
                     self.settings.setValue('Extremecookie', data.info()['Set-Cookie'])
-                    self.showstatus('Logged in to Extreme')
+                    self.showstatus(self.tr('Logged in to Extreme'))
 
 
             #logging.debug("settings: %r", list(self.settings.allKeys()))
@@ -627,11 +499,29 @@ class Odometer(Gui.QMainWindow):
         def failed(ex):
             logging.warning("faile! %r", ex)
             self.logException(ex)
+            self.showerror(self.tr('Login failed. Check your password at the website.'))
             stopBusy()
         def startBusy():
             ui.progressBar.setRange(0,0)
         def stopBusy():
             ui.progressBar.setMaximum(1)
+
+        def AUXauth():
+            logging.info('Getting auth (session id) from AUX')
+            def getauth(resp):
+                'extract session id from response json'
+                body = resp.read().decode()
+                sid = json.loads(body)['sid'] 
+                logging.debug('aux sid: %s', sid)
+                self.settings.setValue('AUXSID', sid)
+                self.settings.setValue('AUXcookie', resp.info()['Set-Cookie'])
+
+            startBusy()
+            sid = UrlWorker()
+            sid.failed.connect(failed)
+            sid.finished.connect(getauth)
+            sid.finished.connect(lambda d: AUXlogin())
+            sid.load('http://search.auxmp.com//search/html/ajax/axExtData.php?_dc=%s&ext=1&sprache=en&country=NO&ac=login' % int(time.time()))
         def AUXlogin():
             logging.info('login to aux')
             self.settings.setValue('AUXuser', ui.AUXuser.text())
@@ -639,16 +529,21 @@ class Odometer(Gui.QMainWindow):
             startBusy()
             async = UrlWorker()
             url = 'http://search.auxmp.com//search/html/ajax/axExtData.php'
-            getdata = urllib.urlencode({'ac':'login',
-                                        'country': 'NO',
-                                        'sprache': 'en',
-                                        'ext': 1,
-                                        '_dc': int(time.time()),
-                                        'luser':unicode(ui.AUXuser.text()),
-                                        # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
-
-                                        'lpass':unicode(ui.AUXpassword.text())})
-            async.load('%s?%s' % (url, getdata), timeout=7)
+            # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
+            _password = ui.AUXpassword.text() +'~'+ self.settings.value('AUXSID', '')
+            getdata = urllib.parse.urlencode({'ac':'login',
+                                            'country': 'NO',
+                                            'sprache': 'en',
+                                            'ext': 1,
+                                            '_dc': int(time.time()),
+                                            'luser':str(ui.AUXuser.text()),
+                                            'lpass':hashlib.md5(_password).hexdigest(),  
+                                            })
+            async.load('%s?%s' % (url, getdata), 
+                       timeout=7, 
+                       headers={
+                        'Cookie':self.settings.value('AUXcookie', '')
+                       })
             async.finished.connect(lambda d: storeCookie('AUX', d))
             async.failed.connect(failed)
         def Apollologin():
@@ -658,8 +553,8 @@ class Odometer(Gui.QMainWindow):
             startBusy()
             async = UrlWorker()
             url = 'http://www.findthetune.com/online/login/ajax_authentication/'
-            postdata = {'user':unicode(ui.Apollouser.text()),
-                        'pass':unicode(ui.Apollopassword.text())}
+            postdata = {'user':str(ui.Apollouser.text()),
+                        'pass':str(ui.Apollopassword.text())}
             async.load(url, timeout=7, data=postdata)
             async.finished.connect(lambda d: storeCookie('Apollo', d))
             async.failed.connect(failed)
@@ -670,17 +565,8 @@ class Odometer(Gui.QMainWindow):
             startBusy()
             async = UrlWorker()
             url = 'http://www.findthetune.com/online/login/ajax_authentication/'
-            getdata = urllib.urlencode({'ac':'login',
-                                        'country': 'NO',
-                                        'sprache': 'en',
-                                        'ext': 1,
-                                        '_dc': int(time.time()),
-                                        'luser':unicode(ui.AUXuser.text()),
-                                        # from javascript source: var lpass = Sonofind.Helper.md5(pass + "~" + Sonofind.AppInstance.SID);
-
-                                        'lpass':unicode(ui.AUXpassword.text())})
-            postdata = {'user':unicode(ui.Uprightuser.text()),
-                        'pass':unicode(ui.Uprightpassword.text())}
+            postdata = {'user':str(ui.Uprightuser.text()),
+                        'pass':str(ui.Uprightpassword.text())}
             async.load(url, timeout=7, data=postdata)
             async.finished.connect(lambda d: storeCookie('Upright', d))
             async.failed.connect(failed)
@@ -691,13 +577,13 @@ class Odometer(Gui.QMainWindow):
             startBusy()
             async = UrlWorker()
             url = 'http://www.unippm.se/Feeds/commonXMLFeed.aspx'
-            getdata = urllib.urlencode({'method': 'Login',
-                                        'user':unicode(ui.Universaluser.text()),
-                                        'password':unicode(ui.Universalpassword.text()),
-                                        'rememberme':'false',
-                                        'autoLogin':'false',
-                                        '_': int(time.time()),
-                                        })
+            getdata = urllib.parse.urlencode({'method': 'Login',
+                                            'user':str(ui.Universaluser.text()),
+                                            'password':str(ui.Universalpassword.text()),
+                                            'rememberme':'false',
+                                            'autoLogin':'false',
+                                            '_': int(time.time()),
+                                            })
             async.load('%s?%s' % (url, getdata), timeout=7)
             async.finished.connect(lambda d: storeCookie('Universal', d))
             async.failed.connect(failed)
@@ -705,7 +591,7 @@ class Odometer(Gui.QMainWindow):
             logging.info('Getting auth from Extreme Music')
             def getauth(resp):
                 'extract json from response body'
-                body = resp.read()
+                body = resp.read().decode()
                 logging.debug('auth: %s', body)
                 self.settings.setValue('ExtremeAUTH', json.loads(body)['env']['API_AUTH'])
             startBusy()
@@ -722,24 +608,26 @@ class Odometer(Gui.QMainWindow):
             self.settings.setValue('Extremepassword', ui.Extremepassword.text())
             async = UrlWorker()
             url = 'https://lapi.extrememusic.com/accounts/login'
-            postdata = json.dumps({'username': unicode(ui.Extremeuser.text()),
-                                   'password': unicode(ui.Extremepassword.text()),
+            postdata = json.dumps({'username': str(ui.Extremeuser.text()),
+                                   'password': str(ui.Extremepassword.text()),
                                    'remember_me': False})
-            auth = {'X-API-Auth': unicode(self.settings.value('ExtremeAUTH', '').toString()),
+            auth = {'X-API-Auth': self.settings.value('ExtremeAUTH', ''),
                     'Content-Type':'application/json; charset=utf-8'}
             async.load(url, timeout=7, data=postdata, headers=auth)
             async.finished.connect(lambda d: storeCookie('Extreme', d))
             async.failed.connect(failed)
-        ui.AUXlogin.clicked.connect(AUXlogin)
+        ui.AUXlogin.clicked.connect(AUXauth)
         ui.Apollologin.clicked.connect(Apollologin)
         ui.Universallogin.clicked.connect(Universallogin)
+        # TODO: implement this login: 
+        # ui.Uprightlogin.clicked.connect(Uprightlogin)
         ui.Extremelogin.clicked.connect(Extremeauth)
         return LoginDialog.exec_()
 
     def updateAUXRepertoire(self):
         self.logMessage(self.tr('Updating AUX repertoire'))
         try:
-            repertoire = pickle.loads(str(self.settings.value('auxrepertoire', '').toString()))
+            repertoire = pickle.loads(self.settings.value('auxrepertoire', ''))
         except Exception as e:
             self.logException(e)
             repertoire = None
@@ -748,7 +636,7 @@ class Odometer(Gui.QMainWindow):
             return (datetime.datetime.now() - dt).days
         if repertoire is not None and age(repertoire['timestamp']) < 7:
             self.logMessage(self.tr('Found fresh AUX repertoire list in cache'))
-            self.logMessage(unicode(self.tr('AUX repertoire: %s catalogs')) % (len(repertoire.keys())-1))
+            self.logMessage(str(self.tr('AUX repertoire: %s catalogs')) % (len(repertoire.keys())-1))
             self.AUXRepertoire = repertoire
             return
 
@@ -757,12 +645,13 @@ class Odometer(Gui.QMainWindow):
         _url = self.buildflags.get('release', 'AUXRepertoireUrl')
 
         def store(data):
-            repertoire = json.loads(data.read())
+            logging.debug("got json aux data: %s", data)
+            repertoire = json.loads(data.read().decode('utf8'))
             logging.debug("got repertoire: %s", repertoire)
             repertoire['timestamp'] = datetime.datetime.now()
             self.settings.setValue('auxrepertoire', pickle.dumps(repertoire))
             self.AUXRepertoire = repertoire
-            self.logMessage(unicode(self.tr('AUX repertoire: %s catalogs')) % (len(repertoire.keys())-1))
+            self.logMessage(str(self.tr('AUX repertoire: %s catalogs')) % (len(repertoire.keys())-1))
         def failed(ex):
             #logging.debug("faile!", ex
             self.logException(ex)
@@ -778,7 +667,7 @@ class Odometer(Gui.QMainWindow):
 
     def setManualLookupButtonVisible(self, show):
         if show:
-            self.ui.resolveManualButton = self.ui.buttonBox.addButton(self.tr('Manual lookup'), Gui.QDialogButtonBox.ActionRole)
+            self.ui.resolveManualButton = self.ui.buttonBox.addButton(self.tr('Manual lookup'), QDialogButtonBox.ActionRole)
             self.ui.resolveManualButton.clicked.connect(self.manualResolve)
         else:
             try:
@@ -788,38 +677,42 @@ class Odometer(Gui.QMainWindow):
 
     def setSubmitMissingButtonVisible(self, show):
         if show:
-            self.ui.submitMissingButton = self.ui.buttonBox.addButton(self.tr('Submit missing filename'), Gui.QDialogButtonBox.ActionRole)
+            self.ui.submitMissingButton = self.ui.buttonBox.addButton(self.tr('Submit missing filename'), QDialogButtonBox.ActionRole)
             self.ui.submitMissingButton.clicked.connect(self.submitMissingFilename)
         else:
             try:
-                self.ui.buttonBox.removeButton(self.ui.resolveManualButton)
+                self.ui.buttonBox.removeButton(self.ui.submitMissingButton)
             except Exception as e:
                 self.showException(e)
 
     def clicked(self, qml):
         'Open file dialog to get xmeml file name'
-        lastdir = self.settings.value('lastdir', '').toString()
-        xf = Gui.QFileDialog.getOpenFileName(self,
+        lastdir = self.settings.value('lastdir', '')
+        xf = QFileDialog.getOpenFileName(self,
             self.tr('Open an xmeml file (FCP export)'),
             lastdir,
             self.tr('Xmeml files (*.xml)'))
-        self.xmemlfile = unicode(xf)
-        if not os.path.exists(self.xmemlfile):
+        logging.debug('Got following file name to open: %r', xf)
+        _xmemlfile, _filter = xf
+        if not os.path.exists(_xmemlfile):
+            logging.warning('Tried to open a non-existing file: %r', _xmemlfile)
             return False
+        self.xmemlfile = _xmemlfile
         self.settings.setValue('lastdir', os.path.dirname(self.xmemlfile))
         self.loadxml(self.xmemlfile)
 
     def loadxml(self, xmemlfile):
         'Start loading xmeml file, start xmeml parser'
-        if isinstance(xmemlfile, unicode):
+        if isinstance(xmemlfile, str):
             unicxmemlfile = xmemlfile
         else:
             unicxmemlfile = xmemlfile.decode(sys.getfilesystemencoding())
-        msgbox = self.showstatus(unicode(self.tr("Loading %s...")) % unicxmemlfile, autoclose=self.loaded)
+        self.clearstatus()
+        msgbox = self.showstatus(str(self.tr("Loading %s...")) % unicxmemlfile, autoclose=self.loaded)
         self.loadingbar()
         self.loaded.connect(self.removeLoadingbar)
         self.xmemlthread.failed.connect(self.removeLoadingbar)
-        self.loaded.connect(lambda: self.ui.fileInfo.setText(unicode(self.tr("<b>Loaded:</b> %s")) % os.path.basename(unicxmemlfile)))
+        self.loaded.connect(lambda: self.ui.fileInfo.setText(str(self.tr("<b>Loaded:</b> %s")) % os.path.basename(unicxmemlfile)))
         self.loaded.connect(lambda: self.ui.fileInfo.setToolTip(os.path.abspath(unicxmemlfile)))
         try:
       	    self.xmemlthread.load(xmemlfile)
@@ -829,7 +722,7 @@ class Odometer(Gui.QMainWindow):
 
     def loadingbar(self):
         'Add global progress bar'
-        self.ui.progress = Gui.QProgressBar(self)
+        self.ui.progress = QProgressBar(self)
         self.ui.progress.setMinimum(0)
         self.ui.progress.setMaximum(0) # don't show progress, only "busy" indicator
         self.ui.statusbar.addWidget(self.ui.progress, 100)
@@ -848,30 +741,30 @@ class Odometer(Gui.QMainWindow):
             self.logException(e)
             return False
 
-        self.ui.volumeInfo.setText(unicode(self.tr("<i>(above %i dB)</i>")) % self.volumethreshold.decibel)
+        self.ui.volumeInfo.setText(str(self.tr("<i>(above %i dB)</i>")) % self.volumethreshold.decibel)
         self.xmemlparser = xmemlparser
         numclips = len(self.audioclips.keys())
         self.ui.creditsButton.setEnabled(numclips > 0)
-        self.msg.emit(unicode(self.tr(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb.")) % (numclips, xmemlparser.name))
+        self.msg.emit(str(self.tr(u"%i audio clips loaded from xmeml sequence \u00ab%s\u00bb.")) % (numclips, xmemlparser.name))
         self.loaded.emit()
 
     def computeAudibleDuration(self, volume=None):
         'Loop through all audio clips and start the metadata workers'
         if isinstance(volume, xmemliter.Volume):
             self.audioclips, self.audiofiles = self.xmemlparser.audibleranges(volume)
-            self.ui.volumeInfo.setText(unicode(self.tr("<i>(above %i dB)</i>")) % volume.decibel)
+            self.ui.volumeInfo.setText(str(self.tr("<i>(above %i dB)</i>")) % volume.decibel)
         self.ui.clips.clear()
         self.rows = {}
-        for audioname, ranges in self.audioclips.iteritems():
+        for audioname, ranges in self.audioclips.items():
             frames = len(ranges)
             if frames == 0:
-                self.logMessage(unicode(self.tr(u'Skipping clip "%s" because no frames are audible')) % audioname)
+                self.logMessage(str(self.tr(u'Skipping clip "%s" because no frames are audible')) % audioname)
                 continue
             logging.debug("======= %s: %s -> %s======= ", audioname, ranges.r, frames)
             fileref = self.audiofiles[audioname] # might be None, if clip is offline
             secs = ranges.seconds()
-            r = Gui.QTreeWidgetItem(self.ui.clips, ['', audioname,
-                                                    '%ss (%sf)' % (secs, frames)])
+            r = QTreeWidgetItem(self.ui.clips, ['', audioname,
+                                                '%ss (%sf)' % (secs, frames)])
             r.metadata = metadata.model.TrackMetadata(filename=audioname)
             r.audioname = audioname
             r.clip = {'durationsecs':secs, 'durationframes':frames, 'in':None, 'out':None}
@@ -884,10 +777,10 @@ class Odometer(Gui.QMainWindow):
                 if isinstance(w, metadata.resolvers.AUXResolver):
                     w.updateRepertoire(self.AUXRepertoire) # make sure repertoire is current
                 elif isinstance(w, metadata.resolvers.ApollomusicResolver):
-                    logincookie = unicode(self.settings.value('Apollocookie', '').toString())
+                    logincookie = self.settings.value('Apollocookie', '')
                     if not logincookie: # not logged in to apollo, big problem
                         self.showerror(self.tr(u'Track from Apollo Music detected. Please log in to the service'))
-                        self.logMessage(self.tr(u'No logincookie from apollo music found.'), msgtype=StatusBox.WARNING)
+                        self.logMessage(self.tr(u'No logincookie from apollo music found.'), msgtype=Status.WARNING)
                         continue # go to next track
                     else:
                         w.setlogincookie(logincookie)
@@ -897,7 +790,7 @@ class Odometer(Gui.QMainWindow):
                 w.trackFailed.connect(lambda x: self.showProgress(x, 100)) # dont leave progress bar dangling
                 w.error.connect(lambda f, e: self.setRowInfo(row=f, text=e, warning=True))
                 w.error.connect(lambda f, e: self.showerror(e))
-                w.warning.connect(lambda s: self.logMessage(s, msgtype=StatusBox.WARNING))
+                w.warning.connect(lambda s: self.logMessage(s, msgtype=Status.WARNING))
                 self.workers.append(w) # keep track of the worker
                 w.resolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
             if self.showsubclips:
@@ -908,7 +801,7 @@ class Odometer(Gui.QMainWindow):
                     r.subclips.append( {'durationsecs':secs, 'durationframes':frames,
                                         'in':formatTC(float(range.start) / ranges.framerate),
                                         'out':formatTC(float(range.end) / ranges.framerate)} )
-                    sr = Gui.QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
+                    sr = QTreeWidgetItem(r, ['', '%s-%i' % (audioname, i),
                                                  '%ss (%sf)' % (secs, frames),
                                                  u'%sf\u2013%sf' % (range.start, range.end)
                                                 ]
@@ -918,7 +811,7 @@ class Odometer(Gui.QMainWindow):
 
     def loadMetadata(self, filename, metadata):
         'Handle metadata for a specific clip'
-        row = self.rows[unicode(filename)]
+        row = self.rows[str(filename)]
         logging.debug("loadMetadata: %s - %s", filename, metadata)
         row.metadata = metadata
         if metadata.productionmusic:
@@ -938,12 +831,18 @@ class Odometer(Gui.QMainWindow):
             self.ui.AUXButton.setEnabled(True)
         elif metadata.musiclibrary == 'ApolloMusic':
             self.ui.ApolloButton.setEnabled(True)
+        #elif metadata.musiclibrary == 'ExtremeMusic': # TODO: enable this when dynamic report is possible
+        #    self.ui.ExtremeButton.setEnabled(True)
+        #elif metadata.musiclibrary == 'Universal': # TODO: enable this when dynamic report is possible
+        #    self.ui.UniversalButton.setEnabled(True)
+        #elif metadata.musiclibrary == 'Upright': # TODO: enable this when dynamic report is possible
+        #    self.ui.Upright.setEnabled(True)
         self.metadataLoaded.emit(row)
 
     def trackCompleted(self, filename, metadata):
         'React to metadata finished loading for a specific clip'
         logging.debug("got metadata (%s): %s", filename, metadata)
-        self.rows[unicode(filename)].setCheckState(0, Core.Qt.Checked)
+        self.rows[str(filename)].setCheckState(0, Core.Qt.Checked)
         self.metadataloaded += 1
         if len(self.audioclips)  == self.metadataloaded:
             self.ui.DMAButton.setEnabled(True)
@@ -951,9 +850,9 @@ class Odometer(Gui.QMainWindow):
     def showProgress(self, filename, progress):
         'Show progress bar for a specific clip, e.g. when metadata is loading'
         logging.debug("got progress for %s: %r", filename, progress)
-        row = self.rows[unicode(filename)]
+        row = self.rows[str(filename)]
         if progress < 100: # not yet reached 100%
-            p = Gui.QProgressBar(parent=self.ui.clips)
+            p = QProgressBar(parent=self.ui.clips)
             p.setValue(progress)
             self.ui.clips.setItemWidget(row, 3, p)
         else: # finishd, show some text instead
@@ -971,12 +870,12 @@ class Odometer(Gui.QMainWindow):
             return
         ss = vars(md)
         ss.update({'secs':md.duration/25}) # TODO: FIXME: Dont hardcode framerate
-        s += unicode(self.tr("""<i>Name:</i><br>%(name)s<br>
+        s += str(self.tr("""<i>Name:</i><br>%(name)s<br>
                 <i>Total length:</i><br>%(secs)ss<br>
                 <i>Rate:</i><br>%(timebase)sfps<br>
                 """)) % ss
         if hasattr(r, 'metadata') and r.metadata.musiclibrary is not None:
-            s += unicode(self.tr("<i>Library</i><br>%s<br>")) % r.metadata.musiclibrary
+            s += str(self.tr("<i>Library</i><br>%s<br>")) % r.metadata.musiclibrary
         self.ui.metadata.setText(s)
         #self.ui.playButton.setEnabled(os.path.exists(r.clip.name))
         if self.ui.detailsBox.isVisible(): # currently editing metadata
@@ -997,9 +896,9 @@ class Odometer(Gui.QMainWindow):
             self.ui.clipCopyright.setText(_c or self.tr('Unknown'))
             self.ui.clipLabel.setText(row.metadata.label or self.tr('Unknown'))
             _y = row.metadata.year if row.metadata.year != -1 else None
-            self.ui.clipYear.setText(unicode(row.metadata.year or 0))
+            self.ui.clipYear.setText(str(row.metadata.year or 0))
             self.ui.detailsBox.show()
-        except AttributeError, (e):
+        except AttributeError as e:
             self.logException(e)
             self.ui.detailsBox.hide()
         if hasattr(self.ui, 'resolveManualButton'):
@@ -1022,7 +921,7 @@ class Odometer(Gui.QMainWindow):
             text = widget.text()
             widget.hide()
             detailsLayout.takeAt(index)
-            _edit = Gui.QLineEdit(text, self.ui.detailsBox)
+            _edit = QLineEdit(text, self.ui.detailsBox)
             detailsLayout.addWidget(_edit, row, column)
             _edit.editingFinished.connect(lambda: close(_edit, widget, row, column))
         for x in (self.ui.clipTitle,
@@ -1038,17 +937,12 @@ class Odometer(Gui.QMainWindow):
 
     def setRowInfo(self, row, text, warning=False):
         'Set the 3rd cell of the <row> to <text>'
-
-        if isinstance(row, basestring):
+        if isinstance(row, str):
             row = self.rows[row]
-        elif isinstance(row, Core.QString):
-            row = self.rows[unicode(row)]
         logging.debug('setting row  <%r> to <%r>', row, text)
         row.setText(3, text)
         if warning:
             row.setIcon(3, Gui.QIcon(':/gfx/warn'))
-            #            row.setSizeHint(3, Core.QSize(16,16))
-            row.setIconSize(Core.QSize(16,16))
         else:
             row.setIcon(3, Gui.QIcon())
 
@@ -1060,33 +954,35 @@ class Odometer(Gui.QMainWindow):
                 yield row
 
     def prfReport(self):
-        PRFDialog = Gui.QDialog()
+        PRFDialog = QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(PRFDialog)
-        s = unicode(self.tr('<h1>Track metadata sheet for PRF</h1>'))
+        s = str(self.tr('<h1>Track metadata sheet for PRF</h1>'))
         for r in self.itercheckedrows():
             _t = r.metadata.title if r.metadata.title else repr(r.audioname)
-            s += unicode(self.tr('<div><dt>Title:</dt><dd>%s</dd>')) % _t
+            s += str(self.tr('<div><dt>Title:</dt><dd>%s</dd>')) % _t
+            if r.metadata.identifier is not None:
+                s += str(self.tr('<dt>Track identifier:</dt><dd>%s</dd>')) % r.metadata.identifier
             if r.metadata.artist not in (None, u'(N/A for production music)'):
-                s += unicode(self.tr('<dt>Artist:</dt><dd>%s</dd>')) % r.metadata.artist
+                s += str(self.tr('<dt>Artist:</dt><dd>%s</dd>')) % r.metadata.artist
             if r.metadata.albumname is not None:
-                s += unicode(self.tr('<dt>Album name:</dt><dd>%s</dd>')) % r.metadata.albumname
+                s += str(self.tr('<dt>Album name:</dt><dd>%s</dd>')) % r.metadata.albumname
             if r.metadata.lyricist is not None:
-                s += unicode(self.tr('<dt>Lyricist:</dt><dd>%s</dd>')) % r.metadata.lyricist
+                s += str(self.tr('<dt>Lyricist:</dt><dd>%s</dd>')) % r.metadata.lyricist
             if r.metadata.composer is not None:
-                s += unicode(self.tr('<dt>Composer:</dt><dd>%s</dd>')) % r.metadata.composer
+                s += str(self.tr('<dt>Composer:</dt><dd>%s</dd>')) % r.metadata.composer
             if r.metadata.label is not None:
-                s += unicode(self.tr('<dt>Label:</dt><dd>%s</dd>')) % r.metadata.label
+                s += str(self.tr('<dt>Label:</dt><dd>%s</dd>')) % r.metadata.label
             if r.metadata.recordnumber is not None:
-                s += unicode(self.tr('<dt>Recordnumber:</dt><dd>%s</dd>')) % r.metadata.recordnumber
+                s += str(self.tr('<dt>Recordnumber:</dt><dd>%s</dd>')) % r.metadata.recordnumber
             if r.metadata.copyright is not None and r.metadata.copyright != u'(This information requires login)':
-                s += unicode(self.tr('<dt>Copyright owner:</dt><dd>%s</dd>')) % r.metadata.copyright
+                s += str(self.tr('<dt>Copyright owner:</dt><dd>%s</dd>')) % r.metadata.copyright
             if r.metadata.year != -1:
-                s += unicode(self.tr('<dt>Released year:</dt><dd>%s</dd>')) % r.metadata.year
+                s += str(self.tr('<dt>Released year:</dt><dd>%s</dd>')) % r.metadata.year
 
-            s += "<p><b>" + unicode(self.tr(u"Seconds in total</b>: %s")) % r.clip['durationsecs']
+            s += "<p><b>" + str(self.tr(u"Seconds in total</b>: %s")) % r.clip['durationsecs']
             if len(r.subclips):
-                s += unicode(self.tr(", in these subclips:")) + "<ol>"
+                s += str(self.tr(", in these subclips:")) + "<ol>"
                 for sc in r.subclips:
                     s += u"<li>%s\" \u2013 %s-%s</li>" % (sc['durationsecs'], sc['in'], sc['out'])
                 s += "</ol>"
@@ -1095,14 +991,14 @@ class Odometer(Gui.QMainWindow):
         def _save():
             logging.debug("saving report for prf")
             try:
-                loc = Gui.QFileDialog.getSaveFileName(PRFDialog, self.tr("Save PRF report (as HTML)"), '', self.tr('HTML document (*.html)'))
-                if(len(unicode(loc)) == 0): # cancelled
+                loc = QFileDialog.getSaveFileName(PRFDialog, self.tr("Save PRF report (as HTML)"), '', self.tr('HTML document (*.html)'))
+                if(len(str(loc)) == 0): # cancelled
                     return False
-                f = open(unicode(loc), "wb")
-                f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
+                f = open(str(loc), "wb")
+                f.write(str(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
                 self.showstatus(self.tr('Prf report saved'))
-            except IOError, (e):
+            except IOError as e:
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
         return PRFDialog.exec_()
@@ -1112,48 +1008,43 @@ class Odometer(Gui.QMainWindow):
         s = ""
         for r in self.itercheckedrows():
             if r.metadata.musiclibrary == "AUX Publishing":
-                s = s + u"%s x %s sek \r\n" % (r.metadata.getmusicid(), r.clip['durationsecs'])
-        AUXDialog = Gui.QDialog()
+                s = s + "%s x %s sek \r\n" % (r.metadata.identifier, r.clip['durationsecs'])
+        AUXDialog = QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(AUXDialog)
-        ui.webView.load(Core.QUrl('http://auxlicensing.com/Forms/Express%20Rapportering/index.html'))
-        ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
-        ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
+        ui.webEngineView.loadStarted.connect(lambda: ui.progressBar.show())
+        ui.webEngineView.loadProgress.connect(ui.progressBar.setValue)
+        ui.webEngineView.loadFinished.connect(lambda: ui.progressBar.hide())
+        page = ui.webEngineView.page()
+        def callback(msg):
+            logging.debug('callback from js land: %r', msg)
         def reportloaded(boolean):
             logging.debug("report loaded: %s", boolean)
-            html = ui.webView.page().mainFrame()
-            submit = html.findFirstElement('input[type=submit]')
-            submit.setAttribute('style', 'visibility:hidden')
-            business = html.findFirstElement('input[name="foretag"]')
-            business.setAttribute("value", self.settings.value('AUX/foretag', "NRK <avdeling>").toString())
-            contact = html.findFirstElement('input[name=kontakt]')
-            contact.setAttribute("value", self.settings.value('AUX/kontakt', "<ditt eller prosjektleders navn>").toString())
-            phone = html.findFirstElement('input[name="telefon"]')
-            phone.setAttribute("value", self.settings.value('AUX/telefon', "<ditt eller prosjektleders telefonnummer>").toString())
-            email = html.findFirstElement('input[name="email"]')
-            email.setAttribute("value", self.settings.value('AUX/email', "<ditt eller prosjektleders epostadresse>").toString())
-            productionname = html.findFirstElement('input[name="produktionsnamn"]')
-            productionname.setAttribute("value", self.ui.prodno.text())
-            check_tv = html.findFirstElement('input[name="checkbox2"]')
-            check_tv.setAttribute("checked", "checked")
-            text = html.findFirstElement("textarea")
-            text.setPlainText(s)
-        ui.webView.loadFinished.connect(reportloaded)
+            #page.runJavaScript("""document.title""", callback)
+            page.runJavaScript("""document.querySelector('input[name="foretag"]').value='%s'""" % self.settings.value('AUX/foretag', "NRK <avdeling>"))
+            page.runJavaScript("""document.querySelector('input[name="kontakt"]').value='%s'""" %  self.settings.value('AUX/kontakt', "<ditt eller prosjektleders navn>"))
+            page.runJavaScript("""document.querySelector('input[name="telefon"]').value='%s'""" % self.settings.value('AUX/telefon', "<ditt eller prosjektleders telefonnummer>"))
+            page.runJavaScript("""document.querySelector('input[name="email"]').value='%s'""" %  self.settings.value('AUX/email', "<ditt eller prosjektleders epostadresse>"))
+            page.runJavaScript("""document.querySelector('input[name="produktionsnamn"]').value='%s'""" %  self.ui.prodno.text())
+            page.runJavaScript("""document.querySelector('input[name="checkbox2"]').checked=1;""")
+            logging.debug('setting aux report: %r', s)
+            page.runJavaScript('''document.querySelector("textarea").value="%r";''' % s)
+        ui.webEngineView.loadFinished.connect(reportloaded)
         def reportsubmit():
             logging.debug("report submitting")
-            html = ui.webView.page().mainFrame()
             for el in ['foretag', 'kontakt', 'telefon', 'email', 'produktionsnamn']:
                 htmlel = html.findFirstElement('input[name=%s]' % el)
-                val = htmlel.evaluateJavaScript("this.value").toString()
-                if len(val) == 0:
-                    self.showerror(unicode(self.tr('"%s" cannot be blank')) % el.title())
-                    return None
+                val = htmlel.evaluateJavaScript("this.value")
+                #if len(val) == 0:
+                    #self.showerror(str(self.tr('"%s" cannot be blank')) % el.title())
+                    #return None
                 self.settings.setValue('AUX/%s' % el, val)
             submit = html.findFirstElement('input[type=submit]')
             submit.setAttribute('style', 'visibility:show')
-            #submit.evaluateJavaScript('this.click()')
+            submit.evaluateJavaScript('this.click()')
             #return AUXDialog.accept()
         ui.buttonBox.accepted.connect(reportsubmit)
+        ui.webEngineView.load(Core.QUrl('http://auxlicensing.com/Forms/Express%20Rapportering/index.html'))
         return AUXDialog.exec_()
 
     def apollomusicReport(self):
@@ -1171,12 +1062,13 @@ class Odometer(Gui.QMainWindow):
 
         def createRequest(url): # helper method to add cookie to request
             r = QtNetwork.QNetworkRequest(Core.QUrl(url))
-            r.setRawHeader('Cookie', str(self.settings.value('Apollocookie').toString()))
+            r.setRawHeader('Cookie', self.settings.value('Apollocookie'))
             return r
 
-        apollomusicDialog = Gui.QDialog()
+        apollomusicDialog = QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(apollomusicDialog)
+        apollomusicDialog.setWindowTitle(self.tr('Apollo Music report'))
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadProgress.connect(ui.progressBar.setValue)
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
@@ -1185,7 +1077,7 @@ class Odometer(Gui.QMainWindow):
                      # ('http://www.findthetune.com/online/#projects', None), # the last request: show project page
                      (None, '<html><body><h1>Tracks added to Apollo Music Project</h1><p>Please log on to findthetune.com and finish your report</p></body></html>'),
                      ('http://www.findthetune.com/online/projects', # the first request: create a project with all tracks
-                      {'model': json.dumps({'title':unicode(self.ui.prodno.text()) or datetime.datetime.now().isoformat(),
+                      {'model': json.dumps({'title':str(self.ui.prodno.text()) or datetime.datetime.now().isoformat(),
                                   'description':'Created by Pling Plong Odometer for easy reporting and big smiles',
                                   'children':False,
                                   'tracks': ",".join(_trackids.keys())
@@ -1208,7 +1100,7 @@ class Odometer(Gui.QMainWindow):
             if _data is None: # do a http GET
                 ui.webView.load(r, QtNetwork.QNetworkAccessManager.GetOperation)
             else: # do a http POST
-                body = urllib.urlencode(_data)
+                body = urllib.parse.urlencode(_data)
                 r.setHeader(QtNetwork.QNetworkRequest.ContentTypeHeader, 'application/x-www-form-urlencoded')
                 ui.webView.load(r, QtNetwork.QNetworkAccessManager.PostOperation, body)
 
@@ -1223,26 +1115,39 @@ class Odometer(Gui.QMainWindow):
             row.metadata = md
             self.showMetadata(row)
             row.setCheckState(0, Core.Qt.Checked)
+            self.loadMetadata(row.audioname, md)
 
         filepath = self.audiofiles[row.audioname]
-        manualPattern, result = Gui.QInputDialog.getText(self, self.tr('Music ID'),
-            self.tr('Enter the correct music ID:'), Gui.QLineEdit.Normal, filepath.name)
-
-        resolver = metadata.resolvers.findResolver(unicode(manualPattern))
-        resolver.trackResolved.connect(self.loadMetadata) # connect the 'resolved' signal
+        manualPattern, result = QInputDialog.getText(self, self.tr('Music ID'),
+            self.tr('Enter the correct music ID:'), QLineEdit.Normal, filepath.name)
+        logging.debug('got manual music pattern: %r, dialog status %r', manualPattern, result)
+        if not result:
+            # dialog was cancelled 
+            return None
+        resolver = metadata.resolvers.findResolver(str(manualPattern))
+        if isinstance(resolver, metadata.resolvers.ApollomusicResolver):
+            logincookie = self.settings.value('Apollocookie', '')
+            if not logincookie: # not logged in to apollo, big problem
+                self.showerror(self.tr(u'Please log in to the Apollo Music service from the login menu'))
+                self.logMessage(self.tr(u'Tried to manually resolve apollo track, but no logincookie found.'), msgtype=Status.WARNING)
+                return # we cant continue
+            else:
+                resolver.setlogincookie(logincookie)
         resolver.trackResolved.connect(updateMetadata)
-        resolver.trackResolved.connect(self.submitMissingFilename)
-        resolver.trackProgress.connect(self.showProgress)
+        # pop up a dialog to submit this filename to us, since it clearly is missing from our lists
+        resolver.trackResolved.connect(self.submitMissingFilename) 
+        resolver.trackProgress.connect(lambda fn, p: self.showProgress(fn, p))
         resolver.error.connect(lambda f, e: self.showerror(e))
         self.workers.append(resolver) # keep track of the worker
-        resolver.resolve(unicode(manualPattern), filepath.pathurl) # put the worker to work async
+        resolver.resolve(str(manualPattern), filepath.pathurl) # put the worker to work async
 
     def submitMissingFilename(self, filename, resolvedmetadata=None):
         'Add filename and metadata to a public spreadsheet'
         _url = 'https://docs.google.com/spreadsheet/embeddedform?formkey=dEx0Z2xIWWJncHFxLVBQVWd2aW9xSUE6MQ'
-        GdocsDialog = Gui.QDialog()
+        GdocsDialog = QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(GdocsDialog)
+        GdocsDialog.setWindowTitle(self.tr('Submit missing filename'))
         ui.buttonBox.hide()
         ui.webView.load(Core.QUrl(_url))
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
@@ -1262,7 +1167,7 @@ class Odometer(Gui.QMainWindow):
             fn = html.findFirstElement('input[id="entry_0"]')
             fn.setAttribute("value", filename)
             text = html.findFirstElement("textarea")
-            text.setPlainText(unicode(vars(resolvedmetadata)))
+            text.setPlainText(str(vars(resolvedmetadata)))
         ui.webView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()
 
@@ -1278,19 +1183,20 @@ class Odometer(Gui.QMainWindow):
                     _labels_seen.append(r.metadata.label)
             else:
                 s += u'%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s\r\n\r\n' % vars(r.metadata)
-        CreditsDialog = Gui.QDialog()
+        CreditsDialog = QDialog()
         ui = prfreport_ui.Ui_PlingPlongPRFDialog()
         ui.setupUi(CreditsDialog)
+        s = s.replace('UniPPM', 'Universal Publishing Production Music')
         ui.textBrowser.setText(s)
         def _save():
             logging.debug("saving credits")
             try:
-                loc = Gui.QFileDialog.getSaveFileName(CreditsDialog, self.tr("Save credits (as HTML)"), '', self.tr('HTML document (*.html)'))
-                f = open(unicode(loc), "wb")
-                f.write(unicode(ui.textBrowser.toHtml()).encode('utf-8'))
+                loc = QFileDialog.getSaveFileName(CreditsDialog, self.tr("Save credits (as HTML)"), '', self.tr('HTML document (*.html)'))
+                f = open(str(loc), "wb")
+                f.write(str(ui.textBrowser.toHtml()).encode('utf-8'))
                 f.close()
                 self.showstatus(self.tr('End credits saved'))
-            except IOError, (e):
+            except IOError as e:
                 self.showerror(e)
         ui.buttonBox.accepted.connect(_save)
         CreditsDialog.setWindowTitle(self.tr('Credits'))
@@ -1299,19 +1205,20 @@ class Odometer(Gui.QMainWindow):
     def reportError(self):
         'Report program error to an online form'
         _url = 'https://docs.google.com/a/lurtgjort.no/spreadsheet/viewform?formkey=dHFtZHFFMlkydmRPTnFNM2l3SHZFcFE6MQ'
-        GdocsDialog = Gui.QDialog()
+        GdocsDialog = QDialog()
         ui = auxreport_ui.Ui_PlingPlongAUXDialog()
         ui.setupUi(GdocsDialog)
         ui.buttonBox.hide()
+        GdocsDialog.setWindowTitle(self.tr('Report an error'))
         ui.webView.load(Core.QUrl(_url))
         ui.webView.loadStarted.connect(lambda: ui.progressBar.show())
         ui.webView.loadFinished.connect(lambda: ui.progressBar.hide())
         def reportloaded(boolean):
             logging.debug("reporterror loaded: %s", boolean)
             html = ui.webView.page().mainFrame()
-            log = html.findFirstElement('textarea[id="entry_5"]')
+            log = html.findFirstElement('textarea[aria-label="Programlogg Dette er loggen fra Odometer "]')
             log.setPlainText(''.join(self.log))
-            log = html.findFirstElement('input[id="entry_7"]')
+            log = html.findFirstElement('input[aria-label="Programversjon  "]')
             log.setAttribute('value', self.getVersion())
         ui.webView.loadFinished.connect(reportloaded)
         return GdocsDialog.exec_()
@@ -1321,7 +1228,7 @@ class Odometer(Gui.QMainWindow):
         logging.debug("editDuration: %s %s", row, col)
         if col != 2:
             return False
-        editor = Gui.QDoubleSpinBox(parent=self.ui.clips)
+        editor = QDoubleSpinBox(parent=self.ui.clips)
         editor.setMaximum(10000.0)
         editor.setValue(row.clip['durationsecs'])
         editor.setSuffix('s')
@@ -1329,7 +1236,7 @@ class Odometer(Gui.QMainWindow):
             val = float(editor.value())
             row.clip['durationsecs'] = val
             self.ui.clips.removeItemWidget(row, col)
-            row.setText(2, unicode(val)+'s')
+            row.setText(2, str(val)+'s')
         editor.editingFinished.connect(editingFinished)
         self.ui.clips.setItemWidget(row, col, editor)
 
@@ -1339,12 +1246,12 @@ class Odometer(Gui.QMainWindow):
 
     def gluon(self):
         #ALL  data loaded
-        prodno = unicode(self.ui.prodno.text()).strip()
+        prodno = str(self.ui.prodno.text()).strip()
         #ok = self.checkUsage()
         if False: #not ok:
-            msg = Gui.QMessageBox.critical(self, "Rights errors", "Not ok according to usage agreement")
+            msg = QMessageBox.critical(self, "Rights errors", "Not ok according to usage agreement")
         if len(prodno) == 0:
-            msg = Gui.QMessageBox.critical(self, self.tr("Need production number"),
+            msg = QMessageBox.critical(self, self.tr("Need production number"),
                                            self.tr("You must enter the production number"))
             self.ui.prodno.setFocus()
             return False
@@ -1359,8 +1266,8 @@ class Odometer(Gui.QMainWindow):
     def gluonFinished(self, trackname, metadata):
         logging.debug("gluonFinished: %s -> %s", trackname, metadata)
         for nom, row in self.gluon.currejtList:
-            logging.debug("%s %s", repr(os.path.splitext(nom)[0]), repr(unicode(trackname)))
-            if os.path.splitext(nom)[0] == unicode(trackname):
+            logging.debug("%s %s", repr(os.path.splitext(nom)[0]), repr(str(trackname)))
+            if os.path.splitext(nom)[0] == str(trackname):
                 row.setBackground(0, Gui.QBrush(Gui.QColor("light green")))
 
     def run(self, app):
@@ -1400,7 +1307,7 @@ def xmemlfileFromEvent(event):
     data = event.mimeData()
     try:
         for f in data.urls():
-            fil = unicode(f.toLocalFile())
+            fil = str(f.toLocalFile())
             if fil.startswith('/.file/id='):
                 # thanks for nothing, apple
                 # https://stackoverflow.com/questions/37351647/get-path-from-os-x-file-reference-url-alias-file-file-id/37363026#37363026
@@ -1423,27 +1330,22 @@ def rungui(argv):
     if sys.platform == 'win32':
         # default win32 looks awful, make it pretty
         # docs advise to do this before QApplication() is started
-        Gui.QApplication.setStyle("cleanlooks")
-    app = Gui.QApplication(argv)
+        QApplication.setStyle("cleanlooks")
+    app = QApplication(argv)
     if sys.platform == 'win32':
         def setfont(fontname):
             app.setFont(Gui.QFont(fontname, 9))
-            return unicode(app.font().toString()).split(',')[0] == fontname
+            return app.font().toString().split(',')[0] == fontname
         # default win32 looks awful, make it pretty
+        logging.debug('current window font is %r', app.font().toString())
         for z in ['Lucida Sans Unicode', 'Arial Unicode MS', 'Verdana']:
             if setfont(z): break
+        logging.debug('new window font is %r', app.font().toString())
     if f is not None: o = Odometer(app, f)
     else: o = Odometer(app)
     o.run(app)
 
 if __name__ == '__main__':
-    # suppress error on win
     logging.basicConfig(level=logging.DEBUG)
-    if hasattr(sys, 'frozen') and sys.frozen == 'windows_exe':
-        import StringIO
-        sys.stderr = StringIO.StringIO()
-        sys.stdout = StringIO.StringIO()
     rungui(sys.argv)
-
-
 
