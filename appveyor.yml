@@ -49,8 +49,9 @@ build_script:
   - "%PYTHON% buildpyqt.py"
   #- "%PYTHON% setup.py py2exe"
   - "pyinstaller --path=C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin -y pling-plong-odometer.spec"
-  - "%PYTHON% dist.py zip"
+  #- "%PYTHON% dist.py zip"
   - dir dist\
+  - "%PYTHON" -m zipfile -c odometer-%APPVEYOR_BUILD_NUMBER%.zip dist/pling-plong-odometer"
 
 #test_script:
   #- echo "PYTHONPATH=%PYTHONPATH%"
@@ -58,7 +59,7 @@ build_script:
   #- "%PYTHON%/Scripts/py.test test.py"
 
 artifacts:
-  - path: odometer-*\odometer*.zip
+  - path: odometer-*.zip
     name: Odometer Zip
 
 #deploy:
