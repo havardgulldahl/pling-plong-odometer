@@ -19,6 +19,7 @@ VERSION=$(date +"%Y-%m-%d");
 # change bulid defaults
 sed -i "s/beta=.*/beta=0/" BUILDFLAGS
 sed -i "s/releaseCheck=.*/releaseCheck=0/" BUILDFLAGS
+sed -i .bk "s/version=.*/version=$VERSION/" BUILDFLAGS
 
 # update all generated code
 
@@ -63,6 +64,7 @@ git commit ./VERSIONWIN -m "build-win.sh: commiting new windows version $VERSION
 
 # changing back defaults
 sed -i "s/beta=.*/beta=1/" BUILDFLAGS
+sed -i .bk "s/version=.*/version=1997-12-31/" BUILDFLAGS
 $PYQTPATH/pyrcc4.exe -py2 -o src/gui/odometer_rc.py src/gui/odometer.qrc || error "pyrcc failed"
 
 echo "Finished. Take a look at $SHORTNAME"
