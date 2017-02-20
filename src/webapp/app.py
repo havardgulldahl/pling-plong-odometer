@@ -19,8 +19,6 @@ from asyncio import coroutine
 
 from aiohttp import web
 
-from envparse import env, ConfigurationError
-
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop)
 
@@ -172,10 +170,6 @@ setup_swagger(app,
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
-    try:
-        env.read_envfile('_passwords.txt')
-    except Exception as e:
-        print(e)
     # start server
     web.run_app(
         app,
