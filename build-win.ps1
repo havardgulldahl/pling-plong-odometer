@@ -10,11 +10,17 @@ function error {
 
 # building pling plong odometer for windows
 
+  - "%PYTHON% buildpyqt.py"
+  #- "%PYTHON% setup.py py2exe"
+  - "pyinstaller --path=C:\\Python35\\Lib\\site-packages\\PyQt5\\Qt\\bin -y pling-plong-odometer.spec"
+  #- "%PYTHON% dist.py zip"
+  - dir dist\
+  - "%PYTHON% -m zipfile -c odometer-%APPVEYOR_BUILD_NUMBER%.zip dist/pling-plong-odometer"
 # some settings
 
-PYTHON="/c/Python27/python.exe"
-PYQTPATH="/c/Python27/Lib/site-packages/PyQt4"
-VERSION=$(date +"%Y-%m-%d");
+$PYTHON = "C:/Python35/python.exe"
+$PYQTPATH = "/c/Python27/Lib/site-packages/PyQt4"
+$VERSION=(Get-Date).Date
 
 # change bulid defaults
 sed -i "s/beta=.*/beta=0/" BUILDFLAGS
