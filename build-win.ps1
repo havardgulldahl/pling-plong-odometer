@@ -4,28 +4,32 @@
 # building pling plong odometer for windows
 
 $PYTHON = "C:/Python35/python.exe"
-$VERSION = Get-Date -format dd-MM-yyyy
+$VERSION = Get-Date -format yyyy-MM-dd
 
 # change bulid defaults
 #sed -i "s/beta=.*/beta=0/" BUILDFLAGS
 #sed -i .bk "s/version=.*/version=$VERSION/" BUILDFLAGS
-(Get-Content BUILDFLAGS) -replace "beta=.*" "beta=0" | Set-Content BUILDFLAGS
-(Get-Content BUILDFLAGS) -replace "version=.*" "version=\$VERSION" | Set-Content BUILDFLAGS
+(Get-Content BUILDFLAGS) -replace "beta=.*", "beta=0" | Set-Content BUILDFLAGS
+(Get-Content BUILDFLAGS) -replace "version=.*", "version=$VERSION" | Set-Content BUILDFLAGS
 
 # update all generated code
 Write-Host "Generate python code"
-Invoke-Expression $PYTHON buildpyqt.py
+& $PYTHON buildpyqt.py
 
 # build the castle
 Write-Host "Building the app (see build.log)"
-Invoke-Expression pyinstaller -y pling-plong-odometer.spec
+& pyinstaller -y pling-plong-odometer.spec
 
 # create neat package
 Write-Host "Creating package"
-$NO = "$APPVEYOR_BUILD_NUMBER" -or $VERSION
+if ($APPVEYOR_BUILD_NUMBER -ne $null) {
+    $NO=$APPVEYOR_BUILD_NUMBER
+} else {
+    $NO=$VERSION
+}
 $SHORTNAME = "odometer-$NO"
 #/c/Program\ Files/7-Zip/7z.exe a -r -sfx7z.sfx $SHORTNAME $BUNDLE || error "creating sfx bundle failed";
-Invoke-Expression $PYTHON -m zipfile -c $SHORTNAME.zip dist/pling-plong-odometer
+& $PYTHON -m zipfile -c $SHORTNAME.zip dist/pling-plong-odometer
 
 # create history
 #git tag -a "v$VERSION-win" -m "Version $VERSION release" || error "couldnt tag git tree";
