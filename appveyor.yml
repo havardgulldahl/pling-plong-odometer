@@ -30,7 +30,7 @@ install:
 
 build_script:
   - echo Building..
-  - ps: & ./build-win.ps1
+  - ps: .\build-win.ps1
 
 #test_script:
   #- echo "PYTHONPATH=%PYTHONPATH%"
