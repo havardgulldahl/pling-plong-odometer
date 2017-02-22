@@ -29,7 +29,10 @@ if ($APPVEYOR_BUILD_NUMBER -ne $null) {
 }
 $SHORTNAME = "odometer-$NO"
 #/c/Program\ Files/7-Zip/7z.exe a -r -sfx7z.sfx $SHORTNAME $BUNDLE || error "creating sfx bundle failed";
-& $PYTHON -m zipfile -c $SHORTNAME.zip dist/pling-plong-odometer
+dir
+$zipargs = '-m','zipfile','-c',"$SHORTNAME.zip",'dist/pling-plong-odometer'
+echo $zipargs
+& $PYTHON $zipargs
 
 # create history
 #git tag -a "v$VERSION-win" -m "Version $VERSION release" || error "couldnt tag git tree";
