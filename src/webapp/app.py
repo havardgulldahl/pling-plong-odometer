@@ -150,12 +150,12 @@ async def handle_supported_resolvers(request):
 
 app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
 
-
 def index(request):
     with open('static/index.html') as f:
         return web.Response(text=f.read(), content_type='text/html')
 
 app.router.add_get('/', index)
+app.router.add_static('/media', 'static/media')
 
 # TODO app.router.add_get('/submit_runsheet', handle_submit_runsheet) # submit a runsheet to applicable services
 # TODO app.router.add_get('/report_error', handle_report_error) # report an error
