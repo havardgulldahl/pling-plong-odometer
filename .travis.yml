@@ -45,6 +45,7 @@ install:
 - python -V && pip -V 
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
 - pip install pyinstaller || true;
+- pip install cx_Freeze || true;
 - pip install -r requirements.txt
 - pip install .
 - ls

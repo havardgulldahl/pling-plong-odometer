@@ -26,6 +26,7 @@ install:
   - "%PIP% install %PYQT%"
   - "%PIP% install -r %REQUIREMENTS%"
   - "%PIP% install pyinstaller"
+  - "%PIP% install cx_Freeze"
   - ps: Invoke-WebRequest "$env:MSVCP" -OutFile "C:\projects\pling-plong-odometer\MSVCP90.dll"
 
 build_script:
