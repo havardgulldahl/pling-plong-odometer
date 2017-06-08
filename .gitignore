@@ -69,6 +69,8 @@ samples/
 bin/
 lib/
 include/
+share/
+
 VERSIONMAC
 VERSIONWIN
 
@@ -80,3 +82,5 @@ src/metadata/*.mp3
 
 
 .python-version
+pip-selfcheck.json
+

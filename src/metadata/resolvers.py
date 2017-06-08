@@ -346,10 +346,10 @@ class DMAResolver(ResolverBase):
 
     @staticmethod
     def musicid(filename):
-        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]+)')
+        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)([A-Za-z0-9]+))')
         g = rex.search(filename)
         try:
-            return g.group(2)
+            return g.group(3)
         except AttributeError: #no match
             return None
 
