@@ -17,7 +17,7 @@ from . import resolvers
 from . import gluon
 
 from pprint import pformat, pprint
-GLUON_HTTP_LOOKUP="http://mamcdma02/DMA/"
+GLUON_HTTP_LOOKUP="http://malxdmamv01/"
 
 class LogThread(Core.QThread):
     'QThread subclass to log all exceptions and not bomb out on them'

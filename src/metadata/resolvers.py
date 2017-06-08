@@ -349,7 +349,7 @@ class DMAResolver(ResolverBase):
         rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]+)')
         g = rex.search(filename)
         try:
-            return g.group(1)
+            return g.group(2)
         except AttributeError: #no match
             return None
 
