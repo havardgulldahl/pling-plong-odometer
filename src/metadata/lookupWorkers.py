@@ -16,7 +16,7 @@ from .model import TrackMetadata
 from . import resolvers
 from . import gluon
 
-GLUON_HTTP_LOOKUP="http://mamcdma02/DMA/"
+GLUON_HTTP_LOOKUP="http://malxdmamv01/"
 
 class GluonLookupWorker(Core.QThread):
     'Lookup a DMA track on gluon and retrieve metadata'

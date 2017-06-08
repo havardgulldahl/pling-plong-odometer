@@ -282,7 +282,7 @@ class DMAResolver(ResolverBase):
         rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]+)')
         g = rex.search(filename)
         try:
-            return g.group(1)
+            return g.group(2)
         except AttributeError: #no match
             return None
 
@@ -294,7 +294,7 @@ class DMAResolver(ResolverBase):
             if md is not None:
                 return md
 
-        endpoint="http://mamcdma02/DMA/{musicid}.xml"
+        endpoint="http://malxdmamv01/{musicid}.xml"
         if self.session is None:
             self.session = aiohttp.ClientSession()
         async with self.session.get(endpoint.format(musicid=_musicid)) as resp:
