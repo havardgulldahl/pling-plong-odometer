@@ -71,7 +71,6 @@ class ResolverBase:
 
     def __init__(self):
         self.session = None # set it in .setSession() or lazy create in .resolve()
-        self.logincookie = None
 
     def accepts(self, filename):
         for f in self.prefixes:
@@ -115,6 +114,7 @@ class ResolverBase:
 
     def cache(self, metadata):
         "Add metadata for a filename to a local cache to prevent constant network lookups"
+        return None # TODO: implement this when the celery queue is working
         if None in [metadata.title, metadata.recordnumber]:
             # invalid cached object, we dont cache it
             return False
@@ -130,6 +130,7 @@ class ResolverBase:
 
     def fromcache(self):
         "Get metadata from local cache, or None if it's not cached or too old"
+        return None # TODO: implement this when the celery queue is working
         try:
             loc = open(self.cachelocation(), "rb")
         except IOError: #file doesn't exist -> not cached
@@ -150,6 +151,7 @@ class ResolverBase:
 
     def incache(self):
         "Checks to see if the metadata is in cache"
+        return False # TODO: implement this when the celery queue is working
         return os.path.exists(self.cachelocation())
 
     def cachelocation(self):
@@ -161,10 +163,6 @@ class ResolverBase:
             return os.path.join(ourdir, hashlib.md5(self.filename.encode('utf8')).hexdigest())
         except UnicodeEncodeError:
             logging.warning("cachelocation warn: %r - %r", repr(self.filename), type(self.filename))
-
-    def cleanup(self, filename, *args):
-        "Remove objects to prevent hanging threads"
-        pass
 
     def getlabel(self, hint):
         "Return a nice, verbose name for a label, if it is known (returns hint otherwise)"
