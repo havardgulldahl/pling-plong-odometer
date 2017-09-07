@@ -48,7 +48,7 @@ exe = EXE(pyz,
           a.scripts,
           exclude_binaries=True,
           name='pling-plong-odometer',
-          debug=True,
+          debug=False,
           strip=False,
           upx=True,
           console=True, icon='odometer.ico')
