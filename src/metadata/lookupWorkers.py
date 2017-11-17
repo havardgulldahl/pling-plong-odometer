@@ -209,85 +209,180 @@ class UniPPMLookupWorker(LogThread):
 
         # then, get all metadata
         albumdata, trackdata = self.request_trackdata(self.musicid)
-        #print trackdata
+        #print(trackdata)
+        # trackdata looks like this: 
+        '''         {
+            "v": 1681900,
+            "vt": "Main Track",
+            "tt": "Fake Friends",
+            "ac": "https://dams.cdn.unippm.com/AlbumImages/59x59/d9712fdd7ec84ec4bcfd74f398e9276f.jpg",
+            "ano": "KOS453",
+            "ana": "Drama TV Series - Season 3",
+            "ad": "A Perfect Kit For Modern TV Drama Series",
+            "tno": "36",
+            "td": "DRAMEDY - Medium - Stealthy & wry dramedy theme - Pizzicato, piano, percussion, double bass - TV Series, sitcoms",
+            "bwaid": 794691,
+            "vc": 1,
+            "w": 696000,
+            "wg": 10467,
+            "tg": [
+                {
+                    "id": 18431,
+                    "na": "2000s",
+                    "cid": 17,
+                    "cn": "Eras"
+                },
+                {
+                    "id": 18432,
+                    "na": "2010s",
+                    "cid": 17,
+                    "cn": "Eras"
+                },
+                {
+                    "id": 18597,
+                    "na": "Piano",
+                    "cid": 18,
+                    "cn": "Instruments"
+                },
+                {
+                    "id": 18817,
+                    "na": "Pizzicato",
+                    "cid": 18,
+                    "cn": "Instruments"
+                },
+                {
+                    "id": 18819,
+                    "na": "String Section",
+                    "cid": 18,
+                    "cn": "Instruments"
+                },
+                {
+                    "id": 18925,
+                    "na": "Intrigue",
+                    "cid": 19,
+                    "cn": "Moods"
+                },
+                {
+                    "id": 18971,
+                    "na": "Stealthy",
+                    "cid": 19,
+                    "cn": "Moods"
+                },
+                {
+                    "id": 19041,
+                    "na": "Anticipation",
+                    "cid": 19,
+                    "cn": "Moods"
+                },
+                {
+                    "id": 19052,
+                    "na": "Mysterious",
+                    "cid": 19,
+                    "cn": "Moods"
+                },
+                {
+                    "id": 19056,
+                    "na": "Suspenseful",
+                    "cid": 19,
+                    "cn": "Moods"
+                },
+                {
+                    "id": 19101,
+                    "na": "Light Comedy",
+                    "cid": 20,
+                    "cn": "Music For"
+                },
+                {
+                    "id": 19159,
+                    "na": "Family/Light Comedy",
+                    "cid": 20,
+                    "cn": "Music For"
+                },
+                {
+                    "id": 19177,
+                    "na": "Reality TV",
+                    "cid": 20,
+                    "cn": "Music For"
+                },
+                {
+                    "id": 19187,
+                    "na": "Spy/Detective",
+                    "cid": 20,
+                    "cn": "Music For"
+                },
+                {
+                    "id": 19196,
+                    "na": "American Comedy",
+                    "cid": 20,
+                    "cn": "Music For"
+                },
+                {
+                    "id": 19614,
+                    "na": "Medium",
+                    "cid": 22,
+                    "cn": "Tempos"
+                }
+            ],
+            "wa": [
+                {
+                    "wadId": 6,
+                    "vop": 1,
+                    "wop": 1,
+                    "v": 1681900,
+                    "a": "https://stream.music.cdn.unippm.com/KOS/KOS453/Fake_Friends/KOS_453_36_Fake_Friends_Kalfayan_794691.mp3",
+                    "a2": "https://stream.music.cdn.unippm.com/KOS/KOS453/Fake_Friends/KOS_453_36_Fake_Friends_Kalfayan_794691.mp4",
+                    "t": 36,
+                    "wai": 794691,
+                    "d": 98,
+                    "vd": ""
+                }
+            ],
+            "c": "Yannick Kalfayan [SACEM]",
+            "l": "Kosinus",
+            "lid": 138,
+            "d": 98,
+            "hs": false,
+            "cData": [
+                {
+                    "id": 11382,
+                    "na": "Yannick Kalfayan",
+                    "s": "SACEM"
+                }
+            ],
+            "pData": [
+                {
+                    "id": 79,
+                    "na": "Kapagama"
+                },
+                {
+                    "id": 194,
+                    "na": "Kosinus"
+                }
+            ],
+            "tid": "KOS453-36",
+            "hly": false
+        } '''
         if trackdata is None:
             return
         self.progress.emit(75)
-        # trackdata looks like this:
-#         {
-#         VersionId: 1681900,
-#         VersionDescription: null,
-#         WorkName: "Fake Friends",
-#         LabelId: 0,
-#         WorkId: 696000,
-#         WorkAudioId: 794691,
-#         Publishers: [
-#         {
-#         Name: "Kapagama",
-#         Society: "SACEM"
-#         },
-#         {
-#         Name: "Kosinus",
-#         Society: "SACEM"
-#         }
-#         ],
-#         Composers: null,
-#         WorkGroupingId: 10467,
-#         WorkGroupingName: "Drama TV Series - Season 3",
-#         DiscNo: 453,
-#         TrackNo: 36,
-#         TrackNoIndex: 0,
-#         LabelDescription: null,
-#         LabelName: "KOS",
-#         Lyrics: "",
-#         CDNTrackName: null,
-#         CDNFilePath: null,
-#         VersionType: null,
-#         Length: null,
-#         BPM: null,
-#         DiscNoSuffix: null,
-#         WorkComposers: "Yannick Kalfayan [SACEM]",
-#         Duration: null,
-#         Versions: [
-#         {
-#         VersionId: 1681900,
-#         WorkId: 696000,
-#         DurationId: 6,
-#         WorkAudioId: 794691,
-#         TrackNumber: 36,
-#         TrackNoIndex: 0,
-#         Length: 98,
-#         VersionType: "Main Track",
-#         VersionDescription: "",
-#         EditType: "Full Length",
-#         BPM: 0,
-#         AudioFilePath: "46/91/KOS_453_36_Fake_Friends_Kalfayan_794691",
-#         InVirtualLibrary: false,
-#         WorkName: null,
-#         PrsUrl: null,
-#         PrsAltText: null
-#         }
-#         ],
-#         InVirtualLibrary: false,
-#         Label: "Kosinus"
-#         }
-        composers = [ trackdata.get('shares', []) ]
+
+        composers = [ x.get('na') for x in trackdata.get('cData') ]
 
         metadata = TrackMetadata(filename=self.filename,
                  musiclibrary=resolvers.UniPPMResolver.name,
-                 title=trackdata.get('WorkName', None),
-                 # length=-1,
-                 composer=trackdata.get('WorkComposers', None),
+                 title=trackdata.get('tt', None),
+                 length=trackdata.get('d', -1),
+                 composer=trackdata.get('c', None),
                  artist=None,
                  year=-1,
-                 recordnumber=self.musicid,
-                 albumname=trackdata.get('WorkGroupingName', None),
+                 recordnumber=trackdata.get('tid', self.musicid),
+                 albumname=trackdata.get('ana', None),
                  copyright='Universal Publishing Production Music',
                  # lcnumber=None,
                  # isrc=None,
                  # ean=None,
-                 # catalogue=None,
-                 label=trackdata.get('LabelName', ''),
+                 catalogue=trackdata.get('l', None),
+                 label=trackdata.get('l', None),
                  # lyricist=None,
                  identifier='UniPPMTrack# %s' % self.musicid,
                  )
@@ -309,12 +404,12 @@ class UniPPMLookupWorker(LogThread):
         and parse the json we get back
 
         """
-        endpoint = 'http://www.unippm.se/Feeds/TracksHandler.aspx'
+        #endpoint = 'http://www.unippm.se/Feeds/TracksHandler.aspx'
+        endpoint = 'http://cloud1.search.universalproductionmusic.com/uppm_work_12_1/select?q=editIds:(%s)'
         try:
-            data = ( ('method','workaudiodetails'),
-                     ('workAudioId', musicid)
-                   )
-            r = urllib.request.Request(endpoint + '?' + urllib.parse.urlencode(data))
+            _req_url = endpoint % (musicid,)
+            r = urllib.request.Request(_req_url)
+            logging.debug('scraping track metadata from unippm: %r', _req_url)
             req = urllib.request.urlopen(r)
 
         except IOError as e:
@@ -334,7 +429,7 @@ class UniPPMLookupWorker(LogThread):
             self.trackFailed.emit()
             self.error.emit('Tried to lookup %s, but failed. Please try again' % (musicid,))
             return None
-        trackdata = response
+        trackdata = response.get('docs')[0]
         albumdata = None # TODO: get this
         return albumdata, trackdata
 
