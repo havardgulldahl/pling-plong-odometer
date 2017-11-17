@@ -2,26 +2,12 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2011-2017
 """
-py2app/py2exe build script for odometer.
+sdist build script for odometer.
 
-Will automatically ensure that all build prerequisites are available
-
-Usage (Mac OS X):
-    python setup.py py2app
-
-Usage (Windows):
-    python setup.py py2exe
 """
 
-import sys, os.path
-#from setuptools import setup
-from cx_Freeze import setup, Executable
-
-if sys.platform == 'win32':
-    #import py2exe
-    base = "Win32GUI" # for win32 guis 
-else:
-    base = None
+import sys, os.path, re
+from setuptools import setup
 
 def getversion():
     if sys.platform == 'darwin':
