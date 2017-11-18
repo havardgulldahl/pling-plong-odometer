@@ -90,8 +90,8 @@ cx_options = dict( # cx_freeze
     },
     executables = [Executable(mainscript, 
                               base=base, 
-                              copyDependentFiles=True,
                               targetName='odometer')]
+    # https://cx-freeze.readthedocs.io/en/latest/distutils.html
 )
 
 setup(

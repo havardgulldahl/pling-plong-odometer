@@ -47,7 +47,8 @@ install:
 - pip install wheel pyinstaller || true;
 - pip install cx_Freeze || true;
 - pip install -r requirements.txt
-- pip install --egg .
+#- pip install --egg .
+- python setup.py build
 - ls
 
 script:
