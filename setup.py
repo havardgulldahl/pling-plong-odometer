@@ -25,6 +25,11 @@ def getversion():
 
 mainscript = os.path.join('src', 'pling-plong-odometer.py')
 
+if sys.platform == 'win32':
+    #import py2exe
+    base = "Win32GUI" # for win32 guis 
+else:
+    base = None
 # if sys.platform == 'darwin':
 #      extra_options = dict(
 #          setup_requires=['py2app'],
@@ -83,7 +88,10 @@ cx_options = dict( # cx_freeze
                              "path": ['src']
                             },
     },
-    executables = [Executable(mainscript, base=base)]
+    executables = [Executable(mainscript, 
+                              base=base, 
+                              copyDependentFiles=True,
+                              targetName='odometer')]
 )
 
 setup(
