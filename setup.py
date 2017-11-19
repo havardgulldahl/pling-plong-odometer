@@ -108,9 +108,9 @@ cx_options = dict( # cx_freeze
 
 setup(
     name="Pling Plong Odometer",
-    version=datetime.datetime.now().strftime('%y.%-m.%-d')
+    version=datetime.datetime.now().strftime('%y.%-m.%-d'),
     author='Håvard Gulldahl',
     author_email='havard.gulldahl@nrk.no',
-    description='Pling Plong Odometer is a tool to automatically calculate audio usage in a Adobe Premiere or Final Cut Pro project',
+    description='A tool to calculate audio usage in a Adobe Premiere or Final Cut Pro project',
     **cx_options
 )

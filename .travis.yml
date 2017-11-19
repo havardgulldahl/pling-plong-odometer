@@ -19,10 +19,10 @@ matrix:
     osx_image: xcode7.3
     language: generic
     env: OSX=OSX10.11
-  - os: osx
-    osx_image: xcode6.4
-    language: generic
-    env: OSX=OSX10.10
+  # - os: osx
+  #   osx_image: xcode6.4
+  #   language: generic
+  #   env: OSX=OSX10.10
 
 branches:
   only:
