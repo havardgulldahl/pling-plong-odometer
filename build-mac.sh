@@ -46,7 +46,7 @@ cp -r "$NIB" dist/Pling\ Plong\ Odometer.app/Contents/Resources/ || error "Coul
 cp qt.conf dist/Pling\ Plong\ Odometer.app/Contents/Resources/qt.conf
 
 # rename to maximase brand name exposure (badges to come!)
-mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
+#mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
 
 #TODO: add to Info.plist
 #
