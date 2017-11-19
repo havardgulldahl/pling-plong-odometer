@@ -51,7 +51,7 @@ if __name__ == '__main__':
     elif sys.platform == 'win32':
         _pylupdate = os.path.join(scripts_dir, 'pylupdate5.exe')
         # look at https://www.appveyor.com/docs/build-environment/#qt
-        _lrelease = os.path.join('C:', 'Qt' , '5.9' , 'msvc2015', 'lrelease.exe')
+        _lrelease = os.path.join('Qt' , '5.9' , 'msvc2015', 'lrelease.exe')
         _pyuic = os.path.join(scripts_dir, 'pyuic5.exe')
         _pyrcc = os.path.join(scripts_dir, 'pyrcc5.exe')
         _versionfile = os.path.join('.', 'VERSIONWIN')
