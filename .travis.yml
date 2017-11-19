@@ -43,11 +43,8 @@ before_install:
 install:
 - pyenv install 3.5.2; pyenv local 3.5.2; export PATH="~/.pyenv/shims:$PATH"
 - python -V && pip -V 
-#- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
-#- pip install cx_Freeze || true;
 - pip install wheel pyinstaller || true;
 - pip install -r requirements.txt
-#- pip install --egg .
 
 script:
 - if [ "$TRAVIS_OS_NAME" = "osx" ]; then ./build-mac.sh ${OSX}-${TRAVIS_JOB_NUMBER}-${TAG}; fi
