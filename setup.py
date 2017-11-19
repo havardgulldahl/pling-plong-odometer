@@ -10,19 +10,6 @@ import sys, os.path, re, datetime
 from cx_Freeze import setup, Executable
 from setuptools import setup
 
-def getversion():
-    if sys.platform == 'darwin':
-        _p = 'MAC'
-    elif sys.platform == 'win32':
-        _p = 'WIN'
-    else:
-        _p = 'x'
-    try:
-        _ver = open('VERSION%s' % _p).readline().strip()
-        return _ver.replace('-', '.')
-    except:
-        raise
-
 mainscript = os.path.join('src', 'pling-plong-odometer.py')
 
 if sys.platform == 'win32':
@@ -87,12 +74,16 @@ cx_options = dict( # cx_freeze
                              "includes": ["traceback", 'sip','PyQt5','PyQt5.QtWidgets','PyQt5.QtPrintSupport', 'gzip'],
                              "path": ['src']
                             },
+               "bdist_mac": {
+                             "iconfile": ['odometer.icns'],
+                             "qt_menu_nib": [os.path.join('resources','qt_menu.nib')],
+                             "bundle_name": '♫ ♪ Odometer',
+                            }
+              
     },
     executables = [Executable(mainscript, 
-                              base=base, 
                               icon='odometer.ico',
-                              iconfile='odometer.icns',
-                              qt_menu_nib=os.path.join('resources','qt_menu.nib'),
+                              base=base, 
                               targetName='odometer')]
     # https://cx-freeze.readthedocs.io/en/latest/distutils.html
     # iconfile	Path to an icns icon file for the application. This will be copied into the bundle.
