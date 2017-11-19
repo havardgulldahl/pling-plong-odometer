@@ -28,7 +28,8 @@ added_files = [
                (os.path.join(pyqtbinpath, 'Qt5Gui.dll'), '.'),
                (os.path.join(pyqtbinpath, 'Qt5Widgets.dll'), '.'),
                (os.path.join(pyqtbinpath, 'QtWebEngineProcess.exe'), '.'),
-               (os.path.join(pyqtlibpath, 'bin', 'QtWebEngineProcess.exe'), '.')
+               (os.path.join(pyqtlibpath, 'bin', 'QtWebEngineProcess.exe'), '.'),
+               (os.path.join(thispath, 'src', 'qt.conf'), '.'),
               ]
 
 a = Analysis(['src/pling-plong-odometer.py'],
