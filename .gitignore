@@ -84,3 +84,5 @@ src/metadata/*.mp3
 .python-version
 pip-selfcheck.json
 
+
+.vscode/settings.json

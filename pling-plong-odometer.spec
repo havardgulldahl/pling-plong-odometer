@@ -4,6 +4,7 @@ import sys
 import os, os.path
 import PyQt5
 import distutils.util
+import datetime
 
 
 block_cipher = None
@@ -12,6 +13,9 @@ pyqtpath=os.path.join(os.path.dirname(PyQt5.__file__), 'Qt')
 pyqtbinpath=os.path.join(pyqtpath, 'bin')
 pyqtlibpath=os.path.join(pyqtpath, 'lib')
 thispath=os.getcwd()
+version=datetime.datetime.now().strftime('%y.%-m.%-d')
+build = os.environ.get('JENKINS_BUILD_NUMBER', os.environ.get('APPVEYOR_BUILD_NUMBER', '1'))
+buildversion='{}.{}'.format(version, build)
 
 _platform = distutils.util.get_platform()
 if 'win' in _platform:
@@ -29,7 +33,7 @@ added_files = [
                (os.path.join(pyqtbinpath, 'Qt5Widgets.dll'), '.'),
                (os.path.join(pyqtbinpath, 'QtWebEngineProcess.exe'), '.'),
                (os.path.join(pyqtlibpath, 'bin', 'QtWebEngineProcess.exe'), '.'),
-               (os.path.join(thispath, 'src', 'qt.conf'), '.'),
+               (os.path.join(thispath, 'src', 'qt.conf'), '.'), # i.e. to fix plugin path
               ]
 
 a = Analysis(['src/pling-plong-odometer.py'],
@@ -72,6 +76,8 @@ if platform == 'mac':
                     'NSHighResolutionCapable': 'True',
                     'CFBundleDisplayName': '♫ ♪ Odometer',
                     'NSHumanReadableCopyright': 'Copyright 2011-2017 havard.gulldahl@nrk.no',
+                    'CFBundleShortVersionString': version,
+                    'CFBundleVersion': buildversion,
                 },
                 )
     # NOTE, you still have to manually copy everything from
