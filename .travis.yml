@@ -48,6 +48,7 @@ install:
 - pip install cx_Freeze || true;
 - pip install -r requirements.txt
 #- pip install --egg .
+- python setup.py --help-commands
 - python setup.py bdist_mac
 - ls
 
