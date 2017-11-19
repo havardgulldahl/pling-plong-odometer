@@ -90,6 +90,9 @@ cx_options = dict( # cx_freeze
     },
     executables = [Executable(mainscript, 
                               base=base, 
+                              icon='odometer.ico',
+                              iconfile='odometer.icns',
+                              qt_menu_nib=os.path.join('resources','qt_menu.nib'),
                               targetName='odometer')]
     # https://cx-freeze.readthedocs.io/en/latest/distutils.html
     # iconfile	Path to an icns icon file for the application. This will be copied into the bundle.
@@ -105,7 +108,7 @@ cx_options = dict( # cx_freeze
 
 setup(
     name="Pling Plong Odometer",
-    version=datetime.datetime.now().isoformat(' '),
+    version=datetime.datetime.now().strftime('%y.%-m.%-d')
     author='Håvard Gulldahl',
     author_email='havard.gulldahl@nrk.no',
     description='Pling Plong Odometer is a tool to automatically calculate audio usage in a Adobe Premiere or Final Cut Pro project',
