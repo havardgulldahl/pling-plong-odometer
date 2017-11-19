@@ -43,8 +43,7 @@ sed -i .bk "s/version=.*/version=1997-12-31/" BUILDFLAGS
 cp -r dist/pling-plong-odometer/* dist/Pling\ Plong\ Odometer.app/Contents/MacOS/ || error "Could not add crucial app resource"
 echo "Adding some extra resources"
 cp -r "$NIB" dist/Pling\ Plong\ Odometer.app/Contents/Resources/ || error "Could not copy crucial qt resource"
-cp src/qt.conf dist/Pling\ Plong\ Odometer.app/Contents/MacOS/qt.conf
-# TODO: add Info.plist
+cp qt.conf dist/Pling\ Plong\ Odometer.app/Contents/Resources/qt.conf
 
 # rename to maximase brand name exposure (badges to come!)
 mv "dist/Pling Plong Odometer.app" "dist/♫ ♪ Odometer.app"
