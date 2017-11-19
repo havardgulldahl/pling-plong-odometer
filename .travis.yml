@@ -43,8 +43,8 @@ before_install:
 install:
 - pyenv install 3.5.2; pyenv local 3.5.2; export PATH="~/.pyenv/shims:$PATH"
 - python -V && pip -V 
-- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
-- pip install wheel pyinstaller || true;
+#- if [ "$TRAVIS_OS_NAME" = "osx" ]; then pip install py2app; fi
+- pip install wheel || true;
 - pip install cx_Freeze || true;
 - pip install -r requirements.txt
 #- pip install --egg .
@@ -67,5 +67,5 @@ addons:
   artifacts:
     s3_region: "eu-west-1"
     paths:
-    - $(ls *.dmg | tr "\n" ":")
+    - $(ls *.dmg exe.* | tr "\n" ":")
     debug: false
