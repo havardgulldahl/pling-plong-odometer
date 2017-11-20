@@ -18,7 +18,7 @@ Write-Host "Generate python code"
 
 # build the castle
 Write-Host "Building the app (see build.log)"
-& pyinstaller -y pling-plong-odometer.spec
+& pyinstaller -y pling-plong-odometer.spec 2>&1
 
 # create neat package
 Write-Host "Creating package"
