@@ -142,6 +142,7 @@ class ResolverBase(Core.QObject):
         return True
 
     def progress(self, received, total):
+        if total == 0: return
         _progress = 100*received / total
         self.trackProgress.emit(self.filename, _progress)
 
