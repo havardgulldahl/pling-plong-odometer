@@ -88,3 +88,4 @@ pip-selfcheck.json
 
 # deploy configuration
 ##
+.vscode/settings.json
