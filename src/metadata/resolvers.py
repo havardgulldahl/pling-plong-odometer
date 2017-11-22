@@ -147,7 +147,16 @@ class ResolverBase(Core.QObject):
         self.trackProgress.emit(self.filename, _progress)
 
     def url(self, filename): # return url from filename
-        return 'http://malxodometer01:8000/resolve/%s' % urllib.parse.quote(filename)
+        _id = self.musicid(filename)
+        if _id is None:
+            return False
+        if not hasattr(self, 'urlbase'):
+            logging.error('tried to get url of %r', filename)
+        try:
+            return self.urlbase % _id
+        except TypeError:
+            logging.error('tried to get url of %r, but urlbase fialed (%r)', filename, self.urlbase)
+        #return 'http://malxodometer01:8000/resolve/%s' % urllib.parse.quote(filename)
 
     def parse(self, response): # QNetworkReply
         data = bytes(self.doc.response.readAll()).decode()
@@ -243,6 +252,7 @@ class GenericFileResolver(ResolverBase):
     'Resolve file based on embedded metadata, i.e. id3 tags, vorbis tags, bwf'
     name = 'file'
     postfixes = ['MP3','WAV']
+    urlbase = 'file://%s'
 
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
@@ -341,6 +351,7 @@ class DMAResolver(ResolverBase):
     prefixes = ['NRKO_', 'NRKT_', 'NONRO', 'NONRT', 'NONRE' ]
     name = 'DMA'
     #cacheTimeout = 1
+    urlbase = None
 
     @staticmethod
     def musicid(filename):
@@ -513,7 +524,7 @@ class ApollomusicResolver(ResolverBase):
 class UniPPMResolver(ResolverBase):
     prefixes = [ ]
     name = 'UniPPM'
-    urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={trackid}' # HTTP GET interface, returns json
+    urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId=%s' # HTTP GET interface, returns json
     labelmap = {  'AA':'Atmosphere Archive ',
                   'AK':'Atmosphere Kitsch ',
                   'AM':'Access Music ',
@@ -660,7 +671,7 @@ class UniPPMResolver(ResolverBase):
 class UprightmusicResolver(ResolverBase):
     prefixes = [ '_UPRIGHT',]
     name = 'UprightMusic'
-    urlbase = 'http://search.upright-music.com/sites/all/modules/up/session.php?handler=load&tid={trackid}' # HTTP GET interface, returns json
+    urlbase = 'http://search.upright-music.com/sites/all/modules/up/session.php?handler=load&tid=%s' # HTTP GET interface, returns json
     labelmap = { } # TODO: get list of labels
 
     @staticmethod
