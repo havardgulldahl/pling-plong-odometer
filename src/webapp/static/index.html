@@ -98,7 +98,7 @@ function submit(formData) {
             console.log('got audio response: %o', audio);
             return formatAudible(audio["audioclips"]);
         } else {
-            alert('An error occurred!');
+            alertmsg("server returned "+ xhr.status+": "+xhr.statusText, 'danger');
             uploadButton.innerHTML = 'Upload';
         }
     };
@@ -212,8 +212,17 @@ function dropHandler(ev) {
     }
   }
 
-
-
+function alertmsg(msg, errortype) {
+  var e = document.getElementById('alertmsg');
+  var etype = errortype || 'warning';
+  e.innerText = msg;
+  e.classList.add('alert-'+etype);
+  e.hidden=false;
+  window.setTimeout(function() {e.hidden=true; 
+                                e.classList.remove('alert-'+etype); 
+                                e.innerText='';}, 
+                            4500);
+}
 </script>
 
 </head>
@@ -222,6 +231,9 @@ function dropHandler(ev) {
     <h1>Pling Plong Odometer Online</h1>
     <div style="font-size: smaller">
         <a href="/doc">JSON Rest API docs (Swagger)</a>
+    </div>
+
+    <div id=alertmsg class="fade show alert" role="alert" hidden>
     </div>
 
     <form id="file-form" enctype="multipart/form-data" action="/analyze" method="POST">
