@@ -450,7 +450,7 @@ class AUXResolver(ResolverBase):
         async with self.session.get(endpoint, params=params) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
-            data = await resp.json()
+            data = await resp.json(content_type=None) # accept all content types returned
             logging.info('got data: %r', data)
             trackdata = data.get('tracks')[0]
 
