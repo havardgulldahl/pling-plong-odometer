@@ -20,7 +20,8 @@ from asyncio import coroutine
 from aiohttp import web
 
 loop = asyncio.get_event_loop()
-app = web.Application(loop=loop)
+app = web.Application(loop=loop,
+                      client_max_size=20*(1024**2)) # max 20 megs
 
 APIVERSION = '0.1'
 
