@@ -3,6 +3,8 @@
 <head><title>Pling Plong Odometer Online</title>
 
 <link rel="stylesheet" href="/media/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+<link rel="stylesheet" href="/media/tingle.min.css" >
+<script type="text/javascript" src="/media/tingle.min.js"></script>
 
 <style type="text/css">
     .duration { text-align: right; 
@@ -38,6 +40,7 @@ function main() {
     var uploadTestfileButton = document.getElementById('upload-testfile-button');
     var fileList = document.getElementById('files-list');
     var resolveAllButton = document.getElementById('resolve-all-button');
+    var createCreditsButton = document.getElementById('create-credits-button');
 
     // set up empty table
     var tr = document.createElement('tr');
@@ -45,6 +48,13 @@ function main() {
     for (var i=0; i<60; i++) {
         fileList.appendChild(tr.cloneNode(true));
     }
+
+    // create empty modal for later
+    window.modalmodal = new tingle.modal({
+        footer: true,
+        closeMethods: ['overlay', 'button', 'escape'],
+        closeLabel: "Lukk",
+    });
 
     uploadTestfileButton.onclick = function(event) {
         event.preventDefault();
@@ -85,6 +95,12 @@ function main() {
             btns[i].click();
         }
     }
+
+    createCreditsButton.onclick = function(event) {
+        event.preventDefault();
+        creditsdialog();
+    }
+
 }
 
 function submit(formData) {
@@ -149,6 +165,8 @@ function resolve(url) {
             var metadata = JSON.parse(xhr.response);
             console.log('got metadata %o', metadata);
             var md = metadata['metadata'];
+            output.classList.add('has-metadata');
+            output.metadata = md;
             if(md.productionmusic === true) {
                 output.innerHTML = "<i>"+md.copyright+"</i> &reg; <b>"+md.label+"</b>";
 
@@ -234,6 +252,38 @@ function alertmsg(msg, errortype) {
                                 e.innerText='';}, 
                             4500);
 }
+
+function creditsdialog() {
+    var metadatarows = document.querySelectorAll('td.has-metadata');
+    var s = "";
+    var _labels = [];
+    for(var i=0; i<metadatarows.length; i++) {
+        var md = metadatarows[i].metadata;
+        if(md.title===undefined) { continue }
+        if(md.productionmusic===true) {
+            if(_labels.indexOf(md.label) === -1) { // only register once per label
+                s = s + "<i>"+md.copyright+"</i> &reg; <b>"+md.label+"</b><br>";
+            }
+        } else {
+            s = s + "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year;
+        }
+    }
+    console.log('got credits: %o', s);
+    window.modalmodal.setContent('<h1>End credits</h1>'+s);
+    window.modalmodal.open();
+
+    /*
+    for r in self.itercheckedrows():
+    if r.metadata.title is None: continue
+    if r.metadata.productionmusic:
+        if not r.metadata.label in _labels_seen:
+            s += u'%(musiclibrary)s\r\n\u2117 %(label)s\r\n\r\n' % vars(r.metadata)
+            _labels_seen.append(r.metadata.label)
+    else:
+        s += u'%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s\r\n\r\n' % vars(r.metadata)
+
+        */
+}
 </script>
 
 </head>
@@ -255,7 +305,7 @@ function alertmsg(msg, errortype) {
     <button id="resolve-all-button">Resolve all</button>
     <span class=mx-5></span>
     <button disabled id="create-report-button">Generate metadata report</button>
-    <button disabled id="create-credits-button">Generate credits</button>
+    <button id="create-credits-button">Generate credits</button>
     </form>
 
     <table style="width: 98%" class="table table-striped table-sm"
