@@ -588,7 +588,7 @@ class ApollomusicResolver(ResolverBase):
         async with self.session.get(endpoint) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
-            data = await resp.json()
+            data = await resp.json(content_type=None) # accept all returned content types
             logging.info('got data: %r', data)
             trackdata = data['tracks'][0]
             try: _yr = int(trackdata.get('recorded', -1), 10)
