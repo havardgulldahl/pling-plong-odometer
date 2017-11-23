@@ -9,6 +9,11 @@
                 padding-right: 1em;
                 font-family: Courier New, Courier, monospace;
               }
+
+
+    .dragover { border: 6px double blue;
+
+    }
 </style>
 
 <script type="text/javascript">
@@ -165,6 +170,7 @@ function resolve(url) {
 function dropHandler(ev) {
     console.log("Drop");
     ev.preventDefault();
+    document.querySelector('table').classList.remove('dragover');
     // If dropped items aren't files, reject them
     var dt = ev.dataTransfer;
     // Create a new FormData object.
@@ -195,10 +201,15 @@ function dropHandler(ev) {
     console.log("dragOver");
     // Prevent default select and drag behavior
     ev.preventDefault();
+    document.querySelector('table').classList.add('dragover');
+    window.setTimeout(function() {
+        document.querySelector('table').classList.remove('dragover');
+    }, 10000)
   }
 
   function dragendHandler(ev) {
     console.log("dragEnd");
+    document.querySelector('table').classList.remove('dragover');
     // Remove all of the drag data
     var dt = ev.dataTransfer;
     if (dt.items) {
