@@ -620,7 +620,8 @@ class UniPPMResolver(ResolverBase):
     name = 'UniPPM'
     prettyname = 'Universal Production Publising Music'
     website = 'http://www.unippm.se/'
-    urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={musicid}' # HTTP GET interface, returns json
+    #urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={musicid}' # HTTP GET interface, returns json
+    urlbase = 'http://cloud1.search.universalproductionmusic.com/uppm_work_12_1/select?q=editIds:({musicid})'# HTTP GET interface, returns json 
     labelmap = {  'AA':'Atmosphere Archive ',
                   'AK':'Atmosphere Kitsch ',
                   'AM':'Access Music ',
@@ -770,28 +771,28 @@ class UniPPMResolver(ResolverBase):
         async with self.session.get(self.urlbase.format(musicid=_musicid)) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
-            data = await resp.json()
+            data = await resp.json(content_type=None)
             logging.info('got data: %r', data)
-            composers = [ data.get('shares', []) ]
+            trackdata = data.get('docs')[0]
 
             metadata = TrackMetadata(filename=self.filename,
-                    musiclibrary=self.name,
-                    title=data.get('WorkName', None),
-                    # length=-1,
-                    composer=data.get('WorkComposers', None),
-                    artist=None,
-                    year=-1,
-                    recordnumber=_musicid,
-                    albumname=data.get('WorkGroupingName', None),
-                    copyright='Universal Publishing Production Music',
-                    # lcnumber=None,
-                    # isrc=None,
-                    # ean=None,
-                    # catalogue=None,
-                    label=data.get('LabelName', ''),
-                    # lyricist=None,
-                    identifier='UniPPMTrack# %s' % _musicid
-                    )
+                 musiclibrary=self.name,
+                 title=trackdata.get('tt', None),
+                 length=trackdata.get('d', -1),
+                 composer=trackdata.get('c', None),
+                 artist=None,
+                 year=-1,
+                 recordnumber=trackdata.get('tid', _musicid),
+                 albumname=trackdata.get('ana', None),
+                 copyright='Universal Publishing Production Music',
+                 # lcnumber=None,
+                 # isrc=None,
+                 # ean=None,
+                 catalogue=trackdata.get('l', None),
+                 label=trackdata.get('l', None),
+                 # lyricist=None,
+                 identifier='UniPPMTrack#{}'.format(_musicid),
+                 )
             metadata.productionmusic = True
             return metadata
 
