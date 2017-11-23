@@ -34,6 +34,13 @@ function main() {
     var fileList = document.getElementById('files-list');
     var resolveAllButton = document.getElementById('resolve-all-button');
 
+    // set up empty table
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>|<td><td><td><td>';
+    for (var i=0; i<60; i++) {
+        fileList.appendChild(tr.cloneNode(true));
+    }
+
     uploadTestfileButton.onclick = function(event) {
         event.preventDefault();
         // empty files table
@@ -49,9 +56,6 @@ function main() {
 
         // Update button text.
         uploadButton.innerHTML = 'Uploading...';
-
-        // empty files table
-        removeChildren(fileList);
 
         // The rest of the code will go here...
         // Get the selected files from the input.
@@ -104,7 +108,10 @@ function submit(formData) {
 }
 
 function formatAudible(audible) {
-    var filelist = document.getElementById('files-list');
+    var fileList = document.getElementById('files-list');
+    // empty files table
+    removeChildren(fileList);
+
     for(var i=0; i<audible.length; i++) {
         var tr = document.createElement('tr');
         var elm = audible[i];
@@ -118,7 +125,7 @@ function formatAudible(audible) {
            tr.classList.add('table-success');
         }
         tr.innerHTML = "<td>"+c+"<td class=duration>"+secs+"<td>"+service+"<td><button "+disabled+" onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
-        filelist.appendChild(tr);
+        fileList.appendChild(tr);
     }
 }
 
@@ -155,6 +162,55 @@ function resolve(url) {
     xhr.send();
 }
 
+function dropHandler(ev) {
+    console.log("Drop");
+    ev.preventDefault();
+    // If dropped items aren't files, reject them
+    var dt = ev.dataTransfer;
+    // Create a new FormData object.
+    var formData = new FormData();
+    if (dt.items) {
+      // Use DataTransferItemList interface to access the file(s)
+      for (var i=0; i < dt.items.length; i++) {
+        if (dt.items[i].kind == "file") {
+          var f = dt.items[i].getAsFile();
+          console.log("... file[" + i + "].name = %o",f);
+          // Add the file to the request.
+          formData.append('xmeml', f, f.name);
+        }
+      }
+    } else {
+      // Use DataTransfer interface to access the file(s)
+      for (var i=0; i < dt.files.length; i++) {
+        var f = dt.files[i];
+        console.log("... file[" + i + "].name = %o",f);
+        // Add the file to the request.
+        formData.append('xmeml', f, f.name);
+      }  
+    }
+    submit(formData)
+  }
+
+  function dragoverHandler(ev) {
+    console.log("dragOver");
+    // Prevent default select and drag behavior
+    ev.preventDefault();
+  }
+
+  function dragendHandler(ev) {
+    console.log("dragEnd");
+    // Remove all of the drag data
+    var dt = ev.dataTransfer;
+    if (dt.items) {
+      // Use DataTransferItemList interface to remove the drag data
+      for (var i = 0; i < dt.items.length; i++) {
+        dt.items.remove(i);
+      }
+    } else {
+      // Use DataTransfer interface to remove the drag data
+      ev.dataTransfer.clearData();
+    }
+  }
 
 
 
@@ -179,7 +235,10 @@ function resolve(url) {
     <button disabled id="create-credits-button">Generate credits</button>
     </form>
 
-    <table style="width: 98%" class="table table-striped table-sm">
+    <table style="width: 98%" class="table table-striped table-sm"
+        ondrop="dropHandler(event);" 
+        ondragover="dragoverHandler(event);" 
+        ondragend="dragendHandler(event);">
         <thead class="thead-inverse">
             <th>name</th>
             <th>audible length</th>
