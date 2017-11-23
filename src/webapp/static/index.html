@@ -86,6 +86,7 @@ function submit(formData) {
             return formatAudible(audio["audioclips"]);
         } else {
             alert('An error occurred!');
+            uploadButton.innerHTML = 'Upload';
         }
     };
 
@@ -151,7 +152,7 @@ function resolve(url) {
 
     <h1>Pling Plong Odometer Online</h1>
     <div style="font-size: smaller">
-        <a href="/doc">JSON Rest API docs</a>
+        <a href="/doc">JSON Rest API docs (Swagger)</a>
     </div>
 
     <form id="file-form" enctype="multipart/form-data" action="/analyze" method="POST">
@@ -159,6 +160,8 @@ function resolve(url) {
     <input type="hidden" name="usetestfile" value="0">
     <button type="submit" id="upload-button">Upload</button>
     <button type="submit" id="upload-testfile-button">Use testfile</button>
+    <button type="submit" disabled id="create-credits-button">Generate credits</button>
+    <label>Auto-identify <input type="checkbox" id="auto-identify"></label>
     </form>
 
     <table style="width: 98%">
