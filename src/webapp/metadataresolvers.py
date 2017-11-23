@@ -851,7 +851,7 @@ class UprightmusicResolver(ResolverBase):
             # tid="6288627e-bae8-49c8-9f3c-f6ed024eb698"></td>
             #
             # where tid = internal track id
-            itemnode = html.get_element_by_id('jp_playlist_1_item_0').find('td') # get first td
+            itemnode = html.get_element_by_id('jp_playlist_1_item_2').find('td') # get first td
             #logging.debug('lxml result: %r', itemnode)
             return itemnode.get('tid', default=None)
 
@@ -869,7 +869,7 @@ class UprightmusicResolver(ResolverBase):
         async with self.session.get(self.urlbase.format(trackid=internal_guid)) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
-            data = await resp.json()
+            data = await resp.json(content_type=None) # accept all returned content types
             #logging.info('got data: %r', data)
             trackdata = data['track']
             composers = [ s['stakeholder']['name'] for s in trackdata.get('shares', []) ]
