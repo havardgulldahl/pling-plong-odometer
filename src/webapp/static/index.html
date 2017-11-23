@@ -32,6 +32,7 @@ function main() {
     var uploadButton = document.getElementById('upload-button');
     var uploadTestfileButton = document.getElementById('upload-testfile-button');
     var fileList = document.getElementById('files-list');
+    var resolveAllButton = document.getElementById('resolve-all-button');
 
     uploadTestfileButton.onclick = function(event) {
         event.preventDefault();
@@ -66,6 +67,14 @@ function main() {
         }
         submit(formData)
         return false;
+    }
+    resolveAllButton.onclick = function(event) {
+        event.preventDefault();
+        // resolve all resolvable tracks
+        var btns = document.querySelectorAll('#files-list button:not([disabled])');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].click();
+        }
     }
 }
 
@@ -103,8 +112,9 @@ function formatAudible(audible) {
         var r = elm.resolve;
         var secs = secs2timestring(elm.audible_length);
         var service = elm.music_service || "<i>Unknown</i>";
-        var resolvable = elm.resolvable ? "&rarr;" : "&times;"
-        tr.innerHTML = "<td>"+c+"<td class=duration>"+secs+"<td>"+service+"<td><button onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
+        var resolvable = elm.resolvable ? "&rarr;" : "&times;";
+        var disabled = elm.resolvable ? "" : " disabled ";
+        tr.innerHTML = "<td>"+c+"<td class=duration>"+secs+"<td>"+service+"<td><button "+disabled+" onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
         filelist.appendChild(tr);
     }
 }
@@ -160,8 +170,8 @@ function resolve(url) {
     <input type="hidden" name="usetestfile" value="0">
     <button type="submit" id="upload-button">Upload</button>
     <button type="submit" id="upload-testfile-button">Use testfile</button>
-    <button type="submit" disabled id="create-credits-button">Generate credits</button>
-    <label>Auto-identify <input type="checkbox" id="auto-identify"></label>
+    <button disabled id="create-credits-button">Generate credits</button>
+    <button id="resolve-all-button">Resolve all</button>
     </form>
 
     <table style="width: 98%">
