@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang=en>
+<html lang=no>
 <head><title>Pling Plong Odometer Online</title>
 
 <link rel="stylesheet" href="/media/bootstrap.min.css" integrity="sha256-QUyqZrt5vIjBumoqQV0jM8CgGqscFfdGhN+nVCqX0vc=" crossorigin="anonymous">
@@ -14,8 +14,9 @@
 
 
     .dragover { border: 6px double blue;
-
     }
+
+    progress { width: 90%; }
 </style>
 
 <script type="text/javascript">
@@ -414,10 +415,19 @@ s = s + '</table>'
 </head>
 <body>
 
-    <h1>Pling Plong Odometer Online</h1>
-    <div style="font-size: smaller">
-        <a href="/doc">JSON Rest API docs (Swagger)</a>
-    </div>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <a class="navbar-brand" href="#">♫ ♪ Odometer</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                  <div class="navbar-nav">
+                    <a class="nav-item nav-link active" href="#">Analyse <span class="sr-only">(current)</span></a>
+                    <a class="nav-item nav-link disabled" href="#">Hjelp</a>
+                    <a class="nav-item nav-link" href="/docs" title="JSON REST API documentation (swagger)">JSON docs</a>
+                  </div>
+                </div>
+              </nav>
 
     <div id=alertmsg class="fade show alert" role="alert" hidden>
     </div>
