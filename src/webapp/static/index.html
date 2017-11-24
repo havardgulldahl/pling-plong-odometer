@@ -2,7 +2,7 @@
 <html lang=en>
 <head><title>Pling Plong Odometer Online</title>
 
-<link rel="stylesheet" href="/media/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+<link rel="stylesheet" href="/media/bootstrap.min.css" integrity="sha256-QUyqZrt5vIjBumoqQV0jM8CgGqscFfdGhN+nVCqX0vc=" crossorigin="anonymous">
 <link rel="stylesheet" href="/media/tingle.min.css" >
 <script type="text/javascript" src="/media/tingle.min.js"></script>
 
@@ -40,6 +40,7 @@ function main() {
     var uploadTestfileButton = document.getElementById('upload-testfile-button');
     var fileList = document.getElementById('files-list');
     var resolveAllButton = document.getElementById('resolve-all-button');
+    var createReportButton = document.getElementById('create-report-button');
     var createCreditsButton = document.getElementById('create-credits-button');
 
     // set up empty table
@@ -52,9 +53,16 @@ function main() {
     // create empty modal for later
     window.modalmodal = new tingle.modal({
         footer: true,
+        stickyFooter: false,
+        closeLabel: "Close",
         closeMethods: ['overlay', 'button', 'escape'],
-        closeLabel: "Lukk",
     });
+    // add a button
+    window.modalmodal.addFooterBtn('Lukk', 'tingle-btn tingle-btn--primary', function() {
+    // here goes some logic
+        window.modalmodal.close();
+    });
+
 
     uploadTestfileButton.onclick = function(event) {
         event.preventDefault();
@@ -94,6 +102,11 @@ function main() {
         for (var i = 0; i < btns.length; i++) {
             btns[i].click();
         }
+    }
+
+    createReportButton.onclick = function(event) {
+        event.preventDefault();
+        reportdialog();
     }
 
     createCreditsButton.onclick = function(event) {
@@ -146,6 +159,8 @@ function formatAudible(audible) {
            tr.classList.add('table-success');
         }
         tr.innerHTML = "<td>"+c+"<td class=duration>"+secs+"<td>"+service+"<td><button "+disabled+" onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
+        // keep the info around as a javascript object
+        tr.lastChild.timelinedata = elm;
         fileList.appendChild(tr);
     }
 }
@@ -254,12 +269,48 @@ function alertmsg(msg, errortype) {
 }
 
 function creditsdialog() {
+    // pop up  a dialog suitable for copy-paste into end credits
     var metadatarows = document.querySelectorAll('td.has-metadata');
     var s = "";
     var _labels = [];
     for(var i=0; i<metadatarows.length; i++) {
         var md = metadatarows[i].metadata;
         if(md.title===undefined) { continue }
+        if(md.productionmusic===true) {
+            if(_labels.indexOf(md.label) === -1) { // only register once per label
+                s = s + "<i>"+md.copyright+"</i> <br>&reg; <b>"+md.label+"</b><br>";
+            }
+        } else {
+            s = s + "<i>"+md.title+"</i> "+md.artist+" <br>&reg; <b>"+md.label+"</b> "+md.year;
+        }
+    }
+    console.log('got credits: %o', s);
+    window.modalmodal.setContent('<h1>End credits</h1>'+s);
+    window.modalmodal.open();
+}
+
+function runsheetdialog() {
+    // pop up a run sheet dialog, listing each track by inpoint on timeline on timeline
+    var metadatarows = document.querySelectorAll('td.has-metadata');
+    var s = "<h1>Tracks by order of entry on timeline</h1>";
+    s = s + '<table cellpadding=10><tr>';
+    s = s + '<th>In</th>';
+    s = s + '<th>Out</th>';
+    s = s + '<th>Duration</th>';
+    s = s + '<th>Clip details</th>';
+    s = s + '</tr>';
+    var reportrows = []; // this is where we keep the generated text of each report row
+    for(var i=0; i<metadatarows.length; i++) {
+        var md = metadatarows[i].metadata;
+        var td = metadatarows[i].timelinedata;
+        console.log("got timelinedata: %o", td);
+        var t;
+        if(md.title===undefined) {// TODO: let people choose ordinary files also 
+            t = td.filename; 
+        } else {
+            t = '\u00ab'+md.title+'\u00bb \u2117 '+td.musiclibrary
+            //_t = u'\u00ab%(title)s\u00bb \u2117 %(musiclibrary)s' % vars(r.metadata)
+        }
         if(md.productionmusic===true) {
             if(_labels.indexOf(md.label) === -1) { // only register once per label
                 s = s + "<i>"+md.copyright+"</i> &reg; <b>"+md.label+"</b><br>";
@@ -271,19 +322,65 @@ function creditsdialog() {
     console.log('got credits: %o', s);
     window.modalmodal.setContent('<h1>End credits</h1>'+s);
     window.modalmodal.open();
-
-    /*
-    for r in self.itercheckedrows():
-    if r.metadata.title is None: continue
-    if r.metadata.productionmusic:
-        if not r.metadata.label in _labels_seen:
-            s += u'%(musiclibrary)s\r\n\u2117 %(label)s\r\n\r\n' % vars(r.metadata)
-            _labels_seen.append(r.metadata.label)
-    else:
-        s += u'%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s\r\n\r\n' % vars(r.metadata)
-
-        */
 }
+
+function reportdialog() {
+    // pop up a prf report, detailing the metadata details
+    var metadatarows = document.querySelectorAll('td.has-metadata');
+    var reportrows = []; // this is where we keep the generated text of each report row
+    for(var i=0; i<metadatarows.length; i++) {
+        var md = metadatarows[i].metadata;
+        var td = metadatarows[i].timelinedata;
+        console.log("got timelinedata: %o", td);
+        var t = md.title || td.title;// TODO: let people choose ordinary files also 
+        var _s = "<div><dt>Title:</dt><dd>"+t+"</dd>";
+        if(md.identifier)
+            _s = _s + "<dt>Track identifier:</dt><dd>"+md.identifier+"</dd>";
+        if(md.artist)
+            _s = _s + "<dt>Artist:</dt><dd>"+md.artist+"</dd>";
+        if(md.albumname)
+            _s = _s + "<dt>Album name:</dt><dd>"+md.albumname+"</dd>";
+        if(md.lyricist)
+            _s = _s + "<dt>Lyricist:</dt><dd>"+md.lyricist+"</dd>";
+        if(md.composer)
+            _s = _s + "<dt>Composer:</dt><dd>"+md.composer+"</dd>";
+        if(md.label)
+            _s = _s + "<dt>Label:</dt><dd>"+md.label+"</dd>";
+        if(md.recordnumber)
+            _s = _s + "<dt>Recordnumber:</dt><dd>"+md.recordnumber+"</dd>";
+        if(md.copyright)
+            _s = _s + "<dt>Copyright owner:</dt><dd>"+md.copyright+"</dd>";
+        if(md.year)
+            _s = _s + "<dt>Released year:</dt><dd>"+md.year+"</dd>";
+        
+        _s = _s + "<br><b>Seconds in total</b>: "+secs2timestring(td.audible_length)+"</div><hr>";
+        reportrows.push(_s);
+    }
+    window.modalmodal.setContent("<h1>Track metadata sheet for PRF</h1>"+reportrows.join("\n"));
+    window.modalmodal.open();
+}
+
+/*
+clips = defaultdict(list)
+for r in self.itercheckedrows():
+    if r.metadata.title is None:
+        # not resolved, use file name
+        _t = repr(r.audioname)
+    else:
+        _t = u'\u00ab%(title)s\u00bb \u2117 %(musiclibrary)s' % vars(r.metadata)
+    for sc in r.subclips:
+        _s = '<tr><td><code>%s</code></td><td><code>%s</code></td>' % (sc['in'], sc['out'])
+        _s += '<td>%06.2f\"</td>' % (sc['durationsecs'])
+        _s += '<td>%s</td>' % _t
+        _s += "</tr>"
+        clips[sc['in']].append(_s)
+# sort all clips by inpoint
+inpoints = list(clips.keys())
+inpoints.sort()
+s = s + "".join(["".join(clips[inpoint]) for inpoint in inpoints])
+s = s + '</table>'
+*/
+
 </script>
 
 </head>
@@ -304,7 +401,7 @@ function creditsdialog() {
     <button type="submit" id="upload-testfile-button">Use testfile</button>
     <button id="resolve-all-button">Resolve all</button>
     <span class=mx-5></span>
-    <button disabled id="create-report-button">Generate metadata report</button>
+    <button id="create-report-button">Generate metadata report</button>
     <button id="create-credits-button">Generate credits</button>
     </form>
 
@@ -312,7 +409,7 @@ function creditsdialog() {
         ondrop="dropHandler(event);" 
         ondragover="dragoverHandler(event);" 
         ondragend="dragendHandler(event);">
-        <thead class="thead-inverse">
+        <thead class="thead-dark">
             <th>name</th>
             <th>audible length</th>
             <th>&reg;</th>
