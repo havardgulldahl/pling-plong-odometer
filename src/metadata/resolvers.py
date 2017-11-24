@@ -150,6 +150,7 @@ class ResolverBase(Core.QObject):
         _id = self.musicid(filename)
         if _id is None:
             return False
+        return 'http://localhost:8000/resolve/%s' % urllib.parse.quote(filename)
         if not hasattr(self, 'urlbase'):
             logging.error('tried to get url of %r', filename)
         try:
