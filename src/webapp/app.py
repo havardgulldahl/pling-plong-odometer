@@ -33,9 +33,11 @@ class AudioClip:
 
     def set_ranges(self, ranges):
         self.ranges = ranges
+        audible_frames = len(ranges) # in frames
+        self.audible_length = float(audible_frames) / ranges.framerate  # gives us seconds
 
     def is_audible(self):
-        return len(self.ranges) > 0
+        return self.audible_length > 0
 
     def is_resolvable(self):
         'Look at the filename and say if it is resolvable from one or the other service. Returns bool'
@@ -47,7 +49,7 @@ class AudioClip:
 
     def to_dict(self):
         return {'clipname': self.filename, 
-                'audible_length': len(self.ranges),
+                'audible_length': self.audible_length,
                 'resolvable': self.is_resolvable(),
                 'music_service': self.service,
                 'resolve':'/resolve/{}'.format(quote(self.filename)),
