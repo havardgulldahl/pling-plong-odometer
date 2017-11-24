@@ -33,6 +33,23 @@ function removeChildren(node) {
     }
 }
 
+function startProgress(max) {
+    console.log('creating progress bar with max=%o', max);
+   document.getElementById('th-metadata').innerHTML = "<progress id=progress value=0 class=align-bottom max="+max+"></progress>";
+}
+
+function updateProgress(val) {
+    console.log('updating progress bar with val=%o', val);
+    var p = document.getElementById('progress');
+    var newval = parseInt(p.getAttribute('value'))+val;
+    if(newval == p.getAttribute('max')) {
+        // all resolve tasks are finished, remove progressbar
+        p.parentElement.innerHTML = 'metadata';
+    } else {
+        p.setAttribute('value', newval);
+    }
+}
+
 function main() {
     var form = document.getElementById('file-form');
     var fileSelect = document.getElementById('file-select');
@@ -99,10 +116,12 @@ function main() {
         event.preventDefault();
         // resolve all resolvable tracks
         var resolvables = document.querySelectorAll('#files-list .metadata.resolvable'); 
+        startProgress(resolvables.length);
         for (var i = 0; i < resolvables.length; i++) {
             var url = resolvables[i].timelinedata.resolve;
             resolve(url);
         }
+
     }
 
     createReportButton.onclick = function(event) {
@@ -202,6 +221,7 @@ function resolve(url) {
             output.innerHTML = '<i>'+xhr.statusText+'</i>';
             output.classList.add('text-white', 'bg-danger');
         }
+        updateProgress(+1);
     };
 
     // Send 
@@ -425,7 +445,7 @@ s = s + '</table>'
             <th>name</th>
             <th>audible length</th>
             <th>&reg;</th>
-            <th>metadata</th>
+            <th id="th-metadata">metadata</th>
         </thead>
         <tbody id=files-list style="font-size:80%">
 
