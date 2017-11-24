@@ -35,12 +35,12 @@ function removeChildren(node) {
 }
 
 function startProgress(max) {
-    console.log('creating progress bar with max=%o', max);
+   //console.log('creating progress bar with max=%o', max);
    document.getElementById('th-metadata').innerHTML = "<progress id=progress value=0 class=align-bottom max="+max+"></progress>";
 }
 
 function updateProgress(val) {
-    console.log('updating progress bar with val=%o', val);
+    //console.log('updating progress bar with val=%o', val);
     var p = document.getElementById('progress');
     var newval = parseInt(p.getAttribute('value'))+val;
     if(newval == p.getAttribute('max')) {
@@ -113,18 +113,6 @@ function main() {
         submit(formData)
         return false;
     }
-    resolveAllButton.onclick = function(event) {
-        event.preventDefault();
-        // resolve all resolvable tracks
-        var resolvables = document.querySelectorAll('#files-list .metadata.resolvable'); 
-        startProgress(resolvables.length);
-        for (var i = 0; i < resolvables.length; i++) {
-            var url = resolvables[i].timelinedata.resolve;
-            resolve(url);
-        }
-
-    }
-
     createReportButton.onclick = function(event) {
         event.preventDefault();
         reportdialog();
@@ -136,6 +124,18 @@ function main() {
     }
 
 }
+
+function resolveAll() {
+    // resolve all resolvable tracks
+    var resolvables = document.querySelectorAll('#files-list .metadata.resolvable'); 
+    startProgress(resolvables.length);
+    for (var i = 0; i < resolvables.length; i++) {
+        var url = resolvables[i].timelinedata.resolve;
+        resolve(url);
+    }
+
+}
+
 
 function submit(formData) {
     // Set up the request.
@@ -183,6 +183,7 @@ function formatAudible(audible) {
         }
         fileList.appendChild(tr);
     }
+    resolveAll();
 }
 
 function resolve(url) {
@@ -424,7 +425,7 @@ s = s + '</table>'
                   <div class="navbar-nav">
                     <a class="nav-item nav-link active" href="#">Analyse <span class="sr-only">(current)</span></a>
                     <a class="nav-item nav-link disabled" href="#">Hjelp</a>
-                    <a class="nav-item nav-link" href="/docs" title="JSON REST API documentation (swagger)">JSON docs</a>
+                    <a class="nav-item nav-link" href="/doc" title="JSON REST API documentation (swagger)">JSON docs</a>
                   </div>
                 </div>
               </nav>
@@ -437,7 +438,6 @@ s = s + '</table>'
     <input type="hidden" name="usetestfile" value="0">
     <button type="submit" id="upload-button">Upload</button>
     <button type="submit" id="upload-testfile-button">Use testfile</button>
-    <button id="resolve-all-button">Resolve all</button>
     <span class=mx-5></span>
     <button id="create-report-button">Generate metadata report</button>
     <button id="create-credits-button">Generate credits</button>
