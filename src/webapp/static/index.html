@@ -45,7 +45,7 @@ function main() {
 
     // set up empty table
     var tr = document.createElement('tr');
-    tr.innerHTML = '<td>|<td><td><td><td>';
+    tr.innerHTML = '<td>|<td><td><td>';
     for (var i=0; i<60; i++) {
         fileList.appendChild(tr.cloneNode(true));
     }
@@ -98,9 +98,10 @@ function main() {
     resolveAllButton.onclick = function(event) {
         event.preventDefault();
         // resolve all resolvable tracks
-        var btns = document.querySelectorAll('#files-list button:not([disabled])');
-        for (var i = 0; i < btns.length; i++) {
-            btns[i].click();
+        var resolvables = document.querySelectorAll('#files-list .metadata.resolvable'); 
+        for (var i = 0; i < resolvables.length; i++) {
+            var url = resolvables[i].timelinedata.resolve;
+            resolve(url);
         }
     }
 
@@ -153,14 +154,13 @@ function formatAudible(audible) {
         var r = elm.resolve;
         var secs = secs2timestring(elm.audible_length);
         var service = elm.music_service || "<i>Unknown</i>";
-        var resolvable = elm.resolvable ? "&rarr;" : "&times;";
-        var disabled = elm.resolvable ? "" : " disabled ";
-        if(elm.resolvable) {
-           tr.classList.add('table-success');
-        }
-        tr.innerHTML = "<td>"+c+"<td class=duration>"+secs+"<td>"+service+"<td><button "+disabled+" onclick=resolve('"+r+"')>"+resolvable+"</button><td id='o-"+window.btoa(r)+"'>";
+        tr.innerHTML = "<td>"+c+"<td class=duration>"+secs+"<td>"+service+"<td class=metadata id='o-"+window.btoa(r)+"'>";
         // keep the info around as a javascript object
         tr.lastChild.timelinedata = elm;
+        if(elm.resolvable) {
+           tr.classList.add('table-success');
+           tr.lastChild.classList.add('resolvable');
+        }
         fileList.appendChild(tr);
     }
 }
@@ -413,7 +413,6 @@ s = s + '</table>'
             <th>name</th>
             <th>audible length</th>
             <th>&reg;</th>
-            <th>resolvable?</th>
             <th>metadata</th>
         </thead>
         <tbody id=files-list style="font-size:80%">
