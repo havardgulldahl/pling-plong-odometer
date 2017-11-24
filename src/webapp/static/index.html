@@ -177,9 +177,9 @@ function resolve(url) {
     xhr.onload = function () {
         if (xhr.status === 200) {
             // File(s) uploaded.
-            var metadata = JSON.parse(xhr.response);
-            console.log('got metadata %o', metadata);
-            var md = metadata['metadata'];
+            var response = JSON.parse(xhr.response);
+            console.log('got response %o', response);
+            var md = response['metadata'];
             output.classList.add('has-metadata');
             output.metadata = md;
             if(md.productionmusic === true) {
@@ -189,10 +189,18 @@ function resolve(url) {
                 output.innerHTML = "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year;
                 //s += u'%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s\r\n\r\n' % vars(r.metadata)
             }
+        } else if(xhr.status === 400) {
+            // server had issues with our request
+            var response = JSON.parse(xhr.response);
+            console.log('got error response %o', response);
+            var e = response['error'];
+            output.classList.add('text-danger');
+            output.innerHTML = '<b>'+e.type+'</b>: '+e.args;
 
         } else {
             console.error("server returned %o -> %o", xhr.status, xhr.statusText);
-            output.innerHTML = '<i style="color:red">'+xhr.statusText+'</i>';
+            output.innerHTML = '<i>'+xhr.statusText+'</i>';
+            output.classList.add('text-danger');
         }
     };
 

@@ -6,7 +6,8 @@ import time
 import pathlib
 from urllib.parse import quote
 
-from aiohttp_swagger import *
+import aiohttp.client_exceptions
+from aiohttp_swagger import swagger_path, setup_swagger
 
 from metadataresolvers import findResolver, getResolvers
 from model import TrackMetadata
@@ -71,9 +72,17 @@ async def handle_resolve(request):
     # add passwords for services that need it for lookup to succeed
     # run resolver
     app.logger.info("resolve audioname {!r} with resolver {!r}".format(audioname, resolver))
-    metadata = await resolver.resolve(audioname)
+    try:
+        metadata = await resolver.resolve(audioname)
+    except aiohttp.client_exceptions.ClientConnectorError as e:
+        return web.json_response({
+            'error': {'type':e.__class__.__name__,
+                       'args':e.args},
+            'metadata': []
+        },status=400)
     return web.json_response({
-        'metadata': vars(metadata)
+        'metadata': vars(metadata),
+        'error': [],
     })
 
 app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
