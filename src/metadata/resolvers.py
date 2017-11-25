@@ -166,8 +166,14 @@ class ResolverBase(Core.QObject):
         if statuscode == 404:
             self.trackFailed.emit(self.filename)
             self.error.emit(self.filename, 'Not found')
+            return
+        error = json.loads(data).get('error', [])
+        if len(error) > 0:
+            self.trackFailed.emit(self.filename)
+            self.error.emit(self.filename, '{}: {}'.format(error["type"], error["args"]))
+            return
         try:
-            md = json.loads(data).get('metadata', None)
+            md = json.loads(data).get('metadata', [])
             del(md['_retrieved'])
             self.trackResolved.emit(self.filename, TrackMetadata(**md))
         except json.decoder.JSONDecodeError:
