@@ -152,6 +152,7 @@ function main() {
         // based on public domain code from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
         var curFiles = document.getElementById('file-select').files;
         var preview = document.getElementById('preview');
+        var btn = document.getElementById('upload-button');
         if(curFiles.length === 0) {
           preview.innerHTML = "<b>no files selected</b>";
         } else {
@@ -162,7 +163,8 @@ function main() {
                 preview.innerText = 'File ok (' + returnFileSize(chosenFile.size) + ')';
                 preview.setAttribute('title', 'Full file name: '+chosenFile.name);
                 preview.setAttribute('class', 'text-success');
-                document.getElementById('upload-button').removeAttribute('disabled');
+                btn.removeAttribute('disabled');
+                btn.setAttribute('class', 'btn btn-primary');
             } else {
                 preview.innerText = 'Not a valid file type';
                 preview.setAttribute('class', 'text-danger');
@@ -195,13 +197,15 @@ function submit(formData) {
     xhr.onload = function () {
         if (xhr.status === 200) {
             // File(s) uploaded.
-            uploadButton.innerHTML = 'Get started';
+            uploadButton.innerText = 'Analysed ✔';
+            uploadButton.setAttribute('disabled', 'disabled');
+            uploadButton.classList.replace('btn-primary','btn-secondary');
             var audio = JSON.parse(xhr.response);
             console.log('got audio response: %o', audio);
             return formatAudible(audio["audioclips"]);
         } else {
             alertmsg("server returned "+ xhr.status+": "+xhr.statusText, 'danger');
-            uploadButton.innerHTML = 'Get started';
+            uploadButton.innerText = 'Get started';
         }
     };
 
