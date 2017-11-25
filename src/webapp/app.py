@@ -22,7 +22,8 @@ from aiohttp import web
 
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
-                      client_max_size=20*(1024**2)) # max 20 megs
+                      client_max_size=20*(1024**2)) # upload size max 20 megs
+clientSession = aiohttp.ClientSession()
 
 APIVERSION = '0.1'
 
@@ -71,6 +72,7 @@ async def handle_resolve(request):
     audioname = request.match_info.get('audioname', None) # match path string, see the respective route
     # find resolver
     resolver = findResolver(audioname)
+    resolver.setSession(clientSession) # use the same session object for speedups
     # add passwords for services that need it for lookup to succeed
     # run resolver
     app.logger.info("resolve audioname {!r} with resolver {!r}".format(audioname, resolver))
