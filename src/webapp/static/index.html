@@ -17,6 +17,7 @@
     }
 
     progress { width: 90%; }
+
 </style>
 
 <script type="text/javascript">
@@ -52,6 +53,30 @@ function updateProgress(val) {
     }
 }
 
+function returnFileSize(number) {
+    if(number < 1024) {
+      return number + 'bytes';
+    } else if(number > 1024 && number < 1048576) {
+      return (number/1024).toFixed(1) + 'KB';
+    } else if(number > 1048576) {
+      return (number/1048576).toFixed(1) + 'MB';
+    }
+}
+
+var fileTypes = [
+    'text/xml',
+    'application/xml'
+  ]
+  
+function validFileType(file) {
+    for(var i = 0; i < fileTypes.length; i++) {
+        if(file.type === fileTypes[i]) {
+        return true;
+        }
+    }
+    return false;
+}
+
 function main() {
     var form = document.getElementById('file-form');
     var fileSelect = document.getElementById('file-select');
@@ -82,7 +107,6 @@ function main() {
         window.modalmodal.close();
     });
 
-
     uploadTestfileButton.onclick = function(event) {
         event.preventDefault();
         // empty files table
@@ -97,7 +121,7 @@ function main() {
         event.preventDefault();
 
         // Update button text.
-        uploadButton.innerHTML = 'Uploading...';
+        uploadButton.innerHTML = 'Reading...';
 
         // The rest of the code will go here...
         // Get the selected files from the input.
@@ -124,6 +148,28 @@ function main() {
         creditsdialog();
     }
 
+    fileSelect.onchange = function(event) {
+        // based on public domain code from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
+        var curFiles = document.getElementById('file-select').files;
+        var preview = document.getElementById('preview');
+        if(curFiles.length === 0) {
+          preview.innerHTML = "<b>no files selected</b>";
+        } else {
+            // empty files table
+            removeChildren(fileList);
+            var chosenFile = curFiles[0];
+            if(validFileType(chosenFile)) {
+                preview.innerText = 'File ok (' + returnFileSize(chosenFile.size) + ')';
+                preview.setAttribute('title', 'Full file name: '+chosenFile.name);
+                preview.setAttribute('class', 'text-success');
+                document.getElementById('upload-button').removeAttribute('disabled');
+            } else {
+                preview.innerText = 'Not a valid file type';
+                preview.setAttribute('class', 'text-danger');
+                document.getElementById('upload-button').setAttribute('disabled', 'disabled');
+            }
+        }
+    }
 }
 
 function resolveAll() {
@@ -149,13 +195,13 @@ function submit(formData) {
     xhr.onload = function () {
         if (xhr.status === 200) {
             // File(s) uploaded.
-            uploadButton.innerHTML = 'Upload';
+            uploadButton.innerHTML = 'Get started';
             var audio = JSON.parse(xhr.response);
             console.log('got audio response: %o', audio);
             return formatAudible(audio["audioclips"]);
         } else {
             alertmsg("server returned "+ xhr.status+": "+xhr.statusText, 'danger');
-            uploadButton.innerHTML = 'Upload';
+            uploadButton.innerHTML = 'Get started';
         }
     };
 
@@ -441,10 +487,16 @@ function finishedResolving() {
 
     <form id="file-form" class="form-inline" 
           enctype="multipart/form-data" action="/analyze" method="POST">
-        <input type="file" class="form-control" id="file-select" name="xmeml">
+        <input type="file" 
+               class="form-control" 
+               id="file-select" title="Choose timeline data (XMEML)"
+               accept=".xml,text/xml,application/xml"
+               name="xmeml">
         <input type="hidden" name="usetestfile" value="0">
-        <button type="submit" class="btn btn-primary" id="upload-button">Upload</button>
-        <button type="submit" class="btn btn-outline-primary" id="upload-testfile-button">Use testfile</button>
+        <span id="preview" class=text-secondary>Please select a file</span>
+        <span class=mx-5></span>
+        <button type="submit" class="btn btn-primary" id="upload-button" disabled>Get started</button>
+        <button type="submit" class="invisible btn btn-outline-primary" id="upload-testfile-button">Use testfile</button>
         <span class=mx-5></span>
         <button type="button" disabled class="btn btn-info" id="create-report-button">Generate metadata report</button>
         <span class=mx-1></span>
