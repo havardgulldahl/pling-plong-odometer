@@ -104,6 +104,7 @@ function main() {
         window.modalmodal.close();
     });
 
+    /*
     uploadTestfileButton.onclick = function(event) {
         event.preventDefault();
         // empty files table
@@ -113,6 +114,7 @@ function main() {
         submit(formData);
         return false;
     }
+    */
 
     form.onsubmit = function(event) {
         event.preventDefault();
@@ -150,6 +152,7 @@ function main() {
         var curFiles = document.getElementById('file-select').files;
         var preview = document.getElementById('preview');
         var btn = document.getElementById('upload-button');
+        btn.innerText = 'Get started';
         if(curFiles.length === 0) {
           preview.innerHTML = "<b>no files selected</b>";
         } else {
@@ -197,6 +200,7 @@ function submit(formData) {
             uploadButton.innerText = 'Analysed ✔';
             uploadButton.setAttribute('disabled', 'disabled');
             uploadButton.classList.replace('btn-primary','btn-secondary');
+
             var audio = JSON.parse(xhr.response);
             console.log('got audio response: %o', audio);
             return formatAudible(audio["audioclips"]);
@@ -283,6 +287,7 @@ function dropHandler(ev) {
     document.querySelector('body').classList.remove('dragover');
     // If dropped items aren't files, reject them
     var dt = ev.dataTransfer;
+    var preview = document.getElementById('preview');
     // Create a new FormData object.
     var formData = new FormData();
     if (dt.items) {
@@ -304,7 +309,9 @@ function dropHandler(ev) {
         formData.append('xmeml', f, f.name);
       }  
     }
-    submit(formData)
+    preview.innerText = "Dropped "+f.name;
+    preview.setAttribute('class', 'text-success');
+    submit(formData);
   }
 
   function dragoverHandler(ev) {
@@ -497,11 +504,11 @@ function finishedResolving() {
                accept=".xml,text/xml,application/xml"
                name="xmeml">
         <input type="hidden" name="usetestfile" value="0">
+        <span class=mx-1></span>
         <span id="preview" class=text-secondary>Please select a file</span>
-        <span class=mx-5></span>
+        <span class=mx-1></span>
         <button type="submit" class="btn btn-primary" id="upload-button" disabled>Get started</button>
-        <button type="submit" class="invisible btn btn-outline-primary" id="upload-testfile-button">Use testfile</button>
-        <span class=mx-5></span>
+        <span class=mx-1></span>
         <button type="button" disabled class="btn btn-info" id="create-report-button">Generate metadata report</button>
         <span class=mx-1></span>
         <button type="button" disabled class="btn btn-info" id="create-credits-button">Generate credits</button>
