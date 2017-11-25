@@ -91,13 +91,6 @@ function main() {
     var createReportButton = document.getElementById('create-report-button');
     var createCreditsButton = document.getElementById('create-credits-button');
 
-    // set up empty table
-    var tr = document.createElement('tr');
-    tr.innerHTML = '<td>|<td><td><td>';
-    for (var i=0; i<60; i++) {
-        fileList.appendChild(tr.cloneNode(true));
-    }
-
     // create empty modal for later
     window.modalmodal = new tingle.modal({
         footer: true,
