@@ -283,7 +283,7 @@ function resolve(url) {
 function dropHandler(ev) {
     console.log("Drop");
     ev.preventDefault();
-    document.querySelector('table').classList.remove('dragover');
+    document.querySelector('body').classList.remove('dragover');
     // If dropped items aren't files, reject them
     var dt = ev.dataTransfer;
     // Create a new FormData object.
@@ -314,15 +314,15 @@ function dropHandler(ev) {
     console.log("dragOver");
     // Prevent default select and drag behavior
     ev.preventDefault();
-    document.querySelector('table').classList.add('dragover');
+    document.querySelector('body').classList.add('dragover');
     window.setTimeout(function() {
-        document.querySelector('table').classList.remove('dragover');
+        document.querySelector('body').classList.remove('dragover');
     }, 10000)
   }
 
   function dragendHandler(ev) {
     console.log("dragEnd");
-    document.querySelector('table').classList.remove('dragover');
+    document.querySelector('body').classList.remove('dragover');
     // Remove all of the drag data
     var dt = ev.dataTransfer;
     if (dt.items) {
@@ -470,7 +470,10 @@ function finishedResolving() {
 </script>
 
 </head>
-<body>
+<body
+    ondrop="dropHandler(event);" 
+    ondragover="dragoverHandler(event);" 
+    ondragend="dragendHandler(event);">
 
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <a class="navbar-brand" href="#">♫ ♪ Odometer</a>
@@ -507,10 +510,7 @@ function finishedResolving() {
         <button type="button" disabled class="btn btn-info" id="create-credits-button">Generate credits</button>
     </form>
 
-    <table class="table table-striped table-sm"
-        ondrop="dropHandler(event);" 
-        ondragover="dragoverHandler(event);" 
-        ondragend="dragendHandler(event);">
+    <table class="table table-striped table-sm">
         <col style="width:40%">
         <col style="width:10%">
         <col style="width:10%">
