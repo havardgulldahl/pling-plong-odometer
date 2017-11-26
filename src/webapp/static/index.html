@@ -160,15 +160,15 @@ function main() {
             removeChildren(fileList);
             var chosenFile = curFiles[0];
             if(validFileType(chosenFile)) {
-                preview.innerText = 'File ok (' + returnFileSize(chosenFile.size) + ')';
+                preview.innerText = 'File type OK (' + returnFileSize(chosenFile.size) + ')';
                 preview.setAttribute('title', 'Full file name: '+chosenFile.name);
-                preview.setAttribute('class', 'text-success');
+                preview.setAttribute('class', 'text-success align-text-top');
                 btn.removeAttribute('disabled');
                 btn.setAttribute('class', 'btn btn-primary');
                 btn.click();
             } else {
                 preview.innerText = 'Not a valid file type';
-                preview.setAttribute('class', 'text-danger');
+                preview.setAttribute('class', 'text-danger align-text-top');
                 document.getElementById('upload-button').setAttribute('disabled', 'disabled');
             }
         }
@@ -498,22 +498,27 @@ function finishedResolving() {
     <div id=alertmsg class="fade show alert" role="alert" hidden>
     </div>
 
-    <form id="file-form" class="form-inline" 
+    <form id="file-form" class="form" 
           enctype="multipart/form-data" action="/analyze" method="POST">
-        <input type="file" 
-               class="form-control" 
-               id="file-select" title="Choose timeline data (XMEML)"
-               accept=".xml,text/xml,application/xml"
-               name="xmeml">
-        <input type="hidden" name="usetestfile" value="0">
-        <span class=mx-1></span>
-        <span id="preview" class=text-secondary>Please select a file</span>
-        <span class=mx-1></span>
-        <button type="submit" class="btn btn-primary invisible" id="upload-button" disabled>Get started</button>
-        <span class=mx-1></span>
-        <button type="button" disabled class="btn btn-info" id="create-report-button">Generate metadata report</button>
-        <span class=mx-1></span>
-        <button type="button" disabled class="btn btn-info" id="create-credits-button">Generate credits</button>
+        <div class="row">
+            <div class="col-3">
+                <input type="file" 
+                    class="form-control" 
+                    id="file-select" title="Choose timeline data (XMEML)"
+                    accept=".xml,text/xml,application/xml"
+                    name="xmeml">
+            </div>
+            <div class="col-5">
+                <span id="preview" class="text-secondary align-text-top">Please select a file</span>
+                <span class=mx-1></span>
+                <button type="submit" class="btn btn-primary invisible" id="upload-button" disabled>Get started</button>
+            </div>
+            <div class="col-4">
+                <button type="button" disabled class="btn btn-primary" id="create-report-button">Generate metadata report</button>
+                <span class=mx-1></span>
+                <button type="button" disabled class="btn btn-primary" id="create-credits-button">Generate credits</button>
+            </div>
+        </div>
     </form>
 
     <table class="table table-striped table-sm">
