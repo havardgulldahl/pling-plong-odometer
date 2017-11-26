@@ -309,6 +309,7 @@ function dropHandler(ev) {
         formData.append('xmeml', f, f.name);
       }  
     }
+    document.getElementById('file-select').value = "";
     preview.innerText = "Dropped "+f.name;
     preview.setAttribute('class', 'text-success');
     submit(formData);
