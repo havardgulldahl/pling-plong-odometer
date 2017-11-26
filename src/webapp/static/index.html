@@ -165,6 +165,7 @@ function main() {
                 preview.setAttribute('class', 'text-success');
                 btn.removeAttribute('disabled');
                 btn.setAttribute('class', 'btn btn-primary');
+                btn.click();
             } else {
                 preview.innerText = 'Not a valid file type';
                 preview.setAttribute('class', 'text-danger');
@@ -508,7 +509,7 @@ function finishedResolving() {
         <span class=mx-1></span>
         <span id="preview" class=text-secondary>Please select a file</span>
         <span class=mx-1></span>
-        <button type="submit" class="btn btn-primary" id="upload-button" disabled>Get started</button>
+        <button type="submit" class="btn btn-primary invisible" id="upload-button" disabled>Get started</button>
         <span class=mx-1></span>
         <button type="button" disabled class="btn btn-info" id="create-report-button">Generate metadata report</button>
         <span class=mx-1></span>
