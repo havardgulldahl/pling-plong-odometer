@@ -1069,7 +1069,14 @@ class ExtremeMusicResolver(ResolverBase):
             self.session.logincookie = await self.get_session_cookie()
         # get internal music id
         musicid = self.musicid(filename)
-        exid = await get_internal_musicid(musicid)
+        try:
+            exid = await get_internal_musicid(musicid)
+        except aiohttp.client_exceptions.ClientResponseError as e:
+            # we might have hit a client session timeout
+            if e.code == 401: # yes, we need to get a new session cookie and retry the request
+                self.session.logincookie = await self.get_session_cookie()
+                exid = await get_internal_musicid(musicid)
+
         # look up internal music id to get metadata
         metadata  = await get_metadata(exid, musicid)
         return metadata
