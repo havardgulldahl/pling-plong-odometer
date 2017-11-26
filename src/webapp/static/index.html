@@ -96,10 +96,7 @@ function validFileType(file) {
 function main() {
     var form = document.getElementById('file-form');
     var fileSelect = document.getElementById('file-select');
-    var uploadButton = document.getElementById('upload-button');
-    var uploadTestfileButton = document.getElementById('upload-testfile-button');
     var fileList = document.getElementById('files-list');
-    var resolveAllButton = document.getElementById('resolve-all-button');
     var createReportButton = document.getElementById('create-report-button');
     var createCreditsButton = document.getElementById('create-credits-button');
 
@@ -116,39 +113,6 @@ function main() {
         window.modalmodal.close();
     });
 
-    /*
-    uploadTestfileButton.onclick = function(event) {
-        event.preventDefault();
-        // empty files table
-        removeChildren(fileList);
-        var formData = new FormData();
-        formData.append('usetestfile', '1');
-        submit(formData);
-        return false;
-    }
-    */
-
-    form.onsubmit = function(event) {
-        event.preventDefault();
-
-        // Update button text.
-        uploadButton.innerHTML = 'Reading...';
-
-        // The rest of the code will go here...
-        // Get the selected files from the input.
-        var files = fileSelect.files;
-        // Create a new FormData object.
-        var formData = new FormData();
-        // Loop through each of the selected files.
-        for (var i = 0; i < files.length; i++) {
-            var file = files[i];
-
-            // Add the file to the request.
-            formData.append('xmeml', file, file.name);
-        }
-        submit(formData)
-        return false;
-    }
     createReportButton.onclick = function(event) {
         event.preventDefault();
         reportdialog();
@@ -160,28 +124,28 @@ function main() {
     }
 
     fileSelect.onchange = function(event) {
+        // react to file select changes
         // based on public domain code from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
-        var curFiles = document.getElementById('file-select').files;
+        var curFiles = fileSelect.files;
         var preview = document.getElementById('preview');
-        var btn = document.getElementById('upload-button');
-        btn.innerText = 'Get started';
         if(curFiles.length === 0) {
           preview.innerHTML = "<b>no files selected</b>";
         } else {
             // empty files table
             removeChildren(fileList);
             var chosenFile = curFiles[0];
-            if(validFileType(chosenFile)) {
+            if(!validFileType(chosenFile)) {
+                preview.innerText = 'Not a valid file type';
+                preview.setAttribute('class', 'text-danger');
+            } else {
                 preview.innerText = 'File OK (' + returnFileSize(chosenFile.size) + ')';
                 preview.setAttribute('title', 'Full file name: '+chosenFile.name);
                 preview.setAttribute('class', 'text-success');
-                btn.removeAttribute('disabled');
-                btn.setAttribute('class', 'btn btn-primary');
-                btn.click();
-            } else {
-                preview.innerText = 'Not a valid file type';
-                preview.setAttribute('class', 'text-danger');
-                document.getElementById('upload-button').setAttribute('disabled', 'disabled');
+                // Create a new FormData object.
+                var formData = new FormData();
+                // Add the file to the request.
+                formData.append('xmeml', chosenFile, chosenFile.name);
+                submit(formData)
             }
         }
     }
@@ -195,41 +159,34 @@ function resolveAll() {
         var url = resolvables[i].timelinedata.resolve;
         resolve(url);
     }
-
 }
 
-
 function submit(formData) {
+    // send the already prepared form data to the json endpoint for analysis
     // Set up the request.
     var xhr = new XMLHttpRequest();
     // Open the connection.
     xhr.open('POST', '/analyze', true);
 
-    var uploadButton = document.getElementById('upload-button');
     // Set up a handler for when the request finishes.
     xhr.onload = function () {
         if (xhr.status === 200) {
             // File(s) uploaded.
-            uploadButton.innerText = 'Analysed ✔';
-            uploadButton.setAttribute('disabled', 'disabled');
-            uploadButton.classList.replace('btn-primary','btn-secondary');
-
             var audio = JSON.parse(xhr.response);
             console.log('got audio response: %o', audio);
             return formatAudible(audio["audioclips"]);
         } else {
             alertmsg("server returned "+ xhr.status+": "+xhr.statusText, 'danger');
-            uploadButton.innerText = 'Get started';
         }
     };
-
     // Send the Data.
     xhr.send(formData);
 }
 
 function formatAudible(audible) {
+    // get a json document of the audio file structure of the parsed xml and render it
     var fileList = document.getElementById('files-list');
-    // empty files table
+    // empty the files table
     removeChildren(fileList);
 
     for(var i=0; i<audible.length; i++) {
@@ -252,6 +209,7 @@ function formatAudible(audible) {
 }
 
 function resolve(url) {
+    // get an url, and parse the JSON contents into a metadata string
     // Set up the request.
     var xhr = new XMLHttpRequest();
     // Open the connection.
@@ -295,7 +253,7 @@ function resolve(url) {
 }
 
 function dropHandler(ev) {
-    console.log("Drop");
+    // handle a dropped file
     ev.preventDefault();
     document.querySelector('body').classList.remove('dragover');
     // If dropped items aren't files, reject them
@@ -321,7 +279,6 @@ function dropHandler(ev) {
     } else {
         preview.innerText = 'Not a valid file type';
         preview.setAttribute('class', 'text-danger');
-        document.getElementById('upload-button').setAttribute('disabled', 'disabled');
     }
   }
 
@@ -517,11 +474,8 @@ function finishedResolving() {
                     accept=".xml,text/xml,application/xml"
                     name="xmeml">
             </div>
-            <div class="col-4">
+            <div class="col-5">
                 <span id="preview" class="text-secondary">Please select a file</span>
-            </div>
-            <div class="col-1">
-                <button type="submit" class="btn btn-primary invisible" id="upload-button" disabled>Get started</button>
             </div>
             <div class="col-4">
                 <button type="button" disabled class="btn btn-primary" id="create-report-button">Generate metadata report</button>
