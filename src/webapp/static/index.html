@@ -16,6 +16,11 @@
     .dragover { border: 6px double blue;
     }
 
+    #preview { vertical-align: bottom;
+               vertical-align: -webkit-baseline-middle;
+        
+    }
+
     progress { width: 90%; }
 
     body { height: 100vh;
@@ -31,6 +36,13 @@ function secs2timestring(duration) {
     var mins = parseInt(duration / 60);
     var secs = duration % 60;
     return mins.toString() + ":" + secs.toString();
+}
+
+function slug(s, len) {
+    // make sure text is not longer than len (default: 15) and return with ellipsis
+    len = len || 15;
+    if(s.length < len) return s;
+    return s.substr(0, len-1) + "…";
 }
 
 function removeChildren(node) {
@@ -160,15 +172,15 @@ function main() {
             removeChildren(fileList);
             var chosenFile = curFiles[0];
             if(validFileType(chosenFile)) {
-                preview.innerText = 'File type OK (' + returnFileSize(chosenFile.size) + ')';
+                preview.innerText = 'File OK (' + returnFileSize(chosenFile.size) + ')';
                 preview.setAttribute('title', 'Full file name: '+chosenFile.name);
-                preview.setAttribute('class', 'text-success align-text-top');
+                preview.setAttribute('class', 'text-success');
                 btn.removeAttribute('disabled');
                 btn.setAttribute('class', 'btn btn-primary');
                 btn.click();
             } else {
                 preview.innerText = 'Not a valid file type';
-                preview.setAttribute('class', 'text-danger align-text-top');
+                preview.setAttribute('class', 'text-danger');
                 document.getElementById('upload-button').setAttribute('disabled', 'disabled');
             }
         }
@@ -289,31 +301,28 @@ function dropHandler(ev) {
     // If dropped items aren't files, reject them
     var dt = ev.dataTransfer;
     var preview = document.getElementById('preview');
+    var chosenFile;
     // Create a new FormData object.
-    var formData = new FormData();
     if (dt.items) {
-      // Use DataTransferItemList interface to access the file(s)
-      for (var i=0; i < dt.items.length; i++) {
-        if (dt.items[i].kind == "file") {
-          var f = dt.items[i].getAsFile();
-          console.log("... file[" + i + "].name = %o",f);
-          // Add the file to the request.
-          formData.append('xmeml', f, f.name);
-        }
-      }
+        // Use DataTransferItemList interface to access the file(s)
+        chosenFile = dt.items[0].getAsFile();
     } else {
-      // Use DataTransfer interface to access the file(s)
-      for (var i=0; i < dt.files.length; i++) {
-        var f = dt.files[i];
-        console.log("... file[" + i + "].name = %o",f);
-        // Add the file to the request.
-        formData.append('xmeml', f, f.name);
-      }  
+        // Use DataTransfer interface to access the file(s)
+        chosenFile = dt.files[0];
     }
-    document.getElementById('file-select').value = "";
-    preview.innerText = "Dropped "+f.name;
-    preview.setAttribute('class', 'text-success');
-    submit(formData);
+    if(validFileType(chosenFile)) {
+        preview.innerText = slug(chosenFile.name, 25) + ' OK – ' + returnFileSize(chosenFile.size);
+        preview.setAttribute('title', 'Full file name: '+chosenFile.name);
+        preview.setAttribute('class', 'text-success');
+        document.getElementById('file-select').value = "";
+        var formData = new FormData();
+        formData.append('xmeml', chosenFile, chosenFile.name);
+        submit(formData);
+    } else {
+        preview.innerText = 'Not a valid file type';
+        preview.setAttribute('class', 'text-danger');
+        document.getElementById('upload-button').setAttribute('disabled', 'disabled');
+    }
   }
 
   function dragoverHandler(ev) {
@@ -500,7 +509,7 @@ function finishedResolving() {
 
     <form id="file-form" class="form" 
           enctype="multipart/form-data" action="/analyze" method="POST">
-        <div class="row">
+        <div class="form-row">
             <div class="col-3">
                 <input type="file" 
                     class="form-control" 
@@ -508,14 +517,14 @@ function finishedResolving() {
                     accept=".xml,text/xml,application/xml"
                     name="xmeml">
             </div>
-            <div class="col-5">
-                <span id="preview" class="text-secondary align-text-top">Please select a file</span>
-                <span class=mx-1></span>
+            <div class="col-4">
+                <span id="preview" class="text-secondary">Please select a file</span>
+            </div>
+            <div class="col-1">
                 <button type="submit" class="btn btn-primary invisible" id="upload-button" disabled>Get started</button>
             </div>
             <div class="col-4">
                 <button type="button" disabled class="btn btn-primary" id="create-report-button">Generate metadata report</button>
-                <span class=mx-1></span>
                 <button type="button" disabled class="btn btn-primary" id="create-credits-button">Generate credits</button>
             </div>
         </div>
