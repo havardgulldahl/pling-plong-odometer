@@ -23,7 +23,13 @@ from aiohttp import web
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
                       client_max_size=20*(1024**2)) # upload size max 20 megs
+                    
 clientSession = aiohttp.ClientSession()
+async def on_shutdown(app):
+    'Cleaning up right before shutdown'
+    await clientSession.close()
+
+app.on_shutdown.append(on_shutdown)
 
 APIVERSION = '0.1'
 
