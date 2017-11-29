@@ -5,6 +5,11 @@
 import time
 
 class TrackMetadata(object):
+    'All important metadata properties of a track that we need for a sane report'
+    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-locals
+    # We need all 19
     def __init__(self,
                  filename=None,
                  musiclibrary=None,
@@ -23,7 +28,7 @@ class TrackMetadata(object):
                  label=None,
                  lyricist=None,
                  identifier=None,
-                 ):
+                ):
 
         def tit(val):
             'Return title case strings or None if val is None'

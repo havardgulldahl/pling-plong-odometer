@@ -1,31 +1,25 @@
-#!/usr/bin/env python
-
 import os.path
 import tempfile
-import time
 import pathlib
 from urllib.parse import quote
 
+import asyncio
+
+from aiohttp import web
 import aiohttp.client_exceptions
+
 from aiohttp_swagger import swagger_path, setup_swagger
 
 from metadataresolvers import findResolver, getResolvers
-from model import TrackMetadata
+#from model import TrackMetadata
 from xmeml import iter as xmemliter
-
-import asyncio
-import uuid
-
-from asyncio import coroutine
-
-from aiohttp import web
 
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
                       client_max_size=20*(1024**2)) # upload size max 20 megs
-                    
-clientSession = aiohttp.ClientSession()
-async def on_shutdown(app):
+clientSession = aiohttp.ClientSession(loop=loop)
+
+async def on_shutdown(_app):
     'Cleaning up right before shutdown'
     await clientSession.close()
 
@@ -34,9 +28,12 @@ app.on_shutdown.append(on_shutdown)
 APIVERSION = '0.1'
 
 class AudioClip:
+    'The important properties of an audio clip for JSON export'
     def __init__(self, filename):
         self.filename = filename
-        self.service = None  # set in is_resolvable
+        self.service = None  # set in is_resolvable()
+        self.ranges = None  # [] set in set_ranges()
+        self.audible_length = None  # float() set in set_ranges()
 
     def set_ranges(self, ranges):
         self.ranges = ranges
@@ -48,20 +45,20 @@ class AudioClip:
 
     def is_resolvable(self):
         'Look at the filename and say if it is resolvable from one or the other service. Returns bool'
-        resolver =  findResolver(self.filename) 
-        if resolver == False:
+        resolver = findResolver(self.filename)
+        if resolver is False:
             return False
         self.service = resolver.name
         return True
 
     def to_dict(self):
-        return {'clipname': self.filename, 
+        return {'clipname': self.filename,
                 'audible_length': self.audible_length,
                 'resolvable': self.is_resolvable(),
                 'music_service': self.service,
                 'resolve':'/resolve/{}'.format(quote(self.filename)),
                 'add_missing':'/add_missing/{}'.format(quote(self.filename)),
-                }
+               }
 
 async def parse_xmeml(xmemlfile):
     """Background task to parse Xmeml with python-xmeml"""
@@ -70,7 +67,7 @@ async def parse_xmeml(xmemlfile):
     xmeml = xmemliter.XmemlParser(xmemlfile)
     audioclips, audiofiles = xmeml.audibleranges()
     app.logger.info('Analyzing the audible parts: %r, files: %r', audioclips, audiofiles)
-    return (audioclips, audiofiles) 
+    return (audioclips, audiofiles)
 
 @swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
@@ -81,15 +78,15 @@ async def handle_resolve(request):
     resolver.setSession(clientSession) # use the same session object for speedups
     # add passwords for services that need it for lookup to succeed
     # run resolver
-    app.logger.info("resolve audioname {!r} with resolver {!r}".format(audioname, resolver))
+    app.logger.info("resolve audioname %r with resolver %r", audioname, resolver)
     try:
         metadata = await resolver.resolve(audioname)
-    except aiohttp.client_exceptions.ClientConnectorError as e:
+    except aiohttp.client_exceptions.ClientConnectorError as _e:
         return web.json_response({
-            'error': {'type':e.__class__.__name__,
-                       'args':e.args},
+            'error': {'type':_e.__class__.__name__,
+                      'args':_e.args},
             'metadata': []
-        },status=400)
+        }, status=400)
     return web.json_response({
         'metadata': vars(metadata),
         'error': [],
@@ -121,10 +118,9 @@ class FakeFileUpload:
 @swagger_path("handle_analyze_post.yaml")
 async def handle_analyze_post(request):
     'POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.'
-    app.logger.debug('About to parse POST args')
     # WARNING: don't do that if you plan to receive large files! Stores all in memory
     data = await request.post() # TODO: switch to request.multipart() to handle big uploads!
-    app.logger.debug('Got POST args: {!r}'.format(data))
+    app.logger.debug('Got POST args: %r', data)
     #'The Xmeml sequence from Premiere or Final Cut that we want to analyze.',
     try:
         xmeml = data['xmeml']
@@ -141,15 +137,15 @@ async def handle_analyze_post(request):
     # .file contains the actual file data that needs to be stored somewhere.
     with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as xmemlfile:
         xmemlfile.write(xmeml.file.read())
-        f = pathlib.Path(xmemlfile.name)
-        app.logger.info('uploaded file: {!r}'.format(f))
+        _f = pathlib.Path(xmemlfile.name)
+        app.logger.info('uploaded file: %r', _f)
         audioclips, audiofiles = await parse_xmeml(xmemlfile.name)
         _r = []
         for clipname, ranges in audioclips.items():
-            ac = AudioClip(clipname)
-            ac.set_ranges(ranges)
-            _r.append(ac)
-        if len(_r) == 0:
+            _ac = AudioClip(clipname)
+            _ac.set_ranges(ranges)
+            _r.append(_ac)
+        if not _r:
             raise web.HTTPBadRequest(reason='No audible clips found. Use /report_error to report an error.') # HTTP 400
         return web.json_response(data={
             'audioclips': [
@@ -169,8 +165,8 @@ async def handle_supported_resolvers(request):
 app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
 
 def index(request):
-    with open('static/index.html') as f:
-        return web.Response(text=f.read(), content_type='text/html')
+    with open('static/index.html') as _f:
+        return web.Response(text=_f.read(), content_type='text/html')
 
 app.router.add_get('/', index)
 app.router.add_static('/media', 'static/media')
@@ -185,7 +181,7 @@ setup_swagger(app,
               title='Pling Plong Odometer Online',
               api_version=APIVERSION,
               contact="havard.gulldahl@nrk.no"
-)
+             )
 
 if __name__ == '__main__':
     import logging
