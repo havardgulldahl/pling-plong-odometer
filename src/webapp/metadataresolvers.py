@@ -1111,12 +1111,113 @@ class ExtremeMusicResolver(ResolverBase):
 
 class WarnerChappellResolver(ResolverBase):
     prefixes = [ ]
-    enabled = False # TODO ENABLE THIS
+    enabled = True 
     name = 'WarnerChappell'
     prettyname = 'Warner Chappell Production Music'
     website = 'http://www.warnerchappellpm.com/sw/'
     urlbase = 'http://search.warnerchappellpm.com/player/trackavailable' # JSON interface
-    labelmap = { } # TODO: get list of labels automatically
+    labelmap = { 
+        'SFL': '615 Platinum Series',
+        'NLM': '9 Lives Music',
+        'A-TEN': 'A-Tension Music',
+        'ATR': 'Acoustitracks',
+        'AD': 'Adrenalin Production Music Library',
+        'AMP': 'AMP',
+        'AMPT': 'Amplitude',
+        'ANM': 'Anarchy Music',
+        'AS': 'Artist Series',
+        'ATUD': 'Attitude',
+        'AA': 'AudioActive',
+        'BMA': 'Basstone Music',
+        'CMGA': 'Café Moondo',
+        'CST': 'Cinema Sound Tools',
+        'CTV': 'Color TV',
+        'CPM': 'CosMind Production Music',
+        'CAR': 'CPM',
+        'CAS': 'CPM Archive Series',
+        'Class': 'CPM Classical',
+        'Cute\ ': 'Cute Music',
+        'ED': 'Ear Drum',
+        'ER9': 'Elbroar',
+        'ELEFAT': 'Elephant Music & Sound Design', 
+        'EMHCML': 'EMH Classical Music Library',
+        'ESO': 'Enterprises Sonor',
+        'ESE': 'Essential Elements',
+        'FNCC': 'Fontana Classic Collection',
+        'FN': 'Fontana Music Library',
+        'FNX': 'Fontana Sound Effects',
+        'FNV': 'Fontana Virtual',
+        'FWM': 'Frameworks Music',
+        'FTS': 'Full Tilt',
+        #'None': 'Gari Sweeps Library',
+        'GAS': 'GAS',
+        'TW': 'Gerhard Daum Music Edition',
+        'GOB': 'Glory Oath + Blood',
+        'SFL': 'Gold Series',
+        'GSD': 'Graphic Sound Design',
+        'GV': 'Gravity',
+        'GA': 'Groove Addicts',
+        'IG': 'Ignite',
+        'IMED': 'Image Edge',
+        'IMCD': 'Image Music Library',
+        'IPMD': 'Impressive Minds',
+        'IT': 'Imtel',
+        'IPM': 'In-spired Production Music',
+        'IND': 'Indiesonics',
+        'INF': 'Infini',
+        'IP': 'Interpulse',
+        'INWLDV': 'Invisible World Music',
+        'KSM': 'Kingsize',
+        'MASSIVE': 'Massive Bass',
+        'AFR': 'Mathambo',
+        'MMP': 'Metro',
+        'MCMA': 'MidCoast Music Artist Songs',
+        'MCMW': 'MidCoast Music Wired',
+        'MB': 'Mind Benders',
+        'MIN': 'Minimal Music',
+        'MRX': 'Miramax',
+        'MG2': 'Music Gallery',
+        'EM': 'Music Shop',
+        'MT': 'Music Shop Tools',
+        'ZEN': 'Music Shop Zen',
+        'NAKD': 'Naked Music',
+        'NSPRACT': 'Non-Stop Premiere',
+        'NSPS': 'Non-Stop Producer Series',
+        'OIL': 'OIL',
+        'OAT': 'One Air Time',
+        'PEDF': 'Pedigree Cuts',
+        'PP': 'Perfect Pitch',
+        'PFF': 'Piano For Film',
+        'PRO': 'Production TRX',
+        'PA': 'Promo Accelerator',
+        'RSE': 'Ready Steady Edit',
+        'NRV': 'Revolución',
+        'RSM': 'RSM',
+        'SAUC': 'Sauce Music',
+        'SC': 'Scaremeister',
+        'SCR': 'Score TRX',
+        'SS': 'Scoring Stage Music',
+        'SM': 'Silent Methods',
+        'SJM': 'Song Junkies',
+        'SP': 'Sound Pol',
+        'SRL': 'Special Request Library',
+        'SPRT': 'Sprint',
+        'SPRE': 'Sprint Edge',
+        'TFJ': 'The Funky Junkies',
+        'TRX': 'TRX Music Library',
+        'TUFF': 'Tuff',
+        'TV': 'TV Club',
+        'UCD': 'Ultimate Crime & Drama',
+        'UPM': 'Unity',
+        'V': 'V – The Production Library',
+        'VALO': 'VALO Artists',
+        'WCMI': 'Warner Chappell Music Italiana',
+        'WCC': 'WC Charted',
+        'TL': 'Who Did That Music?',
+        'X': 'Xtortion Audio',
+
+
+    } # TODO: get list of labels automatically
 
     def __init__(self):
         self.prefixes = [x.upper() for x in self.labelmap.keys()] # prfix is <LABEL> + _
@@ -1127,33 +1228,113 @@ class WarnerChappellResolver(ResolverBase):
         """Returns musicid from filename.
 
         """
-        raise NotImplemented
+        # typical file name ATUD018_04_White Horse.wav
+        # -> ATUD018_04
         prefixes = [x.upper() for x in WarnerChappellResolver.labelmap.keys()]
-        rex = re.compile(r'') #^((%s)\d{2,5}_\d{2,3}(_\d{1,3})?)\s.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
+        rex = re.compile(r'^((%s)\d{2,5}_\d{2,3})_.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
         g = rex.search(filename)
         try:
             return g.group(1)
         except AttributeError: #no match
             return None
 
-    #async def get_session_cookie(self):
-        #'Ping Extreme Music webserver to get a valid session cookie'
-        #url = 'https://www.extrememusic.com/env'
-        #async with self.session.get(url) as resp:
+    async def get_session_cookie(self):
+        'Ping Warner chappell webserver to get a valid session cookie'
+        url = 'http://search.warnerchappellpm.com/login/publicsearch'
+        async with self.session.get(url, params={'public':'USGuestUser',}) as resp:
             #logging.debug('hitting endpoint url: %r', resp.url)
-            #resp.raise_for_status() # bomb on errors
+            resp.raise_for_status() # bomb on errors
+            return True
             #data = await resp.json()
             #logging.info('got data: %r', data)
             #logincookie = data['env']['API_AUTH']
             #return logincookie
 
     async def resolve(self, filename, fromcache=True):
-        raise NotImplemented
+        # POST to http://search.warnerchappellpm.com/content/search
+        # with data : 
+        # lock:0
+        # text:Filename[*ATUD018_04*]
+        # src_type:
+        # src_id:
+        # vista:
+        # order:
+        # reset:false
+        # limit:0
+
+        # and then parse the html .. ugh
+
+        # and, POST to http://search.warnerchappellpm.com/tracks/info
+        # with data: 
+        # tid:640173
+        # did:25
+        # to get all the data we need , but still html
+        
         self.filename = filename
         if fromcache:
             md = self.fromcache()
             if md is not None:
                 return md
+
+        #define helper functions
+        async def get_trackdata(_musicid):  
+            'lookup musicid and return dict: {tid, did, trackno, trackname, description, albumname, label, duration}'
+            searchurl = 'http://search.warnerchappellpm.com/content/search'
+            async with self.session.post(searchurl, data={'text':_musicid}) as rsp:
+                html = lxml.html.fromstring(rsp)
+                trid = html.xpath('//tr[@id]')[0].get('id')
+                _, _id, _did, _tid, _ = trid.split('-')
+                md = [g.text_content() for g in html.xpath('//td')]
+            return {'tid':_tid, 
+                    'did':_did,
+                    'trackno': md[3],
+                    'trackname': md[4],
+                    'description': md[5],
+                    'albumname': md[6],
+                    'label': md[7],
+                    'duration': md[8],
+            }
+
+        async def get_rights(tid, did):
+            'query with tid and did and return dict: {description,filename,publisher,composer,library}'
+            infourl = 'http://search.warnerchappellpm.com/tracks/info'
+            async with self.session.post(infourl, {'tid':tid, 'did':did}) as rsp:
+                html = lxml.html.fromstring(rsp)
+                desc,filename,publisher,composer,library = [q.text for q in html.xpath('//*[@class="return-row-limited"]')]
+                return {'description':desc,
+                        'filename':filename,
+                        'publisher':publisher,
+                        'composer':composer,
+                        'library':library,
+                        }
+
+        _musicid = self.musicid(filename)
+        _cookie = await get_session_cookie()
+        trackdata = await get_trackdata(_musicid)
+        rights = await get_rights(trackdata['tid'], trackdata['did'])
+
+        data = TrackMetadata(filename=self.filename,
+                             musiclibrary=self.name,
+                             title=trackdata.get('trackname'),
+                             length=trackdata.get('duration', -1),
+                             composer=rights.get('composer'),
+                             artist=None,
+                             year=-1,
+                             recordnumber=musicid,
+                             albumname=trackdata.get('albumname'),
+                             copyright=rights.get('publisher'),
+                             # lcnumber=None,
+                             # isrc=None,
+                             # ean=None,
+                             # catalogue=None,
+                             label=trackdata.get('label'),
+                             # lyricist=None,
+                             identifier='warnerchappel#{}'format(trackdata.get('tid', musicid)),
+                             productionmusic=True,
+             )
+
+
+
 
     async def fetchlabels(self):
         raise NotImplemented

@@ -1,4 +1,3 @@
-#!/usr/bin/env python2.7
 #-*- encoding: utf-8 -*-
 
 # snippet to fetch help text online

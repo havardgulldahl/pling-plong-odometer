@@ -4,3 +4,4 @@ lxml
 pytest
 clint
 six
+requests
