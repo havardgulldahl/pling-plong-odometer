@@ -2,6 +2,7 @@ import os.path
 import tempfile
 import pathlib
 from urllib.parse import quote
+import configparser
 
 import asyncio
 
@@ -23,6 +24,12 @@ async def on_shutdown(_app):
     'Cleaning up right before shutdown'
     await clientSession.close()
 
+async def on_startup(_app):
+    'Things to do on startup'
+    _app.configuration = configparser.ConfigParser()
+    _app.configuration.read('config.ini')
+
+app.on_startup.append(on_startup)
 app.on_shutdown.append(on_shutdown)
 
 APIVERSION = '0.1'
@@ -76,6 +83,7 @@ async def handle_resolve(request):
     # find resolver
     resolver = findResolver(audioname)
     resolver.setSession(clientSession) # use the same session object for speedups
+    resolver.setConfig(request.app.configuration)
     # add passwords for services that need it for lookup to succeed
     # run resolver
     app.logger.info("resolve audioname %r with resolver %r", audioname, resolver)

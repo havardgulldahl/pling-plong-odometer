@@ -16,6 +16,7 @@ import datetime
 import re
 import json
 import html.parser
+import configparser
 
 import aiohttp
 
@@ -84,6 +85,18 @@ class ResolverBase:
     def setSession(self, session):
         'add existing aiohttp.ClientSession() to object for transparent cookie handling and resource reuse'
         self.session = session
+
+    def setConfig(self, config):
+        'add ConfigurationParser object to get values that override the builtins'
+        self.config = config
+
+    def getConfig(self, section, value):
+        'simple interface to configurationparser that returns None if values are missing in config'
+        try:
+            return self.config.get(section, value)
+        except (configparser.NoSectionError, configparser.NoOptionError) as e:
+            logging.warning('Tried to get config %s from seciont %s, but got %r', section, value, e)
+            return None
 
     async def resolve(self, filename, fromcache=True):
         self.filename = filename
@@ -274,6 +287,7 @@ class DMAResolver(ResolverBase):
     website = 'http://dma/'
     enabled = True
     #cacheTimeout = 1
+    urlbase = ''
 
     @staticmethod
     def musicid(filename):
@@ -292,7 +306,7 @@ class DMAResolver(ResolverBase):
             if md is not None:
                 return md
 
-        endpoint="http://malxdmamv01/{musicid}.xml"
+        endpoint = self.getConfig('DMAResolver', 'urlbase')
         if self.session is None:
             self.session = aiohttp.ClientSession()
         async with self.session.get(endpoint.format(musicid=_musicid)) as resp:
