@@ -191,6 +191,15 @@ setup_swagger(app,
               contact="havard.gulldahl@nrk.no"
              )
 
+async def init(loop):
+    'init everything, but dont start it up. returns Application'
+    # setup application
+    # add routes
+    # add startup and shutdown routines
+    # set up swagger
+
+
+
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
