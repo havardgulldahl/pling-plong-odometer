@@ -90,3 +90,4 @@ pip-selfcheck.json
 ##
 .vscode/settings.json
 src/webapp/config.ini
+src/webapp/_passwords.txt
