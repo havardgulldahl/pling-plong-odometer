@@ -19,11 +19,10 @@ parameters:
         type: file
         description: The xmeml file that is to be analyzed
 responses:
-  "200":
+  '200':
     description: successful operation
     schema:
       type: array
       items:
-
-  "400":
+  '400':
     description: missing xmeml file data
