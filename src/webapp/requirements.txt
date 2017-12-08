@@ -1,5 +1,6 @@
 aiohttp
 aiohttp_swagger
+aiodns
 appdirs
 lxml
 git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml-iter
