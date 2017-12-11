@@ -93,25 +93,28 @@ function validFileType(file) {
     return false;
 }
 
+function setupModal() {
+    // create empty modal for later
+    tingle = new tingle.modal({
+        footer: true,
+        stickyFooter: true,
+        closeLabel: "Close",
+        closeMethods: ['overlay', 'button', 'escape'],
+    });
+    // add a button
+    tingle.addFooterBtn('Lukk', 'tingle-btn tingle-btn--primary', function() {
+    // here goes some logic
+        tingle.close();
+    });
+    return tingle;
+
+}
 function main() {
     var form = document.getElementById('file-form');
     var fileSelect = document.getElementById('file-select');
     var fileList = document.getElementById('files-list');
     var createReportButton = document.getElementById('create-report-button');
     var createCreditsButton = document.getElementById('create-credits-button');
-
-    // create empty modal for later
-    window.modalmodal = new tingle.modal({
-        footer: true,
-        stickyFooter: false,
-        closeLabel: "Close",
-        closeMethods: ['overlay', 'button', 'escape'],
-    });
-    // add a button
-    window.modalmodal.addFooterBtn('Lukk', 'tingle-btn tingle-btn--primary', function() {
-    // here goes some logic
-        window.modalmodal.close();
-    });
 
     createReportButton.onclick = function(event) {
         event.preventDefault();
@@ -337,8 +340,9 @@ function creditsdialog() {
         }
     }
     console.log('got credits: %o', s);
-    window.modalmodal.setContent('<h1>End credits</h1>'+s);
-    window.modalmodal.open();
+    var tingle = setupModal();
+    tingle.setContent('<h1>End credits</h1>'+s);
+    tingle.open();
 }
 
 function runsheetdialog() {
@@ -372,8 +376,9 @@ function runsheetdialog() {
         }
     }
     console.log('got credits: %o', s);
-    window.modalmodal.setContent('<h1>End credits</h1>'+s);
-    window.modalmodal.open();
+    var tingle = setupModal();
+    tingle.setContent('<h1>End credits</h1>'+s);
+    tingle.open();
 }
 
 function reportdialog() {
@@ -408,10 +413,27 @@ function reportdialog() {
         _s = _s + "<br><b>Seconds in total</b>: "+td.audible_length+"</div><hr>";
         reportrows.push(_s);
     }
-    window.modalmodal.setContent("<h1>Track metadata sheet for PRF</h1>"+reportrows.join("\n"));
-    window.modalmodal.open();
+    var html = reportrows.join("\n");
+    var tingle = setupModal();
+    // add another button
+    tingle.addFooterBtn('Download as file', 'tingle-btn tingle-btn--info', function() {
+        // here goes some logic
+        download(html, "music_metadata.html", "text/html");
+        tingle.close();
+    });
+    tingle.setContent("<h1>Track metadata sheet for PRF</h1>"+html);
+    tingle.open();
 }
 
+function download(content, filename, contentType) {
+    console.log('downloading metadata sheet');
+    if(!contentType) contentType = 'application/octet-stream';
+        var a = document.createElement('a');
+        var blob = new Blob([content], {'type':contentType});
+        a.href = window.URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+}
 /*
 clips = defaultdict(list)
 for r in self.itercheckedrows():
