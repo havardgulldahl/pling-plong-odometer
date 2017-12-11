@@ -45,6 +45,12 @@ function slug(s, len) {
     return s.substr(0, len-1) + "…";
 }
 
+function formatDuration(numbr) {
+    // retun all duration numbers the same way and formatted according to locale
+    // TODO: get locale dynamically (with translations)
+    return numbr.toLocaleString("no", {"minimumIntegerDigits":1, "minimumFractionDigits":2});
+}
+
 function removeChildren(node) {
     while(node.hasChildNodes()) {
         node.removeChild(node.firstChild);
@@ -199,7 +205,7 @@ function formatAudible(audible) {
         var r = elm.resolve;
         var secs = elm.audible_length;
         var service = elm.music_service || "<i>Unknown</i>";
-        tr.innerHTML = "<td>"+c+"<td class=duration>"+secs+"s<td>"+service+"<td class=metadata id='o-"+window.btoa(r)+"'>";
+        tr.innerHTML = "<td>"+c+"<td class=duration>"+formatDuration(secs)+"s<td>"+service+"<td class=metadata id='o-"+window.btoa(r)+"'>";
         // keep the info around as a javascript object
         tr.lastChild.timelinedata = elm;
         if(elm.resolvable) {
@@ -410,7 +416,7 @@ function reportdialog() {
         if(md.year && md.year !== -1)
             _s = _s + "<dt>Released year:</dt><dd>"+md.year+"</dd>";
         
-        _s = _s + "<br><b>Seconds in total</b>: "+td.audible_length+"</div><hr>";
+        _s = _s + "<br><b>Seconds in total</b>: "+formatDuration(td.audible_length)+"</div><hr>";
         reportrows.push(_s);
     }
     var html = reportrows.join("\n");
