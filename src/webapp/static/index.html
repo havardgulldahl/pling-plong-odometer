@@ -95,18 +95,18 @@ function validFileType(file) {
 
 function setupModal() {
     // create empty modal for later
-    tingle = new tingle.modal({
+    tinglemodal = new tingle.modal({
         footer: true,
         stickyFooter: true,
         closeLabel: "Close",
         closeMethods: ['overlay', 'button', 'escape'],
     });
     // add a button
-    tingle.addFooterBtn('Lukk', 'tingle-btn tingle-btn--primary', function() {
+    tinglemodal.addFooterBtn('Lukk', 'tingle-btn tingle-btn--primary', function() {
     // here goes some logic
-        tingle.close();
+        tinglemodal.close();
     });
-    return tingle;
+    return tinglemodal;
 
 }
 function main() {
@@ -340,9 +340,9 @@ function creditsdialog() {
         }
     }
     console.log('got credits: %o', s);
-    var tingle = setupModal();
-    tingle.setContent('<h1>End credits</h1>'+s);
-    tingle.open();
+    var tinglemodal = setupModal();
+    tinglemodal.setContent('<h1>End credits</h1>'+s);
+    tinglemodal.open();
 }
 
 function runsheetdialog() {
@@ -376,9 +376,9 @@ function runsheetdialog() {
         }
     }
     console.log('got credits: %o', s);
-    var tingle = setupModal();
-    tingle.setContent('<h1>End credits</h1>'+s);
-    tingle.open();
+    var tinglemodal = setupModal();
+    tinglemodal.setContent('<h1>End credits</h1>'+s);
+    tinglemodal.open();
 }
 
 function reportdialog() {
@@ -414,15 +414,15 @@ function reportdialog() {
         reportrows.push(_s);
     }
     var html = reportrows.join("\n");
-    var tingle = setupModal();
+    var tinglemodal = setupModal();
     // add another button
-    tingle.addFooterBtn('Download as file', 'tingle-btn tingle-btn--info', function() {
+    tinglemodal.addFooterBtn('Download as file', 'tingle-btn tingle-btn--info', function() {
         // here goes some logic
         download(html, "music_metadata.html", "text/html");
-        tingle.close();
+        tinglemodal.close();
     });
-    tingle.setContent("<h1>Track metadata sheet for PRF</h1>"+html);
-    tingle.open();
+    tinglemodal.setContent("<h1>Track metadata sheet for PRF</h1>"+html);
+    tinglemodal.open();
 }
 
 function download(content, filename, contentType) {
