@@ -24,6 +24,7 @@ var messages = {
         OUT: "Out",
         DURATION: "Duration",
         CLIP_DETAILS: "Clip details",
+        LOADING_DATA: "Loading timeline data...",
         GETTING_METADATA: "Getting metadata...",
         UNKNOWN: "Unknown",
         END_CREDITS: "End credits", 
@@ -46,7 +47,8 @@ var messages = {
         AUDIBLE_LENGTH: "audible length",
         MEASURED_IN_SECONDS: "Measured in seconds",
         MUSIC_LIBRARY: "Music library",
-        METADATA: "metadata"
+        METADATA: "metadata",
+        STARTINFO: "To get started: Select a XMEML file above. <br>(You may also drop it anywhere in this window)"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -58,6 +60,7 @@ var messages = {
         OUT: "Ut",
         DURATION: "Varighet",
         CLIP_DETAILS: "Detaljer om klippet",
+        LOADING_DATA: "Leser tidslinjedata...",
         GETTING_METADATA: "Henter metadata...",
         UNKNOWN: "Ukjent",
         END_CREDITS: "Rulletekst",
@@ -80,6 +83,7 @@ var messages = {
         AUDIBLE_LENGTH: "hørbar varighet",
         MEASURED_IN_SECONDS: "Målt i sekunder",
         MUSIC_LIBRARY: "Musikkbibliotek",
-        METADATA: "metadata"
+        METADATA: "metadata",
+        STARTINFO: "For å starte: Velg en XMEML-fil over. <br>(Du kan også slippe en fil i dette vinduet)"
     }
 };

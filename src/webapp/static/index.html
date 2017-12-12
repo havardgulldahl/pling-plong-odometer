@@ -23,6 +23,10 @@
         
     }
 
+    #startinfo {
+        font-size: 150%;
+    }
+
     progress { width: 90%; }
 
     body { height: 100vh;
@@ -141,6 +145,7 @@ function main() {
     document.getElementById("thead-duration").title = i18n.MEASURED_IN_SECONDS(); 
     document.getElementById("thead-library").title = i18n.MUSIC_LIBRARY(); 
     document.getElementById("thead-metadata").innerText = i18n.METADATA(); 
+    document.getElementById("startinfo").innerHTML = i18n.STARTINFO(); 
 
     createReportButton.onclick = function(event) {
         event.preventDefault();
@@ -209,6 +214,10 @@ function submit(formData) {
             alertmsg(i18n.ALERTMSG({ERRCODE:xhr.status, ERRMSG:xhr.statusText}, 'danger'));
         }
     };
+    var fileList = document.getElementById('files-list');
+    // empty the files table
+    removeChildren(fileList);
+    fileList.innerHTML = "<td>"+i18n.LOADING_DATA()+"<td><td><td>";
     // Send the Data.
     xhr.send(formData);
 }
@@ -547,7 +556,7 @@ function finishedResolving() {
             <th id=thead-metadata>metadata</th>
         </thead>
         <tbody id=files-list style="font-size:80%">
-
+            <td id=startinfo>To get started: Select a XMEML file above. <br>(You may also drop it anywhere in this window). <td><td><td>
         </tbody>
 
     </table>
