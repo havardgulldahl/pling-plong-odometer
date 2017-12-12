@@ -130,7 +130,7 @@ function main() {
     // i18n - translate ui
     document.getElementById("navbar-analysis").innerText = i18n.ANALYSIS(); 
     document.getElementById("navbar-help").innerText = i18n.HELP(); 
-    document.getElementById("navbar-docs").innerText = i18n.DOCS(); 
+    document.getElementById("navbar-api").title = i18n.API(); 
     document.getElementById("file-select").title = i18n.CHOOSE_TIMELINE_DATA(); 
     document.getElementById("preview").innerText = "⇜ "+i18n.PLEASE_SELECT_FILE(); 
     document.getElementById("create-report-button").innerText = i18n.GENERATE_METADATA_REPORT(); 
@@ -507,7 +507,7 @@ function finishedResolving() {
                   <div class="navbar-nav">
                     <a class="nav-item nav-link active" href="#" id=navbar-analysis>Analysis <span class="sr-only">(current)</span></a>
                     <a class="nav-item nav-link disabled" href="#" id=navbar-help>Help</a>
-                    <a class="nav-item nav-link" href="/doc" title="JSON REST API documentation (swagger)" id=navbar-docs>JSON docs</a>
+                    <a class="nav-item nav-link" href="/doc" title="JSON REST API documentation (swagger)" id=navbar-api>API</a>
                   </div>
                 </div>
               </nav>
