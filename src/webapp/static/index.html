@@ -147,6 +147,21 @@ function main() {
     document.getElementById("thead-metadata").innerText = i18n.METADATA(); 
     document.getElementById("startinfo").innerHTML = i18n.STARTINFO(); 
 
+    // add debug ui
+    if(document.location.search == "?debug") {
+        var tbtn = document.createElement('button');
+        tbtn.innerText = "Use testfile";
+        tbtn.onclick = function(event) {
+            event.preventDefault();
+            removeChildren(fileList);
+            var formData = new FormData();
+            formData.append('usetestfile', '1');
+            submit(formData);
+            return false;
+        }
+        document.querySelector('div.col-5').appendChild(tbtn);
+    }
+
     createReportButton.onclick = function(event) {
         event.preventDefault();
         reportdialog();
