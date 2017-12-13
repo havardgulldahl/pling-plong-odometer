@@ -171,11 +171,14 @@ function main() {
             if(!validFileType(chosenFile)) {
                 preview.innerText = i18n.NOT_VALID_FILE_TYPE();
                 preview.setAttribute('class', 'text-danger');
+                // clear any previous file info
+                preview.validFile = null;
             } else {
-                //preview.innerText = 'File OK (' + returnFileSize(chosenFile.size) + ')';
                 preview.innerText = i18n.FILE_OK({FILESIZE: returnFileSize(chosenFile.size)});
                 preview.setAttribute('title', i18n.FULL_FILE_NAME({FILENAME: chosenFile.name}));
                 preview.setAttribute('class', 'text-success');
+                // Keep the file info around as a javascript object
+                preview.validFile = chosenFile;
                 // Create a new FormData object.
                 var formData = new FormData();
                 // Add the file to the request.
@@ -227,6 +230,9 @@ function formatAudible(audible) {
     var fileList = document.getElementById('files-list');
     // empty the files table
     removeChildren(fileList);
+
+    //var serviceList = document.createElement('select');
+    //serviceList.innerHTML = "";
 
     for(var i=0; i<audible.length; i++) {
         var tr = document.createElement('tr');
@@ -309,16 +315,19 @@ function dropHandler(ev) {
     }
     if(validFileType(chosenFile)) {
         preview.innerText = slug(chosenFile.name, 25) + ' OK – ' + returnFileSize(chosenFile.size);
-        preview.setAttribute('title', 'Full file name: '+chosenFile.name);
         preview.setAttribute('title', i18n.FULL_FILE_NAME({FILENAME:chosenFile.name}));
         preview.setAttribute('class', 'text-success');
         document.getElementById('file-select').value = "";
+        // Keep the file info around as a javascript object
+        preview.validFile = chosenFile;
         var formData = new FormData();
         formData.append('xmeml', chosenFile, chosenFile.name);
         submit(formData);
     } else {
         preview.innerText = 'Not a valid file type';
         preview.setAttribute('class', 'text-danger');
+        // Clear any previous file info|
+        preview.validFile = null;
     }
   }
 
@@ -385,7 +394,9 @@ function creditsdialog() {
 function runsheetdialog() {
     // pop up a run sheet dialog, listing each track by inpoint on timeline on timeline
     var metadatarows = document.querySelectorAll('td.has-metadata');
+    var preview = document.getElementById('preview');
     var s = "<h1>"+i18n.REPORT_HEADER_TIMELINE()+"</h1>";
+    s = s + '<p><code>'+i18n.FULL_FILE_NAME({FILENAME:preview.validFile.name})+'</code>';
     s = s + '<table cellpadding=10><tr>';
     s = s + '<th>'+i18n.IN()+'</th>';
     s = s + '<th>'+i18n.OUT()+'</th>';
@@ -447,15 +458,17 @@ function reportdialog() {
         if(md.year && md.year !== -1)
             _s = _s + "<dt>Released year:</dt><dd>"+md.year+"</dd>";
         
-        //_s = _s + "<br><b>Seconds in total</b>: "+formatDuration(td.audible_length)+"</div><hr>";
-        _s = _s + "<br><b>"+i18n.SECONDS_IN_TOTAL({SECONDS:td.audible_length})+"</div><hr>";
+        _s = _s + "<br><b>"+i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(td.audible_length)})+"</div><hr>";
         reportrows.push(_s);
     }
-    var html = reportrows.join("\n");
+    var preview = document.getElementById('preview');
+    var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:preview.validFile.name, 
+                 DATESTRING:preview.validFile.lastModifiedDate.toLocaleString()})+'</code>';
+    html = html + reportrows.join("\n");
     var tinglemodal = setupModal();
     // add another button
     tinglemodal.addFooterBtn(i18n.DOWNLOAD_AS_FILE(), 'tingle-btn tingle-btn--info', function() {
-        // here goes some logic
+        // TODO: add html header and date and time
         download(html, "music_metadata.html", "text/html");
         tinglemodal.close();
     });
