@@ -11,7 +11,7 @@ import aiohttp
 
 from aiohttp_swagger import swagger_path, setup_swagger
 
-from metadataresolvers import findResolver, getResolvers
+from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 #from model import TrackMetadata
 from xmeml import iter as xmemliter
 
@@ -38,7 +38,7 @@ class AudioClip:
     'The important properties of an audio clip for JSON export'
     def __init__(self, filename):
         self.filename = filename
-        self.service = None  # set in is_resolvable()
+        self.services = None  # [] set in is_resolvable()
         self.ranges = None  # [] set in set_ranges()
         self.audible_length = None  # float() set in set_ranges()
 
@@ -52,18 +52,19 @@ class AudioClip:
 
     def is_resolvable(self):
         'Look at the filename and say if it is resolvable from one or the other service. Returns bool'
-        resolver = findResolver(self.filename)
-        if resolver is False:
+        resolvers = findResolvers(self.filename)
+        if not resolvers:
             return False
-        self.service = resolver.name
+        self.services = list([x.name for x in resolvers])
         return True
 
     def to_dict(self):
+        'Boil everything down to a dict that is easy to jsonify'
         return {'clipname': self.filename,
                 'audible_length': self.audible_length,
                 'resolvable': self.is_resolvable(),
-                'music_service': self.service,
-                'resolve':'/resolve/{}'.format(quote(self.filename)),
+                'music_services': self.services,
+                'resolve': {s:'/resolve/{}/{}'.format(quote(s), quote(self.filename)) for s in self.services},
                 'add_missing':'/add_missing/{}'.format(quote(self.filename)),
                }
 
@@ -80,8 +81,20 @@ async def parse_xmeml(xmemlfile):
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
     audioname = request.match_info.get('audioname', None) # match path string, see the respective route
-    # find resolver
-    resolver = findResolver(audioname)
+    resolvername = request.match_info.get('resolver', None) # match path string, see the respective route
+    logging.warning('Parsed path and got audioname: %r, resolvername%r', audioname, resolvername)
+    # find resolver if it is not provided to us on the path string
+    if resolvername:
+        resolver = getResolverByName(resolvername)
+    else:
+        try:
+            resolver = findResolvers(audioname)[0]
+        except IndexError: #no resolvers found
+            return web.json_response({
+                'error': {'type':'No resolvers found',
+                          'args':'Nothing to resolve this file: {!r}'.format(audioname)},
+                'metadata': []
+            })
     resolver.setSession(clientSession) # use the same session object for speedups
     resolver.setConfig(request.app.configuration)
     # add passwords for services that need it for lookup to succeed
@@ -100,7 +113,8 @@ async def handle_resolve(request):
         'error': [],
     })
 
-app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
+app.router.add_get('/resolve/{resolver}/{audioname}', handle_resolve, name='resolve')
+#app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
 
 #'Methods and endpoints to receive an xmeml file and start analyzing it'
 async def handle_analyze_get(request):
@@ -167,7 +181,7 @@ app.router.add_post('/analyze', handle_analyze_post)
 async def handle_supported_resolvers(request):
     'GET a request and return a dict of currently suppported resolvers and their file patterns'
     return web.json_response(data={
-        'resolvers': getResolvers()
+        'resolvers': getAllResolvers()
     })
 
 app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns

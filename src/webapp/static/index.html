@@ -210,9 +210,12 @@ function resolveAll() {
     // resolve all resolvable tracks
     var resolvables = document.querySelectorAll('#files-list .metadata.resolvable'); 
     startProgress(resolvables.length);
+    var url, resolver, clipname;
     for (var i = 0; i < resolvables.length; i++) {
-        var url = resolvables[i].timelinedata.resolve;
-        resolve(url);
+        url = resolvables[i].timelinedata.resolve;
+        resolver = resolvables[i].previousSibling.textContent; // TODO: hanlde multiple e.g. <select>
+        clipname = resolvables[i].timelinedata.clipname;
+        resolve(clipname, url[resolver]);
     }
 }
 
@@ -248,17 +251,19 @@ function formatAudible(audible) {
     // empty the files table
     removeChildren(fileList);
 
-    //var serviceList = document.createElement('select');
+    //var serviceList = document.createElement('select'); //TODO: handle multiple services
     //serviceList.innerHTML = "";
 
+    var tr, elm, c, r, secs, services;
+
     for(var i=0; i<audible.length; i++) {
-        var tr = document.createElement('tr');
-        var elm = audible[i];
-        var c = elm.clipname;
-        var r = elm.resolve;
-        var secs = elm.audible_length;
-        var service = elm.music_service || "<i>Unknown</i>";
-        tr.innerHTML = "<td>"+c+"<td class=duration>"+formatDuration(secs)+"s<td>"+service+"<td class=metadata id='o-"+window.btoa(r)+"'>";
+        tr = document.createElement('tr');
+        elm = audible[i];
+        c = elm.clipname;
+        r = elm.resolve;
+        secs = elm.audible_length;
+        services = elm.music_services || "<i>Unknown</i>"; //TODO: handle multiple services
+        tr.innerHTML = "<td>"+c+"<td class=duration>"+formatDuration(secs)+"s<td>"+services+"<td class=metadata id='o-"+window.btoa(c)+"'>";
         // keep the info around as a javascript object
         tr.lastChild.timelinedata = elm;
         if(elm.resolvable) {
@@ -270,14 +275,14 @@ function formatAudible(audible) {
     resolveAll();
 }
 
-function resolve(url) {
-    // get an url, and parse the JSON contents into a metadata string
+function resolve(clipname, url) {
+    // get a clipname and an url, and parse the JSON contents into a metadata string
     // Set up the request.
     var xhr = new XMLHttpRequest();
     // Open the connection.
     xhr.open('GET', url, true);
 
-    var output = document.getElementById('o-'+window.btoa(url));
+    var output = document.getElementById('o-'+window.btoa(clipname));  // find the metadata cell of the correct row
     // Set up a handler for when the request finishes.
     output.innerText = i18n.GETTING_METADATA();
     xhr.onload = function () {
