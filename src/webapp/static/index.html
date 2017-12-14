@@ -154,6 +154,8 @@ function main() {
         tbtn.onclick = function(event) {
             event.preventDefault();
             removeChildren(fileList);
+            document.getElementById('preview').validFile = {name:'testfile',
+                                                            lastModifiedDate: new Date()};
             var formData = new FormData();
             formData.append('usetestfile', '1');
             submit(formData);
