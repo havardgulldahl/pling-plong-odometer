@@ -68,16 +68,6 @@ class AudioClip:
                 'add_missing':'/add_missing/{}'.format(quote(self.filename)),
                }
 
-async def parse_xmeml(xmemlfile):
-    """Background task to parse Xmeml with python-xmeml. xmemlfile is a pathlib.Path object"""
-    app.logger.info('Parsing the xmemlf ile with xmemliter: %r', xmemlfile)
-    #app.logger.info('exists? %s', xmemlfile.exists())
-    #app.logger.info('stat() %r', xmemlfile.stat())
-    xmeml = xmemliter.XmemlParser(str(xmemlfile))
-    audioclips, audiofiles = xmeml.audibleranges()
-    app.logger.info('Analyzing the audible parts: %r, files: %r', audioclips, audiofiles)
-    return (audioclips, audiofiles)
-
 @swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
@@ -105,20 +95,6 @@ async def handle_resolve(request):
 app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
 
 #'Methods and endpoints to receive an xmeml file and start analyzing it'
-async def handle_analyze_get(request):
-    return web.Response(body="""
-    <html><head><title>Submit xmeml</title></head>
-    <body>
-    <form action="/analyze" method="post" accept-charset="utf-8"
-      enctype="multipart/form-data">
-
-    <label for="xmeml">Xmeml file:</label>
-    <input id="xmeml" name="xmeml" type="file" value=""/>
-
-    <input type="submit" value="submit"/>
-</form></body></html>""".encode())
-
-app.router.add_get('/analyze', handle_analyze_get)
 
 class FakeFileUpload:
     filename = 'static/test_all_services.xml'
