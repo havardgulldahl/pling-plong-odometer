@@ -475,7 +475,7 @@ function reportdialog() {
         if(md.year && md.year !== -1)
             _s = _s + "<dt>Released year:</dt><dd>"+md.year+"</dd>";
         
-        _s = _s + "<br><b>"+i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(td.audible_length)})+"</div><hr>";
+        _s = _s + "<br><b>"+i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(td.audible_length)})+"</b></div><hr>";
         reportrows.push(_s);
     }
     var preview = document.getElementById('preview');

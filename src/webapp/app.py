@@ -129,6 +129,7 @@ async def handle_analyze_post(request):
     # keep the file
     with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as xmemlfile:
         xmemlfile.write(__f.getvalue())
+        app.logger.debug('Wrote xmeml data to %r', xmemlfile.name)
 
     _r = []
     for clipname, ranges in audioclips.items():
