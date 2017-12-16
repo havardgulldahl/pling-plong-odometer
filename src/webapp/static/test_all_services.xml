@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xmeml>
 <xmeml version="4">
-	<sequence id="sequence-10" TL.SQAudioVisibleBase="0" TL.SQVideoVisibleBase="0" TL.SQVisibleBaseTime="72078220993511" TL.SQAVDividerPosition="0.5" TL.SQHideShyTracks="0" TL.SQHeaderWidth="184" Monitor.ProgramZoomOut="180585054720000" Monitor.ProgramZoomIn="0" TL.SQTimePerPixel="0.56883604346732353" MZ.EditLine="57935969280000" MZ.Sequence.PreviewFrameSizeHeight="576" MZ.Sequence.PreviewFrameSizeWidth="720" MZ.Sequence.AudioTimeDisplayFormat="200" MZ.Sequence.PreviewRenderingClassID="1297106761" MZ.Sequence.PreviewRenderingPresetCodec="1297107278" MZ.Sequence.PreviewRenderingPresetPath="EncoderPresets\SequencePreview\9678af98-a7b7-4bdb-b477-7ac9c8df4a4e\I-Frame Only MPEG.epr" MZ.Sequence.PreviewUseMaxRenderQuality="false" MZ.Sequence.PreviewUseMaxBitDepth="false" MZ.Sequence.EditingModeGUID="9678af98-a7b7-4bdb-b477-7ac9c8df4a4e" MZ.Sequence.VideoTimeDisplayFormat="101" MZ.WorkOutPoint="180585054720000" MZ.WorkInPoint="0" explodedTracks="true">
-		<uuid>c99e4364-54ed-424d-931d-f2fab881851f</uuid>
-		<duration>17773</duration>
+	<sequence id="sequence-1" TL.SQAudioVisibleBase="0" TL.SQVideoVisibleBase="0" TL.SQVisibleBaseTime="158774294843943" TL.SQAVDividerPosition="0.5" TL.SQHideShyTracks="0" TL.SQHeaderWidth="236" Monitor.ProgramZoomOut="220546851840000" Monitor.ProgramZoomIn="0" TL.SQTimePerPixel="0.5688360434673182" MZ.EditLine="57935969280000" MZ.Sequence.PreviewFrameSizeHeight="576" MZ.Sequence.PreviewFrameSizeWidth="720" MZ.Sequence.AudioTimeDisplayFormat="200" MZ.Sequence.PreviewRenderingClassID="1297106761" MZ.Sequence.PreviewRenderingPresetCodec="1297107278" MZ.Sequence.PreviewRenderingPresetPath="EncoderPresets/SequencePreview/795454d9-d3c2-429d-9474-923ab13b7018/I-Frame Only MPEG.epr" MZ.Sequence.PreviewUseMaxRenderQuality="false" MZ.Sequence.PreviewUseMaxBitDepth="false" MZ.Sequence.EditingModeGUID="795454d9-d3c2-429d-9474-923ab13b7018" MZ.Sequence.VideoTimeDisplayFormat="101" MZ.WorkOutPoint="180585054720000" MZ.WorkInPoint="0" MZ.ZeroPoint="0" explodedTracks="true">
+		<uuid>03e5b973-316b-4fa9-a5b6-b080ff68183d</uuid>
+		<duration>21706</duration>
 		<rate>
 			<timebase>25</timebase>
 			<ntsc>FALSE</ntsc>
@@ -84,12 +84,12 @@
 						</channel>
 					</group>
 				</outputs>
-				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="50" TL.SQTrackExpanded="1" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerIsInverted="true" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="0" totalExplodedTrackCount="2" premiereTrackType="Stereo">
-					<clipitem id="clipitem-113" premiereChannelType="stereo">
-						<masterclipid>masterclip-51</masterclipid>
+				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="50" TL.SQTrackExpanded="1" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="0" totalExplodedTrackCount="2" premiereTrackType="Stereo">
+					<clipitem id="clipitem-1" premiereChannelType="stereo">
+						<masterclipid>masterclip-1</masterclipid>
 						<name>NONRE638029HD0001 Zip Bags and Airports___DMA.WAV</name>
 						<enabled>TRUE</enabled>
-						<duration>5563</duration>
+						<duration>6669</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -100,14 +100,14 @@
 						<out>5563</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>56523640320000</pproTicksOut>
-						<file id="file-51">
+						<file id="file-1">
 							<name>NONRE638029HD0001 Zip Bags and Airports.wav</name>
-							<pathurl>file://felles.ds.nrk.no/ansatte/n18040/Documents/odometer/NONRE638029HD0001%20Zip%20Bags%20and%20Airports.wav</pathurl>
+							<pathurl>file://localhost//felles.ds.nrk.no/ansatte/n18040/Documents/odometer/NONRE638029HD0001%20Zip%20Bags%20and%20Airports.wav</pathurl>
 							<rate>
 								<timebase>30</timebase>
 								<ntsc>TRUE</ntsc>
 							</rate>
-							<duration>6669</duration>
+							<duration>7994</duration>
 							<timecode>
 								<rate>
 									<timebase>30</timebase>
@@ -134,31 +134,32 @@
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.623519</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.62352</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-113</linkclipref>
+							<linkclipref>clipitem-1</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>1</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-119</linkclipref>
+							<linkclipref>clipitem-8</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>1</clipindex>
@@ -174,11 +175,11 @@
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-114" premiereChannelType="stereo">
-						<masterclipid>masterclip-52</masterclipid>
+					<clipitem id="clipitem-2" premiereChannelType="stereo">
+						<masterclipid>masterclip-2</masterclipid>
 						<name>XCD272_01_6 WHEN THE DEVIL CALLS_STING 2___EXTREMEMUSIC.WAV</name>
 						<enabled>TRUE</enabled>
-						<duration>336</duration>
+						<duration>403</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -189,14 +190,14 @@
 						<out>336</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>3413975040000</pproTicksOut>
-						<file id="file-52">
+						<file id="file-2">
 							<name>XCD272_01_6 WHEN THE DEVIL CALLS_STING 2.WAV</name>
-							<pathurl>file://felles.ds.nrk.no/ansatte/n18040/Documents/odometer/Track_XCD272_01/XCD272_01_6%20WHEN%20THE%20DEVIL%20CALLS_STING%202.WAV</pathurl>
+							<pathurl>file://localhost//felles.ds.nrk.no/ansatte/n18040/Documents/odometer/Track_XCD272_01/XCD272_01_6%20WHEN%20THE%20DEVIL%20CALLS_STING%202.WAV</pathurl>
 							<rate>
 								<timebase>30</timebase>
 								<ntsc>TRUE</ntsc>
 							</rate>
-							<duration>403</duration>
+							<duration>483</duration>
 							<timecode>
 								<rate>
 									<timebase>30</timebase>
@@ -223,31 +224,32 @@
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.748223</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.748222</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-114</linkclipref>
+							<linkclipref>clipitem-2</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>2</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-120</linkclipref>
+							<linkclipref>clipitem-9</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>2</clipindex>
@@ -263,11 +265,11 @@
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-115" premiereChannelType="stereo">
-						<masterclipid>masterclip-53</masterclipid>
+					<clipitem id="clipitem-3" premiereChannelType="stereo">
+						<masterclipid>masterclip-3</masterclipid>
 						<name>_UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV</name>
 						<enabled>TRUE</enabled>
-						<duration>4954</duration>
+						<duration>5938</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -278,14 +280,14 @@
 						<out>4954</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>50335810560000</pproTicksOut>
-						<file id="file-53">
+						<file id="file-3">
 							<name>_UPRIGHT_CAV_402_001_Black_Magic_(Main).WAV</name>
-							<pathurl>file://felles.ds.nrk.no/ansatte/n18040/Documents/odometer/_UPRIGHT_CAV_402_001_Black_Magic_(Main).WAV</pathurl>
+							<pathurl>file://localhost//felles.ds.nrk.no/ansatte/n18040/Documents/odometer/_UPRIGHT_CAV_402_001_Black_Magic_(Main).WAV</pathurl>
 							<rate>
 								<timebase>30</timebase>
 								<ntsc>TRUE</ntsc>
 							</rate>
-							<duration>5938</duration>
+							<duration>7118</duration>
 							<timecode>
 								<rate>
 									<timebase>30</timebase>
@@ -312,31 +314,32 @@
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.685871</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.685872</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-115</linkclipref>
+							<linkclipref>clipitem-3</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>3</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-121</linkclipref>
+							<linkclipref>clipitem-10</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>3</clipindex>
@@ -348,17 +351,15 @@
 							<shottake>SHOT_UPRIGHT</shottake>
 							<lognote>Sassy surf rock with chugging bass, dirty rhythm guitar and kooky female vocal; 146 bpm</lognote>
 						</logginginfo>
-						<comments>
-						</comments>
 						<labels>
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-116" premiereChannelType="stereo">
-						<masterclipid>masterclip-54</masterclipid>
+					<clipitem id="clipitem-4" premiereChannelType="stereo">
+						<masterclipid>masterclip-4</masterclipid>
 						<name>AUXMP_STT003003_ALL_IT_TAKES___AUX.wav</name>
 						<enabled>TRUE</enabled>
-						<duration>2078</duration>
+						<duration>2491</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -369,21 +370,21 @@
 						<out>2078</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>21113809920000</pproTicksOut>
-						<file id="file-54">
+						<file id="file-4">
 							<name>AUXMP_STT003003_ALL_IT_TAKES.wav</name>
-							<pathurl>file://felles.ds.nrk.no/ansatte/n18040/Documents/odometer/AUXMP_STT003003_ALL_IT_TAKES.wav</pathurl>
+							<pathurl>file://localhost//felles.ds.nrk.no/ansatte/n18040/Documents/odometer/AUXMP_STT003003_ALL_IT_TAKES.wav</pathurl>
 							<rate>
 								<timebase>30</timebase>
 								<ntsc>TRUE</ntsc>
 							</rate>
-							<duration>2491</duration>
+							<duration>2986</duration>
 							<timecode>
 								<rate>
 									<timebase>30</timebase>
 									<ntsc>TRUE</ntsc>
 								</rate>
-								<string>00;05;18;08</string>
-								<frame>9538</frame>
+								<string>00;06;21;16</string>
+								<frame>11434</frame>
 								<displayformat>DF</displayformat>
 								<reel>
 									<name></name>
@@ -403,31 +404,32 @@
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.685871</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.685872</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-116</linkclipref>
+							<linkclipref>clipitem-4</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>4</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-122</linkclipref>
+							<linkclipref>clipitem-11</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>4</clipindex>
@@ -443,11 +445,11 @@
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-117" premiereChannelType="stereo">
-						<masterclipid>masterclip-55</masterclipid>
+					<clipitem id="clipitem-5" premiereChannelType="stereo">
+						<masterclipid>masterclip-5</masterclipid>
 						<name>Apollo_WPM_47_1__Drive-in-Lullaby__Daniel-Woodward___APOLLO.mp3</name>
 						<enabled>TRUE</enabled>
-						<duration>3940</duration>
+						<duration>4723</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -458,14 +460,14 @@
 						<out>3940</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>40032921600000</pproTicksOut>
-						<file id="file-55">
+						<file id="file-5">
 							<name>Apollo_WPM_47_1__Drive-in-Lullaby__Daniel-Woodward.mp3</name>
-							<pathurl>file://felles.ds.nrk.no/ansatte/n18040/Documents/odometer/Apollo_WPM_47_1__Drive-in-Lullaby__Daniel-Woodward.mp3</pathurl>
+							<pathurl>file://localhost//felles.ds.nrk.no/ansatte/n18040/Documents/odometer/Apollo_WPM_47_1__Drive-in-Lullaby__Daniel-Woodward.mp3</pathurl>
 							<rate>
 								<timebase>30</timebase>
 								<ntsc>TRUE</ntsc>
 							</rate>
-							<duration>4723</duration>
+							<duration>5661</duration>
 							<timecode>
 								<rate>
 									<timebase>30</timebase>
@@ -492,31 +494,32 @@
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.623519</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.62352</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-117</linkclipref>
+							<linkclipref>clipitem-5</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>5</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-123</linkclipref>
+							<linkclipref>clipitem-12</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>5</clipindex>
@@ -532,29 +535,29 @@
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-118" premiereChannelType="stereo">
-						<masterclipid>masterclip-56</masterclipid>
+					<clipitem id="clipitem-6" premiereChannelType="stereo">
+						<masterclipid>masterclip-6</masterclipid>
 						<name>UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav</name>
 						<enabled>TRUE</enabled>
-						<duration>139</duration>
+						<duration>166</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
 						</rate>
 						<start>17634</start>
-						<end>17773</end>
+						<end>17800</end>
 						<in>0</in>
-						<out>139</out>
+						<out>166</out>
 						<pproTicksIn>0</pproTicksIn>
-						<pproTicksOut>1412328960000</pproTicksOut>
-						<file id="file-56">
+						<pproTicksOut>1686666240000</pproTicksOut>
+						<file id="file-6">
 							<name>UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527.wav</name>
-							<pathurl>file://felles.ds.nrk.no/ansatte/n18040/Documents/odometer/UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527.wav</pathurl>
+							<pathurl>file://localhost//felles.ds.nrk.no/ansatte/n18040/Documents/odometer/UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527.wav</pathurl>
 							<rate>
 								<timebase>30</timebase>
 								<ntsc>TRUE</ntsc>
 							</rate>
-							<duration>166</duration>
+							<duration>199</duration>
 							<timecode>
 								<rate>
 									<timebase>30</timebase>
@@ -581,34 +584,108 @@
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.623519</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.62352</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-118</linkclipref>
+							<linkclipref>clipitem-6</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>6</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-124</linkclipref>
+							<linkclipref>clipitem-13</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>6</clipindex>
+							<groupindex>1</groupindex>
+						</link>
+						<logginginfo>
+							<description></description>
+							<scene></scene>
+							<shottake></shottake>
+							<lognote></lognote>
+						</logginginfo>
+						<labels>
+							<label2>Caribbean</label2>
+						</labels>
+					</clipitem>
+					<clipitem id="clipitem-7" premiereChannelType="stereo">
+						<masterclipid>masterclip-7</masterclipid>
+						<name>CMGA011_01_Delicia Bossa.wav</name>
+						<enabled>TRUE</enabled>
+						<duration>3733</duration>
+						<rate>
+							<timebase>25</timebase>
+							<ntsc>FALSE</ntsc>
+						</rate>
+						<start>17973</start>
+						<end>21706</end>
+						<in>0</in>
+						<out>3733</out>
+						<pproTicksIn>0</pproTicksIn>
+						<pproTicksOut>37929669120000</pproTicksOut>
+						<file id="file-7">
+							<name>CMGA011_01_Delicia Bossa.wav</name>
+							<pathurl>file://localhost/Users/n18040/Downloads/CMGA011_01_Delicia%20Bossa.wav</pathurl>
+							<rate>
+								<timebase>30</timebase>
+								<ntsc>TRUE</ntsc>
+							</rate>
+							<duration>4476</duration>
+							<timecode>
+								<rate>
+									<timebase>30</timebase>
+									<ntsc>TRUE</ntsc>
+								</rate>
+								<string>00;00;00;00</string>
+								<frame>0</frame>
+								<displayformat>DF</displayformat>
+								<reel>
+									<name></name>
+								</reel>
+							</timecode>
+							<media>
+								<audio>
+									<samplecharacteristics>
+										<depth>16</depth>
+										<samplerate>48000</samplerate>
+									</samplecharacteristics>
+									<channelcount>2</channelcount>
+								</audio>
+							</media>
+						</file>
+						<sourcetrack>
+							<mediatype>audio</mediatype>
+							<trackindex>1</trackindex>
+						</sourcetrack>
+						<link>
+							<linkclipref>clipitem-7</linkclipref>
+							<mediatype>audio</mediatype>
+							<trackindex>1</trackindex>
+							<clipindex>7</clipindex>
+							<groupindex>1</groupindex>
+						</link>
+						<link>
+							<linkclipref>clipitem-14</linkclipref>
+							<mediatype>audio</mediatype>
+							<trackindex>2</trackindex>
+							<clipindex>7</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<logginginfo>
@@ -625,12 +702,12 @@
 					<locked>FALSE</locked>
 					<outputchannelindex>1</outputchannelindex>
 				</track>
-				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="50" TL.SQTrackExpanded="1" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerIsInverted="true" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="1" totalExplodedTrackCount="2" premiereTrackType="Stereo">
-					<clipitem id="clipitem-119" premiereChannelType="stereo">
-						<masterclipid>masterclip-51</masterclipid>
+				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="50" TL.SQTrackExpanded="1" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="1" totalExplodedTrackCount="2" premiereTrackType="Stereo">
+					<clipitem id="clipitem-8" premiereChannelType="stereo">
+						<masterclipid>masterclip-1</masterclipid>
 						<name>NONRE638029HD0001 Zip Bags and Airports___DMA.WAV</name>
 						<enabled>TRUE</enabled>
-						<duration>5563</duration>
+						<duration>6669</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -641,36 +718,37 @@
 						<out>5563</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>56523640320000</pproTicksOut>
-						<file id="file-51"/>
+						<file id="file-1"/>
 						<sourcetrack>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.623519</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.62352</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-113</linkclipref>
+							<linkclipref>clipitem-1</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>1</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-119</linkclipref>
+							<linkclipref>clipitem-8</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>1</clipindex>
@@ -686,11 +764,11 @@
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-120" premiereChannelType="stereo">
-						<masterclipid>masterclip-52</masterclipid>
+					<clipitem id="clipitem-9" premiereChannelType="stereo">
+						<masterclipid>masterclip-2</masterclipid>
 						<name>XCD272_01_6 WHEN THE DEVIL CALLS_STING 2___EXTREMEMUSIC.WAV</name>
 						<enabled>TRUE</enabled>
-						<duration>336</duration>
+						<duration>403</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -701,36 +779,37 @@
 						<out>336</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>3413975040000</pproTicksOut>
-						<file id="file-52"/>
+						<file id="file-2"/>
 						<sourcetrack>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.748223</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.748222</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-114</linkclipref>
+							<linkclipref>clipitem-2</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>2</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-120</linkclipref>
+							<linkclipref>clipitem-9</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>2</clipindex>
@@ -746,11 +825,11 @@
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-121" premiereChannelType="stereo">
-						<masterclipid>masterclip-53</masterclipid>
+					<clipitem id="clipitem-10" premiereChannelType="stereo">
+						<masterclipid>masterclip-3</masterclipid>
 						<name>_UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV</name>
 						<enabled>TRUE</enabled>
-						<duration>4954</duration>
+						<duration>5938</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -761,36 +840,37 @@
 						<out>4954</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>50335810560000</pproTicksOut>
-						<file id="file-53"/>
+						<file id="file-3"/>
 						<sourcetrack>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.685871</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.685872</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-115</linkclipref>
+							<linkclipref>clipitem-3</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>3</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-121</linkclipref>
+							<linkclipref>clipitem-10</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>3</clipindex>
@@ -802,17 +882,15 @@
 							<shottake>SHOT_UPRIGHT</shottake>
 							<lognote>Sassy surf rock with chugging bass, dirty rhythm guitar and kooky female vocal; 146 bpm</lognote>
 						</logginginfo>
-						<comments>
-						</comments>
 						<labels>
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-122" premiereChannelType="stereo">
-						<masterclipid>masterclip-54</masterclipid>
+					<clipitem id="clipitem-11" premiereChannelType="stereo">
+						<masterclipid>masterclip-4</masterclipid>
 						<name>AUXMP_STT003003_ALL_IT_TAKES___AUX.wav</name>
 						<enabled>TRUE</enabled>
-						<duration>2078</duration>
+						<duration>2491</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -823,36 +901,37 @@
 						<out>2078</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>21113809920000</pproTicksOut>
-						<file id="file-54"/>
+						<file id="file-4"/>
 						<sourcetrack>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.685871</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.685872</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-116</linkclipref>
+							<linkclipref>clipitem-4</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>4</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-122</linkclipref>
+							<linkclipref>clipitem-11</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>4</clipindex>
@@ -868,11 +947,11 @@
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-123" premiereChannelType="stereo">
-						<masterclipid>masterclip-55</masterclipid>
+					<clipitem id="clipitem-12" premiereChannelType="stereo">
+						<masterclipid>masterclip-5</masterclipid>
 						<name>Apollo_WPM_47_1__Drive-in-Lullaby__Daniel-Woodward___APOLLO.mp3</name>
 						<enabled>TRUE</enabled>
-						<duration>3940</duration>
+						<duration>4723</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
@@ -883,36 +962,37 @@
 						<out>3940</out>
 						<pproTicksIn>0</pproTicksIn>
 						<pproTicksOut>40032921600000</pproTicksOut>
-						<file id="file-55"/>
+						<file id="file-5"/>
 						<sourcetrack>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.623519</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.62352</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-117</linkclipref>
+							<linkclipref>clipitem-5</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>5</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-123</linkclipref>
+							<linkclipref>clipitem-12</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>5</clipindex>
@@ -928,54 +1008,99 @@
 							<label2>Caribbean</label2>
 						</labels>
 					</clipitem>
-					<clipitem id="clipitem-124" premiereChannelType="stereo">
-						<masterclipid>masterclip-56</masterclipid>
+					<clipitem id="clipitem-13" premiereChannelType="stereo">
+						<masterclipid>masterclip-6</masterclipid>
 						<name>UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav</name>
 						<enabled>TRUE</enabled>
-						<duration>139</duration>
+						<duration>166</duration>
 						<rate>
 							<timebase>25</timebase>
 							<ntsc>FALSE</ntsc>
 						</rate>
 						<start>17634</start>
-						<end>17773</end>
+						<end>17800</end>
 						<in>0</in>
-						<out>139</out>
+						<out>166</out>
 						<pproTicksIn>0</pproTicksIn>
-						<pproTicksOut>1412328960000</pproTicksOut>
-						<file id="file-56"/>
+						<pproTicksOut>1686666240000</pproTicksOut>
+						<file id="file-6"/>
 						<sourcetrack>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 						</sourcetrack>
-							<filter>
-								<effect>
-									<name>Audio Levels</name>
-									<effectid>audiolevels</effectid>
-									<effectcategory>audiolevels</effectcategory>
-									<effecttype>audiolevels</effecttype>
-									<mediatype>audio</mediatype>
-									<parameter authoringApp="PremierePro">
-										<parameterid>level</parameterid>
-										<name>Level</name>
-										<valuemin>0</valuemin>
-										<valuemax>3.98109</valuemax>
-										<value>0.623519</value>
-									</parameter>
-								</effect>
-							</filter>
+						<filter>
+							<effect>
+								<name>Audio Levels</name>
+								<effectid>audiolevels</effectid>
+								<effectcategory>audiolevels</effectcategory>
+								<effecttype>audiolevels</effecttype>
+								<mediatype>audio</mediatype>
+								<pproBypass>false</pproBypass>
+								<parameter authoringApp="PremierePro">
+									<parameterid>level</parameterid>
+									<name>Level</name>
+									<valuemin>0</valuemin>
+									<valuemax>3.98109</valuemax>
+									<value>0.62352</value>
+								</parameter>
+							</effect>
+						</filter>
 						<link>
-							<linkclipref>clipitem-118</linkclipref>
+							<linkclipref>clipitem-6</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>1</trackindex>
 							<clipindex>6</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<link>
-							<linkclipref>clipitem-124</linkclipref>
+							<linkclipref>clipitem-13</linkclipref>
 							<mediatype>audio</mediatype>
 							<trackindex>2</trackindex>
 							<clipindex>6</clipindex>
+							<groupindex>1</groupindex>
+						</link>
+						<logginginfo>
+							<description></description>
+							<scene></scene>
+							<shottake></shottake>
+							<lognote></lognote>
+						</logginginfo>
+						<labels>
+							<label2>Caribbean</label2>
+						</labels>
+					</clipitem>
+					<clipitem id="clipitem-14" premiereChannelType="stereo">
+						<masterclipid>masterclip-7</masterclipid>
+						<name>CMGA011_01_Delicia Bossa.wav</name>
+						<enabled>TRUE</enabled>
+						<duration>3733</duration>
+						<rate>
+							<timebase>25</timebase>
+							<ntsc>FALSE</ntsc>
+						</rate>
+						<start>17973</start>
+						<end>21706</end>
+						<in>0</in>
+						<out>3733</out>
+						<pproTicksIn>0</pproTicksIn>
+						<pproTicksOut>37929669120000</pproTicksOut>
+						<file id="file-7"/>
+						<sourcetrack>
+							<mediatype>audio</mediatype>
+							<trackindex>2</trackindex>
+						</sourcetrack>
+						<link>
+							<linkclipref>clipitem-7</linkclipref>
+							<mediatype>audio</mediatype>
+							<trackindex>1</trackindex>
+							<clipindex>7</clipindex>
+							<groupindex>1</groupindex>
+						</link>
+						<link>
+							<linkclipref>clipitem-14</linkclipref>
+							<mediatype>audio</mediatype>
+							<trackindex>2</trackindex>
+							<clipindex>7</clipindex>
 							<groupindex>1</groupindex>
 						</link>
 						<logginginfo>
@@ -992,22 +1117,22 @@
 					<locked>FALSE</locked>
 					<outputchannelindex>2</outputchannelindex>
 				</track>
-				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="25" TL.SQTrackExpanded="0" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerIsInverted="true" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="0" totalExplodedTrackCount="2" premiereTrackType="Stereo">
+				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="25" TL.SQTrackExpanded="0" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="0" totalExplodedTrackCount="2" premiereTrackType="Stereo">
 					<enabled>TRUE</enabled>
 					<locked>FALSE</locked>
 					<outputchannelindex>1</outputchannelindex>
 				</track>
-				<track currentExplodedTrackIndex="1" totalExplodedTrackCount="2" premiereTrackType="Stereo">
+				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="25" TL.SQTrackExpanded="0" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="1" totalExplodedTrackCount="2" premiereTrackType="Stereo">
 					<enabled>TRUE</enabled>
 					<locked>FALSE</locked>
 					<outputchannelindex>2</outputchannelindex>
 				</track>
-				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="25" TL.SQTrackExpanded="0" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerIsInverted="true" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="0" totalExplodedTrackCount="2" premiereTrackType="Stereo">
+				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="25" TL.SQTrackExpanded="0" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="0" totalExplodedTrackCount="2" premiereTrackType="Stereo">
 					<enabled>TRUE</enabled>
 					<locked>FALSE</locked>
 					<outputchannelindex>1</outputchannelindex>
 				</track>
-				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="25" TL.SQTrackExpanded="0" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerIsInverted="true" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="1" totalExplodedTrackCount="2" premiereTrackType="Stereo">
+				<track TL.SQTrackAudioKeyframeStyle="0" TL.SQTrackShy="0" TL.SQTrackExpandedHeight="25" TL.SQTrackExpanded="0" MZ.TrackTargeted="1" PannerCurrentValue="0.5" PannerStartKeyframe="-91445760000000000,0.5,0,0,0,0,0,0" PannerName="Balance" currentExplodedTrackIndex="1" totalExplodedTrackCount="2" premiereTrackType="Stereo">
 					<enabled>TRUE</enabled>
 					<locked>FALSE</locked>
 					<outputchannelindex>2</outputchannelindex>
