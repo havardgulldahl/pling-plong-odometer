@@ -1329,7 +1329,7 @@ class WarnerChappellResolver(ResolverBase):
                              # catalogue=None,
                              label=trackdata.get('label'),
                              # lyricist=None,
-                             identifier='warnerchappel#{}'format(trackdata.get('tid', musicid)),
+                             identifier='warnerchappel#{}'.format(trackdata.get('tid', musicid)),
                              productionmusic=True,
              )
 
