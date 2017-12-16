@@ -3,6 +3,7 @@ import tempfile
 import pathlib
 from urllib.parse import quote
 import configparser
+import io
 
 import asyncio
 
@@ -68,10 +69,11 @@ class AudioClip:
                }
 
 async def parse_xmeml(xmemlfile):
-    """Background task to parse Xmeml with python-xmeml"""
+    """Background task to parse Xmeml with python-xmeml. xmemlfile is a pathlib.Path object"""
     app.logger.info('Parsing the xmemlf ile with xmemliter: %r', xmemlfile)
-    app.logger.info('exists? %s', os.path.exists(xmemlfile))
-    xmeml = xmemliter.XmemlParser(xmemlfile)
+    #app.logger.info('exists? %s', xmemlfile.exists())
+    #app.logger.info('stat() %r', xmemlfile.stat())
+    xmeml = xmemliter.XmemlParser(str(xmemlfile))
     audioclips, audiofiles = xmeml.audibleranges()
     app.logger.info('Analyzing the audible parts: %r, files: %r', audioclips, audiofiles)
     return (audioclips, audiofiles)
@@ -143,23 +145,27 @@ async def handle_analyze_post(request):
         raise web.HTTPBadRequest(reason='Invalid file extension, expecting .xml') # HTTP 400
 
     # .file contains the actual file data that needs to be stored somewhere.
+    __f = io.BytesIO(xmeml.file.read())
+    xmeml = xmemliter.XmemlParser(__f) # XmemlParser expects a file like object
+    audioclips, audiofiles = xmeml.audibleranges()
+    app.logger.info('Analyzing the audible parts: %r, files: %r', audioclips, audiofiles)
+
+    # keep the file
     with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as xmemlfile:
-        xmemlfile.write(xmeml.file.read())
-        _f = pathlib.Path(xmemlfile.name)
-        app.logger.info('uploaded file: %r', _f)
-        audioclips, audiofiles = await parse_xmeml(xmemlfile.name)
-        _r = []
-        for clipname, ranges in audioclips.items():
-            _ac = AudioClip(clipname)
-            _ac.set_ranges(ranges)
-            _r.append(_ac)
-        if not _r:
-            raise web.HTTPBadRequest(reason='No audible clips found. Use /report_error to report an error.') # HTTP 400
-        return web.json_response(data={
-            'audioclips': [
-                c.to_dict() for c in _r
-            ]
-        })
+        xmemlfile.write(__f.getvalue())
+
+    _r = []
+    for clipname, ranges in audioclips.items():
+        _ac = AudioClip(clipname)
+        _ac.set_ranges(ranges)
+        _r.append(_ac)
+    if not _r:
+        raise web.HTTPBadRequest(reason='No audible clips found. Use /report_error to report an error.') # HTTP 400
+    return web.json_response(data={
+        'audioclips': [
+            c.to_dict() for c in _r
+        ]
+    })
 
 app.router.add_post('/analyze', handle_analyze_post)
 
