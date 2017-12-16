@@ -13,6 +13,6 @@ parameters:
   type: string
 responses:
   '200': 
-    description: 'Audioname successfully resolved and json metadata is returned'
+    description: 'Audioname successfully resolved and JSON metadata is returned'
   '404': 
     description: 'Audioname not resolved (not found)'

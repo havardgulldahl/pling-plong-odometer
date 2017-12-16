@@ -89,3 +89,6 @@ pip-selfcheck.json
 # deploy configuration
 ##
 .vscode/settings.json
+src/webapp/config.ini
+src/webapp/_passwords.txt
+.DS_Store

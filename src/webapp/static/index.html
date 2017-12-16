@@ -5,6 +5,8 @@
 <link rel="stylesheet" href="/media/bootstrap.min.css" integrity="sha256-QUyqZrt5vIjBumoqQV0jM8CgGqscFfdGhN+nVCqX0vc=" crossorigin="anonymous">
 <link rel="stylesheet" href="/media/tingle.min.css" >
 <script type="text/javascript" src="/media/tingle.min.js"></script>
+<script type="text/javascript" src="/media/i18n.js"></script>
+<script type="text/javascript" src="/media/messageformat.min.js"></script>
 
 <style type="text/css">
     .duration { text-align: right; 
@@ -21,6 +23,10 @@
         
     }
 
+    #startinfo {
+        font-size: 150%;
+    }
+
     progress { width: 90%; }
 
     body { height: 100vh;
@@ -30,6 +36,9 @@
 </style>
 
 <script type="text/javascript">
+
+var languagecode = "no-NO"; // TODO: update this dynamically
+var i18n = new MessageFormat(languagecode).compile(messages)[languagecode];
 
 function secs2timestring(duration) {
     // takes an integer of seconds, responds with a "mm:ss" timestring
@@ -45,6 +54,12 @@ function slug(s, len) {
     return s.substr(0, len-1) + "…";
 }
 
+function formatDuration(numbr) {
+    // retun all duration numbers the same way and formatted according to locale
+    // TODO: get locale dynamically (with translations)
+    return numbr.toLocaleString("no", {"minimumIntegerDigits":1, "minimumFractionDigits":2});
+}
+
 function removeChildren(node) {
     while(node.hasChildNodes()) {
         node.removeChild(node.firstChild);
@@ -53,7 +68,7 @@ function removeChildren(node) {
 
 function startProgress(max) {
    //console.log('creating progress bar with max=%o', max);
-   document.getElementById('th-metadata').innerHTML = "<progress id=progress value=0 class=align-bottom max="+max+"></progress>";
+   document.getElementById('thead-metadata').innerHTML = "<progress id=progress value=0 class=align-bottom max="+max+"></progress>";
 }
 
 function updateProgress(val) {
@@ -62,7 +77,7 @@ function updateProgress(val) {
     var newval = parseInt(p.getAttribute('value'))+val;
     if(newval == p.getAttribute('max')) {
         // all resolve tasks are finished, remove progressbar
-        p.parentElement.innerHTML = 'metadata';
+        p.parentElement.innerHTML = i18n.METADATA();
         finishedResolving();
     } else {
         p.setAttribute('value', newval);
@@ -93,6 +108,22 @@ function validFileType(file) {
     return false;
 }
 
+function setupModal() {
+    // create empty modal for later
+    tinglemodal = new tingle.modal({
+        footer: true,
+        stickyFooter: true,
+        closeLabel: i18n.CLOSE(),
+        closeMethods: ['overlay', 'button', 'escape'],
+    });
+    // add a button
+    tinglemodal.addFooterBtn(i18n.CLOSE(), 'tingle-btn tingle-btn--primary', function() {
+    // here goes some logic
+        tinglemodal.close();
+    });
+    return tinglemodal;
+
+}
 function main() {
     var form = document.getElementById('file-form');
     var fileSelect = document.getElementById('file-select');
@@ -100,18 +131,38 @@ function main() {
     var createReportButton = document.getElementById('create-report-button');
     var createCreditsButton = document.getElementById('create-credits-button');
 
-    // create empty modal for later
-    window.modalmodal = new tingle.modal({
-        footer: true,
-        stickyFooter: false,
-        closeLabel: "Close",
-        closeMethods: ['overlay', 'button', 'escape'],
-    });
-    // add a button
-    window.modalmodal.addFooterBtn('Lukk', 'tingle-btn tingle-btn--primary', function() {
-    // here goes some logic
-        window.modalmodal.close();
-    });
+    // i18n - translate ui
+    document.getElementById("navbar-analysis").innerText = i18n.ANALYSIS(); 
+    document.getElementById("navbar-help").innerText = i18n.HELP(); 
+    document.getElementById("navbar-api").title = i18n.API(); 
+    document.getElementById("file-select").title = i18n.CHOOSE_TIMELINE_DATA(); 
+    document.getElementById("preview").innerText = "⇜ "+i18n.PLEASE_SELECT_FILE(); 
+    document.getElementById("create-report-button").innerText = i18n.GENERATE_METADATA_REPORT(); 
+    document.getElementById("create-credits-button").innerText = i18n.GENERATE_END_CREDITS(); 
+    document.getElementById("thead-filename").innerText = i18n.NAME(); 
+    document.getElementById("thead-filename").title = i18n.FILENAME(); 
+    document.getElementById("thead-duration").innerText = i18n.AUDIBLE_LENGTH(); 
+    document.getElementById("thead-duration").title = i18n.MEASURED_IN_SECONDS(); 
+    document.getElementById("thead-library").title = i18n.MUSIC_LIBRARY(); 
+    document.getElementById("thead-metadata").innerText = i18n.METADATA(); 
+    document.getElementById("startinfo").innerHTML = i18n.STARTINFO(); 
+
+    // add debug ui
+    if(document.location.search == "?debug") {
+        var tbtn = document.createElement('button');
+        tbtn.innerText = "Use testfile";
+        tbtn.onclick = function(event) {
+            event.preventDefault();
+            removeChildren(fileList);
+            document.getElementById('preview').validFile = {name:'testfile',
+                                                            lastModifiedDate: new Date()};
+            var formData = new FormData();
+            formData.append('usetestfile', '1');
+            submit(formData);
+            return false;
+        }
+        document.querySelector('div.col-5').appendChild(tbtn);
+    }
 
     createReportButton.onclick = function(event) {
         event.preventDefault();
@@ -129,18 +180,22 @@ function main() {
         var curFiles = fileSelect.files;
         var preview = document.getElementById('preview');
         if(curFiles.length === 0) {
-          preview.innerHTML = "<b>no files selected</b>";
+          preview.innerHTML = "<b>"+i18n.NO_FILES_SELECTED()+"</b>";
         } else {
             // empty files table
             removeChildren(fileList);
             var chosenFile = curFiles[0];
             if(!validFileType(chosenFile)) {
-                preview.innerText = 'Not a valid file type';
+                preview.innerText = i18n.NOT_VALID_FILE_TYPE();
                 preview.setAttribute('class', 'text-danger');
+                // clear any previous file info
+                preview.validFile = null;
             } else {
-                preview.innerText = 'File OK (' + returnFileSize(chosenFile.size) + ')';
-                preview.setAttribute('title', 'Full file name: '+chosenFile.name);
+                preview.innerText = i18n.FILE_OK({FILESIZE: returnFileSize(chosenFile.size)});
+                preview.setAttribute('title', i18n.FULL_FILE_NAME({FILENAME: chosenFile.name}));
                 preview.setAttribute('class', 'text-success');
+                // Keep the file info around as a javascript object
+                preview.validFile = chosenFile;
                 // Create a new FormData object.
                 var formData = new FormData();
                 // Add the file to the request.
@@ -176,9 +231,13 @@ function submit(formData) {
             console.log('got audio response: %o', audio);
             return formatAudible(audio["audioclips"]);
         } else {
-            alertmsg("server returned "+ xhr.status+": "+xhr.statusText, 'danger');
+            alertmsg(i18n.ALERTMSG({ERRCODE:xhr.status, ERRMSG:xhr.statusText}, 'danger'));
         }
     };
+    var fileList = document.getElementById('files-list');
+    // empty the files table
+    removeChildren(fileList);
+    fileList.innerHTML = "<td>"+i18n.LOADING_DATA()+"<td><td><td>";
     // Send the Data.
     xhr.send(formData);
 }
@@ -189,6 +248,9 @@ function formatAudible(audible) {
     // empty the files table
     removeChildren(fileList);
 
+    //var serviceList = document.createElement('select');
+    //serviceList.innerHTML = "";
+
     for(var i=0; i<audible.length; i++) {
         var tr = document.createElement('tr');
         var elm = audible[i];
@@ -196,7 +258,7 @@ function formatAudible(audible) {
         var r = elm.resolve;
         var secs = elm.audible_length;
         var service = elm.music_service || "<i>Unknown</i>";
-        tr.innerHTML = "<td>"+c+"<td class=duration>"+secs+"s<td>"+service+"<td class=metadata id='o-"+window.btoa(r)+"'>";
+        tr.innerHTML = "<td>"+c+"<td class=duration>"+formatDuration(secs)+"s<td>"+service+"<td class=metadata id='o-"+window.btoa(r)+"'>";
         // keep the info around as a javascript object
         tr.lastChild.timelinedata = elm;
         if(elm.resolvable) {
@@ -217,7 +279,7 @@ function resolve(url) {
 
     var output = document.getElementById('o-'+window.btoa(url));
     // Set up a handler for when the request finishes.
-    output.innerText = "Getting metadata..."
+    output.innerText = i18n.GETTING_METADATA();
     xhr.onload = function () {
         if (xhr.status === 200) {
             // File(s) uploaded.
@@ -270,15 +332,19 @@ function dropHandler(ev) {
     }
     if(validFileType(chosenFile)) {
         preview.innerText = slug(chosenFile.name, 25) + ' OK – ' + returnFileSize(chosenFile.size);
-        preview.setAttribute('title', 'Full file name: '+chosenFile.name);
+        preview.setAttribute('title', i18n.FULL_FILE_NAME({FILENAME:chosenFile.name}));
         preview.setAttribute('class', 'text-success');
         document.getElementById('file-select').value = "";
+        // Keep the file info around as a javascript object
+        preview.validFile = chosenFile;
         var formData = new FormData();
         formData.append('xmeml', chosenFile, chosenFile.name);
         submit(formData);
     } else {
         preview.innerText = 'Not a valid file type';
         preview.setAttribute('class', 'text-danger');
+        // Clear any previous file info|
+        preview.validFile = null;
     }
   }
 
@@ -337,19 +403,22 @@ function creditsdialog() {
         }
     }
     console.log('got credits: %o', s);
-    window.modalmodal.setContent('<h1>End credits</h1>'+s);
-    window.modalmodal.open();
+    var tinglemodal = setupModal();
+    tinglemodal.setContent('<h1>'+i18n.END_CREDITS()+'</h1>'+s);
+    tinglemodal.open();
 }
 
 function runsheetdialog() {
     // pop up a run sheet dialog, listing each track by inpoint on timeline on timeline
     var metadatarows = document.querySelectorAll('td.has-metadata');
-    var s = "<h1>Tracks by order of entry on timeline</h1>";
+    var preview = document.getElementById('preview');
+    var s = "<h1>"+i18n.REPORT_HEADER_TIMELINE()+"</h1>";
+    s = s + '<p><code>'+i18n.FULL_FILE_NAME({FILENAME:preview.validFile.name})+'</code>';
     s = s + '<table cellpadding=10><tr>';
-    s = s + '<th>In</th>';
-    s = s + '<th>Out</th>';
-    s = s + '<th>Duration</th>';
-    s = s + '<th>Clip details</th>';
+    s = s + '<th>'+i18n.IN()+'</th>';
+    s = s + '<th>'+i18n.OUT()+'</th>';
+    s = s + '<th>'+i18n.DURATION()+'</th>';
+    s = s + '<th>'+i18n.CLIP_DETAILS()+'</th>';
     s = s + '</tr>';
     var reportrows = []; // this is where we keep the generated text of each report row
     for(var i=0; i<metadatarows.length; i++) {
@@ -372,8 +441,9 @@ function runsheetdialog() {
         }
     }
     console.log('got credits: %o', s);
-    window.modalmodal.setContent('<h1>End credits</h1>'+s);
-    window.modalmodal.open();
+    var tinglemodal = setupModal();
+    tinglemodal.setContent('<h1>End credits</h1>'+s);
+    tinglemodal.open();
 }
 
 function reportdialog() {
@@ -405,13 +475,33 @@ function reportdialog() {
         if(md.year && md.year !== -1)
             _s = _s + "<dt>Released year:</dt><dd>"+md.year+"</dd>";
         
-        _s = _s + "<br><b>Seconds in total</b>: "+td.audible_length+"</div><hr>";
+        _s = _s + "<br><b>"+i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(td.audible_length)})+"</b></div><hr>";
         reportrows.push(_s);
     }
-    window.modalmodal.setContent("<h1>Track metadata sheet for PRF</h1>"+reportrows.join("\n"));
-    window.modalmodal.open();
+    var preview = document.getElementById('preview');
+    var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:preview.validFile.name, 
+                 DATESTRING:preview.validFile.lastModifiedDate.toLocaleString()})+'</code>';
+    html = html + reportrows.join("\n");
+    var tinglemodal = setupModal();
+    // add another button
+    tinglemodal.addFooterBtn(i18n.DOWNLOAD_AS_FILE(), 'tingle-btn tingle-btn--info', function() {
+        // TODO: add html header and date and time
+        download(html, "music_metadata.html", "text/html");
+        tinglemodal.close();
+    });
+    tinglemodal.setContent("<h1>"+i18n.REPORT_HEADER_PRF()+"</h1>"+html);
+    tinglemodal.open();
 }
 
+function download(content, filename, contentType) {
+    console.log('downloading metadata sheet');
+    if(!contentType) contentType = 'application/octet-stream';
+        var a = document.createElement('a');
+        var blob = new Blob([content], {'type':contentType});
+        a.href = window.URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+}
 /*
 clips = defaultdict(list)
 for r in self.itercheckedrows():
@@ -454,9 +544,9 @@ function finishedResolving() {
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                   <div class="navbar-nav">
-                    <a class="nav-item nav-link active" href="#">Analyse <span class="sr-only">(current)</span></a>
-                    <a class="nav-item nav-link disabled" href="#">Hjelp</a>
-                    <a class="nav-item nav-link" href="/doc" title="JSON REST API documentation (swagger)">JSON docs</a>
+                    <a class="nav-item nav-link active" href="#" id=navbar-analysis>Analysis <span class="sr-only">(current)</span></a>
+                    <a class="nav-item nav-link disabled" href="#" id=navbar-help>Help</a>
+                    <a class="nav-item nav-link" href="/doc" title="JSON REST API documentation (swagger)" id=navbar-api>API</a>
                   </div>
                 </div>
               </nav>
@@ -490,16 +580,17 @@ function finishedResolving() {
         <col style="width:10%">
         <col style="width:60%">
         <thead class="thead-dark">
-            <th title="File name">name</th>
-            <th title="Measured in seconds">audible length</th>
-            <th title="Music library">&reg;</th>
-            <th id="th-metadata">metadata</th>
+            <th title="File name" id=thead-filename>name</th>
+            <th title="Measured in seconds" id=thead-duration>audible length</th>
+            <th title="Music library" id=thead-library>&reg;</th>
+            <th id=thead-metadata>metadata</th>
         </thead>
         <tbody id=files-list style="font-size:80%">
-
+            <td id=startinfo>To get started: Select a XMEML file above. <br>(You may also drop it anywhere in this window). <td><td><td>
         </tbody>
 
     </table>
+
 
 <script type="text/javascript">
 main()

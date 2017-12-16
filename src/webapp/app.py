@@ -2,11 +2,13 @@ import os.path
 import tempfile
 import pathlib
 from urllib.parse import quote
+import configparser
+import io
 
 import asyncio
 
 from aiohttp import web
-import aiohttp.client_exceptions
+import aiohttp
 
 from aiohttp_swagger import swagger_path, setup_swagger
 
@@ -23,6 +25,12 @@ async def on_shutdown(_app):
     'Cleaning up right before shutdown'
     await clientSession.close()
 
+async def on_startup(_app):
+    'Things to do on startup'
+    _app.configuration = configparser.ConfigParser()
+    _app.configuration.read('config.ini')
+
+app.on_startup.append(on_startup)
 app.on_shutdown.append(on_shutdown)
 
 APIVERSION = '0.1'
@@ -60,15 +68,6 @@ class AudioClip:
                 'add_missing':'/add_missing/{}'.format(quote(self.filename)),
                }
 
-async def parse_xmeml(xmemlfile):
-    """Background task to parse Xmeml with python-xmeml"""
-    app.logger.info('Parsing the xmemlf ile with xmemliter: %r', xmemlfile)
-    app.logger.info('exists? %s', os.path.exists(xmemlfile))
-    xmeml = xmemliter.XmemlParser(xmemlfile)
-    audioclips, audiofiles = xmeml.audibleranges()
-    app.logger.info('Analyzing the audible parts: %r, files: %r', audioclips, audiofiles)
-    return (audioclips, audiofiles)
-
 @swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
@@ -76,12 +75,13 @@ async def handle_resolve(request):
     # find resolver
     resolver = findResolver(audioname)
     resolver.setSession(clientSession) # use the same session object for speedups
+    resolver.setConfig(request.app.configuration)
     # add passwords for services that need it for lookup to succeed
     # run resolver
     app.logger.info("resolve audioname %r with resolver %r", audioname, resolver)
     try:
         metadata = await resolver.resolve(audioname)
-    except aiohttp.client_exceptions.ClientConnectorError as _e:
+    except aiohttp.ClientConnectorError as _e:
         return web.json_response({
             'error': {'type':_e.__class__.__name__,
                       'args':_e.args},
@@ -95,20 +95,6 @@ async def handle_resolve(request):
 app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
 
 #'Methods and endpoints to receive an xmeml file and start analyzing it'
-async def handle_analyze_get(request):
-    return web.Response(body="""
-    <html><head><title>Submit xmeml</title></head>
-    <body>
-    <form action="/analyze" method="post" accept-charset="utf-8"
-      enctype="multipart/form-data">
-
-    <label for="xmeml">Xmeml file:</label>
-    <input id="xmeml" name="xmeml" type="file" value=""/>
-
-    <input type="submit" value="submit"/>
-</form></body></html>""".encode())
-
-app.router.add_get('/analyze', handle_analyze_get)
 
 class FakeFileUpload:
     filename = 'static/test_all_services.xml'
@@ -135,23 +121,28 @@ async def handle_analyze_post(request):
         raise web.HTTPBadRequest(reason='Invalid file extension, expecting .xml') # HTTP 400
 
     # .file contains the actual file data that needs to be stored somewhere.
+    __f = io.BytesIO(xmeml.file.read())
+    xmeml = xmemliter.XmemlParser(__f) # XmemlParser expects a file like object
+    audioclips, audiofiles = xmeml.audibleranges()
+    app.logger.info('Analyzing the audible parts: %r, files: %r', audioclips, audiofiles)
+
+    # keep the file
     with tempfile.NamedTemporaryFile(suffix='.xml', delete=False) as xmemlfile:
-        xmemlfile.write(xmeml.file.read())
-        _f = pathlib.Path(xmemlfile.name)
-        app.logger.info('uploaded file: %r', _f)
-        audioclips, audiofiles = await parse_xmeml(xmemlfile.name)
-        _r = []
-        for clipname, ranges in audioclips.items():
-            _ac = AudioClip(clipname)
-            _ac.set_ranges(ranges)
-            _r.append(_ac)
-        if not _r:
-            raise web.HTTPBadRequest(reason='No audible clips found. Use /report_error to report an error.') # HTTP 400
-        return web.json_response(data={
-            'audioclips': [
-                c.to_dict() for c in _r
-            ]
-        })
+        xmemlfile.write(__f.getvalue())
+        app.logger.debug('Wrote xmeml data to %r', xmemlfile.name)
+
+    _r = []
+    for clipname, ranges in audioclips.items():
+        _ac = AudioClip(clipname)
+        _ac.set_ranges(ranges)
+        _r.append(_ac)
+    if not _r:
+        raise web.HTTPBadRequest(reason='No audible clips found. Use /report_error to report an error.') # HTTP 400
+    return web.json_response(data={
+        'audioclips': [
+            c.to_dict() for c in _r
+        ]
+    })
 
 app.router.add_post('/analyze', handle_analyze_post)
 
@@ -182,6 +173,15 @@ setup_swagger(app,
               api_version=APIVERSION,
               contact="havard.gulldahl@nrk.no"
              )
+
+async def init(loop):
+    'init everything, but dont start it up. returns Application'
+    # setup application
+    # add routes
+    # add startup and shutdown routines
+    # set up swagger
+
+
 
 if __name__ == '__main__':
     import logging
