@@ -28,6 +28,7 @@ class TrackMetadata(object):
                  label=None,
                  lyricist=None,
                  identifier=None,
+                 productionmusic=False,
                 ):
 
         def tit(val):
@@ -51,5 +52,5 @@ class TrackMetadata(object):
         self.label = label
         self.lyricist = tit(lyricist)
         self.identifier = identifier # system-specific identifier
-        self.productionmusic = False
+        self.productionmusic = productionmusic
         self._retrieved = time.mktime(time.localtime())
