@@ -19,7 +19,9 @@ from xmeml import iter as xmemliter
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
                       client_max_size=20*(1024**2)) # upload size max 20 megs
-clientSession = aiohttp.ClientSession(loop=loop)
+headers = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36',
+}
+clientSession = aiohttp.ClientSession(loop=loop, headers=headers)
 
 async def on_shutdown(_app):
     'Cleaning up right before shutdown'
