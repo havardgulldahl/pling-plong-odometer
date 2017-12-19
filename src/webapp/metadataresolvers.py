@@ -27,6 +27,9 @@ import appdirs
 
 from model import TrackMetadata
 
+class TrackNotFound(Exception):
+    pass
+
 def findResolver(filename):
     for resolver in [x() for x in CURRENT_RESOLVERS]:
         if not resolver.enabled: continue
