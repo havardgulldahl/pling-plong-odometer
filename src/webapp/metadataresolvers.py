@@ -694,7 +694,6 @@ class UniPPMResolver(ResolverBase):
                   'KTV':'Koka TV ',
                   'KUT':'Koka Kuts ',
                   'LOCD':'Lo Editions ',
-                  'LO-CD':'Lo Editions',
                   'LO_CD':'Lo Editions',
                   'MAT':'Match Music ',
                   'MEX':'Mexican Music Library ',
@@ -703,10 +702,8 @@ class UniPPMResolver(ResolverBase):
                   'MSV':'MasterSource ',
                   'MXS':'Match XS Dance Label ',
                   'NM':'Network Music ',
-                  'NPM':'Noise Pump Music ',
                   'NPM':'NoisePumpMusic ',
                   'Nuggets':'Nuggets',
-                  'OM':'One Music ',
                   'OM':'OneMusic ',
                   'PMCD':'Parry Classical ',
                   'PML':'Parry Music Library ',
@@ -720,7 +717,6 @@ class UniPPMResolver(ResolverBase):
                   'RNM':'ReverbNation Music ',
                   'RW':'Real World Production Music ',
                   'SAMP':'Sampler ',
-                  'SEE':'SEE ',
                   'SEE':'See Trailer Tracks ',
                   'SLAM':'SLAM!',
                   'SND':'Snowdrop',
@@ -1206,7 +1202,7 @@ class WarnerChappellResolver(ResolverBase):
         'PA': 'Promo Accelerator',
         'RSE': 'Ready Steady Edit',
         'NRV': 'Revolución',
-        'RSM': 'RSM',
+        #'RSM': 'RSM',
         'SAUC': 'Sauce Music',
         'SC': 'Scaremeister',
         'SCR': 'Score TRX',
@@ -1254,18 +1250,18 @@ class WarnerChappellResolver(ResolverBase):
 
     async def get_session_cookie(self):
         'Ping Warner chappell webserver to get a valid session cookie'
-        url = 'http://search.warnerchappellpm.com/login/publicsearch'
-        async with self.session.get(url, params={'public':'USGuestUser',}) as resp:
-            #logging.debug('hitting endpoint url: %r', resp.url)
+        url = 'http://search2.warnerchappellpm.com/login/public?public=NordicGuestUser'
+        async with self.session.get(url, params='public=NordicGuestUser',) as resp:
+        #async with self.session.get(url) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            #logging.debug('hitting endpoint data: %s', await resp.text())
+            _c = self.session.cookie_jar.filter_cookies('http://search2.warnerchappellpm.com/')
+            #logging.info('got cooki: %r', _c)
             resp.raise_for_status() # bomb on errors
-            return True
-            #data = await resp.json()
-            #logging.info('got data: %r', data)
-            #logincookie = data['env']['API_AUTH']
-            #return logincookie
+            return _c
 
     async def resolve(self, filename, fromcache=True):
-        # POST to http://search.warnerchappellpm.com/content/search
+        # POST to http://search2.warnerchappellpm.com/content/search
         # with data : 
         # lock:0
         # text:Filename[*ATUD018_04*]
@@ -1278,10 +1274,11 @@ class WarnerChappellResolver(ResolverBase):
 
         # and then parse the html .. ugh
 
-        # and, POST to http://search.warnerchappellpm.com/tracks/info
+        # and, POST to http://search2.warnerchappellpm.com/tracks/info
         # with data: 
         # tid:640173
         # did:25
+        # and headers [{"key":"X-MLIB-MRL","value":"1","description":""},{"key":"X-Requested-With","value":"XMLHttpRequest","description":""},{"key":"X-MLIB-RENDER","value":"json","description":""}]
         # to get all the data we need , but still html
         
         self.filename = filename
@@ -1293,27 +1290,47 @@ class WarnerChappellResolver(ResolverBase):
         #define helper functions
         async def get_trackdata(_musicid):  
             'lookup musicid and return dict: {tid, did, trackno, trackname, description, albumname, label, duration}'
-            searchurl = 'http://search.warnerchappellpm.com/content/search'
-            async with self.session.post(searchurl, data={'text':_musicid}) as rsp:
-                html = lxml.html.fromstring(rsp)
-                trid = html.xpath('//tr[@id]')[0].get('id')
+            searchurl = 'http://search2.warnerchappellpm.com/content/search'
+            searchfrase = 'Filename[{}*]'.format(_musicid)
+            headers = {"X-MLIB-MRL":"1",
+                       "X-Requested-With":"XMLHttpRequest",
+                       "X-MLIB-RENDER":"json"}
+            async with self.session.post(searchurl, data={'text':searchfrase}) as rsp:
+                logging.debug('got lxml data: %r', rsp)
+                rsp.raise_for_status()
+                _html = await rsp.read()
+                #logging.debug('read body: %r', _html)
+                html = lxml.html.fromstring(_html)
+                try:
+                    trid = html.xpath('//tr[@id]')[0].get('id')
+                except IndexError: #not found, or html changed?
+                    if -1 != _html.find(b'Your search <span class="prs-term">'+bytes(searchfrase, 'ascii')+b'<span> did not find any results.'):
+                        raise TrackNotFound
+                    # if we hit here, the html format has changed and needs updating
+                    raise NotImplementedError
+                    
                 _, _id, _did, _tid, _ = trid.split('-')
                 md = [g.text_content() for g in html.xpath('//td')]
-            return {'tid':_tid, 
-                    'did':_did,
-                    'trackno': md[3],
+            return {'tid':int(_tid),
+                    'did':int(_did),
+                    'trackno': int(md[3]),
                     'trackname': md[4],
                     'description': md[5],
                     'albumname': md[6],
                     'label': md[7],
-                    'duration': md[8],
+                    'BPM': md[8],
             }
 
         async def get_rights(tid, did):
             'query with tid and did and return dict: {description,filename,publisher,composer,library}'
-            infourl = 'http://search.warnerchappellpm.com/tracks/info'
-            async with self.session.post(infourl, {'tid':tid, 'did':did}) as rsp:
-                html = lxml.html.fromstring(rsp)
+            infourl = 'http://search2.warnerchappellpm.com/tracks/info'
+            headers = {"X-MLIB-MRL":"1",
+                       "X-Requested-With":"XMLHttpRequest",
+                       "X-MLIB-RENDER":"json"}
+            async with self.session.post(infourl, data={'tid':tid, 'did':did}, headers=headers) as rsp:
+                logging.debug('hitting endpoint url: %r, data=tid:%r did:%r', rsp.url, tid, did)
+                rsp.raise_for_status()
+                html = lxml.html.fromstring(await rsp.read())
                 desc,filename,publisher,composer,library = [q.text for q in html.xpath('//*[@class="return-row-limited"]')]
                 return {'description':desc,
                         'filename':filename,
@@ -1323,8 +1340,13 @@ class WarnerChappellResolver(ResolverBase):
                         }
 
         _musicid = self.musicid(filename)
-        _cookie = await get_session_cookie()
-        trackdata = await get_trackdata(_musicid)
+        # TODO: check if old cookie is still  valid before gtting new
+        _cookie = await self.get_session_cookie()
+        #logging.info('got cokie: %r', self.session.cookie_jar.filter_cookies('http://search2.warnerchappellpm.com/'))
+        trackdata = await get_trackdata(_musicid) # will return None if track is not found
+        if trackdata is None:
+            return None # TODO: raise 404 exception here
+
         rights = await get_rights(trackdata['tid'], trackdata['did'])
 
         data = TrackMetadata(filename=self.filename,
@@ -1334,7 +1356,7 @@ class WarnerChappellResolver(ResolverBase):
                              composer=rights.get('composer'),
                              artist=None,
                              year=-1,
-                             recordnumber=musicid,
+                             recordnumber=_musicid,
                              albumname=trackdata.get('albumname'),
                              copyright=rights.get('publisher'),
                              # lcnumber=None,
@@ -1343,41 +1365,14 @@ class WarnerChappellResolver(ResolverBase):
                              # catalogue=None,
                              label=trackdata.get('label'),
                              # lyricist=None,
-                             identifier='warnerchappel#{}'.format(trackdata.get('tid', musicid)),
+                             identifier='warnerchappel#{}'.format(trackdata.get('tid', _musicid)),
                              productionmusic=True,
              )
-
-
-
+        return data
 
     async def fetchlabels(self):
-        raise NotImplemented
-        """get a new list of labels online
-
-        0. Get session token
-        curl 'https://www.extrememusic.com/env' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels/1' -H 'X-Requested-With: XMLHttpRequest' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' --compressed
-
-        1. Get label/"series"
-        curl 'https://lapi.extrememusic.com/grid_items?range=0%2C24&view=series' -H 'Origin: https://www.extrememusic.com' -H 'Accept-Encoding: gzip, deflate, sdch, br' -H 'X-API-Auth: 2347c6f3f3ea9cc6e3405f54a3789a6ada9e7631d2e92b0d50cecc8401a360d2' -H 'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.116 Safari/537.36' -H 'Accept-Language: en-US,en;q=0.8,nb;q=0.6,sv;q=0.4,da;q=0.2' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: https://www.extrememusic.com/labels' -H 'Connection: keep-alive' -H 'X-Site-Id: 1' --compressed
-
-        -> image_detail_url:
-        "https://d2oet5a29f64lj.cloudfront.net/IMAGES/series/detail/dcd.jpg"
-                                                                    ^^^ <- label abbreviation
-        """
-        if self.session is None:
-            self.session = aiohttp.ClientSession()
-        # check login cookie, without it we get nothing from the service
-        if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
-            self.session.logincookie = await self.get_session_cookie() 
-        url = 'https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series'
-        headers = {'X-API-Auth':self.session.logincookie}
-        async with self.session.get(url, headers=headers) as resp:
-            logging.debug('update labels. hitting endpoint url: %r', resp.url)
-            resp.raise_for_status() # bomb on errors
-            labels = await resp.json()
-            logging.info('got labels: %r', labels)
-            r = { g['image_detail_url'][59:62].upper() : g['title'] for g in labels['grid_items'] }
-            return r
+        raise NotImplementedError
+        # TODO: reimplement parse_warnerchappell_reportoire.py
 
 # a list of supported resolvers, for easy disabling etc
 CURRENT_RESOLVERS = [
