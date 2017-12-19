@@ -1314,14 +1314,19 @@ class WarnerChappellResolver(ResolverBase):
                     
                 _, _id, _did, _tid, _ = trid.split('-')
                 md = [g.text_content() for g in html.xpath('//td')]
-            return {'tid':int(_tid),
-                    'did':int(_did),
-                    'trackno': int(md[3]),
-                    'trackname': md[4],
-                    'description': md[5],
-                    'albumname': md[6],
-                    'label': md[7],
-                    'BPM': md[8],
+                ## there are 12 table cells
+                # 
+                return {'tid':int(_tid),
+                        'did':int(_did),
+                        'trackno': int(md[3]),
+                        'description': md[4],
+                        'trackname': md[5],
+                        'duration': md[6],
+                        'catalogue': md[7],
+                        'composer': md[8],
+                        'albumname': md[9],
+                        'label': md[10],
+                        'BPM': md[11],
             }
 
         async def get_rights(tid, did):
@@ -1365,7 +1370,7 @@ class WarnerChappellResolver(ResolverBase):
                              # lcnumber=None,
                              # isrc=None,
                              # ean=None,
-                             # catalogue=None,
+                             catalogue=trackdata.get('catalogue', None),
                              label=trackdata.get('label'),
                              # lyricist=None,
                              identifier='warnerchappel#{}'.format(trackdata.get('tid', _musicid)),
