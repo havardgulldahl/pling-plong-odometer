@@ -76,6 +76,12 @@ async def handle_resolve(request):
     audioname = request.match_info.get('audioname', None) # match path string, see the respective route
     # find resolver
     resolver = findResolver(audioname)
+    if not resolver: # none of the resolvers recognize file name , return 404
+        return web.json_response({
+            'error': {'type':'None of the available resolvers recognize this filename',
+                      'args':[quote(audioname),]},
+            'metadata': []
+        }, status=404)
     resolver.setSession(clientSession) # use the same session object for speedups
     resolver.setConfig(request.app.configuration)
     # add passwords for services that need it for lookup to succeed
