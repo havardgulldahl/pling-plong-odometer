@@ -11,34 +11,38 @@ parameters:
   description: The audio name (file name) to resolve from audio service
   required: true
   type: string
+  example: _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV
 responses:
   '200': 
     description: 'Audioname successfully resolved and JSON metadata is returned'
     schema:
-      type: array
-      items: 
-        $ref: '#/definitions/TrackMetadata'
-      examples:
-        application/json:
-          filename: _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV,
-          musiclibrary: UprightMusic,
-          title: Black Magic,
-          length: -1,
-          composer: Oliver Price, Sarah Catherine Johns, Vincent Webb,
-          artist: null,
-          year: -1,
-          recordnumber: CAV_402_001,
-          albumname: 'Original & Quirky: Vintage Oddities 2',
-          copyright: Upright Music,
-          lcnumber: null,
-          isrc: null,
-          ean: null,
-          catalogue: null,
-          label: Cavendish Music,
-          lyricist: null,
-          identifier: Upright#4ceb1f37-8ecc-42e7-a4d8-79ba4336715a,
-          productionmusic: true,
-          _retrieved: 1513765076
+      type: object
+      properties:
+        error:
+          type: array
+          $ref: '#/definitions/Error'
+        metadata:
+          $ref: '#/definitions/TrackMetadata'
+      example:
+        filename: _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV
+        musiclibrary: UprightMusic
+        title: Black Magic
+        length: -1
+        composer: Oliver Price, Sarah Catherine Johns, Vincent Webb
+        artist: ''
+        year: -1
+        recordnumber: CAV_402_001
+        albumname: 'Original & Quirky: Vintage Oddities 2'
+        copyright: Upright Music
+        lcnumber: ''
+        isrc: ''
+        ean: ''
+        catalogue: ''
+        label: Cavendish Music
+        lyricist: ''
+        identifier: Upright#4ceb1f37-8ecc-42e7-a4d8-79ba4336715a
+        productionmusic: true
+        _retrieved: 1513765076
   '404': 
     description: 'Audioname not resolved (not found)'
     schema:
@@ -99,22 +103,6 @@ definitions:
           type: string
           description: Group or collection that track is part of. Internal to music service
         label: 
-          type: string
-          description: The name of the label at the music service
-        lyricist: 
-          type: string
-          description: Credited lyricist (note: some music services don't provide this info)
-        identifier: 
-          type: string
-          description: Unique Odometer identifier
-        productionmusic: 
-          type: boolean
-          description: Flag to indicate whether this track is production music or not
-        _retrieved: 
-          type: integer
-          format: epoch
-          description: Timestamp (epoch) to indicate when the metadata was retrieved from music service
-
   Error:
     type: object
     properties:
@@ -123,5 +111,70 @@ definitions:
         format: integer
       message:
         type: string
-      fields:
+  TrackMetadata:
+    properties:
+      filename: 
         type: string
+        description: The original filename
+      musiclibrary: 
+        type: string
+        description: The name of the library, see /supported_resolvers for the full list
+      title: 
+        type: string
+        description: Track name
+      length: 
+        type: integer
+        x-nullable: true
+        description: Track length (full length)  (some music services don't provide this info)
+      composer: 
+        type: string
+        description: Credited composers
+      artist: 
+        type: string
+        description: Artist (some music services don't provide this info)
+      year: 
+        type: integer
+        description: Track year  (some music services don't provide this info)  
+      recordnumber: 
+        type: string
+        description: Identifier token used by the music service
+      albumname: 
+        type: string
+        description: Name of the album that the track is part of
+      copyright: 
+        type: string
+        description: Copyright owner
+      lcnumber: 
+        type: string
+        x-nullable: true
+        description: Library of congress identifier  (some music services don't provide this info)
+      isrc: 
+        type: string
+        x-nullable: true
+        description: ISRC identifier (some music services don't provide this info)
+      ean: 
+        type: string
+        x-nullable: true
+        description: EAN identifier (some music services don't provide this info)
+      catalogue: 
+        type: string
+        x-nullable: true
+        description: Group or collection that track is part of. Internal to music service
+      label: 
+        type: string
+        x-nullable: true
+        description: The name of the label at the music service
+      lyricist: 
+        type: string
+        x-nullable: true
+        description: Credited lyricist (some music services don't provide this info)
+      identifier: 
+        type: string
+        description: Unique Odometer identifier
+      productionmusic: 
+        type: boolean
+        description: Flag to indicate whether this track is production music or not
+      _retrieved: 
+        type: integer
+        format: epoch
+        description: Timestamp (epoch) to indicate when the metadata was retrieved from music service
