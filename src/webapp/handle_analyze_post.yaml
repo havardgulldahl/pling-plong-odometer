@@ -1,7 +1,7 @@
 tags:
 - analysis
 summary: POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.
-description: This is typically how you start your analysis.
+description: This is typically how you start your analysis, after you have exported the XMEML from Premiere or Final Cut Pro7.
 operationId: handle_analyze_post
 consumes:
 - multipart/form-data
@@ -24,5 +24,36 @@ responses:
     schema:
       type: array
       items:
+        $ref: '#/definitions/Track'
+      example:
+        add_missing: "/add_missing/NONRE638029HD0001%20Zip%20Bags%20and%20Airports___DMA.WAV"
+        audible_length: 222.52
+        clipname: "NONRE638029HD0001 Zip Bags and Airports___DMA.WAV"
+        music_service: "DMA"
+        resolvable: true
+        resolve: "/resolve/NONRE638029HD0001%20Zip%20Bags%20and%20Airports___DMA.WAV"
   '400':
     description: missing xmeml file data
+
+definitions:
+  Track:
+    type: object
+    properties:
+      add_missing: 
+        type: string
+        description: Use this URL to notify the Odometer crew that this track should have been recognized
+      audible_length: 
+        type: integer
+        description: The total duration (in seconds) that this track is audible
+      clipname: 
+        type: string
+        description: The actual name of the clip, according to the timeline
+      music_service: 
+        type: string
+        description: Assumed music service this track belongs to
+      resolvable: 
+        type: boolean
+        description: Whether or not Odometer knows how to resolve this track (based on file name)
+      resolve: 
+        type: string
+        description: URL to use to resolve the track - i.e. get the metadata

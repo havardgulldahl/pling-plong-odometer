@@ -83,7 +83,9 @@ definitions:
         type: string
         description: Artist (some music services don't provide this info)
       year: 
-        type: integer
+        type: 
+          - "integer"
+          - "null"
         description: Track year  (some music services don't provide this info)  
       recordnumber: 
         type: string
