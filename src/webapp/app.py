@@ -173,6 +173,7 @@ app.router.add_static('/media', 'static/media')
 # TODO app.router.add_get('/submit_runsheet', handle_submit_runsheet) # submit a runsheet to applicable services
 # TODO app.router.add_get('/report_error', handle_report_error) # report an error
 # TODO app.router.add_get('/report_missing', handle_report_missing) # report a missing audio pattern
+# TODO app.router.add_get('/stats', handle_stats) # show usage stats and patterns
 
 setup_swagger(app,
               swagger_url="/doc",
