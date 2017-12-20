@@ -793,7 +793,7 @@ class Odometer(QMainWindow):
                 w.error.connect(lambda s: self.logMessage(s, msgtype=Status.ERROR))
                 w.warning.connect(lambda s: self.logMessage(s, msgtype=Status.WARNING))
                 self.workers.append(w) # keep track of the worker
-                w.delayresolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
+                w.newresolve(audioname, fileref.pathurl) # put the worker to work async. NOTE: pathurl will be None on offilne files
             if self.showsubclips:
                 i = 1
                 for range in ranges:
@@ -1139,7 +1139,7 @@ class Odometer(QMainWindow):
         resolver.trackProgress.connect(lambda fn, p: self.showProgress(fn, p))
         resolver.error.connect(lambda f, e: self.showerror(e, errtype='resover error %s' % resolver.name))
         self.workers.append(resolver) # keep track of the worker
-        resolver.resolve(str(manualPattern), filepath.pathurl) # put the worker to work async
+        resolver.newresolve(str(manualPattern), filepath.pathurl) # put the worker to work async
 
     def submitMissingFilename(self, filename, resolvedmetadata=None):
         'Add filename and metadata to a public spreadsheet'

@@ -2,7 +2,6 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2016
 
-from builtins import str
 import os
 import os.path
 import hashlib
@@ -10,6 +9,7 @@ import logging
 import pickle
 import random
 import urllib
+import urllib.parse
 import urllib.request
 import time
 import datetime
@@ -19,7 +19,7 @@ import html.parser
 
 import PyQt5.QtCore as Core
 import PyQt5.QtGui as Gui
-import PyQt5.QtWebEngine as Web
+import PyQt5.QtNetwork as Net
 
 
 from . import lookupWorkers
@@ -70,19 +70,13 @@ class webdoc(Core.QObject):
         super(webdoc, self).__init__(parent)
         self.filename = filename
         self.url = url
-        try:
-            self.page = Web.QWebPage(self)
-            self.frame = self.page.mainFrame()
-        except AttributeError: # qt4 /qt5 
-            self.page = Web.QWebEnginePage(self)
-            self.frame = self.page
-        self.settings = self.page.settings()
-        self.settings.setAttribute(Web.QWebSettings.JavascriptEnabled, False)
-        self.settings.setAttribute(Web.QWebSettings.AutoLoadImages, False)
+        self.manager = Net.QNetworkAccessManager()
 
     def load(self):
         #print "loading url: ", self.url
-        self.frame.load(Core.QUrl(self.url))
+        req = Net.QNetworkRequest(Core.QUrl(self.url))
+        self.response = self.manager.get(req)
+        return self.response
 
 
 class ResolverBase(Core.QObject):
@@ -127,12 +121,7 @@ class ResolverBase(Core.QObject):
         #time.sleep(random.random() * 4)
         self.trackResolved.emit(self.filename, md)
 
-    def delayresolve(self, filename, fullpath, fromcache=True):
-        def r():
-            self.resolve(filename, fullpath, fromcache)
-        Core.QTimer.singleShot(0, r)
-
-    def resolve(self, filename, fullpath, fromcache=True):
+    def newresolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
         self.fullpath = fullpath
         if fromcache:
@@ -147,24 +136,49 @@ class ResolverBase(Core.QObject):
             return False
         logging.debug('ResolverBase.resolve traversing the INTERNET: %s => %s', filename, url)
         self.doc = webdoc(self.filename, url, parent=None)
-        self.doc.frame.loadFinished.connect(self.parse)
-        self.doc.page.loadProgress.connect(self.progress)
-        self.doc.load()
+        self.doc.manager.finished.connect(self.parse)
+        response = self.doc.load()
+        response.downloadProgress.connect(self.progress)
         return True
 
-    def progress(self, i):
-        self.trackProgress.emit(self.filename, i)
+    def progress(self, received, total):
+        if total == 0: return
+        _progress = 100*received / total
+        self.trackProgress.emit(self.filename, _progress)
 
     def url(self, filename): # return url from filename
         _id = self.musicid(filename)
         if _id is None:
             return False
-        return self.urlbase % _id
+        return 'http://localhost:8000/resolve/%s' % urllib.parse.quote(filename)
+        if not hasattr(self, 'urlbase'):
+            logging.error('tried to get url of %r', filename)
+        try:
+            return self.urlbase % _id
+        except TypeError:
+            logging.error('tried to get url of %r, but urlbase fialed (%r)', filename, self.urlbase)
+        #return 'http://malxodometer01:8000/resolve/%s' % urllib.parse.quote(filename)
 
-    def parse(self):
-        # reimplement this to emit a signal with a TrackMetadata object when found
-        #self.trackResolved.emit(self.filename, md)
-        pass
+    def parse(self, response): # QNetworkReply
+        data = bytes(self.doc.response.readAll()).decode()
+        logging.debug('Got data from internet: %r', data)
+        statuscode = response.attribute(Net.QNetworkRequest.HttpStatusCodeAttribute)
+        if statuscode == 404:
+            self.trackFailed.emit(self.filename)
+            self.error.emit(self.filename, 'Not found')
+            return
+        error = json.loads(data).get('error', [])
+        if len(error) > 0:
+            self.trackFailed.emit(self.filename)
+            self.error.emit(self.filename, '{}: {}'.format(error["type"], error["args"]))
+            return
+        try:
+            md = json.loads(data).get('metadata', [])
+            del(md['_retrieved'])
+            self.trackResolved.emit(self.filename, TrackMetadata(**md))
+        except json.decoder.JSONDecodeError:
+            self.trackFailed.emit(self.filename)
+            self.error.emit(self.filename, 'Not found')
 
     @staticmethod
     def musicid(filename):
@@ -245,6 +259,7 @@ class GenericFileResolver(ResolverBase):
     'Resolve file based on embedded metadata, i.e. id3 tags, vorbis tags, bwf'
     name = 'file'
     postfixes = ['MP3','WAV']
+    urlbase = 'file://%s'
 
     def resolve(self, filename, fullpath, fromcache=True):
         self.filename = filename
@@ -343,6 +358,7 @@ class DMAResolver(ResolverBase):
     prefixes = ['NRKO_', 'NRKT_', 'NONRO', 'NONRT', 'NONRE' ]
     name = 'DMA'
     #cacheTimeout = 1
+    urlbase = None
 
     @staticmethod
     def musicid(filename):
@@ -509,7 +525,7 @@ class ApollomusicResolver(ResolverBase):
 class UniPPMResolver(ResolverBase):
     prefixes = [ ]
     name = 'UniPPM'
-    urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={trackid}' # HTTP GET interface, returns json
+    urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId=%s' # HTTP GET interface, returns json
     labelmap = {  'AA':'Atmosphere Archive ',
                   'AK':'Atmosphere Kitsch ',
                   'AM':'Access Music ',
@@ -667,7 +683,7 @@ class UniPPMResolver(ResolverBase):
 class UprightmusicResolver(ResolverBase):
     prefixes = [ '_UPRIGHT',]
     name = 'UprightMusic'
-    urlbase = 'http://search.upright-music.com/sites/all/modules/up/session.php?handler=load&tid={trackid}' # HTTP GET interface, returns json
+    urlbase = 'http://search.upright-music.com/sites/all/modules/up/session.php?handler=load&tid=%s' # HTTP GET interface, returns json
     labelmap = { } # TODO: get list of labels
 
     @staticmethod

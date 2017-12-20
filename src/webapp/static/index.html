@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang=no>
+<head><title>Pling Plong Odometer Online</title>
+
+<link rel="stylesheet" href="/media/bootstrap.min.css" integrity="sha256-QUyqZrt5vIjBumoqQV0jM8CgGqscFfdGhN+nVCqX0vc=" crossorigin="anonymous">
+<link rel="stylesheet" href="/media/tingle.min.css" >
+<script type="text/javascript" src="/media/tingle.min.js"></script>
+<script type="text/javascript" src="/media/i18n.js"></script>
+<script type="text/javascript" src="/media/messageformat.min.js"></script>
+
+<style type="text/css">
+    .duration { text-align: right; 
+                padding-right: 1em;
+                font-family: Courier New, Courier, monospace;
+              }
+
+
+    .dragover { border: 6px double blue;
+    }
+
+    #preview { vertical-align: bottom;
+               vertical-align: -webkit-baseline-middle;
+        
+    }
+
+    #startinfo {
+        font-size: 150%;
+    }
+
+    progress { width: 90%; }
+
+    body { height: 100vh;
+           min-height: 100vh;
+    
+    }
+</style>
+
+<script type="text/javascript">
+
+var languagecode = "no-NO"; // TODO: update this dynamically
+var i18n = new MessageFormat(languagecode).compile(messages)[languagecode];
+
+function secs2timestring(duration) {
+    // takes an integer of seconds, responds with a "mm:ss" timestring
+    var mins = parseInt(duration / 60);
+    var secs = duration % 60;
+    return mins.toString() + ":" + secs.toString();
+}
+
+function slug(s, len) {
+    // make sure text is not longer than len (default: 15) and return with ellipsis
+    len = len || 15;
+    if(s.length < len) return s;
+    return s.substr(0, len-1) + "…";
+}
+
+function formatDuration(numbr) {
+    // retun all duration numbers the same way and formatted according to locale
+    // TODO: get locale dynamically (with translations)
+    return numbr.toLocaleString("no", {"minimumIntegerDigits":1, "minimumFractionDigits":2});
+}
+
+function removeChildren(node) {
+    while(node.hasChildNodes()) {
+        node.removeChild(node.firstChild);
+    }
+}
+
+function startProgress(max) {
+   //console.log('creating progress bar with max=%o', max);
+   document.getElementById('thead-metadata').innerHTML = "<progress id=progress value=0 class=align-bottom max="+max+"></progress>";
+}
+
+function updateProgress(val) {
+    //console.log('updating progress bar with val=%o', val);
+    var p = document.getElementById('progress');
+    var newval = parseInt(p.getAttribute('value'))+val;
+    if(newval == p.getAttribute('max')) {
+        // all resolve tasks are finished, remove progressbar
+        p.parentElement.innerHTML = i18n.METADATA();
+        finishedResolving();
+    } else {
+        p.setAttribute('value', newval);
+    }
+}
+
+function returnFileSize(number) {
+    if(number < 1024) {
+      return number + 'bytes';
+    } else if(number > 1024 && number < 1048576) {
+      return (number/1024).toFixed(1) + 'KB';
+    } else if(number > 1048576) {
+      return (number/1048576).toFixed(1) + 'MB';
+    }
+}
+
+var fileTypes = [
+    'text/xml',
+    'application/xml'
+  ]
+  
+function validFileType(file) {
+    for(var i = 0; i < fileTypes.length; i++) {
+        if(file.type === fileTypes[i]) {
+        return true;
+        }
+    }
+    return false;
+}
+
+function setupModal() {
+    // create empty modal for later
+    tinglemodal = new tingle.modal({
+        footer: true,
+        stickyFooter: true,
+        closeLabel: i18n.CLOSE(),
+        closeMethods: ['overlay', 'button', 'escape'],
+    });
+    // add a button
+    tinglemodal.addFooterBtn(i18n.CLOSE(), 'tingle-btn tingle-btn--primary', function() {
+    // here goes some logic
+        tinglemodal.close();
+    });
+    return tinglemodal;
+
+}
+function main() {
+    var form = document.getElementById('file-form');
+    var fileSelect = document.getElementById('file-select');
+    var fileList = document.getElementById('files-list');
+    var createReportButton = document.getElementById('create-report-button');
+    var createCreditsButton = document.getElementById('create-credits-button');
+
+    // i18n - translate ui
+    document.getElementById("navbar-analysis").innerText = i18n.ANALYSIS(); 
+    document.getElementById("navbar-help").innerText = i18n.HELP(); 
+    document.getElementById("navbar-api").title = i18n.API(); 
+    document.getElementById("file-select").title = i18n.CHOOSE_TIMELINE_DATA(); 
+    document.getElementById("preview").innerText = "⇜ "+i18n.PLEASE_SELECT_FILE(); 
+    document.getElementById("create-report-button").innerText = i18n.GENERATE_METADATA_REPORT(); 
+    document.getElementById("create-credits-button").innerText = i18n.GENERATE_END_CREDITS(); 
+    document.getElementById("thead-filename").innerText = i18n.NAME(); 
+    document.getElementById("thead-filename").title = i18n.FILENAME(); 
+    document.getElementById("thead-duration").innerText = i18n.AUDIBLE_LENGTH(); 
+    document.getElementById("thead-duration").title = i18n.MEASURED_IN_SECONDS(); 
+    document.getElementById("thead-library").title = i18n.MUSIC_LIBRARY(); 
+    document.getElementById("thead-metadata").innerText = i18n.METADATA(); 
+    document.getElementById("startinfo").innerHTML = i18n.STARTINFO(); 
+
+    // add debug ui
+    if(document.location.search == "?debug") {
+        var tbtn = document.createElement('button');
+        tbtn.innerText = "Use testfile";
+        tbtn.onclick = function(event) {
+            event.preventDefault();
+            removeChildren(fileList);
+            document.getElementById('preview').validFile = {name:'testfile',
+                                                            lastModifiedDate: new Date()};
+            var formData = new FormData();
+            formData.append('usetestfile', '1');
+            submit(formData);
+            return false;
+        }
+        document.querySelector('div.col-5').appendChild(tbtn);
+    }
+
+    createReportButton.onclick = function(event) {
+        event.preventDefault();
+        reportdialog();
+    }
+
+    createCreditsButton.onclick = function(event) {
+        event.preventDefault();
+        creditsdialog();
+    }
+
+    fileSelect.onchange = function(event) {
+        // react to file select changes
+        // based on public domain code from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
+        var curFiles = fileSelect.files;
+        var preview = document.getElementById('preview');
+        if(curFiles.length === 0) {
+          preview.innerHTML = "<b>"+i18n.NO_FILES_SELECTED()+"</b>";
+        } else {
+            // empty files table
+            removeChildren(fileList);
+            var chosenFile = curFiles[0];
+            if(!validFileType(chosenFile)) {
+                preview.innerText = i18n.NOT_VALID_FILE_TYPE();
+                preview.setAttribute('class', 'text-danger');
+                // clear any previous file info
+                preview.validFile = null;
+            } else {
+                preview.innerText = i18n.FILE_OK({FILESIZE: returnFileSize(chosenFile.size)});
+                preview.setAttribute('title', i18n.FULL_FILE_NAME({FILENAME: chosenFile.name}));
+                preview.setAttribute('class', 'text-success');
+                // Keep the file info around as a javascript object
+                preview.validFile = chosenFile;
+                // Create a new FormData object.
+                var formData = new FormData();
+                // Add the file to the request.
+                formData.append('xmeml', chosenFile, chosenFile.name);
+                submit(formData)
+            }
+        }
+    }
+}
+
+function resolveAll() {
+    // resolve all resolvable tracks
+    var resolvables = document.querySelectorAll('#files-list .metadata.resolvable'); 
+    startProgress(resolvables.length);
+    for (var i = 0; i < resolvables.length; i++) {
+        var url = resolvables[i].timelinedata.resolve;
+        resolve(url);
+    }
+}
+
+function submit(formData) {
+    // send the already prepared form data to the json endpoint for analysis
+    // Set up the request.
+    var xhr = new XMLHttpRequest();
+    // Open the connection.
+    xhr.open('POST', '/analyze', true);
+
+    // Set up a handler for when the request finishes.
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            // File(s) uploaded.
+            var audio = JSON.parse(xhr.response);
+            console.log('got audio response: %o', audio);
+            return formatAudible(audio["audioclips"]);
+        } else {
+            alertmsg(i18n.ALERTMSG({ERRCODE:xhr.status, ERRMSG:xhr.statusText}, 'danger'));
+        }
+    };
+    var fileList = document.getElementById('files-list');
+    // empty the files table
+    removeChildren(fileList);
+    fileList.innerHTML = "<td>"+i18n.LOADING_DATA()+"<td><td><td>";
+    // Send the Data.
+    xhr.send(formData);
+}
+
+function formatAudible(audible) {
+    // get a json document of the audio file structure of the parsed xml and render it
+    var fileList = document.getElementById('files-list');
+    // empty the files table
+    removeChildren(fileList);
+
+    //var serviceList = document.createElement('select');
+    //serviceList.innerHTML = "";
+
+    for(var i=0; i<audible.length; i++) {
+        var tr = document.createElement('tr');
+        var elm = audible[i];
+        var c = elm.clipname;
+        var r = elm.resolve;
+        var secs = elm.audible_length;
+        var service = elm.music_service || "<i>Unknown</i>";
+        tr.innerHTML = "<td>"+c+"<td class=duration>"+formatDuration(secs)+"s<td>"+service+"<td class=metadata id='o-"+window.btoa(r)+"'>";
+        // keep the info around as a javascript object
+        tr.lastChild.timelinedata = elm;
+        if(elm.resolvable) {
+           tr.firstChild.classList.add('text-success');
+           tr.lastChild.classList.add('resolvable');
+        }
+        fileList.appendChild(tr);
+    }
+    resolveAll();
+}
+
+function resolve(url) {
+    // get an url, and parse the JSON contents into a metadata string
+    // Set up the request.
+    var xhr = new XMLHttpRequest();
+    // Open the connection.
+    xhr.open('GET', url, true);
+
+    var output = document.getElementById('o-'+window.btoa(url));
+    // Set up a handler for when the request finishes.
+    output.innerText = i18n.GETTING_METADATA();
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            // File(s) uploaded.
+            var response = JSON.parse(xhr.response);
+            console.log('got response %o', response);
+            var md = response['metadata'];
+            output.classList.add('has-metadata', 'text-success');
+            output.metadata = md;
+            if(md.productionmusic === true) {
+                output.innerHTML = md.copyright+" &reg; <b>"+md.label+"</b>";
+            } else {
+                output.innerHTML = "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year;
+                //s += u'%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s\r\n\r\n' % vars(r.metadata)
+            }
+        } else if(xhr.status === 400) {
+            // server had issues with our request
+            var response = JSON.parse(xhr.response);
+            console.log('got error response %o', response);
+            var e = response['error'];
+            output.classList.add('text-white', 'bg-danger');
+            output.innerHTML = '<b>'+e.type+'</b>: '+e.args;
+
+        } else {
+            console.error("server returned %o -> %o", xhr.status, xhr.statusText);
+            output.innerHTML = '<i>'+xhr.statusText+'</i>';
+            output.classList.add('text-white', 'bg-danger');
+        }
+        updateProgress(+1);
+    };
+
+    // Send 
+    xhr.send();
+}
+
+function dropHandler(ev) {
+    // handle a dropped file
+    ev.preventDefault();
+    document.querySelector('body').classList.remove('dragover');
+    // If dropped items aren't files, reject them
+    var dt = ev.dataTransfer;
+    var preview = document.getElementById('preview');
+    var chosenFile;
+    // Create a new FormData object.
+    if (dt.items) {
+        // Use DataTransferItemList interface to access the file(s)
+        chosenFile = dt.items[0].getAsFile();
+    } else {
+        // Use DataTransfer interface to access the file(s)
+        chosenFile = dt.files[0];
+    }
+    if(validFileType(chosenFile)) {
+        preview.innerText = slug(chosenFile.name, 25) + ' OK – ' + returnFileSize(chosenFile.size);
+        preview.setAttribute('title', i18n.FULL_FILE_NAME({FILENAME:chosenFile.name}));
+        preview.setAttribute('class', 'text-success');
+        document.getElementById('file-select').value = "";
+        // Keep the file info around as a javascript object
+        preview.validFile = chosenFile;
+        var formData = new FormData();
+        formData.append('xmeml', chosenFile, chosenFile.name);
+        submit(formData);
+    } else {
+        preview.innerText = 'Not a valid file type';
+        preview.setAttribute('class', 'text-danger');
+        // Clear any previous file info|
+        preview.validFile = null;
+    }
+  }
+
+  function dragoverHandler(ev) {
+    console.log("dragOver");
+    // Prevent default select and drag behavior
+    ev.preventDefault();
+    document.querySelector('body').classList.add('dragover');
+    window.setTimeout(function() {
+        document.querySelector('body').classList.remove('dragover');
+    }, 10000)
+  }
+
+  function dragendHandler(ev) {
+    console.log("dragEnd");
+    document.querySelector('body').classList.remove('dragover');
+    // Remove all of the drag data
+    var dt = ev.dataTransfer;
+    if (dt.items) {
+      // Use DataTransferItemList interface to remove the drag data
+      for (var i = 0; i < dt.items.length; i++) {
+        dt.items.remove(i);
+      }
+    } else {
+      // Use DataTransfer interface to remove the drag data
+      ev.dataTransfer.clearData();
+    }
+  }
+
+function alertmsg(msg, errortype) {
+  var e = document.getElementById('alertmsg');
+  var etype = errortype || 'warning';
+  e.innerText = msg;
+  e.classList.add('alert-'+etype);
+  e.hidden=false;
+  window.setTimeout(function() {e.hidden=true; 
+                                e.classList.remove('alert-'+etype); 
+                                e.innerText='';}, 
+                            4500);
+}
+
+function creditsdialog() {
+    // pop up  a dialog suitable for copy-paste into end credits
+    var metadatarows = document.querySelectorAll('td.has-metadata');
+    var s = "";
+    var _labels = [];
+    for(var i=0; i<metadatarows.length; i++) {
+        var md = metadatarows[i].metadata;
+        if(md.title===undefined) { continue }
+        if(md.productionmusic===true) {
+            if(_labels.indexOf(md.label) === -1) { // only register once per label
+                s = s + "<i>"+md.copyright+"</i> <br>&reg; <b>"+md.label+"</b><br>";
+            }
+        } else {
+            s = s + "<i>"+md.title+"</i> "+md.artist+" <br>&reg; <b>"+md.label+"</b> "+md.year;
+        }
+    }
+    console.log('got credits: %o', s);
+    var tinglemodal = setupModal();
+    tinglemodal.setContent('<h1>'+i18n.END_CREDITS()+'</h1>'+s);
+    tinglemodal.open();
+}
+
+function runsheetdialog() {
+    // pop up a run sheet dialog, listing each track by inpoint on timeline on timeline
+    var metadatarows = document.querySelectorAll('td.has-metadata');
+    var preview = document.getElementById('preview');
+    var s = "<h1>"+i18n.REPORT_HEADER_TIMELINE()+"</h1>";
+    s = s + '<p><code>'+i18n.FULL_FILE_NAME({FILENAME:preview.validFile.name})+'</code>';
+    s = s + '<table cellpadding=10><tr>';
+    s = s + '<th>'+i18n.IN()+'</th>';
+    s = s + '<th>'+i18n.OUT()+'</th>';
+    s = s + '<th>'+i18n.DURATION()+'</th>';
+    s = s + '<th>'+i18n.CLIP_DETAILS()+'</th>';
+    s = s + '</tr>';
+    var reportrows = []; // this is where we keep the generated text of each report row
+    for(var i=0; i<metadatarows.length; i++) {
+        var md = metadatarows[i].metadata;
+        var td = metadatarows[i].timelinedata;
+        console.log("got timelinedata: %o", td);
+        var t;
+        if(md.title===undefined) {// TODO: let people choose ordinary files also 
+            t = td.filename; 
+        } else {
+            t = '\u00ab'+md.title+'\u00bb \u2117 '+td.musiclibrary
+            //_t = u'\u00ab%(title)s\u00bb \u2117 %(musiclibrary)s' % vars(r.metadata)
+        }
+        if(md.productionmusic===true) {
+            if(_labels.indexOf(md.label) === -1) { // only register once per label
+                s = s + "<i>"+md.copyright+"</i> &reg; <b>"+md.label+"</b><br>";
+            }
+        } else {
+            s = s + "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year;
+        }
+    }
+    console.log('got credits: %o', s);
+    var tinglemodal = setupModal();
+    tinglemodal.setContent('<h1>End credits</h1>'+s);
+    tinglemodal.open();
+}
+
+function reportdialog() {
+    // pop up a prf report, detailing the metadata details
+    var metadatarows = document.querySelectorAll('td.has-metadata');
+    var reportrows = []; // this is where we keep the generated text of each report row
+    for(var i=0; i<metadatarows.length; i++) {
+        var md = metadatarows[i].metadata;
+        var td = metadatarows[i].timelinedata;
+        console.log("got timelinedata: %o", td);
+        var t = md.title || td.title;// TODO: let people choose ordinary files also 
+        var _s = "<div><dt>Title:</dt><dd>"+t+"</dd>";
+        if(md.identifier)
+            _s = _s + "<dt>Track identifier:</dt><dd>"+md.identifier+"</dd>";
+        if(md.artist)
+            _s = _s + "<dt>Artist:</dt><dd>"+md.artist+"</dd>";
+        if(md.albumname)
+            _s = _s + "<dt>Album name:</dt><dd>"+md.albumname+"</dd>";
+        if(md.lyricist)
+            _s = _s + "<dt>Lyricist:</dt><dd>"+md.lyricist+"</dd>";
+        if(md.composer)
+            _s = _s + "<dt>Composer:</dt><dd>"+md.composer+"</dd>";
+        if(md.label)
+            _s = _s + "<dt>Label:</dt><dd>"+md.label+"</dd>";
+        if(md.recordnumber)
+            _s = _s + "<dt>Recordnumber:</dt><dd>"+md.recordnumber+"</dd>";
+        if(md.copyright)
+            _s = _s + "<dt>Copyright owner:</dt><dd>"+md.copyright+"</dd>";
+        if(md.year && md.year !== -1)
+            _s = _s + "<dt>Released year:</dt><dd>"+md.year+"</dd>";
+        
+        _s = _s + "<br><b>"+i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(td.audible_length)})+"</b></div><hr>";
+        reportrows.push(_s);
+    }
+    var preview = document.getElementById('preview');
+    var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:preview.validFile.name, 
+                 DATESTRING:preview.validFile.lastModifiedDate.toLocaleString()})+'</code>';
+    html = html + reportrows.join("\n");
+    var tinglemodal = setupModal();
+    // add another button
+    tinglemodal.addFooterBtn(i18n.DOWNLOAD_AS_FILE(), 'tingle-btn tingle-btn--info', function() {
+        // TODO: add html header and date and time
+        download(html, "music_metadata.html", "text/html");
+        tinglemodal.close();
+    });
+    tinglemodal.setContent("<h1>"+i18n.REPORT_HEADER_PRF()+"</h1>"+html);
+    tinglemodal.open();
+}
+
+function download(content, filename, contentType) {
+    console.log('downloading metadata sheet');
+    if(!contentType) contentType = 'application/octet-stream';
+        var a = document.createElement('a');
+        var blob = new Blob([content], {'type':contentType});
+        a.href = window.URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+}
+/*
+clips = defaultdict(list)
+for r in self.itercheckedrows():
+    if r.metadata.title is None:
+        # not resolved, use file name
+        _t = repr(r.audioname)
+    else:
+        _t = u'\u00ab%(title)s\u00bb \u2117 %(musiclibrary)s' % vars(r.metadata)
+    for sc in r.subclips:
+        _s = '<tr><td><code>%s</code></td><td><code>%s</code></td>' % (sc['in'], sc['out'])
+        _s += '<td>%06.2f\"</td>' % (sc['durationsecs'])
+        _s += '<td>%s</td>' % _t
+        _s += "</tr>"
+        clips[sc['in']].append(_s)
+# sort all clips by inpoint
+inpoints = list(clips.keys())
+inpoints.sort()
+s = s + "".join(["".join(clips[inpoint]) for inpoint in inpoints])
+s = s + '</table>'
+*/
+function finishedResolving() {
+    // things to do when all metadata is loaded
+    var btns = document.querySelectorAll('#file-form button[type="button"]');
+    for(var i=0; i<btns.length; i++) {
+        btns[i].removeAttribute('disabled');
+    }
+}
+</script>
+
+</head>
+<body
+    ondrop="dropHandler(event);" 
+    ondragover="dragoverHandler(event);" 
+    ondragend="dragendHandler(event);">
+
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <a class="navbar-brand" href="#">♫ ♪ Odometer</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                  <div class="navbar-nav">
+                    <a class="nav-item nav-link active" href="#" id=navbar-analysis>Analysis <span class="sr-only">(current)</span></a>
+                    <a class="nav-item nav-link disabled" href="#" id=navbar-help>Help</a>
+                    <a class="nav-item nav-link" href="/doc" title="JSON REST API documentation (swagger)" id=navbar-api>API</a>
+                  </div>
+                </div>
+              </nav>
+
+    <div id=alertmsg class="fade show alert" role="alert" hidden>
+    </div>
+
+    <form id="file-form" class="form" 
+          enctype="multipart/form-data" action="/analyze" method="POST">
+        <div class="form-row">
+            <div class="col-3">
+                <input type="file" 
+                    class="form-control" 
+                    id="file-select" title="Choose timeline data (XMEML)"
+                    accept=".xml,text/xml,application/xml"
+                    name="xmeml">
+            </div>
+            <div class="col-5">
+                <span id="preview" class="text-secondary">Please select a file</span>
+            </div>
+            <div class="col-4">
+                <button type="button" disabled class="btn btn-primary" id="create-report-button">Generate metadata report</button>
+                <button type="button" disabled class="btn btn-primary" id="create-credits-button">Generate credits</button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-striped table-sm">
+        <col style="width:40%">
+        <col style="width:10%">
+        <col style="width:10%">
+        <col style="width:60%">
+        <thead class="thead-dark">
+            <th title="File name" id=thead-filename>name</th>
+            <th title="Measured in seconds" id=thead-duration>audible length</th>
+            <th title="Music library" id=thead-library>&reg;</th>
+            <th id=thead-metadata>metadata</th>
+        </thead>
+        <tbody id=files-list style="font-size:80%">
+            <td id=startinfo>To get started: Select a XMEML file above. <br>(You may also drop it anywhere in this window). <td><td><td>
+        </tbody>
+
+    </table>
+
+
+<script type="text/javascript">
+main()
+</script>
+</body>
+
+</html>

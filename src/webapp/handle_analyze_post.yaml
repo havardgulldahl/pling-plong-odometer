@@ -1,0 +1,28 @@
+tags:
+- analysis
+summary: POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.
+description: This is typically how you start your analysis.
+operationId: handle_analyze_post
+consumes:
+- multipart/form-data
+produces:
+- application/json
+parameters:
+- in: formData
+  name: xmeml
+  description: file upload
+  required: true
+  type: file
+  schema:
+    properties:
+      xmeml:
+        type: file
+        description: The xmeml file that is to be analyzed
+responses:
+  '200':
+    description: successful operation
+    schema:
+      type: array
+      items:
+  '400':
+    description: missing xmeml file data

@@ -3,4 +3,5 @@ git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml-iter
 lxml
 pytest
 clint
-future
+six
+requests
