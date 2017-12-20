@@ -61,6 +61,11 @@ def getmusicid(filename):
         return ResolverBase.musicid(filename)
     return res.musicid(filename)
 
+def get_sec(time_str):
+    'helper method to get seconds from a time string, e.g. "01:04" -> 64'
+    return sum(int(x) * 60 ** i for i,x in enumerate(reversed(time_str.split(":"))))
+
+
 class ResolverBase:
     prefixes = [] # a list of file prefixes that this resolver recognizes
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
@@ -594,14 +599,6 @@ class ApollomusicResolver(ResolverBase):
             'track': _trackno
         }
         endpoint = 'http://www.findthetune.com/guests/search/label={label}&album={album}&track={track}'.format(**params)
-        def get_sec(time_str):
-            'helper method to get seconds from a time string, e.g. "01:04" -> 64'
-            try:
-                m, s = time_str.split(':')
-                return int(m) * 60 + int(s)
-            except ValueError:
-                return -1
-
         async with self.session.get(endpoint) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
@@ -1360,7 +1357,7 @@ class WarnerChappellResolver(ResolverBase):
         data = TrackMetadata(filename=self.filename,
                              musiclibrary=self.name,
                              title=trackdata.get('trackname'),
-                             length=trackdata.get('duration', -1),
+                             length=get_sec(trackdata.get('duration', -1)),
                              composer=rights.get('composer'),
                              artist=None,
                              year=-1,
