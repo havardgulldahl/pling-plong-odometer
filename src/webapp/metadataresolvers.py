@@ -30,14 +30,17 @@ from model import TrackMetadata
 class TrackNotFound(Exception):
     pass
 
-def findResolver(filename):
+def findResolvers(filename):
+    'Look through enabled resolvers and return all that claim to support the filename'
+    supporting = []
     for resolver in [x() for x in CURRENT_RESOLVERS]:
         if not resolver.enabled: continue
         if resolver.accepts(filename):
-            return resolver
-    return False
+            supporting.append(resolver)
+    return supporting
 
-def getResolvers():
+def getAllResolvers():
+    'Return all defined resolvers'
     r = []
     for resolver in [x() for x in CURRENT_RESOLVERS]:
         r.append({'name': resolver.name,
@@ -51,15 +54,22 @@ def getResolvers():
         })
     return r
 
+def getResolverByName(name):
+    'Return resolver object by resolver name, returns None if none found'
+    for resolver in [x() for x in CURRENT_RESOLVERS]:
+        if resolver.name == name:
+            return resolver
+    return None
+
 def htmlunescape(s):
     return html.parser.HTMLParser().unescape(s)
 
 def getmusicid(filename):
     "Return a music id from filename"
-    res = findResolver(filename)
+    res = findResolvers(filename)
     if not res:
         return ResolverBase.musicid(filename)
-    return res.musicid(filename)
+    return res[0].musicid(filename) # TODO: handle multiple options
 
 def get_sec(time_str):
     'helper method to get seconds from a time string, e.g. "01:04" -> 64'
@@ -422,7 +432,7 @@ class AUXResolver(ResolverBase):
                 'WDA': 'Wild Diesel Artist',
                 'WD': 'Wild Diesel',
                }
-    name = 'AUX Publishing'
+    name = 'AUX'
     prettyname = 'AUX Publishing (inkluderer Sonoton)'
     website = 'http://search.auxmp.com/'
     urlbase = 'http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=%s&ac=track&country=NO'
