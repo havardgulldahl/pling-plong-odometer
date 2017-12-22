@@ -92,6 +92,9 @@ class ResolverBase:
         self.session = None # set it in .setSession() or lazy create in .resolve()
 
     def accepts(self, filename):
+        return self.musicid(filename) is not None
+        """
+
         for f in self.prefixes:
             if str(filename).upper().startswith(f):
                 return True
@@ -99,6 +102,7 @@ class ResolverBase:
             if str(filename).upper().endswith(f):
                 return True
         return False
+        """
 
     def setSession(self, session):
         'add existing aiohttp.ClientSession() to object for transparent cookie handling and resource reuse'
@@ -439,8 +443,12 @@ class AUXResolver(ResolverBase):
 
     @staticmethod
     def musicid(filename):
-        """Returns musicid from filename.  """
-        rex = re.compile(r'^((AUXMP_)?([A-Z]+\d{6}))')
+        """Returns musicid from filename. 
+        
+        AUXMP_STT003003_ALL_IT_TAKES___AUX.wav -> 
+        
+         """
+        rex = re.compile(r'^((AUXMP_)?((%s)\d{6}))' % '|'.join(AUXResolver.labelmap.keys()))
         g = rex.search(filename)
         try:
             return g.group(3)
@@ -836,7 +844,12 @@ class UprightmusicResolver(ResolverBase):
         _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV ---> 4ceb1f37-8ecc-42e7-a4d8-79ba4336715a 
 
         """
-        return filename
+        rex = re.compile(r'^_UPRIGHT_[A-Z]{3}_\d{1,4}_\d{1,4}_\w+_.*', re.UNICODE) # _UPRIGHT_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
+        m = rex.match(filename) 
+        try:
+            return m.group(0)
+        except AttributeError: #no match
+            return None
 
     async def get_guid(self, filename):
         'Search for filename on website and hope we get the unique guid back'
