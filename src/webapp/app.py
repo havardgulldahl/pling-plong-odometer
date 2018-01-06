@@ -172,7 +172,7 @@ async def handle_supported_resolvers(request):
 app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
 
 def index(request):
-    with open('static/index.html') as _f:
+    with open('static/index.html', encoding='utf-8') as _f:
         return web.Response(text=_f.read(), content_type='text/html')
 
 app.router.add_get('/', index)
@@ -203,9 +203,17 @@ async def init(loop):
 if __name__ == '__main__':
     import logging
     logging.basicConfig(level=logging.DEBUG)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Odometer server")
+    parser.add_argument('--path')
+    parser.add_argument('--port', type=int)#, default=8000)
+
+    args = parser.parse_args()
+
     # start server
     web.run_app(
         app,
-        #reload=True,
-        port=8000
+        path=args.path,
+        port=args.port
     )
