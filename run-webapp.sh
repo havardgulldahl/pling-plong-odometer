@@ -1,7 +1,5 @@
 #!/bin/bash
 
-pyenv activate pling-plong-odometer
-
-cd src/webapp;
+cd /usr/local/odometer/src/webapp;
 
 python3 ./app.py $*

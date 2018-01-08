@@ -1,0 +1,10 @@
+# cat /etc/systemd/system/odometer.socket 
+[Unit]
+Description=Odometer Socket
+
+[Socket]
+ListenStream=80
+Accept=yes
+
+[Install]
+WantedBy=sockets.target

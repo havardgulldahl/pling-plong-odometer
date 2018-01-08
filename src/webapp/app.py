@@ -207,7 +207,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Odometer server")
     parser.add_argument('--path')
-    parser.add_argument('--port', type=int)#, default=8000)
+    parser.add_argument('--port', type=int)
 
     args = parser.parse_args()
 
@@ -217,3 +217,8 @@ if __name__ == '__main__':
         path=args.path,
         port=args.port
     )
+    try:
+        loop.run_forever()
+    finally:
+        loop.run_until_complete(loop.shutdown_asyncgens())
+        loop.close()
