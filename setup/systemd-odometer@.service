@@ -2,13 +2,16 @@
 [Unit]
 Description=Odometer Service
 #Requires=odometer.socket
+After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/tmp18040/dev/pling-plong-odometer/run-webapp.sh --port=800%i
-Restart=always
+ExecStart=/home/tmp18040/dev/pling-plong-odometer/run-webapp.sh --port=808%i
+Restart=on-abnormal
+RestartSec=1
 #StandardInput=socket
 StandardError=journal
+StartLimitIntervalSec=0
 TimeoutStopSec=5
 
 [Install]
