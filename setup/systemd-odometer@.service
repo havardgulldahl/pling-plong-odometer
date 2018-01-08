@@ -1,4 +1,11 @@
 # /etc/systemd/system/odometer@.service 
+#
+# To start up two instances
+# sudo systemctl start odometer@{1..2}
+#
+# To enable two instances
+# sudo systemctl enable odometer@{1..2}
+# 
 [Unit]
 Description=Odometer Service
 #Requires=odometer.socket
