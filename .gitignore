@@ -67,7 +67,6 @@ dist/
 build/
 samples/
 bin/
-lib/
 include/
 share/
 
