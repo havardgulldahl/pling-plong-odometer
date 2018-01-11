@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="4.0" ExtensionBundleId="no.nrk.odometer" ExtensionBundleVersion="11.1"
-ExtensionBundleName="Odometer Panel for Premiere Pro"
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ExtensionManifest Version="6.0" ExtensionBundleId="no.nrk.odometer" 
+  ExtensionBundleVersion="11.1"
+  ExtensionBundleName="Odometer Panel for Premiere Pro"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<ExtensionList>
 		<Extension Id="no.nrk.odometer" Version="0.1.0" />
 	</ExtensionList>
@@ -23,15 +24,16 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 				<Resources>
 					<MainPath>./index.html</MainPath>
 					<ScriptPath>./PProPanel.jsx</ScriptPath>
+					<CEFCommandLine>
+						<Parameter>--allow-file-access</Parameter>
+						<Parameter>--allow-file-access-from-files</Parameter>
+						<Parameter>--enable-nodejs</Parameter>
+						<Parameter>--mixed-context</Parameter>
+					</CEFCommandLine>
 				</Resources>
 				<Lifecycle>
 					<AutoVisible>true</AutoVisible>
 				</Lifecycle>
-				<CEFCommandLine>
-					<Parameter>--allow-file-access</Parameter>
-					<Parameter>--allow-file-access-from-files</Parameter>
-					<Parameter>--enable-nodejs</Parameter>
-				</CEFCommandLine>
 				<UI>
 					<Type>Panel</Type>
 					<Menu>♫ ♪ Odometer</Menu>
