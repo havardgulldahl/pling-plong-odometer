@@ -23,8 +23,11 @@ function onLoaded() {
 	});
 
 	csInterface.addEventListener("no.nrk.odometer.events.FCPXMLWritten", function(event){
-		console.log("New FCPXML file detected: " + event.data);
-		alert("New FCPXML file detected: " + event.data);
+		// event will be a javascript object (csInterface does JSON.parse() behind the scenes)
+		// with the following properties
+		//  .type == "no.nrk.odometer.events.FCPXMLWritten" 
+		//  .data == js object
+		console.log("New FCPXML file detected: %o", event);
 	});
 
 	// register for messages
