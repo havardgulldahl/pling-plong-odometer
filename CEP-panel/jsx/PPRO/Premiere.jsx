@@ -1,3 +1,44 @@
+// runs in application context
+// i.e. 
+// no node.js
+// have to pass events to panel code via .dispatch()
+
+// the following global variables already exist in the environment:
+// app. == 
+// 
+
+console = {
+	// recreate console log functions, logging to PPro "Events" panel 
+	log : function(message) {
+		//app.setSDKEventMessage('Here is some information.', 'info');
+		app.setSDKEventMessage(message, 'info');
+	},
+	warn : function(message) {
+		//app.setSDKEventMessage('Here is a warning.', 'warning');
+		app.setSDKEventMessage(message, 'warning');
+	},
+	error : function(message) {
+		//app.setSDKEventMessage('Here is an error.', 'error');  // Very annoying; use sparingly.
+		app.setSDKEventMessage(message, 'error');
+	}
+}
+
+var dispatch = function(signalName, signalData) {
+	// function to pass messages to any listeners to this signal registered with addEventListener
+	// use this to communicate with panel code
+	var eoName;
+	if (Folder.fs == 'Macintosh') {
+		eoName = "PlugPlugExternalObject";							
+	} else {
+		eoName = "PlugPlugExternalObject.dll";
+	}
+	var mylib		= new ExternalObject('lib:' + eoName);
+	var eventObj	= new CSXSEvent();
+	eventObj.type	= signalName;
+	eventObj.data	= signalData;
+	eventObj.dispatch();
+}
+
 $._PPP_={
 
 	createDeepFolderStructure : function(foldersArray, maxDepth) {
@@ -201,6 +242,14 @@ $._PPP_={
 		} else {
 			$._PPP_.updateEventPanel("No active sequence.");
 		}
+	},
+
+	odometer : function() {
+
+			console.log("Odometer was here.");
+			dispatch("no.nrk.odometer.events.FCPXMLWritten", {"filename":"/tmp/test.xml"})
+			console.log("dispatched event");
+
 	},
 	
 	exportFCPXML : function() {

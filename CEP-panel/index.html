@@ -277,23 +277,33 @@
 						csInterface.evalScript(whole_megillah);
 					}
 				});
+				$("#btn_PPROx33").on("click", function(e){
+					e.preventDefault(); 
+					var csInterface = new CSInterface();
+					var OSVersion   = csInterface.getOSInformation();
+					var path    	= csInterface.getSystemPath(SystemPath.EXTENSION);
+					console.log("we got jquery: %o", jQuery);
+					var url = 'http://localhost:8000/resolve/ApolloMusic/Apollo_WPM_47_1__Drive-in-Lullaby__Daniel-Woodward___APOLLO.mp3';
+					jQuery.getJSON(url, function(data) {
+						console.log('we got json data %o', data);
+					});
+					console.log('global: %o, %o, %o', window.require, null, null);
+					var backbone = require('fs');
+					console.log('backbone: %o', backbone);
+
+
+				});
 			});
 		</script>
 	</head>
 
 	<body onLoad="onLoaded()">
 		<a href="javascript:history.go(0)">Refresh panel</a>
-		<p id="username">[uninitialized]</p>
-		<p id="version_string">[uninitialized]</p>
-		<p id="active_seq">[uninitialized]</p>
-		<p id="proxies_on">Proxies enabled for sequence: </p>
 		
 		<div><h2>System</h2></div>
 		<div id="section1" class="sectionID">
-			<p>         </p>
-			<p>         </p>
-			<p>         </p>
-			<p>         </p>
+			<button class="controlBg textStyle" id="btn_PPROx33">Test panel code </button>
+			<button class="controlBg textStyle" id="btn_PPRO33333" onClick="evalScript('$._PPP_.odometer()')">test application code </button>
 			<button class="controlBg textStyle" id="btn_PPRO33" onClick="evalScript('$._PPP_.closeFrontSourceClip()')">Close front-most Source monitor clip</button>
 			<button class="controlBg textStyle" id="btn_PPRO35" onClick="evalScript('$._PPP_.closeAllClipsInSourceMonitor()')">Close all clips in Source monitor</button>
 			<button id="openfolder">Open PProPanel's payloads folder</button>

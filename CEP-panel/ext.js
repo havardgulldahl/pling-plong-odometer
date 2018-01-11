@@ -1,4 +1,4 @@
-
+// runs in browser a.k.a. panel context
 function onLoaded() {
 	var csInterface = new CSInterface();
 	var appName = csInterface.hostEnvironment.appName;
@@ -20,6 +20,11 @@ function onLoaded() {
 
 	csInterface.addEventListener("com.adobe.csxs.events.WorkspaceChanged", function(event){
 		alert("New workspace selected: " + event.data);
+	});
+
+	csInterface.addEventListener("no.nrk.odometer.events.FCPXMLWritten", function(event){
+		console.log("New FCPXML file detected: " + event.data);
+		alert("New FCPXML file detected: " + event.data);
 	});
 
 	// register for messages
