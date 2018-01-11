@@ -4,7 +4,7 @@ function onLoaded() {
 	var appName = csInterface.hostEnvironment.appName;
 	var appVersion = csInterface.hostEnvironment.appVersion;
 	
-	document.getElementById("dragthing").style.backgroundColor = "lightblue";
+	//document.getElementById("dragthing").style.backgroundColor = "lightblue";
 	var caps = csInterface.getHostCapabilities();
 	
 	loadJSX();
@@ -22,7 +22,7 @@ function onLoaded() {
 		alert("New workspace selected: " + event.data);
 	});
 
-	csInterface.addEventListener("no.nrk.odometer.events.FCPXMLWritten", function(event){
+	csInterface.addEventListener("XXXno.nrk.odometer.events.FCPXMLWritten", function(event){
 		// event will be a javascript object (csInterface does JSON.parse() behind the scenes)
 		// with the following properties
 		//  .type == "no.nrk.odometer.events.FCPXMLWritten" 
