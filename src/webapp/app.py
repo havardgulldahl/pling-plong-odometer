@@ -63,6 +63,9 @@ class AudioClip:
 
     def to_dict(self):
         'Boil everything down to a dict that is easy to jsonify'
+        if not self.services: 
+            app.logger.warning('No resolver services found for %s', self.filename)
+            self.services = []
         return {'clipname': self.filename,
                 'audible_length': self.audible_length,
                 'resolvable': self.is_resolvable(),
