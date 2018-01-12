@@ -1,7 +1,8 @@
 
-p {
+html {
 	font-family: "LucidaGrande", sans-serif;
-	text-align:center;
+	color: #eee;
+	font-size: 10pt;
 }
 
 button
@@ -30,4 +31,11 @@ input[type=text]
 
 #content ul li {
 	margin:3px 0px 3px 0px;
+}
+
+.unresolved {
+	color: lightsalmon;
+}
+.resolved {
+	color: greenyellow;
 }

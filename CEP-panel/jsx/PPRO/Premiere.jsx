@@ -246,7 +246,7 @@ $._PPP_={
 
 	odometer : function() {
 
-		console.log("Odometer was here.");
+		//console.log("Odometer was here.");
 		if (!app.project.activeSequence) {
 			// no active sequence
 			console.error("Please select a sequence and run again");

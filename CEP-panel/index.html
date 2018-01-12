@@ -109,12 +109,15 @@
 						tr.attr("id", btoa(val.clipname));
 						tr.html("<td>"+val.clipname+"<td>"+val.audible_length+"<td>"+musicService);
 						tr.toggleClass("resolvable", val.resolvable);
+						tr.addClass("unresolved");
 						tracklist.append(tr);
 						// get metadta from odometer resolver service
 						jQuery.getJSON("http://localhost:8000" + val.resolve[musicService], function(data) {
 							console.log("got track dta: %o", data);
 							tr.data("metadata", data.metadata);
 							tr.children().first().html(formatMetadata(data.metadata));
+							tr.removeClass("unresolved");
+							tr.addClass("resolved");
 						});
 					});
 				}
