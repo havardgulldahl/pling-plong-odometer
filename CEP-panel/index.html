@@ -94,7 +94,33 @@
 
 				});
 
+				function formatMetadata(metadata) {
+					// get a standar TrackMEtadata object and create a nice string
+					return "<b>"+metadata.title+"</b> -- "+metadata.copyright;
+				}
+
+				function setTracks(tracks) {
+					// format a tracklist in the html ui
+					var tracklist = $("#tracks").empty();
+					tracklist.data("timeline", tracks);
+					jQuery.each(tracks, function(idx, val) {
+						var tr = $("<tr>");
+						var musicService = val.music_services[0];
+						tr.attr("id", btoa(val.clipname));
+						tr.html("<td>"+val.clipname+"<td>"+val.audible_length+"<td>"+musicService);
+						tr.toggleClass("resolvable", val.resolvable);
+						tracklist.append(tr);
+						// get metadta from odometer resolver service
+						jQuery.getJSON("http://localhost:8000" + val.resolve[musicService], function(data) {
+							console.log("got track dta: %o", data);
+							tr.data("metadata", data.metadata);
+							tr.children().first().html(formatMetadata(data.metadata));
+						});
+					});
+				}
+
 				var csInterface = new CSInterface();
+				// listen for signals from application that FCP XMEML is created
 				csInterface.addEventListener("no.nrk.odometer.events.FCPXMLWritten", function(event){
 					// event will be a javascript object (csInterface does JSON.parse() behind the scenes)
 					// with the following properties
@@ -103,16 +129,7 @@
 					console.log("New FCPXML file detected: %o", event);
 					var output = document.getElementById("output");
 					output.innerText = JSON.stringify(event.data);
-					/*
-					var reader = new FileReader();
-					reader.onload = function(e) {
-						// triggered when file is read
-						var rawData = reader.result;
-						console.log("read file: %o", rawData);
-					}
-					var f = new File("", event.data.filename);
-					reader.readAsBinaryString(f);
-					*/
+					// use internal Premiere Pro API to read file from file system
 					var result = window.cep.fs.readFile(event.data.filename);
 					if(result.err === 0){
 						//success
@@ -123,6 +140,7 @@
 						var form = new FormData();
 						form.append("xmeml", blob, "test.xml");
 						console.log("created form %o", form);
+						// submit to odometer service
 						jQuery.ajax({
 							url: "http://localhost:8000/analyze",
 							method: "POST",
@@ -134,6 +152,7 @@
 								console.log("succes: %o", result);
 								var s = "read audioclips: " + result.audioclips.length;
 								output.innerText = s;
+								setTracks(result.audioclips);
 							},
 							error: function(er){
 								console.log("error: %o", er);
@@ -156,6 +175,18 @@
 			<button class="controlBg textStyle" id="btn_PPRO33333" onClick="evalScript('$._PPP_.odometer()')">test application code </button>
 		</div>
 		<textarea id=output rows=8 style="width:100%;border:1px solid white"></textarea>
+		<table>
+			<thead>
+				<tr>
+					<td>clip</td>
+					<td>length</td>
+					<td>metadata</td>
+				</tr>
+			</thead>
+			<tbody id=tracks>
+
+			</tbody>
+		</table>
 	</body>
 	<script>
 		document.body.onbeforeunload = function() {
