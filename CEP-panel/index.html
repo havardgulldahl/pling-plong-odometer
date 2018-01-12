@@ -130,14 +130,11 @@
 					//  .type == "no.nrk.odometer.events.FCPXMLWritten" 
 					//  .data == js object
 					console.log("New FCPXML file detected: %o", event);
-					var output = document.getElementById("output");
-					output.innerText = JSON.stringify(event.data);
 					// use internal Premiere Pro API to read file from file system
 					var result = window.cep.fs.readFile(event.data.filename);
 					if(result.err === 0){
 						//success
 						//result.data is file content
-						output.innerText = "successfuly read data";
 						console.log("read %s bytes", result.data.length);
 						var blob = new Blob([result.data], {type : 'text/xml'});
 						var form = new FormData();
@@ -153,8 +150,6 @@
 							contentType: false,
 							success: function(result){
 								console.log("succes: %o", result);
-								var s = "read audioclips: " + result.audioclips.length;
-								output.innerText = s;
 								setTracks(result.audioclips);
 							},
 							error: function(er){
@@ -164,7 +159,7 @@
 
 					} else {
 
-						output.innerText = "file read failed";
+						alert("file read failed");
 					}
 				});
 			});
@@ -177,7 +172,6 @@
 			<button class="controlBg textStyle" id="btn_PPROx33">Test panel code </button>
 			<button class="controlBg textStyle" id="btn_PPRO33333" onClick="evalScript('$._PPP_.odometer()')">test application code </button>
 		</div>
-		<textarea id=output rows=8 style="width:100%;border:1px solid white"></textarea>
 		<table>
 			<thead>
 				<tr>
