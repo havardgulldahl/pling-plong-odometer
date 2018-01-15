@@ -99,6 +99,12 @@
 					return "<b>"+metadata.title+"</b> -- "+metadata.copyright;
 				}
 
+				function formatDuration(numbr) {
+					// retun all duration numbers the same way and formatted according to locale
+					// TODO: get locale dynamically (with translations)
+					return numbr.toLocaleString("no", {"minimumIntegerDigits":1, "minimumFractionDigits":2});
+				}
+
 				function setTracks(tracks) {
 					// format a tracklist in the html ui
 					var tracklist = $("#tracks").empty();
@@ -110,7 +116,7 @@
 						var tr = $("<tr>");
 						var musicService = val.music_services[0];
 						tr.attr("id", btoa(val.clipname));
-						tr.html("<td>"+val.clipname+"<td>"+val.audible_length+"<td>"+musicService);
+						tr.html("<td>"+val.clipname+"<td>"+formatDuration(val.audible_length)+"<td>"+musicService);
 						tr.toggleClass("resolvable", val.resolvable);
 						tr.addClass("unresolved");
 						tracklist.append(tr);
@@ -126,7 +132,6 @@
 							console.log("failed to resolve clip %o", val.clipname);
 							tr.removeClass("unresolved");
 							tr.addClass("resolvefailed");
-							tr.children().last().text("!");
 						})
 						.always(function() {
 							var evt = new CSEvent("no.nrk.odometer.events.ResolveFinished", "APPLICATION");
@@ -181,24 +186,24 @@
 					{
 					"id": "menuItemId1",
 					"label": "testExample1",
-					"enabled": true,
-					"checkable": true,
-					"checked": false,
-					"icon": "./img/small_16X16.png"
+					"enabled": true
+					//"checkable": true,
+					//"checked": false,
+					//"icon": "./img/small_16X16.png"
 					}, {
 					"id": "menuItemId2",
 					"label": "testExample2",
-					"enabled": true,
-					"checkable": true,
-					"checked": false,
-					"icon": "./img/small_16X16.png"
+					"enabled": true
+					//"checkable": true,
+					//"checked": false,
+					//"icon": "./img/small_16X16.png"
 					}, {
-					"id": "print",
+					"id": "pprint",
 					"label": "print",
-					"enabled": true,
-					"checkable": true,
-					"checked": false,
-					"icon": "./img/small_16X16.png"
+					"enabled": true
+					//"checkable": true,
+					//"checked": false,
+					//"icon": "./img/small_16X16.png"
 					}
 				] };
 				csInterface.setContextMenuByJSON(m, function(menuitem) {
@@ -224,15 +229,19 @@
 	<body onLoad="onLoaded()">
 		<a href="javascript:history.go(0)">Refresh panel</a>
 		<div id="section1" class="sectionID">
-			<button class="controlBg textStyle" id="btn_PPROx33">Test panel code </button>
-			<button class="controlBg textStyle" id="btn_PPRO33333" onClick="evalScript('$._PPP_.odometer()')">test application code </button>
+			<button class="controlBg textStyle" id="btn_PPRO33333" onClick="evalScript('$._PPP_.odometer()')">Resolve</button>
+			<button class="controlBg textStyle resolvedependent" id="btn_PRF" disabled>Report</button>
+			<button class="controlBg textStyle resolvedependent" id="btn_credits" disabled>credits</button>
 		</div>
-		<table>
+		<table style="width: 99%; display:table; table-layout:fixed">
+			<col style="width:70%">
+			<col style="width:15%">
+			<col style="width:15%">
 			<thead>
 				<tr>
 					<td id="clip">clip</td>
-					<td>length</td>
-					<td>metadata</td>
+					<td>audible</td>
+					<td>®</td>
 				</tr>
 			</thead>
 			<tbody id="tracks">
@@ -240,40 +249,4 @@
 			</tbody>
 		</table>
 	</body>
-	<script>
-		document.body.onbeforeunload = function() {
-			var csInterface		= new CSInterface();
-		    var OSVersion		= csInterface.getOSInformation();
-		    var appVersion		= csInterface.hostEnvironment.appVersion;
-		    var versionAsFloat	= parseFloat(appVersion);
-
-		    if (versionAsFloat < 10.3){
-			    var path = "file:///Library/Application Support/Adobe/CEP/extensions/PProPanel/payloads/onbeforeunload.html";
-			    
-			    if (OSVersion.indexOf("Windows") >=0){
-					path = "file:///C:/Program%20Files%20(x86)/Common%20Files/Adobe/CEP/extensions/PProPanel/payloads/onbeforeunload.html"
-			    }
-			    csInterface.openURLInDefaultBrowser(path);		
-		    }
-	  	};
-
-		var createFolders = function() {
-		  var csInterface = new CSInterface();
-		  csInterface.callScript(
-		    '_PPP_',
-		    'createDeepFolderStructure',
-		    function(res) {
-		      console.log('Successfully created folders!');
-		    },
-		    function(err) {
-		      console.error(err);
-					alert(err.message);
-		    },
-				['This', 'is', 'a', 'very', 'deep', 'folder', 'structure'], // 1st argument
-				6 // 2nd argument
-		  );
-		};
-
-	</script>
-	</script>
 </html>

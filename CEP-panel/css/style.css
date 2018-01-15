@@ -33,9 +33,9 @@ input[type=text]
 	margin:3px 0px 3px 0px;
 }
 
-.unresolved {
-	color: lightsalmon;
+.resolvefailed :first-child::before {
+	content: "!!!";
 }
-.resolved {
+.resolved :first-child {
 	color: greenyellow;
 }
