@@ -103,6 +103,9 @@
 					// format a tracklist in the html ui
 					var tracklist = $("#tracks").empty();
 					tracklist.data("timeline", tracks);
+					// set up a progress bar
+					$("#clip").html("<progress max="+tracks.length+" value=0>0%</progress>");
+					// run thru each of the received tracks
 					jQuery.each(tracks, function(idx, val) {
 						var tr = $("<tr>");
 						var musicService = val.music_services[0];
@@ -118,6 +121,16 @@
 							tr.children().first().html(formatMetadata(data.metadata));
 							tr.removeClass("unresolved");
 							tr.addClass("resolved");
+						})
+						.fail(function() {
+							console.log("failed to resolve clip %o", val.clipname);
+							tr.removeClass("unresolved");
+							tr.addClass("resolvefailed");
+							tr.children().last().text("!");
+						})
+						.always(function() {
+							var evt = new CSEvent("no.nrk.odometer.events.ResolveFinished", "APPLICATION");
+							csInterface.dispatchEvent(evt);
 						});
 					});
 				}
@@ -162,6 +175,48 @@
 						alert("file read failed");
 					}
 				});
+
+				// set context (right-click) menu
+				var m = { "menu":[
+					{
+					"id": "menuItemId1",
+					"label": "testExample1",
+					"enabled": true,
+					"checkable": true,
+					"checked": false,
+					"icon": "./img/small_16X16.png"
+					}, {
+					"id": "menuItemId2",
+					"label": "testExample2",
+					"enabled": true,
+					"checkable": true,
+					"checked": false,
+					"icon": "./img/small_16X16.png"
+					}, {
+					"id": "print",
+					"label": "print",
+					"enabled": true,
+					"checkable": true,
+					"checked": false,
+					"icon": "./img/small_16X16.png"
+					}
+				] };
+				csInterface.setContextMenuByJSON(m, function(menuitem) {
+					console.log('Right click: %o', menuitem);
+
+				});
+				// listen for signals from application that resolve file is finished
+				csInterface.addEventListener("no.nrk.odometer.events.ResolveFinished", function(event){
+					var unresolved = document.querySelectorAll("tr.unresolved");
+					var progress = document.querySelector("progress");
+					if(unresolved.length === 0) {
+						// everything is resolved, remove progress bar
+						$("#clip").text("clip");
+					} else {
+						progress.value = progress.max-unresolved.length;
+					}
+				});
+
 			});
 		</script>
 	</head>
@@ -175,12 +230,12 @@
 		<table>
 			<thead>
 				<tr>
-					<td>clip</td>
+					<td id="clip">clip</td>
 					<td>length</td>
 					<td>metadata</td>
 				</tr>
 			</thead>
-			<tbody id=tracks>
+			<tbody id="tracks">
 
 			</tbody>
 		</table>
