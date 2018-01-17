@@ -50,7 +50,7 @@ var messages = {
         MEASURED_IN_SECONDS: "Measured in seconds",
         MUSIC_LIBRARY: "Music library",
         METADATA: "metadata",
-        STARTINFO: "To get started: Select a XMEML file above. <br>(You may also drop it anywhere in this window)"
+        STARTINFO: "To get started: Select an XMEML file—exported from Adobe Premiere or Final Cut Pro 7.x. <br>(You may also drop it anywhere in this window)"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -88,6 +88,6 @@ var messages = {
         MEASURED_IN_SECONDS: "Målt i sekunder",
         MUSIC_LIBRARY: "Musikkbibliotek",
         METADATA: "metadata",
-        STARTINFO: "For å starte: Velg en XMEML-fil over. <br>(Du kan også slippe en fil i dette vinduet)"
+        STARTINFO: "For å starte: Velg en XMEML-fil — eksportert fra Adobe Premiere eller Final Cut Pro 7.x. <br>(Du kan også slippe en fil i dette vinduet)"
     }
 };
