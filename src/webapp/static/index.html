@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang=no>
-<head><title>Pling Plong Odometer Online</title>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pling Plong Odometer Online</title>
 
 <link rel="stylesheet" href="/media/bootstrap.min.css" integrity="sha256-QUyqZrt5vIjBumoqQV0jM8CgGqscFfdGhN+nVCqX0vc=" crossorigin="anonymous">
 <link rel="stylesheet" href="/media/tingle.min.css" >
@@ -32,6 +36,12 @@
     body { height: 100vh;
            min-height: 100vh;
     
+    }
+
+    .beta {
+        font-size: x-small;
+        text-transform: lowercase;
+        margin-left: -1ex;
     }
 </style>
 
@@ -543,7 +553,7 @@ function finishedResolving() {
     ondragend="dragendHandler(event);">
 
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <a class="navbar-brand" href="#">♫ ♪ Odometer</a>
+                <a class="navbar-brand" href="#">♫ ♪ Odometer <span class=beta title="Some things may break">BETA</span></a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
                   <span class="navbar-toggler-icon"></span>
                 </button>
@@ -585,13 +595,17 @@ function finishedResolving() {
         <col style="width:10%">
         <col style="width:60%">
         <thead class="thead-dark">
+          <tr>
             <th title="File name" id=thead-filename>name</th>
             <th title="Measured in seconds" id=thead-duration>audible length</th>
             <th title="Music library" id=thead-library>&reg;</th>
             <th id=thead-metadata>metadata</th>
+          </tr>
         </thead>
         <tbody id=files-list style="font-size:80%">
-            <td id=startinfo>To get started: Select a XMEML file above. <br>(You may also drop it anywhere in this window). <td><td><td>
+          <tr>
+            <td id=startinfo>To get started: Select an XMEML file—exported from Adobe Premiere or Final Cut Pro 7.x. <br>(You may also drop it anywhere in this window). <td><td><td>
+          </tr>
         </tbody>
 
     </table>
