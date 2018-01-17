@@ -90,8 +90,84 @@
 					console.log('global: %o, %o, %o', window.require, null, null);
 					var backbone = require('fs');
 					console.log('backbone: %o', backbone);
+				});
+
+				function generateReport(metadatarows, limitService) {
+					// generate an HTML report based on metadata found in clips
+					// "limitService": exclude all other music services than this
+					//  .. default is don't exclude anything
+					// returns string
+					var include = limitService || "all";
+					var reportrows = []; // this is where we keep the generated text of each report row
+					//for(var i=0; i<metadatarows.length; i++) {
+					metadatarows.each(function(idx, el) {
+						var row = $(el);
+
+						var md = row.data("metadata");
+						var td = row.data("timelinedata");
+						console.log("got timelinedata: %o", td);
+						if(! (include==="all" || include===md.musiclibrary)) {
+							// skip this
+							return true;
+						}
+						var t = md.title || td.title;// TODO: let people choose ordinary files also 
+						var _s = "<div><dt>Title:</dt><dd>"+t+"</dd>";
+						if(md.identifier)
+							_s = _s + "<dt>Track identifier:</dt><dd>"+md.identifier+"</dd>";
+						if(md.artist)
+							_s = _s + "<dt>Artist:</dt><dd>"+md.artist+"</dd>";
+						if(md.albumname)
+							_s = _s + "<dt>Album name:</dt><dd>"+md.albumname+"</dd>";
+						if(md.lyricist)
+							_s = _s + "<dt>Lyricist:</dt><dd>"+md.lyricist+"</dd>";
+						if(md.composer)
+							_s = _s + "<dt>Composer:</dt><dd>"+md.composer+"</dd>";
+						if(md.label)
+							_s = _s + "<dt>Label:</dt><dd>"+md.label+"</dd>";
+						if(md.recordnumber)
+							_s = _s + "<dt>Recordnumber:</dt><dd>"+md.recordnumber+"</dd>";
+						if(md.copyright)
+							_s = _s + "<dt>Copyright owner:</dt><dd>"+md.copyright+"</dd>";
+						if(md.year && md.year !== -1)
+							_s = _s + "<dt>Released year:</dt><dd>"+md.year+"</dd>";
+						
+						//_s = _s + "<br><b>"+i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(td.audible_length)})+"</b></div><hr>";
+						_s = _s + "<br><b>Seconds in total:"+formatDuration(td.audible_length)+"</b></div><hr>";
+						reportrows.push(_s);
+					});
+					//var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:preview.validFile.name, 
+								//DATESTRING:preview.validFile.lastModifiedDate.toLocaleString()})+'</code>';
+					//var html = '<p><code>Generated from: '+preview.validFile.name+"at "+
+								//preview.validFile.lastModifiedDate.toLocaleString()+'</code>';
+					var html = "";
+					
+					html = html + reportrows.join("\n");
+					return html;
+				}
 
 
+				$("#btn_report").on("click", function(e){
+					e.preventDefault(); 
+					var csInterface = new CSInterface();
+					var OSVersion   = csInterface.getOSInformation();
+					console.log("generating report");
+					var metadatarows = $("#tracks tr");
+					var report = generateReport(metadatarows, $("select").val());
+					//console.log("got report %o", report);
+					var path = window.cep.fs.showSaveDialogEx("Where to save report?",
+															  null, // null===last file location
+															  ["html"], // filetypes
+															  "odometer_report" // defaultName
+															);
+					console.log("got path location: %o", path);
+					var result = window.cep.fs.writeFile(path.data, report);
+					if (0 == result.err){
+						// success
+						console.log("wrote report");
+					} else {
+						// fail
+						console.error("report write failed");
+					}
 				});
 
 				function formatMetadata(metadata) {
@@ -116,6 +192,7 @@
 						var tr = $("<tr>");
 						var musicService = val.music_services[0];
 						tr.attr("id", btoa(val.clipname));
+						tr.data("timelinedata", val);
 						tr.html("<td>"+val.clipname+"<td>"+formatDuration(val.audible_length)+"<td>"+musicService);
 						tr.toggleClass("resolvable", val.resolvable);
 						tr.addClass("unresolved");
@@ -158,6 +235,8 @@
 						var form = new FormData();
 						form.append("xmeml", blob, "test.xml");
 						console.log("created form %o", form);
+						//disable all reporting buttons
+						$(".resolvedependent").prop("disabled", true);
 						// submit to odometer service
 						jQuery.ajax({
 							url: "http://localhost:8000/analyze",
@@ -220,6 +299,8 @@
 					} else {
 						progress.value = progress.max-unresolved.length;
 					}
+					//enable all reporting buttons
+					$(".resolvedependent").prop("disabled", false);
 				});
 
 			});
@@ -230,8 +311,20 @@
 		<a href="javascript:history.go(0)">Refresh panel</a>
 		<div id="section1" class="sectionID">
 			<button class="controlBg textStyle" id="btn_PPRO33333" onClick="evalScript('$._PPP_.odometer()')">Resolve</button>
-			<button class="controlBg textStyle resolvedependent" id="btn_PRF" disabled>Report</button>
-			<button class="controlBg textStyle resolvedependent" id="btn_credits" disabled>credits</button>
+			<button class="controlBg textStyle resolvedependent" id="btn_credits" disabled>Update end credits</button>
+			<label>Which services to include:
+			<select> 
+				<option value=all>all</option>
+				<option value=DMA>NRK/DMA</option>
+				<option value=AUX>AUX</option>
+				<option value=ApolloMusic>Apollo Music</option>
+				<option value=UniPPM>Universal PPM</option>
+				<option value=ExtremeMusic>Extreme Music</option>
+				<option value=UprightMusic>Upright Music</option>
+				<option value=WarnerChappell>WarnerChappell</option>
+			</select>
+			</label>
+			<button class="controlBg textStyle resolvedependent" id="btn_report" disabled>Get report</button>
 		</div>
 		<table style="width: 99%; display:table; table-layout:fixed">
 			<col style="width:70%">
