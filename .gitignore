@@ -83,6 +83,7 @@ src/metadata/*.mp3
 .python-version
 .Python
 pip-selfcheck.json
+package-lock.json
 
 
 # deploy configuration
@@ -91,3 +92,4 @@ pip-selfcheck.json
 src/webapp/config.ini
 src/webapp/_passwords.txt
 .DS_Store
+CEP-panel/node_modules/
