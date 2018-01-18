@@ -13,7 +13,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/tmp18040/dev/pling-plong-odometer/run-webapp.sh --port=808%i
+ExecStart=/usr/local/odometer/latest/run-webapp.sh --port=808%i
 Restart=on-abnormal
 RestartSec=1
 #StandardInput=socket

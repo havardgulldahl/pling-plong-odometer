@@ -15,7 +15,7 @@ server {
 
     location /static {
       # path for static files
-      root <<STATICPATH>>
+      root /usr/local/odometer/latest/src/webapp/static;
     }
 
   }
