@@ -130,6 +130,7 @@
 							_s = _s + "<dt>Copyright owner:</dt><dd>"+md.copyright+"</dd>";
 						if(md.year && md.year !== -1)
 							_s = _s + "<dt>Released year:</dt><dd>"+md.year+"</dd>";
+						_s = _s + "<dt>Music Library:</dt><dd>"+md.musiclibrary+"</dd>";
 						
 						//_s = _s + "<br><b>"+i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(td.audible_length)})+"</b></div><hr>";
 						_s = _s + "<br><b>Seconds in total:"+formatDuration(td.audible_length)+"</b></div><hr>";
@@ -152,12 +153,13 @@
 					var OSVersion   = csInterface.getOSInformation();
 					console.log("generating report");
 					var metadatarows = $("#tracks tr");
-					var report = generateReport(metadatarows, $("select").val());
+					var selectedService = $("select").val();
+					var report = generateReport(metadatarows, selectedService);
 					//console.log("got report %o", report);
 					var path = window.cep.fs.showSaveDialogEx("Where to save report?",
 															  null, // null===last file location
 															  ["html"], // filetypes
-															  "odometer_report" // defaultName
+															  "odometer_report_"+selectedService // defaultName
 															);
 					console.log("got path location: %o", path);
 					var result = window.cep.fs.writeFile(path.data, report);
@@ -198,7 +200,7 @@
 						tr.addClass("unresolved");
 						tracklist.append(tr);
 						// get metadta from odometer resolver service
-						jQuery.getJSON("http://localhost:8000" + val.resolve[musicService], function(data) {
+						jQuery.getJSON("http://odometer" + val.resolve[musicService], function(data) {
 							console.log("got track dta: %o", data);
 							tr.data("metadata", data.metadata);
 							tr.children().first().html(formatMetadata(data.metadata));
@@ -239,7 +241,7 @@
 						$(".resolvedependent").prop("disabled", true);
 						// submit to odometer service
 						jQuery.ajax({
-							url: "http://localhost:8000/analyze",
+							url: "http://odometer/analyze",
 							method: "POST",
 							dataType: "json",
 							data: form,
