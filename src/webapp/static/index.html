@@ -90,6 +90,7 @@ function startProgress(max) {
 function updateProgress(val) {
     //console.log('updating progress bar with val=%o', val);
     var p = document.getElementById('progress');
+    if(!p) return; // progress element is only there with multiple resolves # TODO: FIX THIS
     var newval = parseInt(p.getAttribute('value'))+val;
     if(newval == p.getAttribute('max')) {
         // all resolve tasks are finished, remove progressbar
@@ -229,11 +230,6 @@ function resolveAll() {
     var url, resolver, clipname;
     for (var i = 0; i < resolvables.length; i++) {
         resolveClip(resolvables[i].getAttribute("id"));
-        continue; 
-        url = resolvables[i].timelinedata.resolve;
-        resolver = resolvables[i].previousSibling.textContent; // TODO: hanlde multiple e.g. <select>
-        clipname = resolvables[i].timelinedata.clipname;
-        resolve(clipname, url[resolver]);
     }
 }
 
@@ -243,7 +239,7 @@ function resolveClip(metadatacell_id) {
     var url = cell.timelinedata.resolve;
     var resolver = cell.previousSibling.firstChild.value;
     var clipname = cell.timelinedata.clipname;
-    console.log("resolveClip: %o %o->%o", clipname, resolver, url);
+    //console.log("resolveClip: %o %o->%o", clipname, resolver, url);
     resolve(clipname, url[resolver])
 }
 
@@ -327,6 +323,12 @@ function resolve(clipname, url) {
     var output = document.getElementById('o-'+window.btoa(clipname));  // find the metadata cell of the correct row
     // Set up a handler for when the request finishes.
     output.innerText = i18n.GETTING_METADATA();
+    // clear any previous state 
+    output.classList.toggle("has-metadata", false);
+    output.classList.toggle("bg-danger", false);
+    output.classList.toggle("text-white", false);
+    output.classList.toggle("text-success", false);
+
     xhr.onload = function () {
         if (xhr.status === 200) {
             // File(s) uploaded.
