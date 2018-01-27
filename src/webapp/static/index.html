@@ -277,12 +277,12 @@ function formatMusicServicesDropdown(music_services, metadatacell_id) {
     // get a list of music services and return a html string of a <select> element
     var s = "<select size=1 onchange=\"resolveClip('"+metadatacell_id+"')\">";
     var possible_services = all_music_services.slice(0); //make a copy
-    var suggested = "<optgroup label=Suggested>";
+    var suggested = "<optgroup label='"+i18n.RECOGNISED()+"'>";
     for(var i=0;i<music_services.length;i++){
         suggested = suggested+"<option>"+music_services[i]+"</option>";
         possible_services.splice(possible_services.indexOf(music_services[i]), 1); // remove from that list
     }
-    var possible = "<optgroup label=Other>";
+    var possible = "<optgroup label='"+i18n.OTHERS()+"'>";
     for(var j=0;j<possible_services.length;j++) {
         possible = possible + "<option>"+possible_services[j]+"</option>";
     }
