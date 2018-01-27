@@ -54,6 +54,7 @@
 
 var languagecode = "no-NO"; // TODO: update this dynamically
 var i18n = new MessageFormat(languagecode).compile(messages)[languagecode];
+const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "ApolloMusic", "UniPPM", "WarnerChappell"]; // TOOD: get this dynamically/lazily
 
 function secs2timestring(duration) {
     // takes an integer of seconds, responds with a "mm:ss" timestring
@@ -227,11 +228,23 @@ function resolveAll() {
     startProgress(resolvables.length);
     var url, resolver, clipname;
     for (var i = 0; i < resolvables.length; i++) {
+        resolveClip(resolvables[i].getAttribute("id"));
+        continue; 
         url = resolvables[i].timelinedata.resolve;
         resolver = resolvables[i].previousSibling.textContent; // TODO: hanlde multiple e.g. <select>
         clipname = resolvables[i].timelinedata.clipname;
         resolve(clipname, url[resolver]);
     }
+}
+
+function resolveClip(metadatacell_id) {
+    // (manually) gather all the details from the dom and resolve() a clip 
+    var cell = document.getElementById(metadatacell_id);
+    var url = cell.timelinedata.resolve;
+    var resolver = cell.previousSibling.firstChild.value;
+    var clipname = cell.timelinedata.clipname;
+    console.log("resolveClip: %o %o->%o", clipname, resolver, url);
+    resolve(clipname, url[resolver])
 }
 
 function submit(formData) {
@@ -260,14 +273,27 @@ function submit(formData) {
     xhr.send(formData);
 }
 
+function formatMusicServicesDropdown(music_services, metadatacell_id) {
+    // get a list of music services and return a html string of a <select> element
+    var s = "<select size=1 onchange=\"resolveClip('"+metadatacell_id+"')\">";
+    var possible_services = all_music_services.slice(0); //make a copy
+    var suggested = "<optgroup label=Suggested>";
+    for(var i=0;i<music_services.length;i++){
+        suggested = suggested+"<option>"+music_services[i]+"</option>";
+        possible_services.splice(possible_services.indexOf(music_services[i]), 1); // remove from that list
+    }
+    var possible = "<optgroup label=Other>";
+    for(var j=0;j<possible_services.length;j++) {
+        possible = possible + "<option>"+possible_services[j]+"</option>";
+    }
+    return s+suggested+possible+"</select>";
+
+}
 function formatAudible(audible) {
     // get a json document of the audio file structure of the parsed xml and render it
     var fileList = document.getElementById('files-list');
     // empty the files table
     removeChildren(fileList);
-
-    //var serviceList = document.createElement('select'); //TODO: handle multiple services
-    //serviceList.innerHTML = "";
 
     var tr, elm, c, r, secs, services;
 
@@ -277,7 +303,8 @@ function formatAudible(audible) {
         c = elm.clipname;
         r = elm.resolve;
         secs = elm.audible_length;
-        services = elm.music_services || "<i>Unknown</i>"; //TODO: handle multiple services
+        //services = elm.music_services || "<i>Unknown</i>"; //TODO: handle multiple services
+        services = formatMusicServicesDropdown(elm.music_services, "o-"+window.btoa(c));
         tr.innerHTML = "<td>"+c+"<td class=duration>"+formatDuration(secs)+"s<td>"+services+"<td class=metadata id='o-"+window.btoa(c)+"'>";
         // keep the info around as a javascript object
         tr.lastChild.timelinedata = elm;
