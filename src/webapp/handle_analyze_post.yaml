@@ -29,9 +29,10 @@ responses:
         add_missing: "/add_missing/NONRE638029HD0001%20Zip%20Bags%20and%20Airports___DMA.WAV"
         audible_length: 222.52
         clipname: "NONRE638029HD0001 Zip Bags and Airports___DMA.WAV"
-        music_service: "DMA"
+        music_services: ["DMA"]
         resolvable: true
-        resolve: "/resolve/NONRE638029HD0001%20Zip%20Bags%20and%20Airports___DMA.WAV"
+        resolve: {DMA: "/resolve/DMA/NONRE638029HD0001%20Zip%20Bags%20and%20Airports___DMA.WAV"}
+        resolve_other: "/resolve/{music_service}/NONRE638029HD0001%20Zip%20Bags%20and%20Airports___DMA.WAV"
   '400':
     description: missing xmeml file data
 
@@ -48,12 +49,15 @@ definitions:
       clipname: 
         type: string
         description: The actual name of the clip, according to the timeline
-      music_service: 
-        type: string
-        description: Assumed music service this track belongs to
+      music_services: 
+        type: array
+        description: Assumed music services this track belongs to, ordered by most probable service first
       resolvable: 
         type: boolean
         description: Whether or not Odometer knows how to resolve this track (based on file name)
       resolve: 
+        type: array
+        description: services and URLs to use to resolve the track - i.e. get the metadata, ordered by most probable service first
+      resolve_other: 
         type: string
-        description: URL to use to resolve the track - i.e. get the metadata
+        description: URL template to use to resolve the track - i.e. get the metadata. Replace {music_service} with the service to resolve with

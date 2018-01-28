@@ -71,6 +71,7 @@ class AudioClip:
                 'resolvable': self.is_resolvable(),
                 'music_services': self.services,
                 'resolve': {s:'/resolve/{}/{}'.format(quote(s), quote(self.filename)) for s in self.services},
+                'resolve_other': '/resolve/{{music_service}}/{}'.format(quote(self.filename)),
                 'add_missing':'/add_missing/{}'.format(quote(self.filename)),
                }
 
