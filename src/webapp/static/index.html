@@ -244,11 +244,15 @@ function resolveAll() {
 function resolveClip(metadatacell_id) {
     // (manually) gather all the details from the dom and resolve() a clip 
     var cell = document.getElementById(metadatacell_id);
-    var url = cell.timelinedata.resolve;
     var resolver = cell.previousSibling.firstChild.value;
+    var url = cell.timelinedata.resolve[resolver];
+    if(url===undefined) {
+        // odometer doesnt recognise this clip, we must force it
+        var url = cell.timelinedata.resolve_other.replace("{music_service}", resolver);
+    }
     var clipname = cell.timelinedata.clipname;
     //console.log("resolveClip: %o %o->%o", clipname, resolver, url);
-    resolve(clipname, url[resolver])
+    resolve(clipname, url)
 }
 
 function submit(formData) {
