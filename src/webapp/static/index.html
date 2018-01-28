@@ -78,6 +78,15 @@ function slug(s, len) {
     return s.substr(0, len-1) + "…";
 }
 
+// ucs-2 string to base64 encoded ascii
+function utoa(str) {
+    return window.btoa(unescape(encodeURIComponent(str)));
+}
+// base64 encoded ascii to ucs-2 string
+function atou(str) {
+    return decodeURIComponent(escape(window.atob(str)));
+}
+
 function formatDuration(numbr) {
     // retun all duration numbers the same way and formatted according to locale
     // TODO: get locale dynamically (with translations)
@@ -312,8 +321,8 @@ function formatAudible(audible) {
         r = elm.resolve;
         secs = elm.audible_length;
         //services = elm.music_services || "<i>Unknown</i>"; //TODO: handle multiple services
-        services = formatMusicServicesDropdown(elm.music_services, "o-"+window.btoa(c));
-        tr.innerHTML = "<td>"+c+"<td class=duration>"+formatDuration(secs)+"s<td>"+services+"<td class=metadata id='o-"+window.btoa(c)+"'>";
+        services = formatMusicServicesDropdown(elm.music_services, "o-"+utoa(c));
+        tr.innerHTML = "<td>"+c+"<td class=duration>"+formatDuration(secs)+"s<td>"+services+"<td class=metadata id='o-"+utoa(c)+"'>";
         // keep the info around as a javascript object
         tr.lastChild.timelinedata = elm;
         if(elm.resolvable) {
@@ -332,7 +341,7 @@ function resolve(clipname, url) {
     // Open the connection.
     xhr.open('GET', url, true);
 
-    var output = document.getElementById('o-'+window.btoa(clipname));  // find the metadata cell of the correct row
+    var output = document.getElementById('o-'+utoa(clipname));  // find the metadata cell of the correct row
     // Set up a handler for when the request finishes.
     output.innerText = i18n.GETTING_METADATA();
     // clear any previous state 
