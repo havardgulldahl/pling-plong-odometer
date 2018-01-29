@@ -9,19 +9,22 @@ cd /tmp;
 echo "Get latest release from Github.";
 
 LATEST=$(curl -s https://api.github.com/repos/havardgulldahl/pling-plong-odometer/releases/latest \
-    | grep zipball_url \
+    | grep tarball_url \
     | cut -d '"' -f 4);
 
 VERSION=$(basename "$LATEST");
-curl -O "$LATEST" && echo "Downloaded $VERSION";
+echo "got $LATEST -> $VERSION";
+curl -L -o "${VERSION}.tar" "$LATEST" && echo "Downloaded $VERSION";
 
-echo "Unwrap into /usr/local";
+OUTPUT=/tmp;
+echo "Unwrap into ${OUTPUT}/$VERSION";
 
-unzip "$VERSION" -d "/tmp" && "unpacked";
+mkdir -p "$OUTPUT/$VERSION";
+tar -xvf "$VERSION.tar" --strip 1 -C "${OUTPUT}/${VERSION}" && echo "unpacked";
 
 echo "Setting up zymlink"
 
-ln -sf /tmp/latest /tmp/"$LATEST";
+ln -sf ${OUTPUT}/$VERSION ${OUTPUT}/latest;
 
 echo "restarting odometer server with new version";
 
