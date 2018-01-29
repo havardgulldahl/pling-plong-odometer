@@ -28,4 +28,4 @@ ln -sf ${OUTPUT}/$VERSION ${OUTPUT}/latest;
 
 echo "restarting odometer server with new version";
 
-#systemctl restart odometer@{1..2} && "Running version $LATEST";
+systemctl restart odometer@{1..2} && echo "Running version $LATEST";
