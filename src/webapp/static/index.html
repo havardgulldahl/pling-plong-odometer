@@ -464,13 +464,14 @@ function creditsdialog() {
     // pop up  a dialog suitable for copy-paste into end credits
     var metadatarows = document.querySelectorAll('td.has-metadata');
     var s = "";
-    var _labels = [];
+    var _holders = [];
     for(var i=0; i<metadatarows.length; i++) {
         var md = metadatarows[i].metadata;
         if(md.title===undefined) { continue }
         if(md.productionmusic===true) {
-            if(_labels.indexOf(md.label) === -1) { // only register once per label
-                s = s + "<i>"+md.copyright+"</i> <br>&reg; <b>"+md.label+"</b><br>";
+            if(_holders.indexOf(md.copyright) === -1) { // only register once per copyright holder
+                s = s + "<i>"+md.copyright+"</i><br>"// <br>&reg; <b>"+md.label+"</b><br>";
+                _holders.push(md.copyright);
             }
         } else {
             s = s + "<i>"+md.title+"</i> "+md.artist+" <br>&reg; <b>"+md.label+"</b> "+md.year;
