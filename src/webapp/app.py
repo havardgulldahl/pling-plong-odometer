@@ -175,6 +175,14 @@ async def handle_supported_resolvers(request):
 
 app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
 
+async def handle_feedback_post(request):
+    'POST form data feedback. No returned content.'
+    data = await request.post() 
+    app.logger.debug('Got POST args: %r', data)
+    return web.json_response(data={'success':True})
+
+app.router.add_post('/feedback', handle_feedback_post)
+
 def index(request):
     with open('static/index.html', encoding='utf-8') as _f:
         return web.Response(text=_f.read(), content_type='text/html')

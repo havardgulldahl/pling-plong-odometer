@@ -39,6 +39,17 @@
         text-align: center;
     }
 
+    #toggle-feedback {
+        height:40px; 
+        border:solid 3px #CCCCCC; 
+        background:#333; width:100px;
+        line-height:32px; -webkit-transform:rotate(-90deg); font-weight:600;
+        color:white; transform:rotate(-90deg); -ms-transform:rotate(-90deg);
+        -moz-transform:rotate(-90deg); text-align:center; font-size:17px;
+        position:fixed; right:-40px; top:45%; font-family: "Roboto",
+        helvetica, arial, sans-serif; z-index:999; 
+    }
+
     progress { width: 90%; }
 
     body { height: 100vh;
@@ -164,6 +175,7 @@ function main() {
     var fileList = document.getElementById('files-list');
     var createReportButton = document.getElementById('create-report-button');
     var createCreditsButton = document.getElementById('create-credits-button');
+    var toggleFeedbackButton = document.getElementById('toggle-feedback');
 
     // i18n - translate ui
     document.getElementById("navbar-analysis").innerText = i18n.ANALYSIS(); 
@@ -206,6 +218,11 @@ function main() {
     createCreditsButton.onclick = function(event) {
         event.preventDefault();
         creditsdialog();
+    }
+
+    toggleFeedbackButton.onclick = function(event) {
+        event.preventDefault();
+        feedbackdialog();
     }
 
     fileSelect.onchange = function(event) {
@@ -569,6 +586,30 @@ function reportdialog() {
     tinglemodal.open();
 }
 
+function feedbackdialog() {
+    var tinglemodal = setupModal();
+    // add another button
+    tinglemodal.addFooterBtn(i18n.SUBMIT(), 'tingle-btn tingle-btn--info', function() {
+        var form = document.querySelector("#feedback-dialog form");
+        var formData = new FormData(form);
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "/feedback");
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                // File(s) uploaded.
+                var response = JSON.parse(xhr.response);
+                console.log("feedback response: %o", response);
+            } else {
+                console.error("feedback error: %o, %o", xhr.status, xhr.response);
+            }
+            tinglemodal.close();
+        }
+        xhr.send(formData);
+    });
+    tinglemodal.setContent(document.getElementById("feedback-dialog").innerHTML);
+    tinglemodal.open();
+}
+
 function download(content, filename, contentType) {
     console.log('downloading metadata sheet');
     if(!contentType) contentType = 'application/octet-stream';
@@ -671,6 +712,30 @@ function finishedResolving() {
 
     </table>
 
+    <button id=toggle-feedback>Feedback</button>
+    <div style="display:none">
+    <dialog id=feedback-dialog>
+        <form onsubmit="return false;" method="POST" method=/feedback>
+            <div class="form-group">
+                <label for=feedback-name>Name: </label>
+                <input id=feedback-name type=text placeholder="Your full name" class="form-control" >
+            </div>
+            <div class="form-group">
+                <label for=feedback-email>E-mail: </label>
+                <input id=feedback-email type=email placeholder="If you want us to get in touch" class="form-control" >
+            </div>
+            <div class="form-check">
+                <label for=feedback-check>Include xml </label>
+                <input id=feedback-check type=checkbox class="form-check-input">
+            </div>
+            <div class="form-group">
+                <label for=feedback-text>Feedback: </label>
+                <textarea id=feedback-text rows=3 style="width:99%"></textarea>
+            </div>
+
+        </form>
+    </dialog>
+    </div>
 
 <script type="text/javascript">
 main()

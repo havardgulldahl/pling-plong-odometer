@@ -52,7 +52,8 @@ var messages = {
         METADATA: "metadata",
         STARTINFO: "To get started: Select an XMEML file—exported from Adobe Premiere or Final Cut Pro 7.x. <br>(You may also drop it anywhere in this window)",
         RECOGNISED: "Recognised",
-        OTHERS: "Others"
+        OTHERS: "Others",
+        SUBMIT: "Submit"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -92,6 +93,7 @@ var messages = {
         METADATA: "metadata",
         STARTINFO: "For å starte: Velg en XMEML-fil — eksportert fra Adobe Premiere eller Final Cut Pro 7.x. <br>(Du kan også slippe en fil i dette vinduet)",
         RECOGNISED: "Gjenkjent",
-        OTHERS: "Andre"
+        OTHERS: "Andre",
+        SUBMIT: "Send inn"
     }
 };
