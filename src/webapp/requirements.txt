@@ -4,6 +4,7 @@ aiodns
 appdirs
 lxml
 git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml-iter
-
 spotipy
 python-discogs
+aiopg
+aioslacker

@@ -12,6 +12,9 @@ import aiohttp
 
 from aiohttp_swagger import swagger_path, setup_swagger
 
+import aioslacker # pip install aioslacker
+import asyncpg # pip install asyncpg
+
 from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 #from model import TrackMetadata
 from xmeml import iter as xmemliter
@@ -26,11 +29,15 @@ clientSession = aiohttp.ClientSession(loop=loop, headers=headers)
 async def on_shutdown(_app):
     'Cleaning up right before shutdown'
     await clientSession.close()
+    await _app.slack.close()
+    await _app.dbpool.close()
 
 async def on_startup(_app):
     'Things to do on startup'
     _app.configuration = configparser.ConfigParser()
     _app.configuration.read('config.ini')
+    _app.slack = aioslacker.Slacker(_app.configuration.get('slack', 'token'))
+    _app.dbpool = await asyncpg.create_pool(dsn=_app.configuration.get('db', 'dsn'))
 
 app.on_startup.append(on_startup)
 app.on_shutdown.append(on_shutdown)
@@ -179,7 +186,11 @@ async def handle_feedback_post(request):
     'POST form data feedback. No returned content.'
     data = await request.post() 
     app.logger.debug('Got POST args: %r', data)
-    return web.json_response(data={'success':True})
+    async with app.dbpool.acquire() as connection:
+        _id = await connection.fetchval("INSERT INTO feedback (sender, message) VALUES ($1, $2) RETURNING public_id", 
+                                       data.get('sender'),
+                                       data.get('text'))
+        return web.json_response(data={'public_id':str(_id)})
 
 app.router.add_post('/feedback', handle_feedback_post)
 
@@ -194,6 +205,7 @@ app.router.add_static('/media', 'static/media')
 # TODO app.router.add_get('/report_error', handle_report_error) # report an error
 # TODO app.router.add_get('/report_missing', handle_report_missing) # report a missing audio pattern
 # TODO app.router.add_get('/stats', handle_stats) # show usage stats and patterns
+# TODO app.router.add_get('/retrieve', handle_stats) # show usage stats and patterns
 
 setup_swagger(app,
               swagger_url="/doc",
