@@ -190,7 +190,11 @@ async def handle_feedback_post(request):
         _id = await connection.fetchval("INSERT INTO feedback (sender, message) VALUES ($1, $2) RETURNING public_id", 
                                        data.get('sender'),
                                        data.get('text'))
-        return web.json_response(data={'public_id':str(_id)})
+        
+    url = '/feedback/{}'.format(str(_id))
+    app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
+                                'New feedback from {}: {}'.format(data.get('sender'), url))
+    return web.json_response(data={'url':url})
 
 app.router.add_post('/feedback', handle_feedback_post)
 
