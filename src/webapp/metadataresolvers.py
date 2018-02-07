@@ -803,7 +803,7 @@ class UniPPMResolver(ResolverBase):
 
 
     @staticmethod
-    def musicid(filename):
+    def musicid(filename, fuzzy=False):
         """Returns musicid from filename.
 
         # old format
@@ -812,21 +812,25 @@ class UniPPMResolver(ResolverBase):
         # new format, observed late 2016
         UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
         """
+        if fuzzy:
+            regexp = rex.search
+        else:
+            regexp = rex.match
         # first, try new format
-        rex = re.compile(r'^(UPM_)?(%s)\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+        rex = re.compile(r'(UPM_)?(%s)\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
             re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
-        g = rex.search(filename)
+        g = regexp(filename)
         if g is None:
             # try old format
-            rex = re.compile(r'^(%s)_\d{1,4}[A-Z]?_\d{1,4}_(\w+)_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+            rex = re.compile(r'(%s)_\d{1,4}[A-Z]?_\d{1,4}_(\w+)_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
                 re.UNICODE) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
-            g = rex.search(filename)
+            g = regexp(filename)
         try:
             return g.group(3)
         except AttributeError: #no match
             return None
 
-    async def resolve(self, filename, fromcache=True):
+    async def resolve(self, filename, fromcache=True, fuzzy=False):
         self.filename = filename
         _musicid = self.musicid(filename)
         if fromcache:
