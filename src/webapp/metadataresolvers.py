@@ -599,14 +599,18 @@ class ApollomusicResolver(ResolverBase):
         self.password = password
 
     @staticmethod
-    def musicid(filename):
+    def musicid(filename, fuzzy=False):
         """Returns musicid from filename.
 
         Apollo_SMI_360_1__TOUCH_THE_SKY__MIKE_KNELLER_STEPHAN_NORTH.mp3 -> SMI_360_1
 
         """
-        rex = re.compile(r'^Apollo_([A-Z]+_\d+_\d+)__') # _<label>_<albumid>_<trackno>__
-        g = rex.search(filename)
+        rex = re.compile(r'Apollo_([A-Z]+_\d+_\d+)__') # _<label>_<albumid>_<trackno>__
+        if fuzzy:
+            regexp = rex.search
+        else:
+            regexp = rex.match
+        g = regexp(filename)
         try:
             return g.group(1)
         except AttributeError: #no match
@@ -631,13 +635,15 @@ class ApollomusicResolver(ResolverBase):
                 return None
         
 
-    async def resolve(self, filename, fromcache=True):
+    async def resolve(self, filename, fromcache=True, fuzzy=False):
         self.filename = filename
-        _musicid = self.musicid(filename)
         if fromcache:
             md = self.fromcache()
             if md is not None:
                 return md
+        _musicid = self.musicid(filename, fuzzy=fuzzy)
+        if _musicid is None: # invalid filename
+            raise ResolveError('Could not understand Apollo id from filename')
         # login to apollo
         if self.session is None:
             self.session = aiohttp.ClientSession()
