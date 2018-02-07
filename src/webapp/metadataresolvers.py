@@ -470,14 +470,18 @@ class AUXResolver(ResolverBase):
     urlbase = 'http://search.auxmp.com//search/html/ajax/axExtData.php?cdkurz=%s&ac=track&country=NO'
 
     @staticmethod
-    def musicid(filename):
+    def musicid(filename, fuzzy=False):
         """Returns musicid from filename. 
         
         AUXMP_STT003003_ALL_IT_TAKES___AUX.wav -> 
         
          """
-        rex = re.compile(r'^((AUXMP_)?((%s)\d{6}))' % '|'.join(AUXResolver.labelmap.keys()))
-        g = rex.search(filename)
+        rex = re.compile(r'(?:\d{2,5}_)?((AUXMP_)?((%s)\d{6}))' % '|'.join(AUXResolver.labelmap.keys()))
+        if fuzzy:
+            regexp = rex.search
+        else:
+            regexp = rex.match
+        g = regexp(filename)
         try:
             return g.group(3)
         except AttributeError: #no match
@@ -490,14 +494,16 @@ class AUXResolver(ResolverBase):
             if not prefix in self.prefixes:
                 self.prefixes.append(prefix)
 
-    async def resolve(self, filename, fromcache=True):
+    async def resolve(self, filename, fromcache=True, fuzzy=False):
         self.filename = filename
-        _musicid = self.musicid(filename)
         if fromcache:
             md = self.fromcache()
             if md is not None:
                 return md
 
+        _musicid = self.musicid(filename, fuzzy=fuzzy)
+        if _musicid is None:
+            raise ResolveError('Could not understand AUX id from filename')
         """do an http get request to http://search.auxmp.co//search/html/ajax/axExtData.php
 
         look up musicid, e.g ROCK015601
