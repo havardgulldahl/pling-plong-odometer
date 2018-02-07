@@ -16,6 +16,7 @@ import aioslacker # pip install aioslacker
 import asyncpg # pip install asyncpg
 
 from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
+import metadataresolvers
 #from model import TrackMetadata
 from xmeml import iter as xmemliter
 
@@ -78,7 +79,7 @@ class AudioClip:
                 'resolvable': self.is_resolvable(),
                 'music_services': self.services,
                 'resolve': {s:'/resolve/{}/{}'.format(quote(s), quote(self.filename)) for s in self.services},
-                'resolve_other': '/resolve/{{music_service}}/{}?other=1'.format(quote(self.filename)),
+                'resolve_other': '/resolve/{{music_service}}/{}?override=1'.format(quote(self.filename)),
                 'add_missing':'/add_missing/{}'.format(quote(self.filename)),
                }
 
@@ -87,11 +88,11 @@ async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
     audioname = request.match_info.get('audioname', None) # match path string, see the respective route
     resolvername = request.match_info.get('resolver', None) # match path string, see the respective route
-    logging.warning('Parsed path and got audioname: %r, resolvername%r', audioname, resolvername)
-    # find resolver if it is not provided to us on the path string
-    if resolvername:
-        resolver = getResolverByName(resolvername)
-    else:
+    override = request.query.get('override', False) == '1'
+    app.logger.info('Parsed path and got audioname: %r, resolvername%r, overide? %s', audioname, resolvername, override)
+    # find resolver as it is provided to us on the path string
+    resolver = getResolverByName(resolvername)
+    if resolver is None:
         try:
             resolver = findResolvers(audioname)[0]
         except IndexError: #no resolvers found
@@ -106,13 +107,19 @@ async def handle_resolve(request):
     # run resolver
     app.logger.info("resolve audioname %r with resolver %r", audioname, resolver)
     try:
-        metadata = await resolver.resolve(audioname)
+        metadata = await resolver.resolve(audioname, fuzzy=override)
     except aiohttp.ClientConnectorError as _e:
         return web.json_response({
             'error': {'type':_e.__class__.__name__,
                       'args':_e.args},
             'metadata': []
         }, status=400)
+    except metadataresolvers.ResolveError as _e:
+        return web.json_response({
+            'error': {'type':_e.__class__.__name__,
+                      'args':_e.args},
+            'metadata': []
+        }, status=404)
     return web.json_response({
         'metadata': vars(metadata),
         'error': [],
@@ -210,6 +217,7 @@ app.router.add_static('/media', 'static/media')
 # TODO app.router.add_get('/report_missing', handle_report_missing) # report a missing audio pattern
 # TODO app.router.add_get('/stats', handle_stats) # show usage stats and patterns
 # TODO app.router.add_get('/retrieve', handle_stats) # show usage stats and patterns
+# TODO app.router.add_get('/feedback/{}', handle_show_feedback) # show status on feedback item
 
 setup_swagger(app,
               swagger_url="/doc",

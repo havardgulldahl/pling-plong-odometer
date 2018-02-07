@@ -27,7 +27,13 @@ import appdirs
 
 from model import TrackMetadata
 
-class TrackNotFound(Exception):
+class OdometerException(Exception):
+    pass
+
+class TrackNotFound(OdometerException):
+    pass
+
+class ResolveError(OdometerException):
     pass
 
 def findResolvers(filename):
@@ -312,22 +318,28 @@ class DMAResolver(ResolverBase):
     urlbase = ''
 
     @staticmethod
-    def musicid(filename):
-        rex = re.compile(r'^((NRKO_|NRKT_|NONRO|NONRT|NONRE)([A-Za-z0-9]+))')
-        g = rex.search(filename)
+    def musicid(filename, fuzzy=False):
+        rex = re.compile(r'((NRKO_|NRKT_|NONRO|NONRT|NONRE)([A-Za-z0-9]+))')
+        if fuzzy:
+            regexp = rex.search
+        else:
+            regexp = rex.match
+        g = regexp(filename)
         try:
             return g.group(3)
         except AttributeError: #no match
             return None
 
-    async def resolve(self, filename, fromcache=True):
+    async def resolve(self, filename, fromcache=True, fuzzy=False):
         self.filename = filename
-        _musicid = self.musicid(filename)
         if fromcache:
             md = self.fromcache()
             if md is not None:
                 return md
 
+        _musicid = self.musicid(filename, fuzzy=fuzzy)
+        if _musicid is None:
+            raise ResolveError('Could not get DMA music id from filename')
         endpoint = self.getConfig('DMAResolver', 'urlbase')
         if self.session is None:
             self.session = aiohttp.ClientSession()
