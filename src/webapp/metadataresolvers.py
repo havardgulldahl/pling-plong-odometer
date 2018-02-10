@@ -1154,6 +1154,8 @@ class ExtremeMusicResolver(ResolverBase):
             self.session.logincookie = await self.get_session_cookie()
         # get internal music id
         musicid = self.musicid(filename, fuzzy=fuzzy)
+        if musicid is None:
+            raise ResolveError('Could not parse Extreme Music id from filename')
         try:
             exid = await get_internal_musicid(musicid)
         except aiohttp.client_exceptions.ClientResponseError as e:
@@ -1309,15 +1311,19 @@ class WarnerChappellResolver(ResolverBase):
         super(WarnerChappellResolver, self).__init__()
 
     @staticmethod
-    def musicid(filename):
+    def musicid(filename, fuzzy=False):
         """Returns musicid from filename.
 
         """
         # typical file name ATUD018_04_White Horse.wav
         # -> ATUD018_04
         prefixes = [x.upper() for x in WarnerChappellResolver.labelmap.keys()]
-        rex = re.compile(r'^((%s)\d{2,5}_\d{2,3})_.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
-        g = rex.search(filename)
+        rex = re.compile(r'((%s)\d{2,5}_\d{2,3})_.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
+        if fuzzy:
+            regexp = rex.search
+        else:
+            regexp = rex.match
+        g = regexp(filename)
         try:
             return g.group(1)
         except AttributeError: #no match
@@ -1335,7 +1341,7 @@ class WarnerChappellResolver(ResolverBase):
             resp.raise_for_status() # bomb on errors
             return _c
 
-    async def resolve(self, filename, fromcache=True):
+    async def resolve(self, filename, fromcache=True, fuzzy=False):
         # POST to http://search2.warnerchappellpm.com/content/search
         # with data : 
         # lock:0
@@ -1419,7 +1425,7 @@ class WarnerChappellResolver(ResolverBase):
                         'library':library,
                         }
 
-        _musicid = self.musicid(filename)
+        _musicid = self.musicid(filename, fuzzy=fuzzy)
         # TODO: check if old cookie is still  valid before gtting new
         _cookie = await self.get_session_cookie()
         #logging.info('got cokie: %r', self.session.cookie_jar.filter_cookies('http://search2.warnerchappellpm.com/'))
