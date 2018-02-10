@@ -836,11 +836,14 @@ class UniPPMResolver(ResolverBase):
 
     async def resolve(self, filename, fromcache=True, fuzzy=False):
         self.filename = filename
-        _musicid = self.musicid(filename)
         if fromcache:
             md = self.fromcache()
             if md is not None:
                 return md
+
+        _musicid = self.musicid(filename, fuzzy=fuzzy)
+        if _musicid is None: # no match
+            raise ResolveError('Couldnt understand UniPPM id from filename')
 
         if self.session is None:
             self.session = aiohttp.ClientSession()
@@ -882,7 +885,7 @@ class UprightmusicResolver(ResolverBase):
     labelmap = { } # TODO: get list of labels
 
     @staticmethod
-    def musicid(filename):
+    def musicid(filename, fuzzy=False):
         """Returns filename, since that is the closest thing we get to an offline, external musicid.
 
         Upright Music keeps their own, internal guid based unique keys for each track. So for this service, 
