@@ -812,18 +812,22 @@ class UniPPMResolver(ResolverBase):
         # new format, observed late 2016
         UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
         """
+        # first, try new format
+        rex = re.compile(r'(UPM_)?(%s)\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+            re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
         if fuzzy:
             regexp = rex.search
         else:
             regexp = rex.match
-        # first, try new format
-        rex = re.compile(r'(UPM_)?(%s)\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
-            re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
         g = regexp(filename)
         if g is None:
             # try old format
             rex = re.compile(r'(%s)_\d{1,4}[A-Z]?_\d{1,4}_(\w+)_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
                 re.UNICODE) # _<label>_<albumid>_<trackno>_<title>_<musicid>.wav
+            if fuzzy:
+                regexp = rex.search
+            else:
+                regexp = rex.match
             g = regexp(filename)
         try:
             return g.group(3)
@@ -1015,7 +1019,7 @@ class ExtremeMusicResolver(ResolverBase):
         super(ExtremeMusicResolver, self).__init__()
 
     @staticmethod
-    def musicid(filename):
+    def musicid(filename, fuzzy=False):
         """Returns musicid from filename.
 
         SCS069_02 MR DARKSIDE.WAV -> SCS069_02
@@ -1023,8 +1027,12 @@ class ExtremeMusicResolver(ResolverBase):
 
         """
         prefixes = [x.upper() for x in ExtremeMusicResolver.labelmap.keys()]
-        rex = re.compile(r'^((%s)\d{2,5}_\d{2,3}(_\d{1,3})?)\s.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
-        g = rex.search(filename)
+        rex = re.compile(r'((%s)\d{2,5}_\d{2,3}(_\d{1,3})?)\s.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
+        if fuzzy:
+            regexp = rex.search
+        else:
+            regexp = rex.match
+        g = regexp(filename)
         try:
             return g.group(1)
         except AttributeError: #no match
@@ -1041,7 +1049,7 @@ class ExtremeMusicResolver(ResolverBase):
             logincookie = data['env']['API_AUTH']
             return logincookie
 
-    async def resolve(self, filename, fromcache=True):
+    async def resolve(self, filename, fromcache=True, fuzzy=False):
         self.filename = filename
         if fromcache:
             md = self.fromcache()
@@ -1145,7 +1153,7 @@ class ExtremeMusicResolver(ResolverBase):
         if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
             self.session.logincookie = await self.get_session_cookie()
         # get internal music id
-        musicid = self.musicid(filename)
+        musicid = self.musicid(filename, fuzzy=fuzzy)
         try:
             exid = await get_internal_musicid(musicid)
         except aiohttp.client_exceptions.ClientResponseError as e:
