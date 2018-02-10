@@ -1436,6 +1436,8 @@ class WarnerChappellResolver(ResolverBase):
                         }
 
         _musicid = self.musicid(filename, fuzzy=fuzzy)
+        if _musicid is None:
+            raise ResolveError("Couldn't read WarnerChappell id from filename")
         # TODO: check if old cookie is still  valid before gtting new
         _cookie = await self.get_session_cookie()
         #logging.info('got cokie: %r', self.session.cookie_jar.filter_cookies('http://search2.warnerchappellpm.com/'))
