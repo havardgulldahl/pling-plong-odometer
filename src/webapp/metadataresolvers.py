@@ -895,8 +895,12 @@ class UprightmusicResolver(ResolverBase):
         _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV ---> 4ceb1f37-8ecc-42e7-a4d8-79ba4336715a 
 
         """
-        rex = re.compile(r'^_UPRIGHT_[A-Z]{3}_\d{1,4}_\d{1,4}_\w+_.*', re.UNICODE) # _UPRIGHT_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
-        m = rex.match(filename) 
+        rex = re.compile(r'_UPRIGHT_[A-Z]{3}_\d{1,4}_\d{1,4}_\w+', re.UNICODE) # _UPRIGHT_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
+        if fuzzy:
+            regexp = rex.search
+        else:
+            regexp = rex.match
+        m = regexp(filename)
         try:
             return m.group(0)
         except AttributeError: #no match
@@ -940,13 +944,16 @@ class UprightmusicResolver(ResolverBase):
             return itemnode.get('tid', default=None)
 
 
-    async def resolve(self, filename, fromcache=True):
+    async def resolve(self, filename, fromcache=True, fuzzy=False):
         self.filename = filename
         if fromcache:
             md = self.fromcache()
             if md is not None:
                 return
-        internal_guid = await self.get_guid(filename)
+        musicid = self.musicid(filename, fuzzy=fuzzy)
+        if musicid is None:
+            raise ResolveError('Couldnt understand Upright id from filename')
+        internal_guid = await self.get_guid(musicid)
         logging.debug('got internal guid: %r', internal_guid)
         if self.session is None:
             self.session = aiohttp.ClientSession()
@@ -981,7 +988,7 @@ class UprightmusicResolver(ResolverBase):
                     # catalogue=None,
                     label=trackdata['album']['library']['name'],
                     # lyricist=None,
-                    identifier='Upright#%s' % trackdata.get('id', -1),
+                    identifier='UprightTrack#%s' % trackdata.get('id', -1),
                     )
             metadata.productionmusic = True
             return metadata
