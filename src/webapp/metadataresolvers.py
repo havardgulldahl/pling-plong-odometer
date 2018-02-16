@@ -1402,7 +1402,7 @@ class WarnerChappellResolver(ResolverBase):
                     
                 _, _id, _did, _tid, _ = trid.split('-')
                 md = [g.text_content() for g in html.xpath('//td')]
-                ## there are 12 table cells
+                ## there are 11 table cells
                 # 
                 return {'tid':int(_tid),
                         'did':int(_did),
@@ -1414,7 +1414,7 @@ class WarnerChappellResolver(ResolverBase):
                         'composer': md[8],
                         'albumname': md[9],
                         'label': md[10],
-                        'BPM': md[11],
+                        #'BPM': md[11],
             }
 
         async def get_rights(tid, did):
