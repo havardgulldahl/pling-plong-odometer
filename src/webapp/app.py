@@ -45,6 +45,14 @@ app.on_shutdown.append(on_shutdown)
 
 APIVERSION = '0.1'
 
+async def store_resolve_result(_app, result_code:int, result_text:str, filename:str, resolver:str, overridden:bool):
+    'Helper to add result of a resolve attempt to DB'
+
+    sql = '''INSERT INTO resolve_result (result_code, result_text, filename, resolver, overridden)
+             VALUES ($1, $2, $3, $4, $5);'''
+    async with _app.dbpool.acquire() as connection:
+        await connection.execute(sql, result_code, result_text, filename, resolver, overridden)
+        
 class AudioClip:
     'The important properties of an audio clip for JSON export'
     def __init__(self, filename):
@@ -109,17 +117,20 @@ async def handle_resolve(request):
     try:
         metadata = await resolver.resolve(audioname, fuzzy=override)
     except aiohttp.ClientConnectorError as _e:
+        await store_resolve_result(app, 400, str(_e.args), audioname, resolvername, override)
         return web.json_response({
             'error': {'type':_e.__class__.__name__,
                       'args':_e.args},
             'metadata': []
         }, status=400)
     except metadataresolvers.ResolveError as _e:
+        await store_resolve_result(app, 404, str(_e.args), audioname, resolvername, override)
         return web.json_response({
             'error': {'type':_e.__class__.__name__,
                       'args':_e.args},
             'metadata': []
         }, status=404)
+    await store_resolve_result(app, 200, 'OK', audioname, resolvername, override)
     return web.json_response({
         'metadata': vars(metadata),
         'error': [],
