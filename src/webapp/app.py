@@ -216,6 +216,21 @@ async def handle_feedback_post(request):
 
 app.router.add_post('/feedback', handle_feedback_post)
 
+async def handle_add_missing(request):
+    'POST json metadata object corresponding to a filename that we should have known about'
+    filename = request.match_info.get('filename', None) # match path string, see the respective route
+    data = await request.json() 
+    app.logger.debug('add missing filename: %r, with POST args %r', filename, data)
+
+    app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
+                                'Missing audio reported:\n`{}` -> *{}* ({})'.format(filename, 
+                                                                                    data.get('identifier'),
+                                                                                    data.get('label')))
+
+    return web.json_response(data={'error': [],})
+
+app.router.add_post('/add_missing/{filename}', handle_add_missing) # report an audio file that is missing from odometer patterns
+
 def index(request):
     with open('static/index.html', encoding='utf-8') as _f:
         return web.Response(text=_f.read(), content_type='text/html')
@@ -225,9 +240,9 @@ app.router.add_static('/media', 'static/media')
 
 # TODO app.router.add_get('/submit_runsheet', handle_submit_runsheet) # submit a runsheet to applicable services
 # TODO app.router.add_get('/report_error', handle_report_error) # report an error
-# TODO app.router.add_get('/report_missing', handle_report_missing) # report a missing audio pattern
 # TODO app.router.add_get('/stats', handle_stats) # show usage stats and patterns
-# TODO app.router.add_get('/retrieve', handle_stats) # show usage stats and patterns
+# TODO app.router.add_get('/get_track', get_track) # get track from unique id
+# TODO app.router.add_get('/clear_track', clear_track) # get track clearance (copyright metadata) from unique id
 # TODO app.router.add_get('/feedback/{}', handle_show_feedback) # show status on feedback item
 
 setup_swagger(app,
