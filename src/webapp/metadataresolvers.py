@@ -719,6 +719,7 @@ class UniPPMResolver(ResolverBase):
                   'CHUCKD':'Chuck D ',
                   'CM':'Chronic Music ',
                   'CNCT':'Connect ',
+                  'CNOIR': 'Chappell Noir',
                   'COHH':'Chronicles of Hip Hop ',
                   'DC':'Directors Choice ',
                   'DF':'Darkfly ',
