@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import sys
 import io
 import asyncio
@@ -9,7 +10,6 @@ import datetime
 import io
 import collections
 import attr
-from decimal import Decimal
 
 @attr.s
 class DataPoint:
@@ -17,8 +17,17 @@ class DataPoint:
     resolver:str = attr.ib()
     result_code:int = attr.ib()
     count:int = attr.ib()
-    relative:Decimal = attr.ib(init=False)
+    relative:float = attr.ib(init=False)
 
+    def to_dict(self): 
+        return attr.asdict(self)
+
+class DataPointEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, DataPoint):
+            return obj.to_dict()
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)
 
 async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper):
     'main routine'
@@ -35,8 +44,7 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
             totals.update({resolvername:s}) 
 
         for dp in rows:
-            #print("count: {}, totlas: {}, relative. {!r}".format(dp.count, totals[dp.resolver], Decimal(dp.count)/Decimal(totals[dp.resolver])))
-            dp.relative = Decimal(dp.count)/Decimal(totals[dp.resolver])
+            dp.relative = float(dp.count)/float(totals[dp.resolver])
 
         return {name: rows} 
 
@@ -59,7 +67,8 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
     from pprint import pprint, pformat
 
     #pprint(out)
-    outfile.write(pformat(out))
+    #outfile.write(pformat(out))
+    json.dump(out, outfile, cls=DataPointEncoder, indent=0)
     
     await dbpool.close()
 
