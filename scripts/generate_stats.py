@@ -8,9 +8,17 @@ import configparser
 import datetime
 import io
 import collections
+import attr
 from decimal import Decimal
 
-DataPoint = collections.namedtuple('DataPoint', ['resolver', 'result_code', 'count', 'relative'])
+@attr.s
+class DataPoint:
+    'Hold data from the DB'
+    resolver:str = attr.ib()
+    result_code:int = attr.ib()
+    count:int = attr.ib()
+    relative:Decimal = attr.ib(init=False)
+
 
 async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper):
     'main routine'
@@ -19,31 +27,29 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
     async def run(name:str, sql:str) -> dict:
         'run an SQL query and return a dict with a named key'
         result = await dbpool.fetch(sql)
-        #_l  = [list(r.values()) for r in result]
-        _l = list(map(DataPoint._make, [list(r.values()) for r in result]))
-        resolvers = set(j.resolver for j in _l)
+        rows = [DataPoint(**dict(r.items())) for r in result]
+        resolvers = set(j.resolver for j in rows)
         totals = {}
         for resolvername in resolvers:
-            s = sum([j.count for j in _l if j.resolver == resolvername])
+            s = sum([j.count for j in rows if j.resolver == resolvername])
             totals.update({resolvername:s}) 
 
-        rows = []
-        for dp in _l:
+        for dp in rows:
             #print("count: {}, totlas: {}, relative. {!r}".format(dp.count, totals[dp.resolver], Decimal(dp.count)/Decimal(totals[dp.resolver])))
-            rows.append(dp._replace(relative = Decimal(dp.count)/Decimal(totals[dp.resolver])))
+            dp.relative = Decimal(dp.count)/Decimal(totals[dp.resolver])
 
         return {name: rows} 
 
     out = {'timestamp':datetime.datetime.now().isoformat()}
     out.update(await run('activity_24hrs', 
-        '''SELECT  resolver, result_code, COUNT(resolver), 0.0
+        '''SELECT  resolver, result_code, COUNT(resolver)
         FROM    resolve_result
         WHERE   timestamp >= NOW() - '1 day'::INTERVAL
         GROUP BY result_code, resolver
         ORDER BY resolver'''
     ))
     out.update(await run('activity_7days', 
-        '''SELECT  resolver, result_code, COUNT(resolver), 0.0
+        '''SELECT  resolver, result_code, COUNT(resolver)
         FROM    resolve_result
         WHERE   timestamp >= NOW() - '7 day'::INTERVAL
         GROUP BY result_code, resolver
