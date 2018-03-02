@@ -253,8 +253,13 @@ $._PPP_={
 		}
 		var sequence = app.project.activeSequence;
 		// get temp file name
-		// TODO: make this better, and cross platform
-		var tmpname = "/tmp/" + sequence.name + ".xml";
+		var tmpname;
+		if (Folder.fs == 'Macintosh') {
+			tmpname = "/tmp/" + sequence.name + ".xml";
+		} else {
+			// windows
+			tmpname = "C:\\Windows\\temp\\" + sequence.name + ".xml"; 
+		}
 		sequence.exportAsFinalCutProXML(tmpname, 1); // 1 == suppress UI
 		dispatch("no.nrk.odometer.events.FCPXMLWritten", {filename:tmpname});
 		console.log("FCPXML successfully written: "+tmpname);
