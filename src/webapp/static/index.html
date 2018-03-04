@@ -648,6 +648,73 @@ function report_missing_filename(button) {
     xhr.send(JSON.stringify(metadata));
 }
 
+function statusdialog() {
+    // set up dialog with live status, graphs, etc
+
+    const allcolors = ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'];
+
+    // set up dialog
+    var tinglemodal = setupModal();
+    tinglemodal.setContent(document.getElementById("status-dialog").innerHTML);
+
+    // load graph library
+    var head = document.head || document.getElementsByTagName("head")[0];
+    var scr = document.createElement("script");
+    scr.type = "text\/javascript";
+    scr.onload = function() {
+        // script library is loaded, now get data
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "/media/status.json");
+        xhr.onload = function () {
+        if (xhr.status === 200) {
+            // parse status data
+            var dataseries = JSON.parse(xhr.responseText);
+            console.log("dataseries: %o", dataseries);
+            var sets = []
+            var z = dataseries["activity_7days"]["datasets"];
+            for(var k in z) {
+                console.log("colors: %o", allcolors.slice(0, Object.keys(z).length));
+                var colors = allcolors.slice(0, Object.keys(z).length);
+                sets.push({
+                    label: k,
+                    borderColor: colors,
+                    backgroundColor: colors,
+                    data: dataseries["activity_7days"]["datasets"][k]
+                })
+            }
+
+            
+            // create chart
+            var ctx = document.getElementById("statusChart");
+            var myChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: dataseries["activity_7days"]["labels"],
+                    datasets: sets,
+                },
+                options: {
+                    responsive: false,
+                    scales: {
+                        xAxes: [{
+                            stacked: true
+                        }],
+                        yAxes: [{
+                            stacked: true
+                        }]
+                    }
+                }
+            });
+        } else {
+            console.error("chart data error: %o, %o", xhr.status, xhr.response);
+        }
+        }
+        xhr.send();
+        tinglemodal.open();
+    };
+    head.appendChild(scr);
+    scr.src = "/media/Chart.min.js";
+}
+
 function download(content, filename, contentType) {
     console.log('downloading metadata sheet');
     if(!contentType) contentType = 'application/octet-stream';
@@ -702,6 +769,7 @@ function finishedResolving() {
                     <a class="nav-item nav-link active" href="#" id=navbar-analysis>Analysis <span class="sr-only">(current)</span></a>
                     <a class="nav-item nav-link disabled" href="#" id=navbar-help>Help</a>
                     <a class="nav-item nav-link" href="/doc" title="JSON REST API documentation (swagger)" id=navbar-api>API</a>
+                    <a class="nav-item nav-link" href="#" title="" onclick="statusdialog()" id=navbar-status>Status</a>
                   </div>
                 </div>
               </nav>
@@ -768,6 +836,10 @@ function finishedResolving() {
             </div>
 
         </form>
+    </dialog>
+    <dialog id=status-dialog>
+        Status:
+        <canvas id="statusChart" width="400" height="400"></canvas>
     </dialog>
     </div>
 

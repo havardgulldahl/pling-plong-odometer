@@ -60,13 +60,14 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
         dataset = Dataset()
         for r in await dbpool.fetch(sql):
             dataset.append(DataPoint(**dict(r.items())))
-        ret = []
-        for name, datapoints in dataset._set.items():
+        ret = {'labels':[],
+               'datasets':{k:[] for k in result_codes}
+               }
 
-            codes = {}
+        for name, datapoints in dataset._set.items():
+            ret['labels'].append(name)
             for code in result_codes:
-                codes[code] = sum([dp.count for dp in datapoints if dp.result_code == code])
-            ret.append( {name: codes})
+                ret['datasets'][code].append(sum([dp.count for dp in datapoints if dp.result_code == code]))
 
         return {setname: ret} 
 
@@ -90,7 +91,7 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
 
     #pprint(out)
     #outfile.write(pformat(out))
-    json.dump(out, outfile, cls=DataPointEncoder, indent=0)
+    json.dump(out, outfile, cls=DataPointEncoder, indent=1)
     
     await dbpool.close()
 
