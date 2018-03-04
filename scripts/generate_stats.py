@@ -10,6 +10,7 @@ import datetime
 import io
 import collections
 import attr
+import logging
 
 @attr.s
 class DataPoint:
@@ -17,10 +18,21 @@ class DataPoint:
     resolver:str = attr.ib()
     result_code:int = attr.ib()
     count:int = attr.ib()
-    relative:float = attr.ib(init=False)
+    #'relative:float = attr.ib(init=False)
 
     def to_dict(self): 
         return attr.asdict(self)
+
+@attr.s
+class Dataset:
+    'sort DataPoints'
+    _set:collections.OrderedDict = attr.ib(default=collections.OrderedDict())
+
+    def append(self, dp:DataPoint):
+        'add to dataset'
+        if not dp.resolver in self._set:
+            self._set.update({dp.resolver: []})
+        self._set[dp.resolver].append(dp)
 
 class DataPointEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -33,20 +45,30 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
     'main routine'
     dbpool = await asyncpg.create_pool(dsn=configuration.get('db', 'dsn'))
 
-    async def run(name:str, sql:str) -> dict:
-        'run an SQL query and return a dict with a named key'
+    async def strip(sql:str) -> list:
+        'run an sql query and return naked items'
         result = await dbpool.fetch(sql)
-        rows = [DataPoint(**dict(r.items())) for r in result]
-        resolvers = set(j.resolver for j in rows)
-        totals = {}
-        for resolvername in resolvers:
-            s = sum([j.count for j in rows if j.resolver == resolvername])
-            totals.update({resolvername:s}) 
+        return [ r[0] for r in result ]
 
-        for dp in rows:
-            dp.relative = float(dp.count)/float(totals[dp.resolver])
+    resolvers = await strip('''SELECT DISTINCT resolver from resolve_result ORDER BY resolver ASC;''')
 
-        return {name: rows} 
+    result_codes = await strip('''SELECT DISTINCT result_code from resolve_result ORDER BY result_code ASC;''')
+
+
+    async def run(setname:str, sql:str) -> dict:
+        'run an SQL query and return a dict with a named key'
+        dataset = Dataset()
+        for r in await dbpool.fetch(sql):
+            dataset.append(DataPoint(**dict(r.items())))
+        ret = []
+        for name, datapoints in dataset._set.items():
+
+            codes = {}
+            for code in result_codes:
+                codes[code] = sum([dp.count for dp in datapoints if dp.result_code == code])
+            ret.append( {name: codes})
+
+        return {setname: ret} 
 
     out = {'timestamp':datetime.datetime.now().isoformat()}
     out.update(await run('activity_24hrs', 
@@ -74,7 +96,6 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
 
 
 if __name__ == '__main__':
-    import logging
     logging.basicConfig(level=logging.DEBUG)
     import argparse
 
