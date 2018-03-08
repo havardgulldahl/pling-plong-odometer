@@ -61,13 +61,18 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
         for r in await dbpool.fetch(sql):
             dataset.append(DataPoint(**dict(r.items())))
         ret = {'labels':[],
-               'datasets':{k:[] for k in result_codes}
+               'datasets':{k:[] for k in result_codes},
+               'tooltips':{k:[] for k in result_codes},
                }
 
         for name, datapoints in dataset._set.items():
             ret['labels'].append(name)
+            total = sum(dp.count for dp in datapoints)
             for code in result_codes:
-                ret['datasets'][code].append(sum([dp.count for dp in datapoints if dp.result_code == code]))
+                num = sum([dp.count for dp in datapoints if dp.result_code == code])
+                rel = float(num) / float(total)
+                ret['datasets'][code].append(rel)
+                ret['tooltips'][code].append(num)
 
         return {setname: ret} 
 
