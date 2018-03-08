@@ -672,6 +672,7 @@ function statusdialog() {
             // parse status data
             var dataseries = JSON.parse(xhr.responseText);
             console.log("dataseries: %o", dataseries);
+            document.querySelector(".tingle-modal-box__content h2").innerHTML = i18n.STATUS_GRAPH_7DAYS({TIMESTAMP:dataseries.timestamp});
             var sets = []
             var z = dataseries["activity_7days"]["datasets"];
             for(var k in z) {
@@ -862,7 +863,7 @@ function finishedResolving() {
         </form>
     </dialog>
     <dialog id=status-dialog>
-        Status:
+        <h2>Status</h2>
         <canvas id="statusChart" width="400" height="400"></canvas>
     </dialog>
     </div>

@@ -54,7 +54,8 @@ var messages = {
         RECOGNISED: "Recognised",
         OTHERS: "Others",
         SUBMIT: "Submit",
-        THANK_YOU: "Thank you for your help!"
+        THANK_YOU: "Thank you for your help!",
+        STATUS_GRAPH_7DAYS: "Status for music services in 7 days until {TIMESTAMP}: " 
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -96,6 +97,7 @@ var messages = {
         RECOGNISED: "Gjenkjent",
         OTHERS: "Andre",
         SUBMIT: "Send inn",
-        THANK_YOU: "Tusen takk for hjelpa!"
+        THANK_YOU: "Tusen takk for hjelpa!",
+        STATUS_GRAPH_7DAYS: "Status for musikkdatatjenestene 7 dager fram til {TIMESTAMP}: " 
     }
 };
