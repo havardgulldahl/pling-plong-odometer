@@ -700,10 +700,21 @@ function statusdialog() {
                     responsive: false,
                     scales: {
                         xAxes: [{
-                            stacked: true
+                            stacked: true,
+                            scaleLabel: {
+                                labelString: 'Service'
+                            },
+                            ticks: {
+                                autoSkip: false,
+                                min: 0,
+                                stepSize: 1
+                            }
                         }],
                         yAxes: [{
-                            stacked: true
+                            stacked: true,
+                            ticks: {
+                                display: false
+                            }
                         }]
                     },
                     tooltips: {
