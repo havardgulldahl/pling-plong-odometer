@@ -506,7 +506,7 @@ function creditsdialog() {
                 _holders.push(md.copyright);
             }
         } else {
-            s = s + "<i>"+md.title+"</i> "+md.artist+" <br>&reg; <b>"+md.label+"</b> "+md.year;
+            s = s + "<i>"+md.title+"</i> "+md.artist+" <br>&reg; <b>"+md.label+"</b> "+md.year+" <br>";
         }
     }
     console.log('got credits: %o', s);
@@ -544,7 +544,7 @@ function runsheetdialog() {
                 s = s + "<i>"+md.copyright+"</i> &reg; <b>"+md.label+"</b><br>";
             }
         } else {
-            s = s + "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year;
+            s = s + "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year+" <br>";
         }
     }
     console.log('got credits: %o', s);
