@@ -19,6 +19,7 @@ from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 import metadataresolvers
 #from model import TrackMetadata
 from xmeml import iter as xmemliter
+from rights import DueDiligence
 
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
@@ -39,6 +40,7 @@ async def on_startup(_app):
     _app.configuration.read('config.ini')
     _app.slack = aioslacker.Slacker(_app.configuration.get('slack', 'token'))
     _app.dbpool = await asyncpg.create_pool(dsn=_app.configuration.get('db', 'dsn'))
+    _app.duediligence = DueDiligence(config=_app.configuration)
 
 app.on_startup.append(on_startup)
 app.on_shutdown.append(on_shutdown)
@@ -230,6 +232,17 @@ async def handle_add_missing(request):
     return web.json_response(data={'error': [],})
 
 app.router.add_post('/add_missing/{filename}', handle_add_missing) # report an audio file that is missing from odometer patterns
+
+async def handle_get_rights(request):
+    'GET music data and try to get copyrights from spotify and discogs'
+    #TODO solve this with an async queue
+    trackinfo = request.match_info.get('trackinfo', None) 
+    rights = app.duediligence.search_track_rights(trackinfo)
+    return web.json_response({'error':[],
+                              'rights':rights}
+                              )
+
+app.router.add_get('/rights/{trackinfo}', handle_get_rights)
 
 def index(request):
     with open('static/index.html', encoding='utf-8') as _f:
