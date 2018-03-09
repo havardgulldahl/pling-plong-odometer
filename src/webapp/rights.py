@@ -28,9 +28,7 @@ class DueDiligence:
 
     def get_album_rights(self, albumuri:str) -> dict:
         'Get copyright info from spotify album uri'
-        return self.sp.album(albumuri).get('copyrights')
-
-        
+        return {'spotify': self.sp.album(albumuri).get('copyrights')}
 
         #return sp.album('spotify:album:5UAN1IyYzJUDLvweDXDqJf').get('copyrights')
 
