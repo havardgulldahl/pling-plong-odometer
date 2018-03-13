@@ -49,7 +49,7 @@ class DueDiligence:
             logging.debug('Parsing copyright owner from %r', labelstring)
             # (C) 1993 Virgin Records America, Inc. -> "Virgin Records America, Inc."
             # ℗ 2017 Propeller Recordings, distributed by Universal Music AS, Norway -> 
-            rex = re.compile(r'^(?:\(C\)|\(P\)|℗ )?(?:\d{2,4} )?(.+)')
+            rex = re.compile(r'^(?:\(C\)|\(P\)|℗|©)? ?(?:\d{4} )?(.+)')
             return rex.match(labelstring).group(1)
         r = self.sp.album(albumuri).get('copyrights')
         ret = { k['type']:k['text'] for k in r}
@@ -62,6 +62,14 @@ class DueDiligence:
     # discogs
     def discogs_search_label(self, label:str) -> discogs_client.models.Label:
         'Search for label in discogs'
+        # simplify
+        # KIDinaKORNER/Interscope Records -> KIDinaKORNER
+        # Republic Records, a division of UMG Recordings, Inc. -> Republic Records
+        # Def Jam Recordings Norway -> Def Jam Recordings
+        # Atlantic Recording Corporation for the United States and WEA International Inc. for the world outside of the United States. A Warner Music Group Company -> ???
+        # Bad Vibes Forever / EMPIRE -> Bad Vibes Forever
+
+
         #TODO: add fuzzy search
         srch = self.discogs.search(type='label', q=label)
         logging.debug('got srch :%r', srch)
