@@ -48,14 +48,16 @@ class DueDiligence:
         def parse_label(labelstring:str) -> str:
             logging.debug('Parsing copyright owner from %r', labelstring)
             # (C) 1993 Virgin Records America, Inc. -> "Virgin Records America, Inc."
-            rex = re.compile(r'^(?:\(C\)|\(P\)) \d{2,4} (.+)')
+            # ℗ 2017 Propeller Recordings, distributed by Universal Music AS, Norway -> 
+            rex = re.compile(r'^(?:\(C\)|\(P\)|℗ )?(?:\d{2,4} )?(.+)')
             return rex.match(labelstring).group(1)
         r = self.sp.album(albumuri).get('copyrights')
         ret = { k['type']:k['text'] for k in r}
-        ret.update({'parsed_label': parse_label(ret['C'])})
+        if 'P' in ret: # have (P) section
+            ret.update({'parsed_label': parse_label(ret['P'])})
+        elif 'C' in ret: # have (C) section
+            ret.update({'parsed_label': parse_label(ret['C'])})
         return ret
-
-        #return sp.album('spotify:album:5UAN1IyYzJUDLvweDXDqJf').get('copyrights')
 
     # discogs
     def discogs_search_label(self, label:str) -> discogs_client.models.Label:
