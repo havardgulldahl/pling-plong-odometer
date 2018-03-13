@@ -22,6 +22,11 @@
     .dragover { border: 6px double blue;
     }
 
+    .spinner {
+        width: 40px;
+        height: 40px;
+    }
+
     #preview { vertical-align: bottom;
                vertical-align: -webkit-baseline-middle;
         
@@ -391,8 +396,8 @@ function resolve(clipname, url) {
             if(md.productionmusic === true) {
                 output.innerHTML = md.copyright+" &reg; <b>"+md.label+"</b>";
             } else {
-                output.innerHTML = "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year;
-                //s += u'%(title)s\r\n%(artist)s\r\n \u2117 %(label)s %(year)s\r\n\r\n' % vars(r.metadata)
+                output.innerHTML = "<i>"+md.title+"</i> "+md.artist
+                        + " <button type=button onclick='check_copyright(this)' class='btn btn-success btn-xs' title='Check copyright'>©©©</a>";
             }
             if(output.classList.contains('resolve-overridden')) {
                 // this is the result of a manual overridden resolve, i.e. filename should've been 
@@ -646,6 +651,45 @@ function report_missing_filename(button) {
         }
     }
     xhr.send(JSON.stringify(metadata));
+}
+
+function check_copyright(button) {
+    // check the copyright info of commercial releases
+    var cell = button.parentElement;
+    var metadata = cell.metadata;
+    var timelinedata = cell.timelinedata;
+    console.log("check copyright metadata : %o", metadata);
+    var sp = document.createElement('div');
+    var dmarights = "<b>DMA</b>: &reg; "+metadata.year+" "+metadata.label;
+    sp.innerHTML = dmarights
+        +"<br><b>Spotify</b>: <img class=spinner src=/media/spinner.gif><br><b>Discogs</b>: <img class=spinner src=/media/spinner.gif";
+    cell.appendChild(sp);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "/ownership/query/"+encodeURIComponent(metadata.title+" "+metadata.artist));
+    xhr.setRequestHeader("Content-type", "application/json;charset=utf-8");
+    xhr.onload = function () {
+        if (xhr.status === 200) {
+            // add copyright to ui
+
+            var response = JSON.parse(xhr.response);
+            console.log("copyright response: %o", response);
+            var s = dmarights + "<br><b>Spotify</b>: ";
+            s += response.ownership.spotify.P || response.ownership.spotify.C;
+            if(response.ownership.discogs) {
+                var d = response.ownership.discogs;
+                s += "<br><b>Discogs</b>: ";
+                for(var i=0;i<d.length;i++) {
+                    s += "-> "+d[i].name;
+                }
+            }
+            sp.innerHTML = s;
+            
+        } else {
+            console.error("copyright error: %o, %o", xhr.status, xhr.response);
+        }
+    }
+    xhr.send();
 }
 
 function statusdialog() {
