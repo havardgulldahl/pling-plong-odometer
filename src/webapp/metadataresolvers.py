@@ -544,7 +544,7 @@ class AUXResolver(ResolverBase):
                     catalogue=trackdata.get('p_nummer', None),
                     label=trackdata.get('label', None),
                     lyricist=trackdata.get('lyrics', None),
-                    identifier=trackdata.get('cdkurz', self.musicid)
+                    identifier='AUXTrack#{}'.format(trackdata.get('cdkurz', self.musicid))
                     )
             metadata.productionmusic = True
             try:
