@@ -235,12 +235,15 @@ app.router.add_post('/add_missing/{filename}', handle_add_missing) # report an a
 
 async def handle_get_rights(request):
     'GET music data and try to get copyrights from spotify and discogs'
-    #TODO solve this with an async queue
+    #TODO gather ifnormaton with an async queue
     trackinfo = request.match_info.get('trackinfo', None) 
-    rights = app.duediligence.search_track_rights(trackinfo)
+    spotifycopyright = app.duediligence.spotify_search_copyrights(trackinfo)
+    discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
+    discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
     return web.json_response({'error':[],
-                              'rights':rights}
-                              )
+                              'current_ownership':{'spotify':spotifycopyright,
+                                                   'discogs':discogs_label_heritage}
+    })
 
 app.router.add_get('/rights/{trackinfo}', handle_get_rights)
 

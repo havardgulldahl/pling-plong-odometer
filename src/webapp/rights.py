@@ -1,4 +1,5 @@
 from pprint import pprint as pp
+import re
 import logging
 import configparser
 import spotipy
@@ -43,7 +44,15 @@ class DueDiligence:
 
     def spotify_get_album_rights(self, albumuri:str) -> dict:
         'Get copyright info from spotify album uri'
-        return {'spotify': self.sp.album(albumuri).get('copyrights')}
+        def parse_label(labelstring:str) -> str:
+            logging.debug('Parsing copyright owner from %r', labelstring)
+            # (C) 1993 Virgin Records America, Inc. -> "Virgin Records America, Inc."
+            rex = re.compile(r'^(?:\(C\)|\(P\)) \d{2,4} (.+)')
+            return rex.match(labelstring).group(1)
+        r = self.sp.album(albumuri).get('copyrights')
+        ret = { k['type']:k['text'] for k in r}
+        ret.update({'parsed_label': parse_label(ret['C'])})
+        return ret
 
         #return sp.album('spotify:album:5UAN1IyYzJUDLvweDXDqJf').get('copyrights')
 
@@ -61,7 +70,8 @@ class DueDiligence:
 
         raise DiscogsNotFoundError('Could not find the label "{}" in the Discogs database'.format(label))
 
-    def discogs_top_label(self, label:discogs_client.models.Label) -> discogs_client.models.Label:
+    def discogs_label_heritage(self, label:discogs_client.models.Label) -> discogs_client.models.Label:
+        'Take a discogs label and walk the parenthood till the very top'
         heritage = [label]
         while hasattr(label, 'parent_label'):
             if label.parent_label is not None: # None indicates we reached top level
