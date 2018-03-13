@@ -20,7 +20,7 @@ from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 import metadataresolvers
 #from model import TrackMetadata
 from xmeml import iter as xmemliter
-from rights import DueDiligence, DueDiligenceJSONEncoder
+from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, SpotifyNotFoundError
 
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
@@ -126,7 +126,7 @@ async def handle_resolve(request):
                       'args':_e.args},
             'metadata': []
         }, status=400)
-    except metadataresolvers.ResolveError as _e:
+    except (aiohttp.client_exceptions.ClientResponseError, metadataresolvers.ResolveError) as _e:
         await store_resolve_result(app, 404, str(_e.args), audioname, resolvername, override)
         return web.json_response({
             'error': {'type':_e.__class__.__name__,
@@ -239,13 +239,19 @@ async def handle_get_ownership(request):
     #TODO gather ifnormaton with an async queue
     trackinfo = request.match_info.get('trackinfo', None) 
     spotifycopyright = app.duediligence.spotify_search_copyrights(trackinfo)
-    discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
-    discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
+    try:
+        discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
+        discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
+    except DiscogsNotFoundError as e:
+        app.logger.warning('Coul dnot get label from discogs: %s', e)
+        discogs_label = None
+        discogs_label_heritage = []
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[],
-                              'current_ownership':{'spotify':spotifycopyright,
-                                                   'timestamp': datetime.datetime.now().isoformat('T'),
-                                                   'discogs':discogs_label_heritage}
+                              'ownership':{'spotify':spotifycopyright,
+                                           'timestamp': datetime.datetime.now().isoformat('T'),
+                                           'original_query':trackinfo,
+                                           'discogs':discogs_label_heritage}
                              }, 
                              dumps=jsonencoder
 
