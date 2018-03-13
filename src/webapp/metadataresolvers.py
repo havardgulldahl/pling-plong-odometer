@@ -537,7 +537,7 @@ class AUXResolver(ResolverBase):
                     year=-1,
                     recordnumber=_musicid,
                     albumname=trackdata.get('cd_title', None),
-                    copyright='SONOTON Music GmbH & Co. KG',
+                    copyright='AUX',
                     lcnumber=trackdata.get('lc', None),
                     isrc=trackdata.get('isrc', None),
                     ean=trackdata.get('ean', None),
