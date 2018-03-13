@@ -19,7 +19,7 @@ from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 import metadataresolvers
 #from model import TrackMetadata
 from xmeml import iter as xmemliter
-from rights import DueDiligence
+from rights import DueDiligence, DueDiligenceJSONEncoder
 
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
@@ -239,11 +239,15 @@ async def handle_get_rights(request):
     trackinfo = request.match_info.get('trackinfo', None) 
     spotifycopyright = app.duediligence.spotify_search_copyrights(trackinfo)
     discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
-    discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
+    #discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
+    jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[],
                               'current_ownership':{'spotify':spotifycopyright,
-                                                   'discogs':discogs_label_heritage}
-    })
+                                                   'discogs':discogs_label}
+                             }, 
+                             dumps=jsonencoder
+
+    )
 
 app.router.add_get('/rights/{trackinfo}', handle_get_rights)
 

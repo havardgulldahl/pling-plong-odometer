@@ -2,6 +2,7 @@ from pprint import pprint as pp
 import re
 import logging
 import configparser
+import json
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client # pip install discogs_client  
@@ -78,6 +79,18 @@ class DueDiligence:
                 label = label.parent_label
                 heritage.append(label)
         return heritage
+
+class DueDiligenceJSONEncoder(json.JSONEncoder):
+    'turning external models into neat json'
+    def default(self, obj):
+        if isinstance(obj, discogs_client.models.Label):
+            # model definitoion: 
+            # https://github.com/discogs/discogs_client/blob/dc6551e5844d20a9da69e97c19afa8234f292d41/discogs_client/models.py#L521
+            d = {'id':obj.id,
+                 'name':obj.name,}
+            return d
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)
 
 
 if __name__ == '__main__':
