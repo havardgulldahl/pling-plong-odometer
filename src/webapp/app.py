@@ -4,6 +4,7 @@ import pathlib
 from urllib.parse import quote
 import configparser
 import io
+import datetime
 
 import asyncio
 
@@ -233,23 +234,26 @@ async def handle_add_missing(request):
 
 app.router.add_post('/add_missing/{filename}', handle_add_missing) # report an audio file that is missing from odometer patterns
 
-async def handle_get_rights(request):
+async def handle_get_ownership(request):
     'GET music data and try to get copyrights from spotify and discogs'
     #TODO gather ifnormaton with an async queue
     trackinfo = request.match_info.get('trackinfo', None) 
     spotifycopyright = app.duediligence.spotify_search_copyrights(trackinfo)
     discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
-    #discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
+    discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[],
                               'current_ownership':{'spotify':spotifycopyright,
-                                                   'discogs':discogs_label}
+                                                   'timestamp': datetime.datetime.now().isoformat('T'),
+                                                   'discogs':discogs_label_heritage}
                              }, 
                              dumps=jsonencoder
 
     )
 
-app.router.add_get('/rights/{trackinfo}', handle_get_rights)
+#app.router.add_get('/ownership/{trackinfo}', handle_get_ownership)
+app.router.add_get(r'/ownership/{type:(DMA|query)}/{trackinfo}', handle_get_ownership)
+#app.router.add_get('/ownership/lookup/{trackinfo}', handle_get_ownership)
 
 def index(request):
     with open('static/index.html', encoding='utf-8') as _f:

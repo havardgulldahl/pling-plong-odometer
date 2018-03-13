@@ -75,8 +75,8 @@ class DueDiligence:
         'Take a discogs label and walk the parenthood till the very top'
         heritage = [label]
         while hasattr(label, 'parent_label'):
-            if label.parent_label is not None: # None indicates we reached top level
-                label = label.parent_label
+            label = label.parent_label
+            if label is not None:
                 heritage.append(label)
         return heritage
 
