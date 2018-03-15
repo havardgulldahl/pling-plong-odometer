@@ -112,30 +112,42 @@ class DueDiligence:
         return ret
 
     # discogs
-    def discogs_search_label(self, label:str) -> discogs_client.models.Label:
-        'Search for label in discogs'
-        # simplify
+    def parse_label_attribution(self, labelquery:str) -> str:
+        'Simplify label / phonograph / copyright attribution, for lookups at discogs'
         # KIDinaKORNER/Interscope Records -> Interscope Records
         # Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc
         # Def Jam Recordings Norway -> Def Jam Recordings
         # Atlantic Recording Corporation for the United States and WEA International Inc. for the world outside of the United States. A Warner Music Group Company -> ???
-        # Bad Vibes Forever / EMPIRE -> Bad Vibes Forever
+        # Bad Vibes Forever / EMPIRE -> EMPIRE
+        return labelquery.replace('Norway', '').strip()
 
+    def discogs_search_label(self, labelquery:str) -> discogs_client.models.Label:
+        'Search for label in discogs'
         # strategy
         # 1. first, search naively with the full string
-        # 2. if no match, parse the label string and simplify
+        # 2. if no match, parse the label string and simplify, and search again
         # 3. do sanity check of the topmost result
         # 4. return it if it passes
 
-        srch = self.discogs.search(type='label', q=label)
-        logging.debug('got srch :%r', srch)
-        for l in srch.page(0):
-            # see if we find direct name hit
-            # l is discogs_client.models.Label
-            if l.name == label:
-                return l
+        def search(query):
+            srch = self.discogs.search(type='label', q=query)
+            logging.debug('got srch :%r', srch)
+            for l in srch.page(0):
+                # see if we find direct name hit
+                # l is discogs_client.models.Label
+                if l.name == query:
+                    return l
+            return None
+        
+        first = search(labelquery)
+        if first is not None:
+            return first
 
-        raise DiscogsNotFoundError('Could not find the label "{}" in the Discogs database'.format(label))
+        second = search(self.parse_label_attribution(labelquery))
+        if second is not None:
+            return second
+
+        raise DiscogsNotFoundError('Could not find the label "{}" in the Discogs database'.format(labelquery))
 
     def discogs_label_heritage(self, label:discogs_client.models.Label) -> discogs_client.models.Label:
         'Take a discogs label and walk the parenthood till the very top'

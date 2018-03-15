@@ -55,7 +55,8 @@ var messages = {
         OTHERS: "Others",
         SUBMIT: "Submit",
         THANK_YOU: "Thank you for your help!",
-        STATUS_GRAPH_7DAYS: "Status for music services in 7 days until {TIMESTAMP}: " 
+        STATUS_GRAPH_7DAYS: "Status for music services in 7 days until {TIMESTAMP}: ",
+        PLEASE_SEARCH_MANUALLY: "Please search manually"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -98,6 +99,7 @@ var messages = {
         OTHERS: "Andre",
         SUBMIT: "Send inn",
         THANK_YOU: "Tusen takk for hjelpa!",
-        STATUS_GRAPH_7DAYS: "Status for musikkdatatjenestene 7 dager fram til {TIMESTAMP}: " 
+        STATUS_GRAPH_7DAYS: "Status for musikkdatatjenestene 7 dager fram til {TIMESTAMP}: ",
+        PLEASE_SEARCH_MANUALLY: "Vennligst søk manuelt"
     }
 };

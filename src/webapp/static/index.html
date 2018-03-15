@@ -675,20 +675,24 @@ function check_copyright(button) {
             console.log("copyright response: %o", response);
             var s = dmarights + "<br><b>Spotify</b>: ";
             s += response.ownership.spotify.P || response.ownership.spotify.C;
-            if(response.ownership.discogs) {
+            s += "<br><b>Discogs</b>: ";
+            if(response.ownership.discogs.length) {
                 var d = response.ownership.discogs;
-                s += "<br><b>Discogs</b>: ";
                 for(var i=0;i<d.length;i++) {
                     s += "-> "+d[i].name;
                 }
+            } else {
+                s += i18n.PLEASE_SEARCH_MANUALLY();
             }
             sp.innerHTML = s;
-            // remove button, clear ui
-            button.remove();
-            
         } else {
             console.error("copyright error: %o, %o", xhr.status, xhr.response);
+            var s = dmarights + "<br><b>Spotify</b>: "+i18n.PLEASE_SEARCH_MANUALLY()+
+                "<br><b>Discogs</b>: "+i18n.PLEASE_SEARCH_MANUALLY();
+            sp.innerHTML = s;
         }
+        // remove button, clear ui
+        button.remove();
     }
     xhr.send();
 }
