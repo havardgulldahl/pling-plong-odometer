@@ -79,6 +79,14 @@
         line-height  : .5;
         border-radius : .2rem;
     }
+
+    .loading {
+        background-color: #ffffff;
+        background-image: url("/media/spinner.gif");
+        background-size: 20px 20px;
+        background-position:right center;
+        background-repeat: no-repeat;
+    }
 </style>
 
 <script type="text/javascript">
@@ -220,6 +228,16 @@ function main() {
             return false;
         }
         document.querySelector('div.col-5').appendChild(tbtn);
+        var t2btn = document.createElement("button");
+        t2btn.innerText = "Check ownership";
+        t2btn.onclick = function(event) {
+            event.preventDefault();
+            var tinglemodal = new setupModal();
+            tinglemodal.setContent(document.getElementById("ownership-dialog").innerHTML);
+            tinglemodal.open();
+            return false;
+        }
+        document.querySelector('div.col-5').appendChild(t2btn);
     }
 
     createReportButton.onclick = function(event) {
@@ -369,6 +387,30 @@ function formatAudible(audible) {
     resolveAll();
 }
 
+function resolve_manually_delay(inputelement) {
+    // add a 2 second delay so we dont run this while typing
+    if(resolve_manually_delay.tick) {
+        window.clearTimeout(resolve_manually_delay.tick);
+    }
+    resolve_manually_delay.tick = window.setTimeout(function() {
+        resolve_manually(inputelement);
+    },
+    2000 );
+}
+
+function resolve_manually(inputelement) {
+    // resolve from text input
+    var q = inputelement.value;
+    console.log('resolve form text input %o', q);
+    var output = inputelement.nextElementSibling;
+    output.setAttribute("id", "o-"+utoa(q));
+    if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
+        resolve(q, "/resolve/DMA/"+encodeURIComponent(q));
+    }
+    // no known resolver
+    return false;
+}
+
 function resolve(clipname, url) {
     // get a clipname and an url, and parse the JSON contents into a metadata string
     // Set up the request.
@@ -384,8 +426,10 @@ function resolve(clipname, url) {
     output.classList.toggle("bg-danger", false);
     output.classList.toggle("text-white", false);
     output.classList.toggle("text-success", false);
+    output.classList.toggle("loading", true);
 
     xhr.onload = function () {
+        output.classList.toggle("loading", false);
         if (xhr.status === 200) {
             // File(s) uploaded.
             var response = JSON.parse(xhr.response);
@@ -394,7 +438,7 @@ function resolve(clipname, url) {
             output.classList.add('has-metadata', 'text-success');
             output.metadata = md;
             if(md.productionmusic === true) {
-                output.innerHTML = md.copyright+" &reg; <b>"+md.label+"</b>";
+                output.innerHTML = md.copyright+" ℗ <b>"+md.label+"</b>";
             } else {
                 output.innerHTML = "<i>"+md.title+"</i> "+md.artist
                         + " <button type=button onclick='check_copyright(this)' class='btn btn-success btn-xs' title='Check copyright'>©©©</a>";
@@ -507,11 +551,11 @@ function creditsdialog() {
         if(md.title===undefined) { continue }
         if(md.productionmusic===true) {
             if(_holders.indexOf(md.copyright) === -1) { // only register once per copyright holder
-                s = s + "<i>"+md.copyright+"</i><br>"// <br>&reg; <b>"+md.label+"</b><br>";
+                s = s + "<i>"+md.copyright+"</i><br>"// <br>℗ <b>"+md.label+"</b><br>";
                 _holders.push(md.copyright);
             }
         } else {
-            s = s + "<i>"+md.title+"</i> "+md.artist+" <br>&reg; <b>"+md.label+"</b> "+md.year+" <br>";
+            s = s + "<i>"+md.title+"</i> "+md.artist+" <br>℗ <b>"+md.label+"</b> "+md.year+" <br>";
         }
     }
     console.log('got credits: %o', s);
@@ -546,10 +590,10 @@ function runsheetdialog() {
         }
         if(md.productionmusic===true) {
             if(_labels.indexOf(md.label) === -1) { // only register once per label
-                s = s + "<i>"+md.copyright+"</i> &reg; <b>"+md.label+"</b><br>";
+                s = s + "<i>"+md.copyright+"</i> ℗ <b>"+md.label+"</b><br>";
             }
         } else {
-            s = s + "<i>"+md.title+"</i> "+md.artist+" &reg; <b>"+md.label+"</b> "+md.year+" <br>";
+            s = s + "<i>"+md.title+"</i> "+md.artist+" ℗ <b>"+md.label+"</b> "+md.year+" <br>";
         }
     }
     console.log('got credits: %o', s);
@@ -660,7 +704,7 @@ function check_copyright(button) {
     var timelinedata = cell.timelinedata; // timeline object from xmeml parser
     console.log("check copyright metadata : %o", metadata);
     var sp = document.createElement('div');
-    var dmarights = "<b>DMA</b>: &reg; "+metadata.year+" "+metadata.label;
+    var dmarights = "<b>DMA</b>: ℗ "+metadata.year+" "+metadata.label;
     sp.innerHTML = dmarights
         +"<br><b>Spotify</b>: <img class=spinner src='/media/spinner.gif'><br><b>Discogs</b>: <img class=spinner src='/media/spinner.gif'>";
     cell.appendChild(sp);
@@ -880,7 +924,7 @@ function finishedResolving() {
           <tr>
             <th title="File name" id=thead-filename>name</th>
             <th title="Measured in seconds" id=thead-duration>audible length</th>
-            <th title="Music library" id=thead-library>&reg;</th>
+            <th title="Music library" id=thead-library>℗</th>
             <th id=thead-metadata>metadata</th>
           </tr>
         </thead>
@@ -914,6 +958,22 @@ function finishedResolving() {
     <dialog id=status-dialog>
         <h2>Status</h2>
         <canvas id="statusChart" width="400" height="400"></canvas>
+    </dialog>
+    <dialog id=ownership-dialog>
+        <h2>Sjekk eierskap på kommersielle låter </h2>
+        <form onsubmit="return false">
+        <div class=form-group>
+            <label for=ownership-input>Skriv inn DMA-id eller spotify-referanse på typen 
+                    <i>spotify:track:XXXXXXXXX</i></label>
+            <input id=ownership-input placeholder="Skriv eller lim inn her" class=form-control 
+                type=search oninput="if(this.value.length>5) {resolve_manually_delay(this);}"
+                autocomplete=off autocorrect=off>
+            <div >
+
+            </div>
+        </div>
+
+        </form>
     </dialog>
     </div>
 
