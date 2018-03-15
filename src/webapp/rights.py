@@ -114,12 +114,23 @@ class DueDiligence:
     # discogs
     def parse_label_attribution(self, labelquery:str) -> str:
         'Simplify label / phonograph / copyright attribution, for lookups at discogs'
-        # KIDinaKORNER/Interscope Records -> Interscope Records
-        # Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc
-        # Def Jam Recordings Norway -> Def Jam Recordings
         # Atlantic Recording Corporation for the United States and WEA International Inc. for the world outside of the United States. A Warner Music Group Company -> ???
         # Bad Vibes Forever / EMPIRE -> EMPIRE
-        return labelquery.replace('Norway', '').strip()
+
+        rexes = [
+            r'(.+) Norway', # Def Jam Recordings Norway -> Def Jam Recordings
+            r'(?:.+), a division of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
+            r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
+        ]
+        for rx in rexes:
+            try:
+                logging.debug('Trying to simplyfi with rx %r', rx)
+                return re.compile(rx).match(labelquery).group(1).strip()
+            except AttributeError:
+                continue
+
+        logging.debug('Could not simplify label %r', labelquery)
+        return None
 
     def discogs_search_label(self, labelquery:str) -> discogs_client.models.Label:
         'Search for label in discogs'
