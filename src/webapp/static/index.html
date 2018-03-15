@@ -662,11 +662,14 @@ function check_copyright(button) {
     var sp = document.createElement('div');
     var dmarights = "<b>DMA</b>: &reg; "+metadata.year+" "+metadata.label;
     sp.innerHTML = dmarights
-        +"<br><b>Spotify</b>: <img class=spinner src=/media/spinner.gif><br><b>Discogs</b>: <img class=spinner src=/media/spinner.gif>";
+        +"<br><b>Spotify</b>: <img class=spinner src='/media/spinner.gif'><br><b>Discogs</b>: <img class=spinner src='/media/spinner.gif'>";
     cell.appendChild(sp);
 
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/ownership/query/"+encodeURIComponent(metadata.title+" "+metadata.artist));
+    var q = metadata.isrc ? "isrc:"+metadata.isrc+" " : "";
+    q += metadata.year ? "year:"+metadata.year+" " : "";
+    q += metadata.title+" "+metadata.artist;
+    xhr.open("GET", "/ownership/query/"+encodeURIComponent(q));
     xhr.setRequestHeader("Content-type", "application/json;charset=utf-8");
     xhr.onload = function () {
         if (xhr.status === 200) {

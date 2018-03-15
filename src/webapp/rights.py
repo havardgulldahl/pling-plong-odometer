@@ -35,13 +35,45 @@ class DueDiligence:
         track = self.spotify_search_track(titleandartist)
         return self.spotify_get_album_rights(track['album']['uri'])
 
-    def spotify_search_track(self, titleandartist:str) -> dict:
-        'Search for track in spotify and return all metadata'
-        srch = self.sp.search(q=titleandartist, type='track', market='NO')
+    def spotify_search_track(self, querystring:str) -> dict:
+        '''Search for track in spotify and return all metadata. 
+        
+        See this for search tips: https://support.spotify.com/us/article/search/
+
+        As per march 2018
+
+        Enter any of these before your search term to narrow the results.
+
+            year: Displays music from a particular year. You can also enter a range of years, for example year:1978-1984.
+            genre: Displays music in the genre matching keyword.
+            label: Displays music released by the label matching keyword.
+            isrc: Displays tracks matching ID number according to the International Standard Recording Code.
+            upc: Displays albums matching ID number according to the Universal Product Code.
+            tag:new - Lists the most recently added albums.
+
+        Refine your search with AND, OR, and NOT, for example:
+
+            Kyuss AND Green - Displays results with keywords 'Kyuss' and 'Green'.
+            Zeppelin OR Floyd - Displays results with keywords 'Zeppelin' or 'Floyd'.
+            Metallica NOT Anger - Displays all Metallica tracks except with the word 'Anger'. 
+            Tip: Instead of using AND or NOT, you can also use + or -.
+
+        Use any combination of the advanced search options to find exactly what you want!
+
+            year:1989-2013 NOT year:1993
+            genre:metal AND year:1932
+            Note: This particular example may not yield many results.
+        '''
+
+        srch = self.sp.search(q=querystring, type='track', market='NO')
         logging.debug('search int sqrch: %r', srch)
         # TODO iterate trhroug all
-        firsttrack = srch['tracks']['items'][0]
-        return firsttrack
+        try:
+            firsttrack = srch['tracks']['items'][0]
+            return firsttrack
+        except IndexError:
+            # no results returned
+            raise SpotifyNotFoundError('Could not find a track using the query "{}". Please refine your search terms'.format(querystring))
 
     def spotify_get_album_rights(self, albumuri:str) -> dict:
         'Get copyright info from spotify album uri'
