@@ -101,7 +101,7 @@ class DueDiligence:
             logging.debug('Parsing copyright owner from %r', labelstring)
             # (C) 1993 Virgin Records America, Inc. -> "Virgin Records America, Inc."
             # ℗ 2017 Propeller Recordings, distributed by Universal Music AS, Norway -> 
-            rex = re.compile(r'^(?:\(C\)|\(P\)|℗|©)? ?(?:\d{4} )?(.+)')
+            rex = re.compile(r'^(?:\(C\)|\(P\)|℗|©)? ?\d{4}?(?:, \d{4})? ?(.+)')
             return rex.match(labelstring).group(1)
         r = self.sp.album(albumuri).get('copyrights')
         ret = { k['type']:k['text'] for k in r}
@@ -118,11 +118,12 @@ class DueDiligence:
         # Bad Vibes Forever / EMPIRE -> EMPIRE
 
         rexes = [
-            r'(.+) Norway', # Def Jam Recordings Norway -> Def Jam Recordings
             r'(?:.+), a division of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
             r'(?:.+), a Division of (.+)', #Columbia Records, a Division of Sony Music Entertainment
-            r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
+            r'(.+) Norway', # Def Jam Recordings Norway -> Def Jam Recordings
             r'^(.+), distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
+            r'^The copyright in this sound recording is owned by (.+)', # The copyright in this sound recording is owned by Mawlaw 388 Ltd T/A Source UK
+            r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
         ]
         for rx in rexes:
             try:

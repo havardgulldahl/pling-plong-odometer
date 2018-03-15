@@ -240,16 +240,22 @@ async def handle_get_ownership(request):
     #TODO gather ifnormaton with an async queue
     trackinfo = request.match_info.get('trackinfo', None) 
     querytype = request.match_info.get('type')
-    if querytype == 'DMA':
-        # look up metadata from DMA
-        raise NotImplementedError
-    elif querytype == 'metadata':
-        metadata = json.loads(trackinfo)
-    else:
-        raise NotImplementedError
     try:
         # get album copyright from spoitfy
-        spotifycopyright = app.duediligence.spotify_search_copyrights(metadata)
+        if querytype == 'DMA':
+            # look up metadata from DMA
+            raise NotImplementedError
+        elif querytype == 'metadata':
+            metadata = json.loads(trackinfo)
+            spotifycopyright = app.duediligence.spotify_search_copyrights(metadata)
+            info = {'title': metadata['title'], 'artist': metadata['artist']}
+        elif querytype == 'spotify':
+            spotifyuri = trackinfo
+            track = app.duediligence.sp.track(spotifyuri)
+            spotifycopyright = app.duediligence.spotify_get_album_rights(track['album']['uri'])
+            info = {'title': track['name'], 'artist': ', '.join([a['name'] for a in track['artists']])}
+        else:
+            raise NotImplementedError
     except SpotifyNotFoundError as e:
         return web.json_response(status=404,
                                  data={'error': ['Could not find track in the spotify database, please do it manually.']}
@@ -264,6 +270,7 @@ async def handle_get_ownership(request):
         discogs_label_heritage = []
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[],
+                              'trackinfo': info,
                               'ownership':{'spotify':spotifycopyright,
                                            'timestamp': datetime.datetime.now().isoformat('T'),
                                            'original_query':trackinfo,
@@ -273,7 +280,7 @@ async def handle_get_ownership(request):
 
     )
 
-app.router.add_get(r'/ownership/{type:(DMA|metadata)}/{trackinfo}', handle_get_ownership)
+app.router.add_get(r'/ownership/{type:(DMA|metadata|spotify)}/{trackinfo}', handle_get_ownership)
 
 def index(request):
     with open('static/index.html', encoding='utf-8') as _f:
