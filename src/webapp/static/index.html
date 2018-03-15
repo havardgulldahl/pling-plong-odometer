@@ -402,7 +402,8 @@ function resolve_manually(inputelement) {
     // resolve from text input
     var q = inputelement.value;
     console.log('resolve form text input %o', q);
-    var output = inputelement.nextElementSibling;
+    //var output = inputelement.nextElementSibling;
+    var output = inputelement.parentElement.querySelector(".card-text");
     output.setAttribute("id", "o-"+utoa(q));
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
         resolve(q, "/resolve/DMA/"+encodeURIComponent(q));
@@ -996,13 +997,18 @@ function finishedResolving() {
         <h2>Sjekk eierskap på kommersielle låter </h2>
         <form onsubmit="return false">
         <div class=form-group>
-            <label for=ownership-input>Skriv inn DMA-id eller spotify-referanse på typen 
-                    <i>spotify:track:0WeqauIUZSjsupDGXsXWsP</i></label>
+            <label for=ownership-input>Skriv inn DMA-id (<i>som NONRE671786HD0001</i>) eller spotify-referanse (
+                    <i>som spotify:track:0WeqauIUZSjsupDGXsXWsP</i>)</label>
             <input id=ownership-input placeholder="Skriv eller lim inn her" class=form-control 
                 type=search oninput="if(this.value.length>5) {resolve_manually_delay(this);}"
                 autocomplete=off autocorrect=off>
-            <div >
-
+            <div class="card">
+                <div class="card-header">
+                    Resultater
+                </div>
+                <div class="card-body">
+                    <p class="card-text">...</p>
+                </div>
             </div>
         </div>
 
