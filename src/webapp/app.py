@@ -5,6 +5,7 @@ from urllib.parse import quote
 import configparser
 import io
 import datetime
+import json
 
 import asyncio
 
@@ -238,7 +239,22 @@ async def handle_get_ownership(request):
     'GET music data and try to get copyrights from spotify and discogs'
     #TODO gather ifnormaton with an async queue
     trackinfo = request.match_info.get('trackinfo', None) 
-    spotifycopyright = app.duediligence.spotify_search_copyrights(trackinfo)
+    querytype = request.match_info.get('type')
+    if querytype == 'DMA':
+        # look up metadata from DMA
+        raise NotImplementedError
+    elif querytype == 'metadata':
+        metadata = json.loads(trackinfo)
+    else:
+        raise NotImplementedError
+    try:
+        # get album copyright from spoitfy
+        spotifycopyright = app.duediligence.spotify_search_copyrights(metadata)
+    except SpotifyNotFoundError as e:
+        return web.json_response(status=404,
+                                 data={'error': ['Could not find track in the spotify database, please do it manually.']}
+                                )
+
     try:
         discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
         discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
@@ -257,9 +273,7 @@ async def handle_get_ownership(request):
 
     )
 
-#app.router.add_get('/ownership/{trackinfo}', handle_get_ownership)
-app.router.add_get(r'/ownership/{type:(DMA|query)}/{trackinfo}', handle_get_ownership)
-#app.router.add_get('/ownership/lookup/{trackinfo}', handle_get_ownership)
+app.router.add_get(r'/ownership/{type:(DMA|metadata)}/{trackinfo}', handle_get_ownership)
 
 def index(request):
     with open('static/index.html', encoding='utf-8') as _f:

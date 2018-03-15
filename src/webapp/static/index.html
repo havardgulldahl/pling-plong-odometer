@@ -656,8 +656,8 @@ function report_missing_filename(button) {
 function check_copyright(button) {
     // check the copyright info of commercial releases
     var cell = button.parentElement;
-    var metadata = cell.metadata;
-    var timelinedata = cell.timelinedata;
+    var metadata = cell.metadata; // Trackmetadata from model.py
+    var timelinedata = cell.timelinedata; // timeline object from xmeml parser
     console.log("check copyright metadata : %o", metadata);
     var sp = document.createElement('div');
     var dmarights = "<b>DMA</b>: &reg; "+metadata.year+" "+metadata.label;
@@ -666,11 +666,7 @@ function check_copyright(button) {
     cell.appendChild(sp);
 
     var xhr = new XMLHttpRequest();
-    var q = metadata.isrc ? "isrc:"+metadata.isrc+" " : "";
-    q += metadata.year ? "year:"+metadata.year+" " : "";
-    q += metadata.title+" "+metadata.artist;
-    xhr.open("GET", "/ownership/query/"+encodeURIComponent(q));
-    xhr.setRequestHeader("Content-type", "application/json;charset=utf-8");
+    xhr.open("GET", "/ownership/metadata/"+encodeURIComponent(JSON.stringify(metadata)));
     xhr.onload = function () {
         if (xhr.status === 200) {
             // add copyright to ui

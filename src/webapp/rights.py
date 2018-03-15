@@ -26,13 +26,33 @@ class DueDiligence:
         self.sp = spotipy.Spotify(client_credentials_manager=self.cred_manager)
         self.discogs = discogs_client.Client(self.useragent, user_token=config.get('discogs', 'token'))
 
-    def spotify_search_copyrights(self, titleandartist:str) -> dict:
-        'Try to llok up a Track in spotify and return the copyrights'
+    def spotify_search_copyrights(self, trackmetadata:dict) -> dict:
+        'Try to llok up a Track in spotify and return the copyrights.'
         #pp(sp.album('spotify:album:5UAN1IyYzJUDLvweDXDqJf').get('copyrights'))
         # 1. search for track info (track title and artist)
         # 2. get album
         # 3. get album uri and return it
-        track = self.spotify_search_track(titleandartist)
+
+        # Trackmetadata is modelled in model.py
+        q = []
+        if trackmetadata['isrc']:
+            q.append('isrc:{}'.format(trackmetadata['isrc']))
+        elif trackmetadata['ean']:
+            q.append('upc:{}'.format(trackmetadata['ean']))
+        elif trackmetadata['year']:
+            q.append('year:{}'.format(trackmetadata['year']))
+        q.append('{} {}'.format(trackmetadata['title'], trackmetadata['artist']))
+        if trackmetadata['albumname']:
+            q.append(trackmetadata['albumname'])
+        track = self.spotify_search_track(' '.join(q))
+
+        # sanity check to figure out if spotify gave us something that looks like what we are after
+        logging.debug("got track from spotify: %r", track)
+        if track['name'].lower() != trackmetadata['title'].lower(): # check if title matches
+            raise SpotifyNotFoundError('Ambigous result returned from Spotify. Please check manually')
+        if not trackmetadata['artist'].lower() in [a['name'].lower() for a in track['artists']]: # check artist
+            raise SpotifyNotFoundError('Ambigous result returned from Spotify. Please check manually')
+
         return self.spotify_get_album_rights(track['album']['uri'])
 
     def spotify_search_track(self, querystring:str) -> dict:
@@ -70,10 +90,10 @@ class DueDiligence:
         # TODO iterate trhroug all
         try:
             firsttrack = srch['tracks']['items'][0]
-            return firsttrack
         except IndexError:
             # no results returned
             raise SpotifyNotFoundError('Could not find a track using the query "{}". Please refine your search terms'.format(querystring))
+        return firsttrack
 
     def spotify_get_album_rights(self, albumuri:str) -> dict:
         'Get copyright info from spotify album uri'
@@ -95,14 +115,18 @@ class DueDiligence:
     def discogs_search_label(self, label:str) -> discogs_client.models.Label:
         'Search for label in discogs'
         # simplify
-        # KIDinaKORNER/Interscope Records -> KIDinaKORNER
-        # Republic Records, a division of UMG Recordings, Inc. -> Republic Records
+        # KIDinaKORNER/Interscope Records -> Interscope Records
+        # Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc
         # Def Jam Recordings Norway -> Def Jam Recordings
         # Atlantic Recording Corporation for the United States and WEA International Inc. for the world outside of the United States. A Warner Music Group Company -> ???
         # Bad Vibes Forever / EMPIRE -> Bad Vibes Forever
 
+        # strategy
+        # 1. first, search naively with the full string
+        # 2. if no match, parse the label string and simplify
+        # 3. do sanity check of the topmost result
+        # 4. return it if it passes
 
-        #TODO: add fuzzy search
         srch = self.discogs.search(type='label', q=label)
         logging.debug('got srch :%r', srch)
         for l in srch.page(0):
