@@ -120,7 +120,9 @@ class DueDiligence:
         rexes = [
             r'(.+) Norway', # Def Jam Recordings Norway -> Def Jam Recordings
             r'(?:.+), a division of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
+            r'(?:.+), a Division of (.+)', #Columbia Records, a Division of Sony Music Entertainment
             r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
+            r'^(.+), distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
         ]
         for rx in rexes:
             try:
@@ -146,7 +148,7 @@ class DueDiligence:
             for l in srch.page(0):
                 # see if we find direct name hit
                 # l is discogs_client.models.Label
-                if l.name == query:
+                if l.name == query or l.name.lower() == query.lower():
                     return l
             return None
         
