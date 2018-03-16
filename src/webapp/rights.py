@@ -112,7 +112,7 @@ class DueDiligence:
         return ret
 
     # discogs
-    def parse_label_attribution(self, labelquery)#:str) -> str:
+    def parse_label_attribution(self, labelquery):#:str) -> str:
         'Simplify label / phonograph / copyright attribution, for lookups at discogs'
         # Atlantic Recording Corporation for the United States and WEA International Inc. for the world outside of the United States. A Warner Music Group Company -> ???
         # Bad Vibes Forever / EMPIRE -> EMPIRE
