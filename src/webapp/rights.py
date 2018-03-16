@@ -17,16 +17,16 @@ class SpotifyNotFoundError(NotFoundError):
     pass
 
 class DueDiligence:
-    useragent:str = 'no.nrk.odometer/0.1'
+    useragent = 'no.nrk.odometer/0.1'
 
-    def __init__(self, config:configparser.ConfigParser):
+    def __init__(self, config): #:configparser.ConfigParser):
         self.cred_manager = SpotifyClientCredentials(config.get('spotify', 'clientId'),
                                                      config.get('spotify', 'secret')
         )
         self.sp = spotipy.Spotify(client_credentials_manager=self.cred_manager)
         self.discogs = discogs_client.Client(self.useragent, user_token=config.get('discogs', 'token'))
 
-    def spotify_search_copyrights(self, trackmetadata:dict) -> dict:
+    def spotify_search_copyrights(self, trackmetadata): #:dict) -> dict:
         'Try to llok up a Track in spotify and return the copyrights.'
         #pp(sp.album('spotify:album:5UAN1IyYzJUDLvweDXDqJf').get('copyrights'))
         # 1. search for track info (track title and artist)
@@ -55,7 +55,7 @@ class DueDiligence:
 
         return self.spotify_get_album_rights(track['album']['uri'])
 
-    def spotify_search_track(self, querystring:str) -> dict:
+    def spotify_search_track(self, querystring):#:str) -> dict:
         '''Search for track in spotify and return all metadata. 
         
         See this for search tips: https://support.spotify.com/us/article/search/
@@ -95,9 +95,9 @@ class DueDiligence:
             raise SpotifyNotFoundError('Could not find a track using the query "{}". Please refine your search terms'.format(querystring))
         return firsttrack
 
-    def spotify_get_album_rights(self, albumuri:str) -> dict:
+    def spotify_get_album_rights(self, albumuri):#:str) -> dict:
         'Get copyright info from spotify album uri'
-        def parse_label(labelstring:str) -> str:
+        def parse_label(labelstring):#:str) -> str:
             logging.debug('Parsing copyright owner from %r', labelstring)
             # (C) 1993 Virgin Records America, Inc. -> "Virgin Records America, Inc."
             # ℗ 2017 Propeller Recordings, distributed by Universal Music AS, Norway -> 
@@ -112,7 +112,7 @@ class DueDiligence:
         return ret
 
     # discogs
-    def parse_label_attribution(self, labelquery:str) -> str:
+    def parse_label_attribution(self, labelquery)#:str) -> str:
         'Simplify label / phonograph / copyright attribution, for lookups at discogs'
         # Atlantic Recording Corporation for the United States and WEA International Inc. for the world outside of the United States. A Warner Music Group Company -> ???
         # Bad Vibes Forever / EMPIRE -> EMPIRE
@@ -135,7 +135,7 @@ class DueDiligence:
         logging.debug('Could not simplify label %r', labelquery)
         return None
 
-    def discogs_search_label(self, labelquery:str) -> discogs_client.models.Label:
+    def discogs_search_label(self, labelquery):#:str) -> discogs_client.models.Label:
         'Search for label in discogs'
         # strategy
         # 1. first, search naively with the full string
@@ -163,7 +163,7 @@ class DueDiligence:
 
         raise DiscogsNotFoundError('Could not find the label "{}" in the Discogs database'.format(labelquery))
 
-    def discogs_label_heritage(self, label:discogs_client.models.Label) -> discogs_client.models.Label:
+    def discogs_label_heritage(self, label):#discogs_client.models.Label) -> discogs_client.models.Label:
         'Take a discogs label and walk the parenthood till the very top'
         heritage = [label]
         while hasattr(label, 'parent_label'):
