@@ -229,11 +229,15 @@ function main() {
         }
         document.querySelector('div.col-5').appendChild(tbtn);
         var t2btn = document.createElement("button");
-        t2btn.innerText = "Check ownership";
+        t2btn.innerText = i18n.CHECK_OWNERSHIP();
         t2btn.onclick = function(event) {
             event.preventDefault();
             var tinglemodal = new setupModal();
             tinglemodal.setContent(document.getElementById("ownership-dialog").innerHTML);
+            tinglemodal.modalBoxContent.querySelector("h2").innerText = i18n.CHECK_OWNERSHIP_TITLE();
+            tinglemodal.modalBoxContent.querySelector("label").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA: "NONRE671786HD0001", SPOTIFY: "spotify:track:0WeqauIUZSjsupDGXsXWsP"});
+            tinglemodal.modalBoxContent.querySelector("input").setAttribute("placeholder", i18n.TYPE_OR_PASTE_HERE());
+            tinglemodal.modalBoxContent.querySelector(".card-header").innerText = i18n.RESULTS();
             tinglemodal.open();
             return false;
         }
@@ -475,14 +479,13 @@ function resolve(clipname, url) {
                 output.innerHTML = md.copyright+" ℗ <b>"+md.label+"</b>";
             } else {
                 output.innerHTML = "<i>"+md.title+"</i> "+md.artist
-                        + " <button type=button onclick='check_copyright(this)' class='btn btn-success btn-xs' title='Check copyright'>©©©</a>";
+                        + " <button type=button onclick='check_copyright(this)' class='btn btn-success btn-xs' title='"+i18n.CHECK_COPYRIGHT()+"'>℗</a>";
             }
             if(output.classList.contains('resolve-overridden')) {
                 // this is the result of a manual overridden resolve, i.e. filename should've been 
                 // recognised, but wasn't
                 // add some ui to report missing filename
-                output.innerHTML = output.innerHTML + " <button type=button onclick='report_missing_filename(this)' class='btn btn-success btn-xs' title='Report missing filename to Odometer devs'>＋</a>";
-            }
+                output.innerHTML = output.innerHTML + " <button type=button onclick='report_missing_filename(this)' class='btn btn-success btn-xs' title='"+i18n.REPORT_MISSING_FILENAME()+"'>＋＋＋</a>"; }
         } else if(xhr.status === 400) {
             // server had issues with our request
             var response = JSON.parse(xhr.response);
@@ -994,17 +997,16 @@ function finishedResolving() {
         <canvas id="statusChart" width="400" height="400"></canvas>
     </dialog>
     <dialog id=ownership-dialog>
-        <h2>Sjekk eierskap på kommersielle låter </h2>
+        <h2>Look up ownership of commercial releases</h2>
         <form onsubmit="return false">
         <div class=form-group>
-            <label for=ownership-input>Skriv inn DMA-id (<i>som NONRE671786HD0001</i>) eller spotify-referanse (
-                    <i>som spotify:track:0WeqauIUZSjsupDGXsXWsP</i>)</label>
-            <input id=ownership-input placeholder="Skriv eller lim inn her" class=form-control 
+            <label for=ownership-input></label>
+            <input id=ownership-input placeholder="Type or paste here" class=form-control 
                 type=search oninput="if(this.value.length>5) {resolve_manually_delay(this);}"
                 autocomplete=off autocorrect=off>
             <div class="card">
                 <div class="card-header">
-                    Resultater
+                    Results
                 </div>
                 <div class="card-body">
                     <p class="card-text">...</p>

@@ -56,7 +56,14 @@ var messages = {
         SUBMIT: "Submit",
         THANK_YOU: "Thank you for your help!",
         STATUS_GRAPH_7DAYS: "Status for music services in 7 days until {TIMESTAMP}: ",
-        PLEASE_SEARCH_MANUALLY: "Please search manually"
+        PLEASE_SEARCH_MANUALLY: "Please search manually",
+        REPORT_MISSING_FILENAME: "Report missing file name to the Odometer hobbits",
+        CHECK_COPYRIGHT: "Check copyright",
+        CHECK_OWNERSHIP: "Check ownership",
+        CHECK_OWNERSHIP_TITLE: "Check ownership of commercial releases",
+        RESULTS: "Results",
+        TYPE_OR_PASTE_HERE: "Type or paste here",
+        OWNERSHIP_HELPTEXT: "Enter a DMA id (e.g. <i>{DMA}</i>) or a spotify reference (e.g. <i>{SPOTIFY}</i>)."
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -100,6 +107,14 @@ var messages = {
         SUBMIT: "Send inn",
         THANK_YOU: "Tusen takk for hjelpa!",
         STATUS_GRAPH_7DAYS: "Status for musikkdatatjenestene 7 dager fram til {TIMESTAMP}: ",
-        PLEASE_SEARCH_MANUALLY: "Vennligst søk manuelt"
+        PLEASE_SEARCH_MANUALLY: "Vennligst søk manuelt",
+        REPORT_MISSING_FILENAME: "Meld fra om manglende filnavn til Odometer-hobittene",
+        CHECK_COPYRIGHT: "Sjekk copyright",
+        CHECK_OWNERSHIP: "Sjekk eierskap",
+        CHECK_OWNERSHIP_TITLE: "Sjekk eierskap på kommersielle låter",
+        RESULTS: "Resultater",
+        TYPE_OR_PASTE_HERE: "Skriv eller lim inn her",
+        OWNERSHIP_HELPTEXT: "Skriv inn DMA-id (som {DMA}) eller spotify-referanse (som {SPOTIFY})."
+
     }
 };
