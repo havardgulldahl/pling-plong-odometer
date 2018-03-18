@@ -708,6 +708,10 @@ function feedbackdialog() {
         xhr.send(formData);
     });
     tinglemodal.setContent(document.getElementById("feedback-dialog").innerHTML);
+    tinglemodal.modalBoxContent.querySelector("label[for=feedback-email]").innerHTML = i18n.EMAIL();
+    tinglemodal.modalBoxContent.querySelector("#feedback-email").setAttribute("placeholder", i18n.IF_YOU_WANT_US_TO_GET_IN_TOUCH());
+    tinglemodal.modalBoxContent.querySelector("label[for=feedback-check]").innerHTML = i18n.INCLUDE_XML();
+    tinglemodal.modalBoxContent.querySelector("label[for=feedback-text]").innerHTML = i18n.FEEDBACK();
     tinglemodal.open();
 }
 
@@ -728,7 +732,7 @@ function report_missing_filename(button) {
             tinglemodal.setContent(i18n.THANK_YOU());
             tinglemodal.open();
         } else {
-            console.error("feedback error: %o, %o", xhr.status, xhr.response);
+            console.error("missing filename error: %o, %o", xhr.status, xhr.response);
         }
     }
     xhr.send(JSON.stringify(metadata));
@@ -978,15 +982,15 @@ function finishedResolving() {
     <dialog id=feedback-dialog>
         <form onsubmit="return false;" method=POST action=/feedback>
             <div class="form-group">
-                <label for=feedback-email>E-mail: </label>
+                <label for=feedback-email>E-mail</label>:
                 <input id=feedback-email name=sender type=email placeholder="If you want us to get in touch" class="form-control" >
             </div>
             <div class="form-check">
                 <input id=feedback-check disabled name=include_xmeml type=checkbox class=form-check-input>
-                <label for=feedback-check>Include xml </label>
+                <label for=feedback-check>Include xml</label>?
             </div>
             <div class="form-group">
-                <label for=feedback-text>Feedback: </label>
+                <label for=feedback-text>Feedback</label>:
                 <textarea id=feedback-text name=text rows=3 style="width:99%"></textarea>
             </div>
 
