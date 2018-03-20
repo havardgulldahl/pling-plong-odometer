@@ -392,6 +392,9 @@ class DMAResolver(ResolverBase):
                 except ValueError:
                     md.recordnumber = _recordnumber
                     md.label = 'Unknown'
+
+            elif ref.get('link') == 'http://gluon.nrk.no/dataordbok.xml#isrc':
+                md.isrc = ref.text
         return md
 
     """
