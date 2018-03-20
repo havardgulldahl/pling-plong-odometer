@@ -365,7 +365,7 @@ class DMAResolver(ResolverBase):
         self.tree = ET.parse(xmlsource)
         obj = self.tree.find('.//'+glns('object'))
         md = TrackMetadata(filename=filename, musiclibrary='DMA')
-        md.identifier = obj.find('.//'+glns('identifier')).text
+        md.identifier = 'DMATrack#{}'.format(obj.find('.//'+glns('identifier')).text)
         md.title = obj.find('.//'+glns('title')).text
         md.albumname = obj.find('.//'+glns('titleAlternative')).text
         for creator in obj.findall('.//'+glns('creator')):
@@ -681,7 +681,7 @@ class ApollomusicResolver(ResolverBase):
                         # catalogue=None,
                         label=trackdata.get('label_fk', None),
                         # lyricist=None,
-                        identifier='apollotrack# %s' % trackdata.get('track_id', -1),
+                        identifier='ApolloTrack#{}'.format(trackdata.get('track_id', -1)),
                         )
             metadata.productionmusic = True
             return metadata
@@ -1157,7 +1157,7 @@ class ExtremeMusicResolver(ResolverBase):
                         # catalogue=None,
                         label=musicid[0:3],
                         # lyricist=None,
-                        identifier='extremetrack#%s' % version_internal_id or musicid,
+                        identifier='ExtremeMusicTrack#%s' % version_internal_id or musicid,
                         )
                 metadata.productionmusic = True
                 return metadata
@@ -1468,7 +1468,7 @@ class WarnerChappellResolver(ResolverBase):
                              catalogue=trackdata.get('catalogue', None),
                              label=trackdata.get('label'),
                              # lyricist=None,
-                             identifier='warnerchappel#{}'.format(trackdata.get('tid', _musicid)),
+                             identifier='WarnerChappellTrack#{}'.format(trackdata.get('tid', _musicid)),
                              productionmusic=True,
              )
         return data
