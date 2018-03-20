@@ -122,9 +122,8 @@ class DueDiligence:
         # Bad Vibes Forever / EMPIRE 
 
         rexes = [
-            r'(?:.+), a division of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
-            r'(?:.+), a Division of (.+)', #Columbia Records, a Division of Sony Music Entertainment
-            r'(?:.+) – A Division of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
+            r'(?:.+), [Aa] [Dd]ivision of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
+            r'(?:.+) – [Aa] [Dd]ivision of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
             r'(.+) Norway', # Def Jam Recordings Norway -> Def Jam Recordings
             r'^(.+), distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
             r'(?:.+) under exclusive licence to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
@@ -151,8 +150,8 @@ class DueDiligence:
 
         def normalize(string):
             'Make strings possible to compare'
-            string = re.sub(r'Ltd(\ |$)', 'Ltd.', string)
-            string = string.lower()
+            string = re.sub(r'Ltd(\ |$)', 'Ltd.', string) # in discogs, Ltd is always abbreviated with the dot
+            string = string.lower()                       # casing is such a mess
             return string
 
         def search(query):

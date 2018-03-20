@@ -429,7 +429,7 @@ function resolve_manually(inputelement) {
                 if(response.ownership.discogs.length) {
                     var d = response.ownership.discogs;
                     for(var i=0;i<d.length;i++) {
-                        s += "-> "+d[i].name;
+                        s += " → "+d[i].name;
                     }
                 } else {
                     s += i18n.PLEASE_SEARCH_MANUALLY();
