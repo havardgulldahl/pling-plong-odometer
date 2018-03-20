@@ -101,8 +101,12 @@ class DueDiligence:
             logging.debug('Parsing copyright owner from %r', labelstring)
             # (C) 1993 Virgin Records America, Inc. -> "Virgin Records America, Inc."
             # ℗ 2017 Propeller Recordings, distributed by Universal Music AS, Norway -> 
+            # (P) NorskAmerikaner AS 2008
             rex = re.compile(r'^(?:\(C\)|\(P\)|℗|©)? ?\d{4}?(?:, \d{4})? ?(.+)')
-            return rex.match(labelstring).group(1)
+            try:
+                return rex.match(labelstring).group(1)
+            except AttributeError:
+                return None
         r = self.sp.album(albumuri).get('copyrights')
         ret = { k['type']:k['text'] for k in r}
         if 'P' in ret: # have (P) section
@@ -115,13 +119,15 @@ class DueDiligence:
     def parse_label_attribution(self, labelquery):#:str) -> str:
         'Simplify label / phonograph / copyright attribution, for lookups at discogs'
         # Atlantic Recording Corporation for the United States and WEA International Inc. for the world outside of the United States. A Warner Music Group Company -> ???
-        # Bad Vibes Forever / EMPIRE -> EMPIRE
+        # Bad Vibes Forever / EMPIRE 
 
         rexes = [
             r'(?:.+), a division of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
             r'(?:.+), a Division of (.+)', #Columbia Records, a Division of Sony Music Entertainment
+            r'(?:.+) – A Division of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
             r'(.+) Norway', # Def Jam Recordings Norway -> Def Jam Recordings
             r'^(.+), distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
+            r'(?:.+) under exclusive licence to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
             r'^The copyright in this sound recording is owned by (.+)', # The copyright in this sound recording is owned by Mawlaw 388 Ltd T/A Source UK
             r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
         ]
@@ -143,15 +149,24 @@ class DueDiligence:
         # 3. do sanity check of the topmost result
         # 4. return it if it passes
 
+        def normalize(string):
+            'Make strings possible to compare'
+            string = re.sub(r'Ltd(\ |$)', 'Ltd.', string)
+            string = string.lower()
+            return string
+
         def search(query):
             srch = self.discogs.search(type='label', q=query)
             logging.debug('got srch :%r', srch)
             for l in srch.page(0):
                 # see if we find direct name hit
                 # l is discogs_client.models.Label
-                if l.name == query or l.name.lower() == query.lower():
+                if normalize(l.name) == normalize(query):
                     return l
             return None
+
+        if labelquery is None:
+            raise DiscogsNotFoundError('This is not a valid label query: {}'.format(labelquery))
         
         first = search(labelquery)
         if first is not None:
