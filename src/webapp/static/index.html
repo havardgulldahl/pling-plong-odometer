@@ -891,6 +891,7 @@ function download(content, filename, contentType) {
     a.href = window.URL.createObjectURL(blob);
     a.download = filename;
     a.click();
+    window.URL.revokeObjectURL(a.href); // free memory
 }
 /*
 clips = defaultdict(list)
