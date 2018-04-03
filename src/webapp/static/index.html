@@ -786,7 +786,12 @@ function statusdialog() {
     // set up dialog with live status, graphs, etc
 
     //const allcolors = ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'];
-    const allcolors = ["rgba(255, 99, 132, 0.2)", "rgba(255, 159, 64, 0.2)", "rgba(255, 205, 86, 0.2)", "rgba(75, 192, 192, 0.2)", "rgba(54, 162, 235, 0.2)", "rgba(153, 102, 255, 0.2)", "rgba(201, 203, 207, 0.2)"];
+    const allcolors = {"404": "rgba(255, 99, 132, 0.2)", 
+                       "201": "rgba(255, 159, 64, 0.2)", 
+                       "400": "rgba(255, 205, 86, 0.2)", 
+                       "200": "rgba(75, 192, 192, 0.2)", 
+                       "500": "rgba(54, 162, 235, 0.2)", 
+                       "default": "rgba(201, 203, 207, 0.2)"};
             
 
     // set up dialog
@@ -810,7 +815,11 @@ function statusdialog() {
             var sets = []
             var z = dataseries["activity_7days"]["datasets"];
             for(var k in z) {
-                var kolor = allcolors.pop();
+                try {
+                    var kolor = allcolors[k];
+                } catch (e) {
+                    var kolor = allcolors["default"];
+                }
                 sets.push({
                     label: k,
                     borderColor: kolor,
