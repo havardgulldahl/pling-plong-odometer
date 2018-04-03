@@ -39,11 +39,13 @@ class DueDiligence:
             q.append('isrc:{}'.format(trackmetadata['isrc']))
         elif trackmetadata['ean']:
             q.append('upc:{}'.format(trackmetadata['ean']))
-        elif trackmetadata['year']:
-            q.append('year:{}'.format(trackmetadata['year']))
-        q.append('{} {}'.format(trackmetadata['title'], trackmetadata['artist']))
-        if trackmetadata['albumname']:
-            q.append(trackmetadata['albumname'])
+        else:
+            # no unique code searches, build up a query of what we know
+            if trackmetadata['year']:
+                q.append('year:{}'.format(trackmetadata['year']))
+            q.append('{} {}'.format(trackmetadata['title'], trackmetadata['artist']))
+            if trackmetadata['albumname']:
+                q.append(trackmetadata['albumname'])
         track = self.spotify_search_track(' '.join(q))
 
         # sanity check to figure out if spotify gave us something that looks like what we are after
