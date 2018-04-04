@@ -7,6 +7,9 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client # pip install discogs_client  
 
+TRUST_ISRC=False # TODO: figure out if we can trust ISRC
+TRUST_EAN=False # TODO: figure out if we can trust EAN
+
 class NotFoundError(Exception): 
     pass
 
@@ -35,9 +38,9 @@ class DueDiligence:
 
         # Trackmetadata is modelled in model.py
         q = []
-        if trackmetadata['isrc']:
+        if TRUST_ISRC and trackmetadata['isrc']:
             q.append('isrc:{}'.format(trackmetadata['isrc']))
-        elif trackmetadata['ean']:
+        elif TRUST_EAN and trackmetadata['ean']:
             q.append('upc:{}'.format(trackmetadata['ean']))
         else:
             # no unique code searches, build up a query of what we know
