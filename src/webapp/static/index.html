@@ -392,14 +392,14 @@ function formatAudible(audible) {
 }
 
 function resolve_manually_delay(inputelement) {
-    // add a 2 second delay so we dont run this while typing
+    // add a delay so we dont run this while typing
     if(resolve_manually_delay.tick) {
         window.clearTimeout(resolve_manually_delay.tick);
     }
     resolve_manually_delay.tick = window.setTimeout(function() {
         resolve_manually(inputelement);
     },
-    2000 );
+    900 );
 }
 
 function resolve_manually(inputelement) {
@@ -764,7 +764,7 @@ function check_copyright(button) {
             if(response.ownership.discogs.length) {
                 var d = response.ownership.discogs;
                 for(var i=0;i<d.length;i++) {
-                    s += "-> "+d[i].name;
+                    s += " ⇝ "+d[i].name;
                 }
             } else {
                 s += i18n.PLEASE_SEARCH_MANUALLY();
