@@ -95,105 +95,18 @@ function setupModal() {
 
 }
 function main() {
-    var form = document.getElementById('file-form');
-    var fileSelect = document.getElementById('file-select');
-    var fileList = document.getElementById('files-list');
-    var createReportButton = document.getElementById('create-report-button');
-    var createCreditsButton = document.getElementById('create-credits-button');
     var toggleFeedbackButton = document.getElementById('toggle-feedback');
 
     // i18n - translate ui
     document.getElementById("navbar-analysis").innerText = i18n.ANALYSIS(); 
     document.getElementById("navbar-help").innerText = i18n.HELP(); 
     document.getElementById("navbar-api").title = i18n.API(); 
-    document.getElementById("file-select").title = i18n.CHOOSE_TIMELINE_DATA(); 
-    document.getElementById("preview").innerText = "⇜ "+i18n.PLEASE_SELECT_FILE(); 
-    document.getElementById("create-report-button").innerText = i18n.GENERATE_METADATA_REPORT(); 
-    document.getElementById("create-credits-button").innerText = i18n.GENERATE_END_CREDITS(); 
-    document.getElementById("thead-filename").innerText = i18n.NAME(); 
-    document.getElementById("thead-filename").title = i18n.FILENAME(); 
-    document.getElementById("thead-duration").innerText = i18n.AUDIBLE_LENGTH(); 
-    document.getElementById("thead-duration").title = i18n.MEASURED_IN_SECONDS(); 
-    document.getElementById("thead-library").title = i18n.MUSIC_LIBRARY(); 
-    document.getElementById("thead-metadata").innerText = i18n.METADATA(); 
-    document.getElementById("startinfo").innerHTML = i18n.STARTINFO(); 
-
-    // add debug ui
-    if(document.location.search == "?debug") {
-        var tbtn = document.createElement('button');
-        tbtn.innerText = "Use testfile";
-        tbtn.onclick = function(event) {
-            event.preventDefault();
-            removeChildren(fileList);
-            document.getElementById('preview').validFile = {name:'testfile',
-                                                            lastModifiedDate: new Date()};
-            var formData = new FormData();
-            formData.append('usetestfile', '1');
-            submit(formData);
-            return false;
-        }
-        document.querySelector('div.col-5').appendChild(tbtn);
-        var t2btn = document.createElement("button");
-        t2btn.innerText = i18n.CHECK_OWNERSHIP();
-        t2btn.onclick = function(event) {
-            event.preventDefault();
-            var tinglemodal = new setupModal();
-            tinglemodal.setContent(document.getElementById("ownership-dialog").innerHTML);
-            tinglemodal.modalBoxContent.querySelector("h2").innerText = i18n.CHECK_OWNERSHIP_TITLE();
-            tinglemodal.modalBoxContent.querySelector("label").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA: "NONRE674655HD0001", SPOTIFY: "spotify:track:7bKqtOF02nEDUImWZqq5nH"});
-            tinglemodal.modalBoxContent.querySelector("input").setAttribute("placeholder", i18n.TYPE_OR_PASTE_HERE());
-            tinglemodal.modalBoxContent.querySelector(".card-header").innerText = i18n.RESULTS();
-            tinglemodal.open();
-            return false;
-        }
-        document.querySelector('div.col-5').appendChild(t2btn);
-    }
-
-    createReportButton.onclick = function(event) {
-        event.preventDefault();
-        reportdialog();
-    }
-
-    createCreditsButton.onclick = function(event) {
-        event.preventDefault();
-        creditsdialog();
-    }
 
     toggleFeedbackButton.onclick = function(event) {
         event.preventDefault();
         feedbackdialog();
     }
 
-    fileSelect.onchange = function(event) {
-        // react to file select changes
-        // based on public domain code from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
-        var curFiles = fileSelect.files;
-        var preview = document.getElementById('preview');
-        if(curFiles.length === 0) {
-          preview.innerHTML = "<b>"+i18n.NO_FILES_SELECTED()+"</b>";
-        } else {
-            // empty files table
-            removeChildren(fileList);
-            var chosenFile = curFiles[0];
-            if(!validFileType(chosenFile)) {
-                preview.innerText = i18n.NOT_VALID_FILE_TYPE();
-                preview.setAttribute('class', 'text-danger');
-                // clear any previous file info
-                preview.validFile = null;
-            } else {
-                preview.innerText = i18n.FILE_OK({FILESIZE: returnFileSize(chosenFile.size)});
-                preview.setAttribute('title', i18n.FULL_FILE_NAME({FILENAME: chosenFile.name}));
-                preview.setAttribute('class', 'text-success');
-                // Keep the file info around as a javascript object
-                preview.validFile = chosenFile;
-                // Create a new FormData object.
-                var formData = new FormData();
-                // Add the file to the request.
-                formData.append('xmeml', chosenFile, chosenFile.name);
-                submit(formData)
-            }
-        }
-    }
 }
 
 function resolveAll() {

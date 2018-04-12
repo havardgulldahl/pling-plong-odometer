@@ -292,6 +292,14 @@ def index(request):
     return {}
 
 app.router.add_get('/', index)
+
+@aiohttp_jinja2.template('copyright_owner.tpl')
+def copyright_owner(request):
+    return {}
+
+app.router.add_get('/copyright_owner', copyright_owner)
+
+
 app.router.add_static('/media', 'static/media')
 
 # TODO app.router.add_get('/submit_runsheet', handle_submit_runsheet) # submit a runsheet to applicable services

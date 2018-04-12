@@ -22,11 +22,13 @@ const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "Apoll
 
 </script>
 
+
+{% block headscript %}{% endblock headscript %}
+
 </head>
 <body
-    ondrop="dropHandler(event);" 
-    ondragover="dragoverHandler(event);" 
-    ondragend="dragendHandler(event);">
+{% block bodyhandlers %}{% endblock bodyhandlers %}
+    >
 
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <a class="navbar-brand" href="#">♫ ♪ Odometer <span class=beta title="Some things may break">BETA</span></a>
@@ -35,7 +37,8 @@ const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "Apoll
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                   <div class="navbar-nav">
-                    <a class="nav-item nav-link active" href="#" id=navbar-analysis>Analysis <span class="sr-only">(current)</span></a>
+                    <a class="nav-item nav-link active" href="/" id=navbar-analysis>Analysis</a>
+                    <a class="nav-item nav-link" href="/copyright_owner" id=navbar-ownership>Ownership</a>
                     <a class="nav-item nav-link disabled" href="#" id=navbar-help>Help</a>
                     <a class="nav-item nav-link" href="/doc" title="JSON REST API documentation (swagger)" id=navbar-api>API</a>
                     <a class="nav-item nav-link" href="#" title="" onclick="statusdialog()" id=navbar-status>Status</a>
@@ -71,30 +74,11 @@ const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "Apoll
         <h2>Status</h2>
         <canvas id="statusChart" width="400" height="400"></canvas>
     </dialog>
-    <dialog id=ownership-dialog>
-        <h2>Look up ownership of commercial releases</h2>
-        <form onsubmit="return false">
-        <div class=form-group>
-            <label for=ownership-input></label>
-            <input id=ownership-input placeholder="Type or paste here" class=form-control 
-                type=search oninput="if(this.value.length>5) {resolve_manually_delay(this);}"
-                autocomplete=off autocorrect=off>
-            <div class="card">
-                <div class="card-header">
-                    Results
-                </div>
-                <div class="card-body">
-                    <p class="card-text">...</p>
-                </div>
-            </div>
-        </div>
-
-        </form>
-    </dialog>
     </div>
 
 <script type="text/javascript">
 main()
+{% block docscript %}{% endblock docscript %}
 </script>
 <footer><a href="https://github.com/havardgulldahl/pling-plong-odometer/releases/tag/★" title="$Format:%ci$">Odometer ★</a></footer>
 </body>
