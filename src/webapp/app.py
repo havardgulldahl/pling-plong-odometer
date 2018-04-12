@@ -14,6 +14,9 @@ import aiohttp
 
 from aiohttp_swagger import swagger_path, setup_swagger
 
+import aiohttp_jinja2 # pip install aiohttp-jinja2
+import jinja2
+
 import aioslacker # pip install aioslacker
 import asyncpg # pip install asyncpg
 
@@ -29,6 +32,8 @@ app = web.Application(loop=loop,
 headers = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36',
 }
 clientSession = aiohttp.ClientSession(loop=loop, headers=headers)
+aiohttp_jinja2.setup(app,
+    loader=jinja2.FileSystemLoader('./templates'))
 
 async def on_shutdown(_app):
     'Cleaning up right before shutdown'
@@ -282,9 +287,9 @@ async def handle_get_ownership(request):
 
 app.router.add_get(r'/ownership/{type:(DMA|metadata|spotify)}/{trackinfo}', handle_get_ownership)
 
+@aiohttp_jinja2.template('index.tpl')
 def index(request):
-    with open('static/index.html', encoding='utf-8') as _f:
-        return web.Response(text=_f.read(), content_type='text/html')
+    return {}
 
 app.router.add_get('/', index)
 app.router.add_static('/media', 'static/media')
