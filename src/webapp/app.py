@@ -240,9 +240,9 @@ async def handle_add_missing(request):
 
 app.router.add_post('/add_missing/{filename}', handle_add_missing) # report an audio file that is missing from odometer patterns
 
-async def handle_get_ownership(request):
-    'GET music data and try to get copyrights from spotify and discogs'
-    #TODO gather ifnormaton with an async queue
+async def handle_getpost_ownership(request):
+    'GET / POST music data and try to get copyrights from spotify and discogs'
+    #TODO gather ifnormaton with an async queue and return EventSource
     trackinfo = request.match_info.get('trackinfo', None) 
     querytype = request.match_info.get('type')
     try:
@@ -251,7 +251,8 @@ async def handle_get_ownership(request):
             # look up metadata from DMA
             raise NotImplementedError
         elif querytype == 'metadata':
-            metadata = json.loads(trackinfo)
+            metadata = await request.json()
+            logging.debug('Got metadata payload: %r %r', len(metadata), metadata)
             spotifycopyright = app.duediligence.spotify_search_copyrights(metadata)
             info = {'title': metadata['title'], 'artist': metadata['artist']}
         elif querytype == 'spotify':
@@ -285,7 +286,8 @@ async def handle_get_ownership(request):
 
     )
 
-app.router.add_get(r'/ownership/{type:(DMA|metadata|spotify)}/{trackinfo}', handle_get_ownership)
+app.router.add_get(r'/ownership/{type:(DMA|spotify)}/{trackinfo}', handle_getpost_ownership)
+app.router.add_post(r'/ownership/{type:metadata}', handle_getpost_ownership)
 
 @aiohttp_jinja2.template('index.tpl')
 def index(request):

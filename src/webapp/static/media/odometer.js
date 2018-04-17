@@ -569,7 +569,9 @@ function check_copyright(button) {
     cell.appendChild(sp);
 
     var xhr = new XMLHttpRequest();
-    xhr.open("GET", "/ownership/metadata/"+encodeURIComponent(JSON.stringify(metadata)));
+    //xhr.open("GET", "/ownership/metadata/"+encodeURIComponent(JSON.stringify(metadata)));
+    xhr.open("POST", "/ownership/metadata");
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function () {
         if (xhr.status === 200) {
             // add copyright to ui
@@ -597,7 +599,7 @@ function check_copyright(button) {
         // remove button, clear ui
         button.remove();
     }
-    xhr.send();
+    xhr.send(JSON.stringify(metadata));
 }
 
 function statusdialog() {
