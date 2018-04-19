@@ -12,6 +12,7 @@
 <script type="text/javascript" src="/media/tingle.min.js"></script>
 <script type="text/javascript" src="/media/i18n.js"></script>
 <script type="text/javascript" src="/media/messageformat.min.js"></script>
+<script type="text/javascript" src="/media/axios.min.js"></script>
 <script type="text/javascript" src="/media/odometer.js"></script>
 
 <script type="text/javascript">
