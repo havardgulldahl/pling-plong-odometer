@@ -247,12 +247,19 @@ async def handle_getpost_ownership(request):
     querytype = request.match_info.get('type')
     try:
         # get album copyright from spoitfy
-        if querytype == 'DMA':
-            # look up metadata from DMA
-            raise NotImplementedError
-        elif querytype == 'metadata':
-            metadata = await request.json()
-            logging.debug('Got metadata payload: %r %r', len(metadata), metadata)
+        if querytype in ('DMA', 'metadata'):
+            if querytype == 'DMA':
+                # look up metadata from DMA
+                resolver = getResolverByName('DMA')
+                resolver.setSession(clientSession) # use the same session object for speedups
+                resolver.setConfig(request.app.configuration)
+                # run resolver
+                app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
+                _metadata = await resolver.resolve(trackinfo)
+                metadata = vars(_metadata)
+            elif querytype == 'metadata':
+                metadata = await request.json()
+            logging.debug('Got metadata payload: %r ', metadata)
             spotifycopyright = app.duediligence.spotify_search_copyrights(metadata)
             info = {'title': metadata['title'], 'artist': metadata['artist']}
         elif querytype == 'spotify':
