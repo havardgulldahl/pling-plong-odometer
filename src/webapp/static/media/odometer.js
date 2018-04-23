@@ -209,64 +209,6 @@ function formatAudible(audible) {
     resolveAll();
 }
 
-function resolve_manually_delay(inputelement) {
-    // add a delay so we dont run this while typing
-    if(resolve_manually_delay.tick) {
-        window.clearTimeout(resolve_manually_delay.tick);
-    }
-    resolve_manually_delay.tick = window.setTimeout(function() {
-        resolve_manually(inputelement);
-    },
-    900 );
-}
-
-function resolve_manually(inputelement) {
-    // resolve from text input
-    var q = inputelement.value;
-    console.log('resolve form text input %o', q);
-    //var output = inputelement.nextElementSibling;
-    var output = inputelement.parentElement.querySelector(".card-text");
-    output.setAttribute("id", "o-"+utoa(q));
-    if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
-        resolve(q, "/resolve/DMA/"+encodeURIComponent(q));
-    } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify URI
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/ownership/spotify/"+encodeURIComponent(q));
-        output.classList.toggle("loading", true);
-        output.classList.toggle("text-success", false);
-        xhr.onload = function () {
-            output.classList.toggle("loading", false);
-            if (xhr.status === 200) {
-                // add copyright to ui
-
-                var response = JSON.parse(xhr.response);
-                console.log("copyright response: %o", response);
-                var s = "<i>"+response.trackinfo.title+"</i> "+response.trackinfo.artist+"<br><b>Spotify</b>: ";
-                s += response.ownership.spotify.P || response.ownership.spotify.C;
-                s += "<br><b>Discogs</b>: ";
-                if(response.ownership.discogs.length) {
-                    var d = response.ownership.discogs;
-                    for(var i=0;i<d.length;i++) {
-                        s += " ⇝ "+d[i].name;
-                    }
-                } else {
-                    s += i18n.PLEASE_SEARCH_MANUALLY();
-                }
-                output.classList.toggle("text-success", true);
-                output.innerHTML = s;
-            } else {
-                console.error("copyright error: %o, %o", xhr.status, xhr.response);
-                var s = "<br><b>Spotify</b>: "+i18n.PLEASE_SEARCH_MANUALLY()+
-                    "<br><b>Discogs</b>: "+i18n.PLEASE_SEARCH_MANUALLY();
-                output.innerHTML = s;
-            }
-        }
-        xhr.send();
-    }
-    // no known resolver
-    return false;
-}
-
 function resolve(clipname, url) {
     // get a clipname and an url, and parse the JSON contents into a metadata string
     // Set up the request.
