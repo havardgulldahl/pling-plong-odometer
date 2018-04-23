@@ -51,9 +51,10 @@ function resolve_manually_delay(inputelement) {
 function resolve_manually(inputelement) {
     // resolve from text input
     var q = inputelement.value;
+    var output = document.getElementById("results-list");
     console.log('resolve form text input %o', q);
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
-        //resolve(q, "/resolve/DMA/"+encodeURIComponent(q));
+        output.classList.toggle("loading", true);
         axios.get("/ownership/DMA/"+encodeURIComponent(q))
             .then(function (response) {
                 console.log(response);
@@ -64,40 +65,22 @@ function resolve_manually(inputelement) {
             });
         
     } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify URI
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", "/ownership/spotify/"+encodeURIComponent(q));
         output.classList.toggle("loading", true);
-        output.classList.toggle("text-success", false);
-        xhr.onload = function () {
-            output.classList.toggle("loading", false);
-            if (xhr.status === 200) {
+        //output.classList.toggle("text-success", false);
+        axios.get("/ownership/spotify/"+encodeURIComponent(q))
+            .then(function (response) {
+                output.classList.toggle("loading", false);
                 // add copyright to ui
-                var response = JSON.parse(xhr.response);
                 console.log("copyright response: %o", response);
-                app.items.push(response);
-                /*
-                var s = "<i>"+response.trackinfo.title+"</i> "+response.trackinfo.artist+"<br><b>Spotify</b>: ";
-                s += response.ownership.spotify.P || response.ownership.spotify.C;
-                s += "<br><b>Discogs</b>: ";
-                if(response.ownership.discogs.length) {
-                    var d = response.ownership.discogs;
-                    for(var i=0;i<d.length;i++) {
-                        s += " ⇝ "+d[i].name;
-                    }
-                } else {
-                    s += i18n.PLEASE_SEARCH_MANUALLY();
-                }
-                output.classList.toggle("text-success", true);
-                output.innerHTML = s;
-                */
-            } else {
-                console.error("copyright error: %o, %o", xhr.status, xhr.response);
+                app.items.push({"metadata":response.data.trackinfo, "ownership":response.data.ownership});
+            })
+            .catch(function(error) {
+                output.classList.toggle("loading", false);
+                console.error("copyright error: %o, %o", error, error);
                 var s = "<br><b>Spotify</b>: "+i18n.PLEASE_SEARCH_MANUALLY()+
                     "<br><b>Discogs</b>: "+i18n.PLEASE_SEARCH_MANUALLY();
                 output.innerHTML = s;
-            }
-        }
-        xhr.send();
+            })
     }
     // no known resolver
     return false;
