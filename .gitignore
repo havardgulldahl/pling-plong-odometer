@@ -93,3 +93,4 @@ src/webapp/config.ini
 src/webapp/_passwords.txt
 .DS_Store
 CEP-panel/node_modules/
+src/webapp/static/media/status.json
