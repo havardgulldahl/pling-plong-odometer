@@ -260,9 +260,10 @@ async def handle_getpost_ownership(request):
             elif querytype == 'metadata':
                 metadata = await request.json()
             logging.debug('Got metadata payload: %r ', metadata)
-            spotifycopyright = app.duediligence.spotify_search_copyrights(metadata)
             info = {'title': metadata['title'], 'artist': metadata['artist']}
+            spotifycopyright = app.duediligence.spotify_search_copyrights(metadata)
         elif querytype == 'spotify':
+            metadata = None
             spotifyuri = trackinfo
             track = app.duediligence.sp.track(spotifyuri)
             spotifycopyright = app.duediligence.spotify_get_album_rights(track['album']['uri'])
@@ -270,17 +271,19 @@ async def handle_getpost_ownership(request):
         else:
             raise NotImplementedError
     except SpotifyNotFoundError as e:
-        return web.json_response(status=404,
-                                 data={'error': ['Could not find track in the spotify database, please do it manually.']}
-                                )
+        spotifycopyright = None
+        #return web.json_response(status=404,
+                                 #data={'error': ['Could not find track in the spotify database, please do it manually.']}
+                                #)
 
-    try:
-        discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
-        discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
-    except DiscogsNotFoundError as e:
-        app.logger.warning('Coul dnot get label from discogs: %s', e)
-        discogs_label = None
-        discogs_label_heritage = []
+    discogs_label = None
+    discogs_label_heritage = []
+    if spotifycopyright is not None:
+        try:
+            discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
+            discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
+        except DiscogsNotFoundError as e:
+            app.logger.warning('Coul dnot get label from discogs: %s', e)
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[],
                               'trackinfo': info,
