@@ -299,6 +299,33 @@ async def handle_getpost_ownership(request):
 app.router.add_get(r'/ownership/{type:(DMA|spotify)}/{trackinfo}', handle_getpost_ownership)
 app.router.add_post(r'/ownership/{type:metadata}', handle_getpost_ownership)
 
+async def handle_get_tracklist(request):
+    'GET tracklist id and return lists of spoityf ids or DMA ids'
+    tracklist_id = request.match_info.get('tracklist', None) 
+    querytype = request.match_info.get('type')
+    if querytype in ('DMA',):
+        # look up metadata from DMA
+        raise NotImplementedError
+        resolver = getResolverByName('DMA')
+        resolver.setSession(clientSession) # use the same session object for speedups
+        resolver.setConfig(request.app.configuration)
+        # run resolver
+        app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
+        _metadata = await resolver.resolve(trackinfo)
+        metadata = vars(_metadata)
+    elif querytype == 'spotify':
+        try:
+            tracklist = list(app.duediligence.spotify_search_playlist(tracklist_id))
+        except SpotifyNotFoundError as e:
+            tracklist = []
+    else:
+        raise NotImplementedError
+
+    return web.json_response({'error':[],
+                              'tracks': tracklist})
+
+app.router.add_get(r'/tracklist/{type:(DMA|spotify)}/{tracklist}', handle_get_tracklist)
+
 @aiohttp_jinja2.template('index.tpl')
 def index(request):
     return {}

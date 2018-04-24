@@ -100,6 +100,18 @@ class DueDiligence:
             raise SpotifyNotFoundError('Could not find a track using the query "{}". Please refine your search terms'.format(querystring))
         return firsttrack
 
+    def spotify_search_playlist(self, playlist_urn): #:str) -> dict:
+        'Get a list of spotify ids from a playlist'
+        # 'spotify:user:spotifycharts:playlist:37i9dQZEVXbJiZcmkrIHGU' -> spotifycharts, 37i9d...
+        _, _, user, _, playlist_id = playlist_urn.split(':')
+        srch = self.sp.user_playlist(user, playlist_id)
+        for item in srch['tracks']['items']:
+            yield {'title':     item['track']['name'],
+                   'uri':       item['track']['uri'],
+                   'artist':    ', '.join([a['name'] for a in item['track']['artists']]), 
+                   'album_uri': item['track']['album']['uri']
+            }
+
     def spotify_get_album_rights(self, albumuri):#:str) -> dict:
         'Get copyright info from spotify album uri'
         def parse_label(labelstring):#:str) -> str:

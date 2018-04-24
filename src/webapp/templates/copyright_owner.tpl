@@ -51,10 +51,9 @@ function resolve_manually_delay(inputelement) {
 function resolve_manually(inputelement) {
     // resolve from text input
     var q = inputelement.value;
-    var output = document.getElementById("results-list");
     console.log('resolve form text input %o', q);
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
-        output.classList.toggle("loading", true);
+        inputelement.classList.toggle("loading", true);
         axios.get("/ownership/DMA/"+encodeURIComponent(q))
             .then(function (response) {
                 console.log(response);
@@ -64,23 +63,42 @@ function resolve_manually(inputelement) {
                 console.log(error);
             });
         
-    } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify URI
-        output.classList.toggle("loading", true);
-        //output.classList.toggle("text-success", false);
+    } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify track URI
+        inputelement.classList.toggle("loading", true);
+        //inputelement.classList.toggle("text-success", false);
         axios.get("/ownership/spotify/"+encodeURIComponent(q))
             .then(function (response) {
-                output.classList.toggle("loading", false);
+                inputelement.classList.toggle("loading", false);
                 // add copyright to ui
                 console.log("copyright response: %o", response);
                 app.items.push({"metadata":response.data.trackinfo, "ownership":response.data.ownership});
             })
             .catch(function(error) {
-                output.classList.toggle("loading", false);
+                inputelement.classList.toggle("loading", false);
                 console.error("copyright error: %o, %o", error, error);
                 var s = "<br><b>Spotify</b>: "+i18n.PLEASE_SEARCH_MANUALLY()+
                     "<br><b>Discogs</b>: "+i18n.PLEASE_SEARCH_MANUALLY();
                 output.innerHTML = s;
             })
+    } else if(q.match(/spotify:user:[a-z]+:playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
+        inputelement.classList.toggle("loading", true);
+        axios.get("/tracklist/spotify/"+encodeURIComponent(q))
+            .then(function (response) {
+                inputelement.classList.toggle("loading", false);
+                // add copyright to ui
+                console.log("tracklist response: %o", response);
+                var tracks = response.data.tracks;
+                var t;
+                for(var i=0;i<tracks.length;i++) {
+                    t = tracks[i];
+                    app.items.push({"metadata":{"title":t.title, "artist":t.artist}, 
+                                    "ownership": {},
+                                    "spotify": {"album_uri": t.album_uri, "uri": t.uri}});
+                }
+            })
+            .catch(function(error) {
+                throw(error);
+            });
     }
     // no known resolver
     return false;
