@@ -8,7 +8,7 @@
             [[ track.metadata.artist ]] 
             <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ track.ownership.spotify.P ]]</span>
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
-            <br>Safe to use? <input type=checkbox v-model="track.isSafe" disabled> 
+            <br>Safe to use? <input type=checkbox v-model="isLicensed" disabled> 
         </td>
     </tr>
 </script>
@@ -23,9 +23,40 @@ Vue.component("ownership-item", {
     methods: {
         isSafe: function() {
             return false;
+        },
+        update_ownership: function() {
+            console.log("update %o spotify", this);
+            var inputelement = this.$el;
+            var track = this.track;
+            inputelement.classList.toggle("loading", true);
+            axios.get("/ownership/spotify/"+encodeURIComponent(track.spotify.uri))
+            .then(function (response) {
+                inputelement.classList.toggle("loading", false);
+                // add copyright to ui
+                console.log("copyright response: %o", response);
+                track.ownership = response.data.ownership;
+                //app.items.push({"metadata":response.data.trackinfo, "ownership":response.data.ownership});
+            })
+            .catch(function(error) {
+                inputelement.classList.toggle("loading", false);
+                console.error("copyright error: %o, %o", error, error);
+                var s = "<br><b>Spotify</b>: "+i18n.PLEASE_SEARCH_MANUALLY()+
+                    "<br><b>Discogs</b>: "+i18n.PLEASE_SEARCH_MANUALLY();
+                output.innerHTML = s;
+            });
         }
-
-    }
+    },
+    computed: {
+        isLicensed: {
+            get: function() {
+                return true
+            }
+        }
+    },
+    mounted: function () {
+        console.log("mounted %o", this);
+        this.update_ownership();
+    },
   });
 
 var app = new Vue({
@@ -95,6 +126,7 @@ function resolve_manually(inputelement) {
                                     "ownership": {},
                                     "spotify": {"album_uri": t.album_uri, "uri": t.uri}});
                 }
+
             })
             .catch(function(error) {
                 throw(error);
