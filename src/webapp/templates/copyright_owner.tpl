@@ -4,9 +4,9 @@
 {% block templates %}
 <script type="text/x-template" id="ownership-template">
     <tr>
-        <td><i>[[ track.metadata.title ]]</i> 
-            [[ track.metadata.artist ]] 
-            <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ track.ownership.spotify.P ]]</span>
+        <td><i>«[[ track.metadata.title ]]»</i> —
+            [[ track.metadata.artist ]] <span v-if="!track.ownership.spotify" class=loading>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ copyright ]]</span>
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
             <br>Safe to use? <input type=checkbox v-model="isLicensed" disabled> 
         </td>
@@ -21,11 +21,8 @@ Vue.component("ownership-item", {
     delimiters: ["[[", "]]"],
     template: "#ownership-template",
     methods: {
-        isSafe: function() {
-            return false;
-        },
         update_ownership: function() {
-            console.log("update %o spotify", this);
+            //console.log("update %o spotify", this);
             var inputelement = this.$el;
             var track = this.track;
             inputelement.classList.toggle("loading", true);
@@ -35,27 +32,29 @@ Vue.component("ownership-item", {
                 // add copyright to ui
                 console.log("copyright response: %o", response);
                 track.ownership = response.data.ownership;
-                //app.items.push({"metadata":response.data.trackinfo, "ownership":response.data.ownership});
             })
             .catch(function(error) {
                 inputelement.classList.toggle("loading", false);
-                console.error("copyright error: %o, %o", error, error);
-                var s = "<br><b>Spotify</b>: "+i18n.PLEASE_SEARCH_MANUALLY()+
-                    "<br><b>Discogs</b>: "+i18n.PLEASE_SEARCH_MANUALLY();
-                output.innerHTML = s;
+                console.error("copyright error: %o", error);
+                track.ownership.spotify = {"P" : i18n.PLEASE_SEARCH_MANUALLY()};
             });
         }
     },
     computed: {
+        copyright: function() {
+            return this.track.ownership.spotify.P || this.track.ownership.spotify.C;
+        },
         isLicensed: {
             get: function() {
-                return true
+                return false;
             }
         }
     },
     mounted: function () {
-        console.log("mounted %o", this);
-        this.update_ownership();
+        //console.log("mounted %o", this);
+        if(isEmpty(this.track.ownership)) { // get ownership details for this object
+            this.update_ownership();
+        }
     },
   });
 
@@ -82,12 +81,14 @@ function resolve_manually_delay(inputelement) {
 function resolve_manually(inputelement) {
     // resolve from text input
     var q = inputelement.value;
+    app.items = []; // empty list
     console.log('resolve form text input %o', q);
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
         inputelement.classList.toggle("loading", true);
         axios.get("/ownership/DMA/"+encodeURIComponent(q))
             .then(function (response) {
                 console.log(response);
+                inputelement.classList.toggle("loading", false);
                 app.items.push({"metadata":response.data.trackinfo, "ownership":response.data.ownership});
             })
             .catch(function (error) {
@@ -129,6 +130,7 @@ function resolve_manually(inputelement) {
 
             })
             .catch(function(error) {
+                inputelement.classList.toggle("loading", false);
                 throw(error);
             });
     }

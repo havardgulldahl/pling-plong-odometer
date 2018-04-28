@@ -23,6 +23,12 @@ function atou(str) {
     return decodeURIComponent(escape(window.atob(str)));
 }
 
+// check if an object is empty -- https://stackoverflow.com/a/34491966
+function isEmpty(obj) {
+    for (var x in obj) { if (obj.hasOwnProperty(x))  return false; }
+    return true;
+ }
+
 function formatDuration(numbr) {
     // retun all duration numbers the same way and formatted according to locale
     // TODO: get locale dynamically (with translations)
