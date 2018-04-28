@@ -112,7 +112,7 @@
                     name="xmeml">
             </div>
             <div class="col-5">
-                <span id="preview" class="text-secondary">Please select a file</span>
+                <label for=id-select id="preview" class="text-secondary col-form-label">⇜ Please select a file</label>
             </div>
             <div class="col-4">
                 <button type="button" disabled class="btn btn-primary" id="create-report-button">Generate metadata report</button>

@@ -149,8 +149,10 @@ function resolve_manually(inputelement) {
                     autocomplete=off autocorrect=off v-model="ownership">
             </div>
             <div class="col-9">
-                <span id="helptext" class="text-secondary">Please enter a Spotify or DMA id</span>
-                <a href=# onclick="document.getElementById('ownership-input').value='NONRE656509HD0001'">Try it</a>
+                <label for=ownership-input class="col-form-label"> ⇜
+                    <span id="helptext" class="text-secondary">Please enter a Spotify or DMA id</span>
+                    <a href=# onclick="document.getElementById('ownership-input').value='NONRE656509HD0001'">Try it</a>
+                </label>
             </div>
         </div>
     </form>
