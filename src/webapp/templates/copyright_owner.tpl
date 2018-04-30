@@ -61,7 +61,7 @@ Vue.component("ownership-item", {
 var app = new Vue({
     el: '#content',
     data: {
-      ownership: 'Hello Vue!',
+      ownership: 'Enter reference',
       items: []
     },
     delimiters: ["[[", "]]"]
