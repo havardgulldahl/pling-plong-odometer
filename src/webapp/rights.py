@@ -106,6 +106,7 @@ class DueDiligence:
         _, _, user, _, playlist_id = playlist_urn.split(':')
         srch = self.sp.user_playlist(user, playlist_id)
         for item in srch['tracks']['items']:
+            logging.debug('got spotify item %r', json.dumps(item['track']['album']))
             yield {'title':     item['track']['name'],
                    'uri':       item['track']['uri'],
                    'artist':    ', '.join([a['name'] for a in item['track']['artists']]), 
@@ -146,6 +147,7 @@ class DueDiligence:
             r'(?:.+) under exclusive licence to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
             r'^The copyright in this sound recording is owned by (.+)', # The copyright in this sound recording is owned by Mawlaw 388 Ltd T/A Source UK
             r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
+            r'^(.+) Inc.', # Cash Money Records Inc. (company) -> Cash Money Records (label)
         ]
         for rx in rexes:
             try:
@@ -167,11 +169,17 @@ class DueDiligence:
 
         def normalize(string):
             'Make strings possible to compare'
-            string = re.sub(r'Ltd(\ |$)', 'Ltd.', string) # in discogs, Ltd is always abbreviated with the dot
+            try:
+                string = re.sub(r'Ltd(\ |$)', 'Ltd.', string) # in discogs, Ltd is always abbreviated with the dot
+            except TypeError as e:
+                logging.debug('could not normalize %r, got etror %r', string, e)
+
             string = string.lower()                       # casing is such a mess
             return string
 
         def search(query):
+            if query is None:
+                return None
             srch = self.discogs.search(type='label', q=query)
             logging.debug('got srch :%r', srch)
             for l in srch.page(0):
