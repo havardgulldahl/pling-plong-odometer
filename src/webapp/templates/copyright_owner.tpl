@@ -8,7 +8,12 @@
             [[ track.metadata.artist ]] <span v-if="!track.ownership.spotify" class=loading>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
             <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ copyright ]]</span>
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
-            <br>Safe to use? <input type=checkbox v-model="isLicensed" disabled> 
+        </td>
+        <td>
+            <label>IFPI <input type=checkbox :checked="isIFPI" disabled></label>
+            <label>FONO <input type=checkbox :checked="isFONO" disabled></label>
+            <br>
+            <b>[[ track.ownership.licenseStatus ]]</b>
         </td>
     </tr>
 </script>
@@ -48,6 +53,31 @@ Vue.component("ownership-item", {
             get: function() {
                 return false;
             }
+        },
+        isIFPI: function() {
+            // http://www.ifpi.no/ifpi-norge/ifpi-medlemmer
+            var d;
+            try {
+                // get last item value lower case
+                d = (this.track.ownership.discogs[this.track.ownership.discogs.length-1]).name.toLocaleLowerCase(); 
+                //console.log('ifpi2: %o', d);
+                return (d.indexOf('warner') != -1|| d.indexOf('sony') != -1|| d.indexOf('universal') != -1);
+            } catch(e) {
+                //console.error(e);
+                return false;
+            }
+        },
+        isFONO: function() {
+            // https://www.fono.no/medlemmene/
+            var d;
+            try {
+                // get last item value lower case
+                d = (this.track.ownership.discogs[this.track.ownership.discogs.length-1]).name.toLocaleLowerCase(); 
+                return (d.indexOf('vibbefanger') != -1); //TODO: FIX THIS ADD ALL
+            } catch(e) {
+                //console.error(e);
+                return false;
+            }
         }
     },
     mounted: function () {
@@ -61,7 +91,7 @@ Vue.component("ownership-item", {
 var app = new Vue({
     el: '#content',
     data: {
-      ownership: 'Enter reference',
+      ownership: '',
       items: []
     },
     delimiters: ["[[", "]]"]
@@ -82,7 +112,7 @@ function resolve_manually(inputelement) {
     // resolve from text input
     var q = inputelement.value;
     app.items = []; // empty list
-    console.log('resolve form text input %o', q);
+    //console.log('resolve form text input %o', q);
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
         inputelement.classList.toggle("loading", true);
         axios.get("/ownership/DMA/"+encodeURIComponent(q))
@@ -159,12 +189,13 @@ function resolve_manually(inputelement) {
 
     <table class="table table-striped table-sm">
         <!-- <col style="width:40%">
-        <col style="width:10%">
         <col style="width:10%"> -->
-        <col style="width:100%">
+        <col style="width:70%">
+        <col style="width:30%">
         <thead class="thead-dark">
           <tr>
             <th id=thead-results>results</th>
+            <th id=thead-license>licence</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
