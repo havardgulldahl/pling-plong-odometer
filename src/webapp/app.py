@@ -305,14 +305,14 @@ async def handle_get_tracklist(request):
     querytype = request.match_info.get('type')
     if querytype in ('DMA',):
         # look up metadata from DMA
-        raise NotImplementedError
         resolver = getResolverByName('DMA')
         resolver.setSession(clientSession) # use the same session object for speedups
         resolver.setConfig(request.app.configuration)
         # run resolver
-        app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
-        _metadata = await resolver.resolve(trackinfo)
-        metadata = vars(_metadata)
+        app.logger.info("get playlist from id %s", tracklist_id)
+        metadata = await resolver.getPlaylist(tracklist_id)
+        app.logger.info("got plylist %r", metadata)
+        tracklist = metadata
     elif querytype == 'spotify':
         try:
             tracklist = list(app.duediligence.spotify_search_playlist(tracklist_id))
