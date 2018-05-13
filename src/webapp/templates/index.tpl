@@ -102,7 +102,7 @@
 
 {% block content %}
     <form id="file-form" class="form" 
-          enctype="multipart/form-data" action="/analyze" method="POST">
+          enctype="multipart/form-data" action="/api/analyze" method="POST">
         <div class="form-row">
             <div class="col-3">
                 <input type="file" 

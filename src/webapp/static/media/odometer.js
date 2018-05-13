@@ -147,7 +147,7 @@ function submit(formData) {
     // Set up the request.
     var xhr = new XMLHttpRequest();
     // Open the connection.
-    xhr.open('POST', '/analyze', true);
+    xhr.open('POST', '/api/analyze', true);
 
     // Set up a handler for when the request finishes.
     xhr.onload = function () {
@@ -460,7 +460,7 @@ function feedbackdialog() {
         var form = document.querySelector(".tingle-modal-box form");
         var formData = new FormData(form);
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/feedback");
+        xhr.open("POST", "/api/feedback");
         xhr.onload = function () {
             if (xhr.status === 200) {
                 // File(s) uploaded.
@@ -518,7 +518,7 @@ function check_copyright(button) {
 
     var xhr = new XMLHttpRequest();
     //xhr.open("GET", "/ownership/metadata/"+encodeURIComponent(JSON.stringify(metadata)));
-    xhr.open("POST", "/ownership/metadata");
+    xhr.open("POST", "/api/ownership/metadata");
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function () {
         if (xhr.status === 200) {

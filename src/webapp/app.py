@@ -100,9 +100,9 @@ class AudioClip:
                 'audible_length': self.audible_length,
                 'resolvable': self.is_resolvable(),
                 'music_services': self.services,
-                'resolve': {s:'/resolve/{}/{}'.format(quote(s), quote(self.filename)) for s in self.services},
-                'resolve_other': '/resolve/{{music_service}}/{}?override=1'.format(quote(self.filename)),
-                'add_missing':'/add_missing/{}'.format(quote(self.filename)),
+                'resolve': {s:'/api/resolve/{}/{}'.format(quote(s), quote(self.filename)) for s in self.services},
+                'resolve_other': '/api/resolve/{{music_service}}/{}?override=1'.format(quote(self.filename)),
+                'add_missing':'/api/add_missing/{}'.format(quote(self.filename)),
                }
 
 @swagger_path("handle_resolve.yaml")
@@ -150,7 +150,7 @@ async def handle_resolve(request):
         'error': [],
     })
 
-app.router.add_get('/resolve/{resolver}/{audioname}', handle_resolve, name='resolve')
+app.router.add_get('/api/resolve/{resolver}/{audioname}', handle_resolve, name='resolve')
 #app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
 
 #'Methods and endpoints to receive an xmeml file and start analyzing it'
@@ -203,7 +203,7 @@ async def handle_analyze_post(request):
         ]
     })
 
-app.router.add_post('/analyze', handle_analyze_post)
+app.router.add_post('/api/analyze', handle_analyze_post)
 
 @swagger_path("handle_supported_resolvers.yaml")
 async def handle_supported_resolvers(request):
@@ -212,7 +212,7 @@ async def handle_supported_resolvers(request):
         'resolvers': getAllResolvers()
     })
 
-app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
+app.router.add_get('/api/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
 
 async def handle_feedback_post(request):
     'POST form data feedback. No returned content.'
@@ -228,7 +228,7 @@ async def handle_feedback_post(request):
                                 'New feedback from {}: {}'.format(data.get('sender'), url))
     return web.json_response(data={'url':url})
 
-app.router.add_post('/feedback', handle_feedback_post)
+app.router.add_post('/api/feedback', handle_feedback_post)
 
 async def handle_add_missing(request):
     'POST json metadata object corresponding to a filename that we should have known about'
@@ -243,7 +243,7 @@ async def handle_add_missing(request):
 
     return web.json_response(data={'error': [],})
 
-app.router.add_post('/add_missing/{filename}', handle_add_missing) # report an audio file that is missing from odometer patterns
+app.router.add_post('/api/add_missing/{filename}', handle_add_missing) # report an audio file that is missing from odometer patterns
 
 async def handle_getpost_ownership(request):
     'GET / POST music data and try to get copyrights from spotify and discogs'
@@ -261,7 +261,7 @@ async def handle_getpost_ownership(request):
                 # run resolver
                 app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
                 _metadata = await resolver.resolve(trackinfo)
-                metadata = vars(_metadata)
+                metadata = vars(_metadata) # TODO: verify with marshmallow
             elif querytype == 'metadata':
                 metadata = await request.json()
             logging.debug('Got metadata payload: %r ', metadata)
@@ -301,8 +301,8 @@ async def handle_getpost_ownership(request):
 
     )
 
-app.router.add_get(r'/ownership/{type:(DMA|spotify)}/{trackinfo}', handle_getpost_ownership)
-app.router.add_post(r'/ownership/{type:metadata}', handle_getpost_ownership)
+app.router.add_get(r'/api/ownership/{type:(DMA|spotify)}/{trackinfo}', handle_getpost_ownership)
+app.router.add_post(r'/api/ownership/{type:metadata}', handle_getpost_ownership)
 
 async def handle_get_tracklist(request):
     'GET tracklist id and return lists of spoityf ids or DMA ids'
@@ -329,7 +329,7 @@ async def handle_get_tracklist(request):
     return web.json_response({'error':[],
                               'tracks': tracklist})
 
-app.router.add_get(r'/tracklist/{type:(DMA|spotify)}/{tracklist}', handle_get_tracklist)
+app.router.add_get(r'/api/tracklist/{type:(DMA|spotify)}/{tracklist}', handle_get_tracklist)
 
 async def handle_get_license_rules(request):
     'Return a list of all license rules from the DB'
