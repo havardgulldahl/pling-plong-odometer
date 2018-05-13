@@ -3,8 +3,9 @@
 # (C) 2016
 
 import time
+from marshmallow import Schema, fields # pip install marshmallow
 
-class TrackMetadata(object):
+class TrackMetadata(object): # TODO: marshmallow this
     'All important metadata properties of a track that we need for a sane report'
     # pylint: disable=too-many-instance-attributes
     # pylint: disable=too-many-arguments
@@ -54,3 +55,28 @@ class TrackMetadata(object):
         self.identifier = identifier # system-specific identifier
         self.productionmusic = productionmusic
         self._retrieved = time.mktime(time.localtime())
+
+class ReportedMissing:
+    id = fields.Int(required=True)
+    filename = fields.Str(required=True)
+    resolver = fields.Str(required=True)
+    reporter = fields.Str(allow_none=True)
+    timestamp = fields.DateTime(required=True)
+
+class Feedback:
+    id = fields.Int(required=True)
+    timestamp = fields.DateTime(required=True)
+    public_id = fields.UUID(required=True)
+    done = fields.Boolean(default=False, required=True)
+    sender = fields.Str(required=True)
+    message = fields.Str(required=True)
+
+class ResolveResult:
+    id = fields.Int(required=True)
+    result_code = fields.Int(required=True)
+    result_text = fields.Str(required=True)
+    filename = fields.Str(required=True)
+    resolver = fields.Str(required=True)
+    overridden = fields.Boolean(default=False)
+    timestamp = fields.DateTime(required=True)
+
