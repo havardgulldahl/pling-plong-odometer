@@ -332,7 +332,7 @@ async def handle_get_tracklist(request):
 app.router.add_get(r'/api/tracklist/{type:(DMA|spotify)}/{tracklist}', handle_get_tracklist)
 
 async def handle_get_license_rules(request):
-    'Return a list of all license rules from the DB'
+    'Return a json list of all license rules from the DB'
     schema = model.LicenseRule()
 
     async with app.dbpool.acquire() as connection:
@@ -360,6 +360,32 @@ async def handle_post_license_rule(request):
                                        data.get('text'))
         
 
+@aiohttp_jinja2.template('licenses.tpl')
+async def handle_get_licenses(request):
+    'Show all license rules in a view'
+    return {}
+app.router.add_get('/licenses', handle_get_licenses)
+
+async def handle_get_feedback_api(request):
+    'Return a json list of all license rules from the DB'
+    schema = model.Feedback()
+
+    async with app.dbpool.acquire() as connection:
+        records = await connection.fetch("SELECT * FROM feedback")
+        feedbacks, errors = schema.load([dict(r) for r in records], many=True)
+
+    return web.json_response({'error':errors,
+                              'feedback': feedbacks},
+                              dumps=model.OdometerJSONEncoder().encode)
+
+app.router.add_get(r'/api/feedback/', handle_get_feedback_api)
+
+@aiohttp_jinja2.template('feedback.tpl')
+async def handle_get_feedback(request):
+    'Show all feedback in a view'
+    return {}
+app.router.add_get('/feedback', handle_get_feedback)
+
 @aiohttp_jinja2.template('index.tpl')
 def index(request):
     return {}
@@ -380,7 +406,6 @@ app.router.add_static('/media', 'static/media')
 # TODO app.router.add_get('/stats', handle_stats) # show usage stats and patterns
 # TODO app.router.add_get('/get_track', get_track) # get track from unique id
 # TODO app.router.add_get('/clear_track', clear_track) # get track clearance (copyright metadata) from unique id
-# TODO app.router.add_get('/feedback/{}', handle_show_feedback) # show status on feedback item
 
 setup_swagger(app,
               swagger_url="/doc",

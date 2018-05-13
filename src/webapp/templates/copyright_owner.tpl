@@ -195,7 +195,7 @@ function resolve_manually(inputelement) {
         <thead class="thead-dark">
           <tr>
             <th id=thead-results>results</th>
-            <th id=thead-license>licence</th>
+            <th id=thead-license>license</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
@@ -207,6 +207,7 @@ function resolve_manually(inputelement) {
           </template>
           <tr v-else>
             <td><b>To get started: Write or type a Spotify or DMA id above</b></td>
+            <td></td>
           </tr>
         </tbody>
 
