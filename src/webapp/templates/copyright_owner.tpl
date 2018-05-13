@@ -19,6 +19,28 @@
 </script>
 {% endblock templates %}
 
+{% block headscript %}
+<script type="text/javascript">
+
+function try_click(el, val) {
+    // generate string for link for interactive testing
+    var txt = i18n.TRY_IT();
+    return "<a href=# onclick='document.getElementById(\""+el+"\").value=\""+val+"\"'>"+txt+"</a>";
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    document.querySelector("#startinfo").innerText = i18n.STARTINFO_OWNERSHIP();
+    document.querySelector("#thead-results").innerText = i18n.RESULTS();
+    document.querySelector("#thead-license").innerText = i18n.LICENSE();
+    document.querySelector("#thead-license").innerText = i18n.LICENSE();
+    document.querySelector("#navbar-ownership").placeholder = i18n.TYPE_OR_PASTE_HERE();
+    document.querySelector("#helptext").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA:try_click("ownership-input", "NONRE656509HD0001"),
+                                                                             SPOTIFY:try_click("ownership-input", "spotify:track:7wxSkft3f6OG3Y3Vysd470")});
+});
+</script>
+{% endblock headscript %}
+
+
 {% block docscript %}
 
 Vue.component("ownership-item", {
@@ -31,7 +53,7 @@ Vue.component("ownership-item", {
             var inputelement = this.$el;
             var track = this.track;
             inputelement.classList.toggle("loading", true);
-            axios.get("/ownership/spotify/"+encodeURIComponent(track.spotify.uri))
+            axios.get("/api/ownership/spotify/"+encodeURIComponent(track.spotify.uri))
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
                 // add copyright to ui
@@ -94,6 +116,9 @@ var app = new Vue({
       ownership: '',
       items: []
     },
+    created: function() {
+        console.log("startup");
+    },
     delimiters: ["[[", "]]"]
   });
 
@@ -115,7 +140,7 @@ function resolve_manually(inputelement) {
     //console.log('resolve form text input %o', q);
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
         inputelement.classList.toggle("loading", true);
-        axios.get("/ownership/DMA/"+encodeURIComponent(q))
+        axios.get("/api/ownership/DMA/"+encodeURIComponent(q))
             .then(function (response) {
                 console.log(response);
                 inputelement.classList.toggle("loading", false);
@@ -128,7 +153,7 @@ function resolve_manually(inputelement) {
     } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify track URI
         inputelement.classList.toggle("loading", true);
         //inputelement.classList.toggle("text-success", false);
-        axios.get("/ownership/spotify/"+encodeURIComponent(q))
+        axios.get("/api/ownership/spotify/"+encodeURIComponent(q))
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
                 // add copyright to ui
@@ -179,9 +204,8 @@ function resolve_manually(inputelement) {
                     autocomplete=off autocorrect=off v-model="ownership">
             </div>
             <div class="col-9">
-                <label for=ownership-input class="col-form-label"> ⇜
+                <label for=ownership-input class="col-form-label text-secondary"> ⇜
                     <span id="helptext" class="text-secondary">Please enter a Spotify or DMA id</span>
-                    <a href=# onclick="document.getElementById('ownership-input').value='NONRE656509HD0001'">Try it</a>
                 </label>
             </div>
         </div>
@@ -206,7 +230,7 @@ function resolve_manually(inputelement) {
           </ownership-item>
           </template>
           <tr v-else>
-            <td><b>To get started: Write or type a Spotify or DMA id above</b></td>
+            <td id=startinfo>To get started: Write or type a Spotify or DMA id above</td>
             <td></td>
           </tr>
         </tbody>

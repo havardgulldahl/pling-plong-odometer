@@ -105,6 +105,7 @@ function main() {
 
     // i18n - translate ui
     document.getElementById("navbar-analysis").innerText = i18n.ANALYSIS(); 
+    document.getElementById("navbar-ownership").innerText = i18n.CHECK_OWNERSHIP(); 
     document.getElementById("navbar-help").innerText = i18n.HELP(); 
     document.getElementById("navbar-api").title = i18n.API(); 
 

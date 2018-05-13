@@ -63,11 +63,14 @@ var messages = {
         CHECK_OWNERSHIP_TITLE: "Check ownership of commercial releases",
         RESULTS: "Results",
         TYPE_OR_PASTE_HERE: "Type or paste here",
-        OWNERSHIP_HELPTEXT: "Enter a DMA id (e.g. <i>{DMA}</i>) or a spotify reference (e.g. <i>{SPOTIFY}</i>).",
+        OWNERSHIP_HELPTEXT: "Enter a DMA id ({DMA}) or a spotify reference ({SPOTIFY}).",
         EMAIL: "E-mail",
         IF_YOU_WANT_US_TO_GET_IN_TOUCH: "If you want us to get in touch",
         INCLUDE_XML: "Include XML",
-        FEEDBACK: "Feedback"
+        FEEDBACK: "Feedback",
+        STARTINFO_OWNERSHIP: "To get started: Enter a reference to a track or a playlist above",
+        LICENSE: "Lisense",
+        TRY_IT: "Try it"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -118,11 +121,13 @@ var messages = {
         CHECK_OWNERSHIP_TITLE: "Sjekk eierskap på kommersielle låter",
         RESULTS: "Resultater",
         TYPE_OR_PASTE_HERE: "Skriv eller lim inn her",
-        OWNERSHIP_HELPTEXT: "Skriv inn DMA-id (som {DMA}) eller spotify-referanse (som {SPOTIFY}).",
+        OWNERSHIP_HELPTEXT: "Skriv inn DMA-id ({DMA}) eller spotify-referanse ({SPOTIFY}).",
         EMAIL: "E-post",
         IF_YOU_WANT_US_TO_GET_IN_TOUCH: "Hvis du vil at vi skal kontakte deg",
         INCLUDE_XML: "Inkluder XML",
-        FEEDBACK: "Feedback"
-
+        FEEDBACK: "Feedback",
+        STARTINFO_OWNERSHIP: "For å starte: Legg inn referanse til et spor eller en spilleliste over",
+        LICENSE: "Lisens",
+        TRY_IT: "Prøv det"
     }
 };
