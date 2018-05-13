@@ -2,7 +2,10 @@
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
 # (C) 2016
 
+import json
+import uuid
 import time
+import datetime
 from marshmallow import Schema, fields # pip install marshmallow
 
 class TrackMetadata(object): # TODO: marshmallow this
@@ -56,27 +59,56 @@ class TrackMetadata(object): # TODO: marshmallow this
         self.productionmusic = productionmusic
         self._retrieved = time.mktime(time.localtime())
 
-class ReportedMissing:
+class RichDateTimeField(fields.DateTime):
+    'Extend fields.DateTime to also accept datetime instance upon load()ing '
+    def _deserialize(self, value, attr, data):
+        if isinstance(value, datetime.datetime):
+            return value.isoformat()
+        return super()._deserialize(value, attr, data)
+
+class ReportedMissing(Schema):
     id = fields.Int(required=True)
     filename = fields.Str(required=True)
     resolver = fields.Str(required=True)
     reporter = fields.Str(allow_none=True)
-    timestamp = fields.DateTime(required=True)
+    timestamp = RichDateTimeField(required=True)
 
-class Feedback:
+class Feedback(Schema):
     id = fields.Int(required=True)
-    timestamp = fields.DateTime(required=True)
+    timestamp = RichDateTimeField(required=True)
     public_id = fields.UUID(required=True)
     done = fields.Boolean(default=False, required=True)
     sender = fields.Str(required=True)
     message = fields.Str(required=True)
 
-class ResolveResult:
+class ResolveResult(Schema):
     id = fields.Int(required=True)
     result_code = fields.Int(required=True)
     result_text = fields.Str(required=True)
     filename = fields.Str(required=True)
     resolver = fields.Str(required=True)
     overridden = fields.Boolean(default=False)
-    timestamp = fields.DateTime(required=True)
+    timestamp = RichDateTimeField(required=True)
+
+class LicenseRule(Schema):
+    'Rules for licensing '
+    id = fields.Int(required=True)
+    active = fields.Boolean(default=True)
+    public_id = fields.UUID(required=True)
+    timestamp = RichDateTimeField(required=True)
+    source = fields.Str(required=True)
+    license_property = fields.Str(required=True) # oneOf album, artist, label
+    license_value = fields.Str(required=True)
+    license_status = fields.Str(required=True) # oneOf green, yellow, red
+    comment = fields.Str(allow_none=True)
+
+
+class OdometerJSONEncoder(json.JSONEncoder):
+    'turning external models and complex objects into neat json'
+    def default(self, obj):
+        if isinstance(obj, uuid.UUID):
+            # https://docs.python.org/3/library/uuid.html
+            return str(obj)
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)
 

@@ -1,3 +1,16 @@
+-- Sequence: public.reported_missing_id_seq
+
+-- DROP SEQUENCE public.reported_missing_id_seq;
+
+CREATE SEQUENCE public.reported_missing_id_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE public.reported_missing_id_seq
+  OWNER TO odometer;
+
 -- Table: public.reported_missing
 
 -- DROP TABLE public.reported_missing;
@@ -17,6 +30,19 @@ WITH (
 ALTER TABLE public.reported_missing
   OWNER TO odometer;
 
+
+-- Sequence: public.feedback_id_seq
+
+-- DROP SEQUENCE public.feedback_id_seq;
+
+CREATE SEQUENCE public.feedback_id_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 2
+  CACHE 1;
+ALTER TABLE public.feedback_id_seq
+  OWNER TO odometer;
 
 -- Table: public.feedback
 
@@ -38,6 +64,20 @@ WITH (
 ALTER TABLE public.feedback
   OWNER TO odometer;
 
+-- Sequence: public.resolve_result_id_seq
+
+-- DROP SEQUENCE public.resolve_result_id_seq;
+
+CREATE SEQUENCE public.resolve_result_id_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1774
+  CACHE 1;
+ALTER TABLE public.resolve_result_id_seq
+  OWNER TO odometer;
+
+
 -- Table: public.resolve_result
 
 -- DROP TABLE public.resolve_result;
@@ -57,4 +97,40 @@ WITH (
   OIDS=FALSE
 );
 ALTER TABLE public.resolve_result
+  OWNER TO odometer;
+
+-- Sequence: public.license_rule_id_seq
+
+-- DROP SEQUENCE public.license_rule_id_seq;
+
+CREATE SEQUENCE public.license_rule_id_seq
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+ALTER TABLE public.license_rule_id_seq
+  OWNER TO odometer;
+
+-- Table: public.license_rule
+
+-- DROP TABLE public.license_rule;
+
+CREATE TABLE public.license_rule
+(
+  id integer NOT NULL DEFAULT nextval('license_rule_id_seq'::regclass),
+  active boolean DEFAULT true,
+  public_id uuid NOT NULL DEFAULT uuid_generate_v4(),
+  "timestamp" timestamp with time zone NOT NULL DEFAULT now(),
+  source text NOT NULL,
+  license_property character varying(255) NOT NULL,
+  license_status character varying(255) NOT NULL,
+  license_value text NOT NULL,
+  comment text,
+  CONSTRAINT license_rules_pkey PRIMARY KEY (id)
+)
+WITH (
+  OIDS=FALSE
+);
+ALTER TABLE public.license_rule
   OWNER TO odometer;

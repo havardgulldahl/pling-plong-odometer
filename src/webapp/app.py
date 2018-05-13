@@ -20,11 +20,16 @@ import jinja2
 import aioslacker # pip install aioslacker
 import asyncpg # pip install asyncpg
 
+from aiohttp_apispec import docs, use_kwargs, marshal_with, AiohttpApiSpec
+
+from xmeml import iter as xmemliter
+
 from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 import metadataresolvers
-#from model import TrackMetadata
-from xmeml import iter as xmemliter
+
 from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, SpotifyNotFoundError
+
+import model
 
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
@@ -325,6 +330,35 @@ async def handle_get_tracklist(request):
                               'tracks': tracklist})
 
 app.router.add_get(r'/tracklist/{type:(DMA|spotify)}/{tracklist}', handle_get_tracklist)
+
+async def handle_get_license_rules(request):
+    'Return a list of all license rules from the DB'
+    schema = model.LicenseRule()
+
+    async with app.dbpool.acquire() as connection:
+        records = await connection.fetch("SELECT * FROM license_rule WHERE active=TRUE")
+        #app.logger.debug('Got DB ROW: %r', records)
+        rules, errors = schema.load([dict(r) for r in records], many=True)
+        #app.logger.debug('Made schame u %r', rules)
+
+    return web.json_response({'error':errors,
+                              'rules': rules},
+                              dumps=model.OdometerJSONEncoder().encode)
+
+app.router.add_get(r'/api/license_rules/', handle_get_license_rules)
+
+@use_kwargs(model.LicenseRule(strict=True))
+async def handle_post_license_rule(request):
+    'Add new license rule, return id'
+    raise NotImplementedError
+
+    data = await request.post() 
+    app.logger.debug('Got POST args: %r', data)
+    async with app.dbpool.acquire() as connection:
+        _id = await connection.fetchval("INSERT INTO feedback (sender, message) VALUES ($1, $2) RETURNING public_id", 
+                                       data.get('sender'),
+                                       data.get('text'))
+        
 
 @aiohttp_jinja2.template('index.tpl')
 def index(request):
