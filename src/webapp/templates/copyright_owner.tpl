@@ -169,7 +169,7 @@ function resolve_manually(inputelement) {
             })
     } else if(q.match(/spotify:user:[a-z]+:playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
         inputelement.classList.toggle("loading", true);
-        axios.get("/tracklist/spotify/"+encodeURIComponent(q))
+        axios.get("/api/tracklist/spotify/"+encodeURIComponent(q))
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
                 // add copyright to ui
