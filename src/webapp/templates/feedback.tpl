@@ -13,10 +13,10 @@
 
 {% block docscript %}
 
-Vue.component("license-item", {
+Vue.component("feedback-item", {
     props: ["item"],
     delimiters: ["[[", "]]"],
-    template: "#license-template",
+    template: "#feedback-template",
     methods: {
     },
     computed: {
@@ -41,26 +41,15 @@ var app = new Vue({
     },
     mounted : function() { 
         console.log("startup");
-        fetch_license_rules();  
+        fetch_feedback();  
     },
     delimiters: ["[[", "]]"]
   });
 
-function resolve_manually_delay(inputelement) {
-    // add a delay so we dont run this while typing
-    if(resolve_manually_delay.tick) {
-        window.clearTimeout(resolve_manually_delay.tick);
-    }
-    resolve_manually_delay.tick = window.setTimeout(function() {
-        resolve_manually(inputelement);
-    },
-    900 );
-}
-
-function fetch_license_rules() {
-    axios.get("/api/license_rules/")
+function fetch_feedback() {
+    axios.get("/api/feedback/")
         .then(function (response) {
-            console.log("got licenses: %o", response);
+            console.log("got feedback: %o", response);
             for(var i=0;i<response.data.rules.length;i++) {
                 app.items.push(response.data.rules[i]);
             }
@@ -74,7 +63,7 @@ function fetch_license_rules() {
 }
 {% endblock docscript %}
 
-{% block admintitle %}Licenses{% endblock  %}
+{% block admintitle %}Feedback{% endblock  %}
 
 
 {% block adminpanel %}
