@@ -25,15 +25,11 @@
 function try_click(el, val) {
     // generate string for link for interactive testing
     var txt = i18n.TRY_IT();
-    return "<a href=# onclick='document.getElementById(\""+el+"\").value=\""+val+"\"'>"+txt+"</a>";
+    return "<a href=# onclick='resolve_manually_delay(document.getElementById(\""+el+"\"));app.ownership=\""+val+"\";'>"+txt+"</a>";
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    document.querySelector("#startinfo").innerText = i18n.STARTINFO_OWNERSHIP();
-    document.querySelector("#thead-results").innerText = i18n.RESULTS();
-    document.querySelector("#thead-license").innerText = i18n.LICENSE();
-    document.querySelector("#thead-license").innerText = i18n.LICENSE();
-    document.querySelector("#navbar-ownership").placeholder = i18n.TYPE_OR_PASTE_HERE();
+    document.querySelector("#ownership-input").placeholder = i18n.TYPE_OR_PASTE_HERE();
     document.querySelector("#helptext").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA:try_click("ownership-input", "NONRE656509HD0001"),
                                                                              SPOTIFY:try_click("ownership-input", "spotify:track:7wxSkft3f6OG3Y3Vysd470")});
 });
@@ -131,6 +127,7 @@ function resolve_manually_delay(inputelement) {
         resolve_manually(inputelement);
     },
     900 );
+    return true;
 }
 
 function resolve_manually(inputelement) {
@@ -218,8 +215,8 @@ function resolve_manually(inputelement) {
         <col style="width:30%">
         <thead class="thead-dark">
           <tr>
-            <th id=thead-results>results</th>
-            <th id=thead-license>license</th>
+            <th data-i18n=results class=translate>results</th>
+            <th data-i18n=license class=translate>license</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
@@ -230,7 +227,7 @@ function resolve_manually(inputelement) {
           </ownership-item>
           </template>
           <tr v-else>
-            <td id=startinfo>To get started: Write or type a Spotify or DMA id above</td>
+            <td><b data-i18n=startinfo_ownership class=translate>To get started: Write or type a Spotify or DMA id above</b></td>
             <td></td>
           </tr>
         </tbody>
