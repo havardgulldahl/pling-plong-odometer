@@ -2,11 +2,12 @@
 
 
 {% block templates %}
-<script type="text/x-template" id="license-template">
+<script type="text/x-template" id="feedback-template">
     <tr  v-bind:class="classObject">
-        <td v-bind:title="'@ '+item.timestamp"> [[ item.source ]]</td>
-        <td> [[ item.license_property]]: [[ item.license_value ]] </td>
-        <td> [[ item.comment ]]</td>
+        <td> <input type=checkbox v-bind:checked=item.done></td>
+        <td> [[ item.timestamp ]]</td>
+        <td> [[ item.message ]]</td>
+        <td> [[ item.sender ]]</td>
     </tr>
 </script>
 {% endblock templates %}
@@ -50,14 +51,13 @@ function fetch_feedback() {
     axios.get("/api/feedback/")
         .then(function (response) {
             console.log("got feedback: %o", response);
-            for(var i=0;i<response.data.rules.length;i++) {
-                app.items.push(response.data.rules[i]);
+            for(var i=0;i<response.data.feedback.length;i++) {
+                app.items.push(response.data.feedback[i]);
             }
 
         })
         .catch(function(error) {
-            inputelement.classList.toggle("loading", false);
-            console.error("license error: %o", error);
+            console.error("feedback error: %o", error);
         });
 
 }
@@ -71,28 +71,26 @@ function fetch_feedback() {
 
 
     <table class="table table-striped table-sm">
-        <!-- <col style="width:40%"> -->
-        <col style="width:10%"> 
-        <col style="width:60%">
-        <col style="width:30%">
+        <col style="width:10%">
+        <col style="width:20%"> 
+        <col style="width:50%">
+        <col style="width:20%">
         <thead class="thead-dark">
           <tr>
-            <th id=thead-source>source</th>
-            <th id=thead-property>property</th>
-            <th id=thead-status>status</th>
+            <th id=thead-done>done?</th>
+            <th id=thead-when>when</th>
+            <th id=thead-message>message</th>
+            <th id=thead-sender>sender</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
           <template v-if="items.length">
-          <license-item v-for="item in items" 
+          <feedback-item v-for="item in items" 
                           v-bind:item="item"
-                          v-bind:key="item.uuid">
-          </license-item>
+                          v-bind:key="item.public_id">
+          </feedback-item>
           </template>
           <tr v-else>
-            <td></td>
-            <td></td>
-            <td></td>
           </tr>
         </tbody>
 
