@@ -1,24 +1,7 @@
 {% extends "base.tpl" %}
 
 {% block docscript %}
-    var form = document.getElementById('file-form');
-    var fileSelect = document.getElementById('file-select');
     var fileList = document.getElementById('files-list');
-    var createReportButton = document.getElementById('create-report-button');
-    var createCreditsButton = document.getElementById('create-credits-button');
-
-    // i18n - translate ui
-    fileSelect.title = i18n.CHOOSE_TIMELINE_DATA(); 
-    document.getElementById("preview").innerText = "⇜ "+i18n.PLEASE_SELECT_FILE(); 
-    createReportButton.innerText = i18n.GENERATE_METADATA_REPORT(); 
-    createCreditsButton.innerText = i18n.GENERATE_END_CREDITS(); 
-    document.getElementById("thead-filename").innerText = i18n.NAME(); 
-    document.getElementById("thead-filename").title = i18n.FILENAME(); 
-    document.getElementById("thead-duration").innerText = i18n.AUDIBLE_LENGTH(); 
-    document.getElementById("thead-duration").title = i18n.MEASURED_IN_SECONDS(); 
-    document.getElementById("thead-library").title = i18n.MUSIC_LIBRARY(); 
-    document.getElementById("thead-metadata").innerText = i18n.METADATA(); 
-    document.getElementById("startinfo").innerHTML = i18n.STARTINFO(); 
 
     // add debug ui
     if(document.location.search == "?test") {
@@ -37,16 +20,19 @@
         document.querySelector('div.col-5').appendChild(tbtn);
     }
 
+    var createReportButton = document.getElementById('create-report-button');
     createReportButton.onclick = function(event) {
         event.preventDefault();
         reportdialog();
     }
 
+    var createCreditsButton = document.getElementById('create-credits-button');
     createCreditsButton.onclick = function(event) {
         event.preventDefault();
         creditsdialog();
     }
 
+    var fileSelect = document.getElementById('file-select');
     fileSelect.onchange = function(event) {
         // react to file select changes
         // based on public domain code from https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file
@@ -92,17 +78,18 @@
         <div class="form-row">
             <div class="col-3">
                 <input type="file" 
-                    class="form-control" 
-                    id="file-select" title="Choose timeline data (XMEML)"
+                    class="form-control translate" 
+                    id="file-select" 
+                    title="Choose timeline data (XMEML)" data-i18n-title=choose_timeline_data
                     accept=".xml,text/xml,application/xml"
                     name="xmeml">
             </div>
             <div class="col-5">
-                <label for=id-select id="preview" class="text-secondary col-form-label">⇜ Please select a file</label>
+                <label for=id-select id="preview" class="text-secondary col-form-label">⇜ <span class=translate data-i18n=please_select_file>Please select a file</span> </label>
             </div>
             <div class="col-4">
-                <button type="button" disabled class="btn btn-primary" id="create-report-button">Generate metadata report</button>
-                <button type="button" disabled class="btn btn-primary" id="create-credits-button">Generate credits</button>
+                <button type="button" disabled class="btn btn-primary translate" id="create-report-button" data-i18n=generate_metadata_report>Generate metadata report</button>
+                <button type="button" disabled class="btn btn-primary translate" id="create-credits-button" data-i18n=generate_end_credits>Generate credits</button>
             </div>
         </div>
     </form>
@@ -114,10 +101,10 @@
         <col style="width:60%">
         <thead class="thead-dark">
           <tr>
-            <th title="File name" id=thead-filename>name</th>
-            <th title="Measured in seconds" id=thead-duration>audible length</th>
-            <th title="Music library" id=thead-library>℗</th>
-            <th id=thead-metadata>metadata</th>
+            <th class=translate title="File name" data-i18n=name data-i18n-title=filename>name</th>
+            <th class=translate title="Measured in seconds" data-i18n=duration data-i18n-title=measured_in_seconds>audible length</th>
+            <th class=translate title="Music library" data-i18n-title=music_library>℗</th>
+            <th class=translate data-i18n=metadata>metadata</th>
           </tr>
         </thead>
         <tbody id=files-list style="font-size:80%">

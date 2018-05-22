@@ -29,8 +29,7 @@ function try_click(el, val) {
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    document.querySelector("#ownership-input").placeholder = i18n.TYPE_OR_PASTE_HERE();
-    document.querySelector("#helptext").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA:try_click("ownership-input", "NONRE656509HD0001"),
+    document.getElementById("helptext").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA:try_click("ownership-input", "NONRE656509HD0001"),
                                                                              SPOTIFY:try_click("ownership-input", "spotify:track:7wxSkft3f6OG3Y3Vysd470")});
 });
 </script>
@@ -197,9 +196,15 @@ function resolve_manually(inputelement) {
     <form id="ownership-form" class="form" onsubmit="return false">
         <div class="form-row">
             <div class="col-3">
-                <input id=ownership-input placeholder="Type or paste here" class=form-control 
-                    type=search oninput="if(this.value.length>5) {resolve_manually_delay(this);}"
-                    autocomplete=off autocorrect=off v-model="ownership">
+                <input 
+                    id=ownership-input 
+                    placeholder="Type or paste here" data-i18n-placeholder=type_or_paste_here 
+                    class="form-control translate" 
+                    type=search 
+                    oninput="if(this.value.length>5) {resolve_manually_delay(this);}"
+                    autocomplete=off 
+                    autocorrect=off 
+                    v-model="ownership">
             </div>
             <div class="col-9">
                 <label for=ownership-input class="col-form-label text-secondary"> ⇜

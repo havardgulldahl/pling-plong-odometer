@@ -103,16 +103,26 @@ function setupModal() {
 function main() {
     // i18n - translate ui
     var translatestrings = document.querySelectorAll(".translate");
+    function translation(key) {
+        // get [key] from data-i18n* and return translation
+        try {
+            var i18nkey = (el.dataset[key]).toUpperCase();
+            console.log("with key %o", i18nkey);
+            return i18n[i18nkey]();
+        } catch(e) {
+            //console.error(e);
+            return false;
+        }
+    }
     for (var i=0; i<translatestrings.length; i++) {
         var el = translatestrings[i];
         console.log("translating element %o ...", el);
-        try {
-            var i18nkey = (el.dataset.i18n).toUpperCase();
-            console.log("with key %o", i18nkey);
-            el.innerText = i18n[i18nkey]();
-        } catch(e) {
-            console.error("no translation for %o defined (set 'data-i18n=*' on element or update i18n.js)", el.innerText);
-        }
+        var txt = translation("i18n");
+        if(txt) el.innerText = txt;
+        var title = translation("i18nTitle");
+        if(title) el.title = title;
+        var placeholder = translation("i18nPlaceholder");
+        if(placeholder) el.placeholder = placeholder;
     }
 
     var toggleFeedbackButton = document.getElementById('toggle-feedback');
