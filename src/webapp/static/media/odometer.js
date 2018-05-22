@@ -107,7 +107,7 @@ function main() {
         // get [key] from data-i18n* and return translation
         try {
             var i18nkey = (el.dataset[key]).toUpperCase();
-            console.log("with key %o", i18nkey);
+            //console.log("with key %o", i18nkey);
             return i18n[i18nkey]();
         } catch(e) {
             //console.error(e);
@@ -116,7 +116,7 @@ function main() {
     }
     for (var i=0; i<translatestrings.length; i++) {
         var el = translatestrings[i];
-        console.log("translating element %o ...", el);
+        //console.log("translating element %o ...", el);
         var txt = translation("i18n");
         if(txt) el.innerText = txt;
         var title = translation("i18nTitle");

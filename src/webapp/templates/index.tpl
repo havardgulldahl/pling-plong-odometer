@@ -104,7 +104,7 @@
             <th class=translate title="File name" data-i18n=name data-i18n-title=filename>name</th>
             <th class=translate title="Measured in seconds" data-i18n=duration data-i18n-title=measured_in_seconds>audible length</th>
             <th class=translate title="Music library" data-i18n-title=music_library>℗</th>
-            <th class=translate data-i18n=metadata>metadata</th>
+            <th class=translate data-i18n=metadata id=thead-metadata>metadata</th>
           </tr>
         </thead>
         <tbody id=files-list style="font-size:80%">
