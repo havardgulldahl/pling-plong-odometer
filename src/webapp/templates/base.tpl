@@ -22,7 +22,7 @@
 
 var languagecode = "no-NO"; // TODO: update this dynamically
 var i18n = new MessageFormat(languagecode).compile(messages)[languagecode];
-const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "ApolloMusic", "UniPPM", "WarnerChappell"]; // TOOD: get this dynamically/lazily
+const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "ApolloMusic", "UniPPM"]; // TOOD: get this dynamically/lazily
 
 </script>
 
