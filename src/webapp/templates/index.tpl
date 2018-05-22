@@ -21,7 +21,7 @@
     document.getElementById("startinfo").innerHTML = i18n.STARTINFO(); 
 
     // add debug ui
-    if(document.location.search == "?debug") {
+    if(document.location.search == "?test") {
         var tbtn = document.createElement('button');
         tbtn.innerText = "Use testfile";
         tbtn.onclick = function(event) {
@@ -35,20 +35,6 @@
             return false;
         }
         document.querySelector('div.col-5').appendChild(tbtn);
-        var t2btn = document.createElement("button");
-        t2btn.innerText = i18n.CHECK_OWNERSHIP();
-        t2btn.onclick = function(event) {
-            event.preventDefault();
-            var tinglemodal = new setupModal();
-            tinglemodal.setContent(document.getElementById("ownership-dialog").innerHTML);
-            tinglemodal.modalBoxContent.querySelector("h2").innerText = i18n.CHECK_OWNERSHIP_TITLE();
-            tinglemodal.modalBoxContent.querySelector("label").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA: "NONRE674655HD0001", SPOTIFY: "spotify:track:7bKqtOF02nEDUImWZqq5nH"});
-            tinglemodal.modalBoxContent.querySelector("input").setAttribute("placeholder", i18n.TYPE_OR_PASTE_HERE());
-            tinglemodal.modalBoxContent.querySelector(".card-header").innerText = i18n.RESULTS();
-            tinglemodal.open();
-            return false;
-        }
-        document.querySelector('div.col-5').appendChild(t2btn);
     }
 
     createReportButton.onclick = function(event) {
