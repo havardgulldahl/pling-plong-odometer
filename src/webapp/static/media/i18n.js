@@ -49,7 +49,6 @@ var messages = {
         AUDIBLE_LENGTH: "audible",
         MEASURED_IN_SECONDS: "Measured in seconds",
         MUSIC_LIBRARY: "Music library",
-        METADATA: "metadata",
         STARTINFO: "To get started: Select an XMEML file—exported from Adobe Premiere or Final Cut Pro 7.x. <br>(You may also drop it anywhere in this window)",
         RECOGNISED: "Recognised",
         OTHERS: "Others",
@@ -70,7 +69,16 @@ var messages = {
         FEEDBACK: "Feedback",
         STARTINFO_OWNERSHIP: "To get started: Enter a reference to a track or a playlist above",
         LICENSE: "Lisense",
-        TRY_IT: "Try it"
+        TRY_IT: "Try it",
+        DONE: "Done",
+        WHEN: "When",
+        MESSAGE: "Message",
+        SENDER: "Sender",
+        LICENSES: "Licenses",
+        SOURCE: "Source",
+        PROPERTY: "Property",
+        STATUS: "Status",
+        MISSINGFILENAMES: "Missing file names"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -107,7 +115,6 @@ var messages = {
         AUDIBLE_LENGTH: "hørbar",
         MEASURED_IN_SECONDS: "Målt i sekunder",
         MUSIC_LIBRARY: "Musikkbibliotek",
-        METADATA: "metadata",
         STARTINFO: "For å starte: Velg en XMEML-fil — eksportert fra Adobe Premiere eller Final Cut Pro 7.x. <br>(Du kan også slippe en fil i dette vinduet)",
         RECOGNISED: "Gjenkjent",
         OTHERS: "Andre",
@@ -128,6 +135,15 @@ var messages = {
         FEEDBACK: "Feedback",
         STARTINFO_OWNERSHIP: "For å starte: Legg inn referanse til et spor eller en spilleliste over",
         LICENSE: "Lisens",
-        TRY_IT: "Prøv det"
+        TRY_IT: "Prøv det",
+        DONE: "Ferdig",
+        WHEN: "Når",
+        MESSAGE: "Melding",
+        SENDER: "Avsender",
+        LICENSES: "Avtaler",
+        SOURCE: "Kilde",
+        PROPERTY: "Egenskap",
+        STATUS: "Status",
+        MISSINGFILENAMES: "Manglende filnavn"
     }
 };

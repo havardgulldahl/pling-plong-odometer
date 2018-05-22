@@ -10,17 +10,17 @@
           <div class="sidebar-sticky">
             <ul class="nav flex-column">
               <li class="nav-item">
-                <a class="nav-link" href="/licenses" data=i18n-licenses class=translate>
+                <a class="nav-link translate" href="/licenses" data-i18n=licenses>
                     Licenses
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/feedback"  data=i18n-feedback class=translate>
+                <a class="nav-link translate" href="/feedback"  data-i18n=feedback>
                     Feedback
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="/missing_files" data=i18n-missing_file_names class=translate>
+                <a class="nav-link translate" href="/missing_files" data-i18n=missingfilenames>
                     Missing file names
                 </a>
               </li>
@@ -31,7 +31,7 @@
 
         <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
           <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-            <h1 class="h2" id=admintitle data=i18n-admintitle class=translate>{% block admintitle %}{% endblock  %}</h1>
+            <h1 class="h2" id=admintitle>{% block admintitle %}{% endblock  %}</h1>
             <!--div class="btn-toolbar mb-2 mb-md-0">
               <div class="btn-group mr-2">
                 <button class="btn btn-sm btn-outline-secondary">Share</button>

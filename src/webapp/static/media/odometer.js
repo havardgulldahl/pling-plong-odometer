@@ -108,11 +108,24 @@ function main() {
     document.getElementById("navbar-ownership").innerText = i18n.CHECK_OWNERSHIP(); 
     document.getElementById("navbar-help").innerText = i18n.HELP(); 
     document.getElementById("navbar-api").title = i18n.API(); 
+    var translatestrings = document.querySelectorAll(".translate");
+    for (var i=0; i<translatestrings.length; i++) {
+        var el = translatestrings[i];
+        console.log("translating element %o ...", el);
+        try {
+            var i18nkey = (el.dataset.i18n).toUpperCase();
+            console.log("with key %o", i18nkey);
+            el.innerText = i18n[i18nkey]();
+        } catch(e) {
+            console.error("no translation for %o defined (set 'data-i18n=*' on element)", el.innerText);
+        }
+    }
 
     toggleFeedbackButton.onclick = function(event) {
         event.preventDefault();
         feedbackdialog();
     }
+
 
 }
 

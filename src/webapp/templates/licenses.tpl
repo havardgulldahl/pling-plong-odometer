@@ -67,14 +67,13 @@ function fetch_license_rules() {
 
         })
         .catch(function(error) {
-            inputelement.classList.toggle("loading", false);
             console.error("license error: %o", error);
         });
 
 }
 {% endblock docscript %}
 
-{% block admintitle %}Licenses{% endblock  %}
+{% block admintitle %}<span class=translate data-i18n=licenses>Licenses</span>{% endblock  %}
 
 
 {% block adminpanel %}
@@ -88,9 +87,9 @@ function fetch_license_rules() {
         <col style="width:30%">
         <thead class="thead-dark">
           <tr>
-            <th id=thead-source>source</th>
-            <th id=thead-property>property</th>
-            <th id=thead-status>status</th>
+            <th class=translate data-i18n=source>source</th>
+            <th class=translate data-i18n=property>property</th>
+            <th class=translate data-i18n=status>status</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
@@ -101,9 +100,6 @@ function fetch_license_rules() {
           </license-item>
           </template>
           <tr v-else>
-            <td></td>
-            <td></td>
-            <td></td>
           </tr>
         </tbody>
 

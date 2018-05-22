@@ -3,9 +3,9 @@
 
 {% block templates %}
 <script type="text/x-template" id="feedback-template">
-    <tr  v-bind:class="classObject">
+    <tr>
         <td> <input type=checkbox v-bind:checked=item.done></td>
-        <td> [[ item.timestamp ]]</td>
+        <td> [[ formattedTimestamp ]]</td>
         <td> [[ item.message ]]</td>
         <td> [[ item.sender ]]</td>
     </tr>
@@ -21,13 +21,9 @@ Vue.component("feedback-item", {
     methods: {
     },
     computed: {
-        classObject: function() {
-            return {
-                "text-success": this.item.license_status == "green",
-                "text-warning": this.item.license_status == "yellow",
-                "text-danger": this.item.license_status == "red",
-                
-            }
+        formattedTimestamp: function() {
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(this.item.timestamp).toLocaleDateString();
         }
     },
     mounted: function () {
@@ -63,7 +59,7 @@ function fetch_feedback() {
 }
 {% endblock docscript %}
 
-{% block admintitle %}Feedback{% endblock  %}
+{% block admintitle %}<span data-i18n=feedback class=translate>Feedback</span>{% endblock  %}
 
 
 {% block adminpanel %}
@@ -77,10 +73,10 @@ function fetch_feedback() {
         <col style="width:20%">
         <thead class="thead-dark">
           <tr>
-            <th id=thead-done>done?</th>
-            <th id=thead-when>when</th>
-            <th id=thead-message>message</th>
-            <th id=thead-sender>sender</th>
+            <th data-i18n=done class=translate>done?</th>
+            <th data-i18n=when class=translate>when</th>
+            <th data-i18n=message class=translate>message</th>
+            <th data-i18n=sender class=translate>sender</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
