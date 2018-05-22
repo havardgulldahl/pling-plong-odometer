@@ -41,11 +41,11 @@ const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "Apoll
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                   <div class="navbar-nav">
-                    <a class="nav-item nav-link active" href="/" id=navbar-analysis>Analysis</a>
-                    <a class="nav-item nav-link" href="/copyright_owner" id=navbar-ownership>Ownership</a>
-                    <a class="nav-item nav-link disabled" href="#" id=navbar-help>Help</a>
-                    <a class="nav-item nav-link" href="/doc" title="JSON REST API documentation (swagger)" id=navbar-api>API</a>
-                    <a class="nav-item nav-link" href="#" title="" onclick="statusdialog()" id=navbar-status>Status</a>
+                    <a class="nav-item nav-link active translate" href="/" data-i18n=analysis id=navbar-analysis>Analysis</a>
+                    <a class="nav-item nav-link translate" href="/copyright_owner" data-i18n=check_ownership id=navbar-ownership>Ownership</a>
+                    <a class="nav-item nav-link disabled translate" href="#" data-i18n=help>Help</a>
+                    <a class="nav-item nav-link translate" href="/doc" title="JSON REST API (swagger)" data-i18n=api>API</a>
+                    <a class="nav-item nav-link translate" href="#" title="" onclick="statusdialog()" data-i18n=status>Status</a>
                   </div>
                 </div>
               </nav>

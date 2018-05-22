@@ -104,20 +104,16 @@ function main() {
     var toggleFeedbackButton = document.getElementById('toggle-feedback');
 
     // i18n - translate ui
-    document.getElementById("navbar-analysis").innerText = i18n.ANALYSIS(); 
-    document.getElementById("navbar-ownership").innerText = i18n.CHECK_OWNERSHIP(); 
-    document.getElementById("navbar-help").innerText = i18n.HELP(); 
-    document.getElementById("navbar-api").title = i18n.API(); 
     var translatestrings = document.querySelectorAll(".translate");
     for (var i=0; i<translatestrings.length; i++) {
         var el = translatestrings[i];
-        console.log("translating element %o ...", el);
+        //console.log("translating element %o ...", el);
         try {
             var i18nkey = (el.dataset.i18n).toUpperCase();
-            console.log("with key %o", i18nkey);
+            //console.log("with key %o", i18nkey);
             el.innerText = i18n[i18nkey]();
         } catch(e) {
-            console.error("no translation for %o defined (set 'data-i18n=*' on element)", el.innerText);
+            console.error("no translation for %o defined (set 'data-i18n=*' on element or update i18n.js)", el.innerText);
         }
     }
 
