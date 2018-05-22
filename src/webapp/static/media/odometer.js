@@ -495,10 +495,6 @@ function feedbackdialog() {
         xhr.send(formData);
     });
     tinglemodal.setContent(document.getElementById("feedback-dialog").innerHTML);
-    tinglemodal.modalBoxContent.querySelector("label[for=feedback-email]").innerHTML = i18n.EMAIL();
-    tinglemodal.modalBoxContent.querySelector("#feedback-email").setAttribute("placeholder", i18n.IF_YOU_WANT_US_TO_GET_IN_TOUCH());
-    tinglemodal.modalBoxContent.querySelector("label[for=feedback-check]").innerHTML = i18n.INCLUDE_XML();
-    tinglemodal.modalBoxContent.querySelector("label[for=feedback-text]").innerHTML = i18n.FEEDBACK();
     tinglemodal.open();
 }
 
