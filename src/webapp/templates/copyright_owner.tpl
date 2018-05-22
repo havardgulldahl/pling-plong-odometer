@@ -145,11 +145,13 @@ function resolve_manually(inputelement) {
             })
             .catch(function (error) {
                 console.log(error);
+                inputelement.classList.toggle("loading", false);
+                alertmsg(error, "warning");
+
             });
         
     } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify track URI
         inputelement.classList.toggle("loading", true);
-        //inputelement.classList.toggle("text-success", false);
         axios.get("/api/ownership/spotify/"+encodeURIComponent(q))
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
@@ -160,9 +162,7 @@ function resolve_manually(inputelement) {
             .catch(function(error) {
                 inputelement.classList.toggle("loading", false);
                 console.error("copyright error: %o, %o", error, error);
-                var s = "<br><b>Spotify</b>: "+i18n.PLEASE_SEARCH_MANUALLY()+
-                    "<br><b>Discogs</b>: "+i18n.PLEASE_SEARCH_MANUALLY();
-                output.innerHTML = s;
+                alertmsg(error, "warning");
             })
     } else if(q.match(/spotify:user:[a-z]+:playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
         inputelement.classList.toggle("loading", true);
@@ -183,7 +183,8 @@ function resolve_manually(inputelement) {
             })
             .catch(function(error) {
                 inputelement.classList.toggle("loading", false);
-                throw(error);
+                console.error("copyright error: %o", error);
+                alertmsg(error, "warning");
             });
     }
     // no known resolver
@@ -227,7 +228,7 @@ function resolve_manually(inputelement) {
           </ownership-item>
           </template>
           <tr v-else>
-            <td><b data-i18n=startinfo_ownership class=translate>To get started: Write or type a Spotify or DMA id above</b></td>
+            <td><span style="font-size: 150%;" data-i18n=startinfo_ownership class=translate>To get started: Write or type a Spotify or DMA id above</span></td>
             <td></td>
           </tr>
         </tbody>

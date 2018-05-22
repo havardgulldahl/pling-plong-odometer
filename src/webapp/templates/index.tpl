@@ -122,7 +122,7 @@
         </thead>
         <tbody id=files-list style="font-size:80%">
           <tr>
-            <td id=startinfo>To get started: Select an XMEML file—exported from Adobe Premiere or Final Cut Pro 7.x. <br>(You may also drop it anywhere in this window). <td><td><td>
+            <td><span style="font-size: 150%;" data-i18n=startinfo class=translate>To get started: Select an XMEML file—exported from Adobe Premiere or Final Cut Pro 7.x. (You may also drop it anywhere in this window).</span> <td><td><td>
           </tr>
         </tbody>
 

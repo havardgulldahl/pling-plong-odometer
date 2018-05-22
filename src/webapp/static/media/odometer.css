@@ -20,8 +20,8 @@
     
 }
 
-#startinfo {
-    font-size: 150%;
+th {
+    text-transform: lowercase;
 }
 
 #thead-duration {

@@ -342,12 +342,14 @@ function dropHandler(ev) {
   }
 
 function alertmsg(msg, errortype) {
-  var e = document.getElementById('alertmsg');
-  var etype = errortype || 'warning';
-  e.innerText = msg;
-  e.classList.add('alert-'+etype);
-  e.hidden=false;
-  window.setTimeout(function() {e.hidden=true; 
+    // flash a message to the #alertmsg elemnt. Errortype one of [warning, danger, info, success, primary]
+    // https://getbootstrap.com/docs/4.0/components/alerts/
+    var e = document.getElementById('alertmsg');
+    var etype = errortype || 'warning';
+    e.innerText = msg;
+    e.classList.add('alert-'+etype);
+    e.hidden=false;
+    window.setTimeout(function() {e.hidden=true; 
                                 e.classList.remove('alert-'+etype); 
                                 e.innerText='';}, 
                             4500);
