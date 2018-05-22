@@ -53,7 +53,7 @@ function updateProgress(val) {
     var newval = parseInt(p.getAttribute('value'))+val;
     if(newval == p.getAttribute('max')) {
         // all resolve tasks are finished, remove progressbar
-        p.parentElement.innerHTML = i18n.METADATA();
+        p.parentElement.innerText = i18n.METADATA();
         finishedResolving();
     } else {
         p.setAttribute('value', newval);
