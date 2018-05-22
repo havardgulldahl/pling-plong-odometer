@@ -92,8 +92,7 @@ function dropHandler(ev) {
         formData.append('xmeml', chosenFile, chosenFile.name);
         submit(formData);
     } else {
-        preview.innerText = 'Not a valid file type';
-        preview.setAttribute('class', 'text-danger');
+        alertmsg(i18n.NOT_VALID_FILE_TYPE(), "danger");
         // Clear any previous file info|
         preview.validFile = null;
     }
