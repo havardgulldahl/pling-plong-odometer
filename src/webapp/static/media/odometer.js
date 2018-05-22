@@ -291,66 +291,6 @@ function resolve(clipname, url) {
     xhr.send();
 }
 
-function dropHandler(ev) {
-    // handle a dropped file
-    ev.preventDefault();
-    document.querySelector('body').classList.remove('dragover');
-    // If dropped items aren't files, reject them
-    var dt = ev.dataTransfer;
-    var preview = document.getElementById('preview');
-    var chosenFile;
-    // Create a new FormData object.
-    if (dt.items) {
-        // Use DataTransferItemList interface to access the file(s)
-        chosenFile = dt.items[0].getAsFile();
-    } else {
-        // Use DataTransfer interface to access the file(s)
-        chosenFile = dt.files[0];
-    }
-    if(validFileType(chosenFile)) {
-        preview.innerText = slug(chosenFile.name, 25) + ' OK – ' + returnFileSize(chosenFile.size);
-        preview.setAttribute('title', i18n.FULL_FILE_NAME({FILENAME:chosenFile.name}));
-        preview.setAttribute('class', 'text-success');
-        document.getElementById('file-select').value = "";
-        // Keep the file info around as a javascript object
-        preview.validFile = chosenFile;
-        var formData = new FormData();
-        formData.append('xmeml', chosenFile, chosenFile.name);
-        submit(formData);
-    } else {
-        preview.innerText = 'Not a valid file type';
-        preview.setAttribute('class', 'text-danger');
-        // Clear any previous file info|
-        preview.validFile = null;
-    }
-  }
-
-  function dragoverHandler(ev) {
-    console.log("dragOver");
-    // Prevent default select and drag behavior
-    ev.preventDefault();
-    document.querySelector('body').classList.add('dragover');
-    window.setTimeout(function() {
-        document.querySelector('body').classList.remove('dragover');
-    }, 10000)
-  }
-
-  function dragendHandler(ev) {
-    console.log("dragEnd");
-    document.querySelector('body').classList.remove('dragover');
-    // Remove all of the drag data
-    var dt = ev.dataTransfer;
-    if (dt.items) {
-      // Use DataTransferItemList interface to remove the drag data
-      for (var i = 0; i < dt.items.length; i++) {
-        dt.items.remove(i);
-      }
-    } else {
-      // Use DataTransfer interface to remove the drag data
-      ev.dataTransfer.clearData();
-    }
-  }
-
 function alertmsg(msg, errortype) {
     // flash a message to the #alertmsg elemnt. Errortype one of [warning, danger, info, success, primary]
     // https://getbootstrap.com/docs/4.0/components/alerts/
