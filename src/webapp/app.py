@@ -31,6 +31,7 @@ from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, 
 
 import model
 
+routes = web.RouteTableDef()
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
                       client_max_size=20*(1024**2)) # upload size max 20 megs
@@ -105,6 +106,7 @@ class AudioClip:
                 'add_missing':'/api/add_missing/{}'.format(quote(self.filename)),
                }
 
+@routes.get('/api/resolve/{resolver}/{audioname}')
 @swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
@@ -150,9 +152,6 @@ async def handle_resolve(request):
         'error': [],
     })
 
-app.router.add_get('/api/resolve/{resolver}/{audioname}', handle_resolve, name='resolve')
-#app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
-
 #'Methods and endpoints to receive an xmeml file and start analyzing it'
 
 class FakeFileUpload:
@@ -160,6 +159,7 @@ class FakeFileUpload:
     def __init__(self):
         self.file = open(self.filename, mode='rb')
 
+@routes.post('/api/analyze')
 @swagger_path("handle_analyze_post.yaml")
 async def handle_analyze_post(request):
     'POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.'
@@ -203,8 +203,7 @@ async def handle_analyze_post(request):
         ]
     })
 
-app.router.add_post('/api/analyze', handle_analyze_post)
-
+@routes.get('/api/supported_resolvers')
 @swagger_path("handle_supported_resolvers.yaml")
 async def handle_supported_resolvers(request):
     'GET a request and return a dict of currently suppported resolvers and their file patterns'
@@ -212,8 +211,7 @@ async def handle_supported_resolvers(request):
         'resolvers': getAllResolvers()
     })
 
-app.router.add_get('/api/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
-
+@routes.post('/api/feedback')
 async def handle_feedback_post(request):
     'POST form data feedback. No returned content.'
     data = await request.post() 
@@ -231,8 +229,7 @@ async def handle_feedback_post(request):
         pass
     return web.json_response(data={'error': [], 'url': url})
 
-app.router.add_post('/api/feedback', handle_feedback_post)
-
+@routes.post('/api/add_missing/{filename}')
 async def handle_add_missing(request):
     'POST json metadata object corresponding to a filename that we should have known about'
     filename = request.match_info.get('filename') # match path string, see the respective route
@@ -252,8 +249,8 @@ async def handle_add_missing(request):
         pass # slack is not that important
     return web.json_response(data={'error': [], })
 
-app.router.add_post('/api/add_missing/{filename}', handle_add_missing) # report an audio file that is missing from odometer patterns
-
+@routes.get(r'/api/ownership/{type:(DMA|spotify)}/{trackinfo}')
+@routes.post(r'/api/ownership/{type:metadata}')
 async def handle_getpost_ownership(request):
     'GET / POST music data and try to get copyrights from spotify and discogs'
     #TODO gather ifnormaton with an async queue and return EventSource
@@ -310,9 +307,7 @@ async def handle_getpost_ownership(request):
 
     )
 
-app.router.add_get(r'/api/ownership/{type:(DMA|spotify)}/{trackinfo}', handle_getpost_ownership)
-app.router.add_post(r'/api/ownership/{type:metadata}', handle_getpost_ownership)
-
+@routes.get(r'/api/tracklist/{type:(DMA|spotify)}/{tracklist}')
 async def handle_get_tracklist(request):
     'GET tracklist id and return lists of spoityf ids or DMA ids'
     tracklist_id = request.match_info.get('tracklist', None) 
@@ -338,8 +333,7 @@ async def handle_get_tracklist(request):
     return web.json_response({'error':[],
                               'tracks': tracklist})
 
-app.router.add_get(r'/api/tracklist/{type:(DMA|spotify)}/{tracklist}', handle_get_tracklist)
-
+@routes.get('/api/license_rules')
 async def handle_get_license_rules(request):
     'Return a json list of all license rules from the DB'
     schema = model.LicenseRule()
@@ -354,8 +348,6 @@ async def handle_get_license_rules(request):
                               'rules': rules},
                               dumps=model.OdometerJSONEncoder().encode)
 
-app.router.add_get(r'/api/license_rules/', handle_get_license_rules)
-
 @use_kwargs(model.LicenseRule(strict=True))
 async def handle_post_license_rule(request):
     'Add new license rule, return id'
@@ -369,12 +361,13 @@ async def handle_post_license_rule(request):
                                        data.get('text'))
         
 
+@routes.get('/licenses')
 @aiohttp_jinja2.template('licenses.tpl')
 async def handle_get_licenses(request):
     'Show all license rules in a view'
     return {}
-app.router.add_get('/licenses', handle_get_licenses)
 
+@routes.get('/api/feedback')
 async def handle_get_feedback_api(request):
     'Return a json list of all license rules from the DB'
     schema = model.Feedback()
@@ -387,26 +380,25 @@ async def handle_get_feedback_api(request):
                               'feedback': feedbacks},
                               dumps=model.OdometerJSONEncoder().encode)
 
-app.router.add_get(r'/api/feedback/', handle_get_feedback_api)
-
+@routes.get('/feedback')
 @aiohttp_jinja2.template('feedback.tpl')
 async def handle_get_feedback(request):
     'Show all feedback in a view'
     return {}
-app.router.add_get('/feedback', handle_get_feedback)
 
+@routes.get('/')
 @aiohttp_jinja2.template('index.tpl')
 def index(request):
     return {}
 
-app.router.add_get('/', index)
 
+@routes.get('/copyright_owner')
 @aiohttp_jinja2.template('copyright_owner.tpl')
 def copyright_owner(request):
     return {}
 
-app.router.add_get('/copyright_owner', copyright_owner)
 
+@routes.get('/api/missing_filenames')
 async def handle_get_missing_filenames_api(request):
     'Return a json list of all reported missing filenames from the DB'
     schema = model.ReportedMissing()
@@ -419,14 +411,13 @@ async def handle_get_missing_filenames_api(request):
                               'missing': missing},
                               dumps=model.OdometerJSONEncoder().encode)
 
-app.router.add_get(r'/api/missing_filenames/', handle_get_missing_filenames_api)
 
+@routes.get('/missing_filenames')
 @aiohttp_jinja2.template('missing_filenames.tpl')
 def missing_filenames(request):
     return {}
 
-app.router.add_get('/missing_filenames', missing_filenames)
-
+app.router.add_routes(routes) # find all @routes.* decorators
 
 app.router.add_static('/media', 'static/media')
 
