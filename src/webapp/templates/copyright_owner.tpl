@@ -7,7 +7,7 @@
         <td><i>«[[ track.metadata.title ]]»</i> —
             [[ track.metadata.artist ]] <span v-if="!track.ownership.spotify" class=loading>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
             <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ copyright ]]</span>
-            <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
+            <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
         </td>
         <td>
             <label>IFPI <input type=checkbox :checked="isIFPI" disabled></label>
