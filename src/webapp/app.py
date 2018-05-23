@@ -224,24 +224,33 @@ async def handle_feedback_post(request):
                                        data.get('text'))
         
     url = '/feedback/{}'.format(str(_id))
-    app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
-                                'New feedback from {}: {}'.format(data.get('sender'), url))
-    return web.json_response(data={'url':url})
+    try:
+        app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
+                                    'New feedback from {}: {}'.format(data.get('sender'), url))
+    except:
+        pass
+    return web.json_response(data={'error': [], 'url': url})
 
 app.router.add_post('/api/feedback', handle_feedback_post)
 
 async def handle_add_missing(request):
     'POST json metadata object corresponding to a filename that we should have known about'
-    filename = request.match_info.get('filename', None) # match path string, see the respective route
+    filename = request.match_info.get('filename') # match path string, see the respective route
     data = await request.json() 
     app.logger.debug('add missing filename: %r, with POST args %r', filename, data)
-
-    app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
+    async with app.dbpool.acquire() as connection:
+        await connection.fetchval("INSERT INTO reported_missing (filename, recordnumber, musiclibrary) VALUES ($1, $2, $3)", 
+                                  filename,
+                                  data.get('recordnumber'),
+                                  data.get('musiclibrary'))
+    try:
+        app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
                                 'Missing audio reported:\n`{}` -> *{}* ({})'.format(filename, 
-                                                                                    data.get('identifier'),
-                                                                                    data.get('label')))
-
-    return web.json_response(data={'error': [],})
+                                                                                    data.get('recordnumber'),
+                                                                                    data.get('musiclibrary')))
+    except:
+        pass # slack is not that important
+    return web.json_response(data={'error': [], })
 
 app.router.add_post('/api/add_missing/{filename}', handle_add_missing) # report an audio file that is missing from odometer patterns
 
@@ -397,6 +406,26 @@ def copyright_owner(request):
     return {}
 
 app.router.add_get('/copyright_owner', copyright_owner)
+
+async def handle_get_missing_filenames_api(request):
+    'Return a json list of all reported missing filenames from the DB'
+    schema = model.ReportedMissing()
+
+    async with app.dbpool.acquire() as connection:
+        records = await connection.fetch("SELECT * FROM reported_missing")
+        missing, errors = schema.load([dict(r) for r in records], many=True)
+
+    return web.json_response({'error':errors,
+                              'missing': missing},
+                              dumps=model.OdometerJSONEncoder().encode)
+
+app.router.add_get(r'/api/missing_filenames/', handle_get_missing_filenames_api)
+
+@aiohttp_jinja2.template('missing_filenames.tpl')
+def missing_filenames(request):
+    return {}
+
+app.router.add_get('/missing_filenames', missing_filenames)
 
 
 app.router.add_static('/media', 'static/media')

@@ -20,7 +20,7 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link translate" href="/missing_files" data-i18n=missingfilenames>
+                <a class="nav-link translate" href="/missing_filenames" data-i18n=missingfilenames>
                     Missing file names
                 </a>
               </li>
