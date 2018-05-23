@@ -41,24 +41,6 @@ function removeChildren(node) {
     }
 }
 
-function startProgress(max) {
-   //console.log('creating progress bar with max=%o', max);
-   document.getElementById('thead-metadata').innerHTML = "<progress id=progress value=0 class=align-bottom max="+max+"></progress>";
-}
-
-function updateProgress(val) {
-    //console.log('updating progress bar with val=%o', val);
-    var p = document.getElementById('progress');
-    if(!p) return; // progress element is only there with multiple resolves # TODO: FIX THIS
-    var newval = parseInt(p.getAttribute('value'))+val;
-    if(newval == p.getAttribute('max')) {
-        // all resolve tasks are finished, remove progressbar
-        p.parentElement.innerText = i18n.METADATA();
-        finishedResolving();
-    } else {
-        p.setAttribute('value', newval);
-    }
-}
 
 function returnFileSize(number) {
     if(number < 1024) {
@@ -159,32 +141,6 @@ function resolveClip(metadatacell_id) {
     var clipname = cell.timelinedata.clipname;
     //console.log("resolveClip: %o %o->%o", clipname, resolver, url);
     resolve(clipname, url)
-}
-
-function submit(formData) {
-    // send the already prepared form data to the json endpoint for analysis
-    // Set up the request.
-    var xhr = new XMLHttpRequest();
-    // Open the connection.
-    xhr.open('POST', '/api/analyze', true);
-
-    // Set up a handler for when the request finishes.
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            // File(s) uploaded.
-            var audio = JSON.parse(xhr.response);
-            console.log('got audio response: %o', audio);
-            return formatAudible(audio["audioclips"]);
-        } else {
-            alertmsg(i18n.ALERTMSG({ERRCODE:xhr.status, ERRMSG:xhr.statusText}, 'danger'));
-        }
-    };
-    var fileList = document.getElementById('files-list');
-    // empty the files table
-    removeChildren(fileList);
-    fileList.innerHTML = "<td>"+i18n.LOADING_DATA()+"<td><td><td>";
-    // Send the Data.
-    xhr.send(formData);
 }
 
 function formatMusicServicesDropdown(music_services, metadatacell_id) {
@@ -427,9 +383,9 @@ function feedbackdialog() {
             })
             .catch(function(error) {
                 console.error("feedback error: %o", error);
-                alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:xhr.statusText}, 'danger'));
+                alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
             });
-            tinglemodal.close();
+        tinglemodal.close();
     });
     tinglemodal.setContent(document.getElementById("feedback-dialog").innerHTML);
     tinglemodal.open();
@@ -618,30 +574,4 @@ function download(content, filename, contentType) {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(a.href); // free memory
 }
-/*
-clips = defaultdict(list)
-for r in self.itercheckedrows():
-    if r.metadata.title is None:
-        # not resolved, use file name
-        _t = repr(r.audioname)
-    else:
-        _t = u'\u00ab%(title)s\u00bb \u2117 %(musiclibrary)s' % vars(r.metadata)
-    for sc in r.subclips:
-        _s = '<tr><td><code>%s</code></td><td><code>%s</code></td>' % (sc['in'], sc['out'])
-        _s += '<td>%06.2f\"</td>' % (sc['durationsecs'])
-        _s += '<td>%s</td>' % _t
-        _s += "</tr>"
-        clips[sc['in']].append(_s)
-# sort all clips by inpoint
-inpoints = list(clips.keys())
-inpoints.sort()
-s = s + "".join(["".join(clips[inpoint]) for inpoint in inpoints])
-s = s + '</table>'
-*/
-function finishedResolving() {
-    // things to do when all metadata is loaded
-    var btns = document.querySelectorAll('#file-form button[type="button"]');
-    for(var i=0; i<btns.length; i++) {
-        btns[i].removeAttribute('disabled');
-    }
-}
+
