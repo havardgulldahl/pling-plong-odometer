@@ -391,29 +391,6 @@ function feedbackdialog() {
     tinglemodal.open();
 }
 
-function report_missing_filename(button) {
-    // send missing filename to odometer devs
-    console.log("report filename: %o", button);
-    var cell = button.parentElement;
-    var metadata = cell.metadata;
-    var timelinedata = cell.timelinedata;
-    console.log("missing metaata : %o", metadata);
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", timelinedata.add_missing);
-    xhr.setRequestHeader("Content-type", "application/json;charset=utf-8");
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            // open dialog to thank for adding missing metadata / filename
-            var tinglemodal = setupModal();
-            tinglemodal.setContent(i18n.THANK_YOU());
-            tinglemodal.open();
-        } else {
-            console.error("missing filename error: %o, %o", xhr.status, xhr.response);
-        }
-    }
-    xhr.send(JSON.stringify(metadata));
-}
-
 function check_copyright(button) {
     // check the copyright info of commercial releases
     var cell = button.parentElement;

@@ -170,6 +170,25 @@ function submit(formData) {
     });
 }
 
+function report_missing_filename(button) {
+    // send missing filename to odometer devs
+    console.log("report filename: %o", button);
+    var cell = button.parentElement;
+    var metadata = cell.metadata;
+    var timelinedata = cell.timelinedata;
+    console.log("missing metaata : %o", metadata);
+    axios.post(timelinedata.add_missing, metadata)
+        .then(function (response) {
+            var tinglemodal = setupModal();
+            tinglemodal.setContent(i18n.THANK_YOU());
+            tinglemodal.open();
+        })
+        .catch(function (error) {
+            console.error("missing filename error: %o", error);
+            alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
+        });
+}
+
 
 {% endblock docscript %}
 
