@@ -69,8 +69,8 @@ class RichDateTimeField(fields.DateTime):
 class ReportedMissing(Schema):
     id = fields.Int(required=True)
     filename = fields.Str(required=True)
-    resolver = fields.Str(required=True)
-    reporter = fields.Str(allow_none=True)
+    recordnumber = fields.Str(required=True)
+    musiclibrary = fields.Str(required==True)
     timestamp = RichDateTimeField(required=True)
 
 class Feedback(Schema):

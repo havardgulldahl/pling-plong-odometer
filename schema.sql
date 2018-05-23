@@ -19,8 +19,8 @@ CREATE TABLE public.reported_missing
 (
   id integer NOT NULL DEFAULT nextval('reported_missing_id_seq'::regclass),
   filename text NOT NULL,
-  resolver text NOT NULL,
-  reporter text,
+  recordnumber text NOT NULL,
+  musiclibrary text NOT NULL,
   "timestamp" timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT reported_missing_pkey PRIMARY KEY (id)
 )
