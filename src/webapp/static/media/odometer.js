@@ -375,6 +375,9 @@ function feedbackdialog() {
     // add another button
     tinglemodal.addFooterBtn(i18n.SUBMIT(), 'tingle-btn tingle-btn--primary', function() {
         var form = document.querySelector(".tingle-modal-box form");
+        if("reportValidity" in form && !form.reportValidity()) { // ie doesnt support this
+            return false;
+        }
         var formData = new FormData(form);
         axios.post("/api/feedback", formData)
             .then(function (response) {
