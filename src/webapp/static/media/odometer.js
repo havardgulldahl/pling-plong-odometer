@@ -420,19 +420,16 @@ function feedbackdialog() {
     tinglemodal.addFooterBtn(i18n.SUBMIT(), 'tingle-btn tingle-btn--primary', function() {
         var form = document.querySelector(".tingle-modal-box form");
         var formData = new FormData(form);
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/api/feedback");
-        xhr.onload = function () {
-            if (xhr.status === 200) {
-                // File(s) uploaded.
-                var response = JSON.parse(xhr.response);
+        axios.post("/api/feedback", formData)
+            .then(function (response) {
                 console.log("feedback response: %o", response);
-            } else {
-                console.error("feedback error: %o, %o", xhr.status, xhr.response);
-            }
+                alertmsg(i18n.THANK_YOU(), "info");
+            })
+            .catch(function(error) {
+                console.error("feedback error: %o", error);
+                alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:xhr.statusText}, 'danger'));
+            });
             tinglemodal.close();
-        }
-        xhr.send(formData);
     });
     tinglemodal.setContent(document.getElementById("feedback-dialog").innerHTML);
     tinglemodal.open();
