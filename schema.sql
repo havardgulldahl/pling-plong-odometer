@@ -22,6 +22,7 @@ CREATE TABLE public.reported_missing
   recordnumber text NOT NULL,
   musiclibrary text NOT NULL,
   "timestamp" timestamp with time zone NOT NULL DEFAULT now(),
+  resolved boolean DEFAULT false,
   CONSTRAINT reported_missing_pkey PRIMARY KEY (id)
 )
 WITH (
