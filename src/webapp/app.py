@@ -434,22 +434,22 @@ app.router.add_static('/media', 'static/media')
 # TODO app.router.add_get('/stats', handle_stats) # show usage stats and patterns
 # TODO app.router.add_get('/get_track', get_track) # get track from unique id
 
-setup_swagger(app,
-              swagger_url="/doc",
-              description='API to parse and resolve audio metadata from XMEML files, i.e. Adobe Premiere projects',
-              title='Pling Plong Odometer Online',
-              api_version=APIVERSION,
-              contact="havard.gulldahl@nrk.no"
-             )
 
-async def init(loop):
+
+async def init():
     'init everything, but dont start it up. returns Application'
     # setup application
     # add routes
     # add startup and shutdown routines
     # set up swagger
-
-
+    global app
+    setup_swagger(app,
+                    swagger_url="/api/doc",
+                    description='API to parse and resolve audio metadata from XMEML files, i.e. Adobe Premiere projects',
+                    title='Pling Plong Odometer Online',
+                    api_version=APIVERSION,
+                    contact="havard.gulldahl@nrk.no"
+                    )
 
 if __name__ == '__main__':
     import logging
@@ -461,6 +461,8 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int)
 
     args = parser.parse_args()
+
+    loop.run_until_complete(init())
 
     web.run_app(
         app,
