@@ -431,10 +431,8 @@ app.router.add_get('/missing_filenames', missing_filenames)
 app.router.add_static('/media', 'static/media')
 
 # TODO app.router.add_get('/submit_runsheet', handle_submit_runsheet) # submit a runsheet to applicable services
-# TODO app.router.add_get('/report_error', handle_report_error) # report an error
 # TODO app.router.add_get('/stats', handle_stats) # show usage stats and patterns
 # TODO app.router.add_get('/get_track', get_track) # get track from unique id
-# TODO app.router.add_get('/clear_track', clear_track) # get track clearance (copyright metadata) from unique id
 
 setup_swagger(app,
               swagger_url="/doc",
@@ -464,14 +462,18 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # start server
     web.run_app(
         app,
         path=args.path,
-        port=args.port
-    )
+        port=args.port)
+""" # TODO: enable AppRunner startup when we can run on py3.6 / aiohttp > v3
+    # main program loop
     try:
         loop.run_forever()
+    except KeyboardInterrupt:
+        pass
     finally:
-        loop.run_until_complete(loop.shutdown_asyncgens())
-        loop.close()
+        loop.run_until_complete()
+    #stop the loop
+    loop.close()
+"""
