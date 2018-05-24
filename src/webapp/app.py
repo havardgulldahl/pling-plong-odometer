@@ -211,7 +211,7 @@ async def handle_supported_resolvers(request):
         'resolvers': getAllResolvers()
     })
 
-@routes.post('/api/feedback')
+@routes.post('/api/feedback/')
 async def handle_feedback_post(request):
     'POST form data feedback. No returned content.'
     data = await request.post() 
@@ -333,7 +333,7 @@ async def handle_get_tracklist(request):
     return web.json_response({'error':[],
                               'tracks': tracklist})
 
-@routes.get('/api/license_rules')
+@routes.get('/api/license_rules/')
 async def handle_get_license_rules(request):
     'Return a json list of all license rules from the DB'
     schema = model.LicenseRule()
@@ -367,7 +367,7 @@ async def handle_get_licenses(request):
     'Show all license rules in a view'
     return {}
 
-@routes.get('/api/feedback')
+@routes.get('/api/feedback/')
 async def handle_get_feedback_api(request):
     'Return a json list of all license rules from the DB'
     schema = model.Feedback()
@@ -398,7 +398,7 @@ def copyright_owner(request):
     return {}
 
 
-@routes.get('/api/missing_filenames')
+@routes.get('/api/missing_filenames/')
 async def handle_get_missing_filenames_api(request):
     'Return a json list of all reported missing filenames from the DB'
     schema = model.ReportedMissing()
@@ -428,7 +428,7 @@ app.router.add_static('/media', 'static/media')
 
 
 async def init():
-    'init everything, but dont start it up. returns Application'
+    'init everything, but dont start it up. '
     # setup application
     # add routes
     # add startup and shutdown routines
