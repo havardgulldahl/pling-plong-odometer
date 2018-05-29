@@ -798,6 +798,7 @@ class UniPPMResolver(ResolverBase):
                   'STSC':'Selectracks Songs ',
                   'STTK':'Selectracks Toolkits ',
                   'STFTA': 'Selectedtracks Unknown',
+                  'SVN': 'Seventh Sense',
                   'SUN': 'Unknown',
                   'ULS':'Ultimate Latin Series ',
                   'UPM': 'Universal filename prefix', ### standard file name prefix???? observed late 2016

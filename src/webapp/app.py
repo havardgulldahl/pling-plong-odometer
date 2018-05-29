@@ -20,12 +20,18 @@ import jinja2
 import aioslacker # pip install aioslacker
 import asyncpg # pip install asyncpg
 
+from aiohttp_apispec import docs, use_kwargs, marshal_with, AiohttpApiSpec
+
+from xmeml import iter as xmemliter
+
 from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 import metadataresolvers
-#from model import TrackMetadata
-from xmeml import iter as xmemliter
+
 from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, SpotifyNotFoundError
 
+import model
+
+routes = web.RouteTableDef()
 loop = asyncio.get_event_loop()
 app = web.Application(loop=loop,
                       client_max_size=20*(1024**2)) # upload size max 20 megs
@@ -95,11 +101,12 @@ class AudioClip:
                 'audible_length': self.audible_length,
                 'resolvable': self.is_resolvable(),
                 'music_services': self.services,
-                'resolve': {s:'/resolve/{}/{}'.format(quote(s), quote(self.filename)) for s in self.services},
-                'resolve_other': '/resolve/{{music_service}}/{}?override=1'.format(quote(self.filename)),
-                'add_missing':'/add_missing/{}'.format(quote(self.filename)),
+                'resolve': {s:'/api/resolve/{}/{}'.format(quote(s), quote(self.filename)) for s in self.services},
+                'resolve_other': '/api/resolve/{{music_service}}/{}?override=1'.format(quote(self.filename)),
+                'add_missing':'/api/add_missing/{}'.format(quote(self.filename)),
                }
 
+@routes.get('/api/resolve/{resolver}/{audioname}')
 @swagger_path("handle_resolve.yaml")
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
@@ -145,9 +152,6 @@ async def handle_resolve(request):
         'error': [],
     })
 
-app.router.add_get('/resolve/{resolver}/{audioname}', handle_resolve, name='resolve')
-#app.router.add_get('/resolve/{audioname}', handle_resolve, name='resolve')
-
 #'Methods and endpoints to receive an xmeml file and start analyzing it'
 
 class FakeFileUpload:
@@ -155,6 +159,7 @@ class FakeFileUpload:
     def __init__(self):
         self.file = open(self.filename, mode='rb')
 
+@routes.post('/api/analyze')
 @swagger_path("handle_analyze_post.yaml")
 async def handle_analyze_post(request):
     'POST an xmeml sequence to start the music report analysis. Returns a list of recognised audio tracks and their respective audible duration.'
@@ -198,8 +203,7 @@ async def handle_analyze_post(request):
         ]
     })
 
-app.router.add_post('/analyze', handle_analyze_post)
-
+@routes.get('/api/supported_resolvers')
 @swagger_path("handle_supported_resolvers.yaml")
 async def handle_supported_resolvers(request):
     'GET a request and return a dict of currently suppported resolvers and their file patterns'
@@ -207,8 +211,7 @@ async def handle_supported_resolvers(request):
         'resolvers': getAllResolvers()
     })
 
-app.router.add_get('/supported_resolvers', handle_supported_resolvers) # show currently supported resolvers and their patterns
-
+@routes.post('/api/feedback')
 async def handle_feedback_post(request):
     'POST form data feedback. No returned content.'
     data = await request.post() 
@@ -219,27 +222,35 @@ async def handle_feedback_post(request):
                                        data.get('text'))
         
     url = '/feedback/{}'.format(str(_id))
-    app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
-                                'New feedback from {}: {}'.format(data.get('sender'), url))
-    return web.json_response(data={'url':url})
+    try:
+        app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
+                                    'New feedback from {}: {}'.format(data.get('sender'), url))
+    except:
+        pass
+    return web.json_response(data={'error': [], 'url': url})
 
-app.router.add_post('/feedback', handle_feedback_post)
-
+@routes.post('/api/add_missing/{filename}')
 async def handle_add_missing(request):
     'POST json metadata object corresponding to a filename that we should have known about'
-    filename = request.match_info.get('filename', None) # match path string, see the respective route
+    filename = request.match_info.get('filename') # match path string, see the respective route
     data = await request.json() 
     app.logger.debug('add missing filename: %r, with POST args %r', filename, data)
-
-    app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
+    async with app.dbpool.acquire() as connection:
+        await connection.fetchval("INSERT INTO reported_missing (filename, recordnumber, musiclibrary) VALUES ($1, $2, $3)", 
+                                  filename,
+                                  data.get('recordnumber'),
+                                  data.get('musiclibrary'))
+    try:
+        app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
                                 'Missing audio reported:\n`{}` -> *{}* ({})'.format(filename, 
-                                                                                    data.get('identifier'),
-                                                                                    data.get('label')))
+                                                                                    data.get('recordnumber'),
+                                                                                    data.get('musiclibrary')))
+    except:
+        pass # slack is not that important
+    return web.json_response(data={'error': [], })
 
-    return web.json_response(data={'error': [],})
-
-app.router.add_post('/add_missing/{filename}', handle_add_missing) # report an audio file that is missing from odometer patterns
-
+@routes.get(r'/api/ownership/{type:(DMA|spotify)}/{trackinfo}')
+@routes.post(r'/api/ownership/{type:metadata}')
 async def handle_getpost_ownership(request):
     'GET / POST music data and try to get copyrights from spotify and discogs'
     #TODO gather ifnormaton with an async queue and return EventSource
@@ -256,7 +267,7 @@ async def handle_getpost_ownership(request):
                 # run resolver
                 app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
                 _metadata = await resolver.resolve(trackinfo)
-                metadata = vars(_metadata)
+                metadata = vars(_metadata) # TODO: verify with marshmallow
             elif querytype == 'metadata':
                 metadata = await request.json()
             logging.debug('Got metadata payload: %r ', metadata)
@@ -296,9 +307,7 @@ async def handle_getpost_ownership(request):
 
     )
 
-app.router.add_get(r'/ownership/{type:(DMA|spotify)}/{trackinfo}', handle_getpost_ownership)
-app.router.add_post(r'/ownership/{type:metadata}', handle_getpost_ownership)
-
+@routes.get(r'/api/tracklist/{type:(DMA|spotify)}/{tracklist}')
 async def handle_get_tracklist(request):
     'GET tracklist id and return lists of spoityf ids or DMA ids'
     tracklist_id = request.match_info.get('tracklist', None) 
@@ -324,46 +333,114 @@ async def handle_get_tracklist(request):
     return web.json_response({'error':[],
                               'tracks': tracklist})
 
-app.router.add_get(r'/tracklist/{type:(DMA|spotify)}/{tracklist}', handle_get_tracklist)
+@routes.get('/api/license_rules')
+async def handle_get_license_rules(request):
+    'Return a json list of all license rules from the DB'
+    schema = model.LicenseRule()
 
+    async with app.dbpool.acquire() as connection:
+        records = await connection.fetch("SELECT * FROM license_rule WHERE active=TRUE")
+        #app.logger.debug('Got DB ROW: %r', records)
+        rules, errors = schema.load([dict(r) for r in records], many=True)
+        #app.logger.debug('Made schame u %r', rules)
+
+    return web.json_response({'error':errors,
+                              'rules': rules},
+                              dumps=model.OdometerJSONEncoder().encode)
+
+@use_kwargs(model.LicenseRule(strict=True))
+async def handle_post_license_rule(request):
+    'Add new license rule, return id'
+    raise NotImplementedError
+
+    data = await request.post() 
+    app.logger.debug('Got POST args: %r', data)
+    async with app.dbpool.acquire() as connection:
+        _id = await connection.fetchval("INSERT INTO feedback (sender, message) VALUES ($1, $2) RETURNING public_id", 
+                                       data.get('sender'),
+                                       data.get('text'))
+        
+
+@routes.get('/licenses')
+@aiohttp_jinja2.template('licenses.tpl')
+async def handle_get_licenses(request):
+    'Show all license rules in a view'
+    return {}
+
+@routes.get('/api/feedback')
+async def handle_get_feedback_api(request):
+    'Return a json list of all license rules from the DB'
+    schema = model.Feedback()
+
+    async with app.dbpool.acquire() as connection:
+        records = await connection.fetch("SELECT * FROM feedback")
+        feedbacks, errors = schema.load([dict(r) for r in records], many=True)
+
+    return web.json_response({'error':errors,
+                              'feedback': feedbacks},
+                              dumps=model.OdometerJSONEncoder().encode)
+
+@routes.get('/feedback')
+@aiohttp_jinja2.template('feedback.tpl')
+async def handle_get_feedback(request):
+    'Show all feedback in a view'
+    return {}
+
+@routes.get('/')
 @aiohttp_jinja2.template('index.tpl')
 def index(request):
     return {}
 
-app.router.add_get('/', index)
 
+@routes.get('/copyright_owner')
 @aiohttp_jinja2.template('copyright_owner.tpl')
 def copyright_owner(request):
     return {}
 
-app.router.add_get('/copyright_owner', copyright_owner)
 
+@routes.get('/api/missing_filenames')
+async def handle_get_missing_filenames_api(request):
+    'Return a json list of all reported missing filenames from the DB'
+    schema = model.ReportedMissing()
+
+    async with app.dbpool.acquire() as connection:
+        records = await connection.fetch("SELECT * FROM reported_missing")
+        missing, errors = schema.load([dict(r) for r in records], many=True)
+
+    return web.json_response({'error':errors,
+                              'missing': missing},
+                              dumps=model.OdometerJSONEncoder().encode)
+
+
+@routes.get('/missing_filenames')
+@aiohttp_jinja2.template('missing_filenames.tpl')
+def missing_filenames(request):
+    return {}
+
+app.router.add_routes(routes) # find all @routes.* decorators
 
 app.router.add_static('/media', 'static/media')
 
 # TODO app.router.add_get('/submit_runsheet', handle_submit_runsheet) # submit a runsheet to applicable services
-# TODO app.router.add_get('/report_error', handle_report_error) # report an error
 # TODO app.router.add_get('/stats', handle_stats) # show usage stats and patterns
 # TODO app.router.add_get('/get_track', get_track) # get track from unique id
-# TODO app.router.add_get('/clear_track', clear_track) # get track clearance (copyright metadata) from unique id
-# TODO app.router.add_get('/feedback/{}', handle_show_feedback) # show status on feedback item
 
-setup_swagger(app,
-              swagger_url="/doc",
-              description='API to parse and resolve audio metadata from XMEML files, i.e. Adobe Premiere projects',
-              title='Pling Plong Odometer Online',
-              api_version=APIVERSION,
-              contact="havard.gulldahl@nrk.no"
-             )
 
-async def init(loop):
+
+async def init():
     'init everything, but dont start it up. returns Application'
     # setup application
     # add routes
     # add startup and shutdown routines
     # set up swagger
-
-
+    global app
+    setup_swagger(app,
+                    swagger_url="/api/doc",
+                    description='API to parse and resolve audio metadata from XMEML files, i.e. Adobe Premiere projects',
+                    title='Pling Plong Odometer Online',
+                    api_version=APIVERSION,
+                    contact="havard.gulldahl@nrk.no"
+                    )
 
 if __name__ == '__main__':
     import logging
@@ -376,14 +453,20 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # start server
+    loop.run_until_complete(init())
+
     web.run_app(
         app,
         path=args.path,
-        port=args.port
-    )
+        port=args.port)
+""" # TODO: enable AppRunner startup when we can run on py3.6 / aiohttp > v3
+    # main program loop
     try:
         loop.run_forever()
+    except KeyboardInterrupt:
+        pass
     finally:
-        loop.run_until_complete(loop.shutdown_asyncgens())
-        loop.close()
+        loop.run_until_complete()
+    #stop the loop
+    loop.close()
+"""

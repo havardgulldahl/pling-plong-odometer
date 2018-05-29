@@ -8,3 +8,8 @@ spotipy
 aiopg
 aioslacker
 discogs_client
+aiohttp-jinja2
+aiohttp-apispec
+asyncpg
+marshmallow
+

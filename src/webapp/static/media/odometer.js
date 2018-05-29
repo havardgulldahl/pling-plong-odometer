@@ -41,24 +41,6 @@ function removeChildren(node) {
     }
 }
 
-function startProgress(max) {
-   //console.log('creating progress bar with max=%o', max);
-   document.getElementById('thead-metadata').innerHTML = "<progress id=progress value=0 class=align-bottom max="+max+"></progress>";
-}
-
-function updateProgress(val) {
-    //console.log('updating progress bar with val=%o', val);
-    var p = document.getElementById('progress');
-    if(!p) return; // progress element is only there with multiple resolves # TODO: FIX THIS
-    var newval = parseInt(p.getAttribute('value'))+val;
-    if(newval == p.getAttribute('max')) {
-        // all resolve tasks are finished, remove progressbar
-        p.parentElement.innerHTML = i18n.METADATA();
-        finishedResolving();
-    } else {
-        p.setAttribute('value', newval);
-    }
-}
 
 function returnFileSize(number) {
     if(number < 1024) {
@@ -101,17 +83,36 @@ function setupModal() {
 
 }
 function main() {
-    var toggleFeedbackButton = document.getElementById('toggle-feedback');
-
     // i18n - translate ui
-    document.getElementById("navbar-analysis").innerText = i18n.ANALYSIS(); 
-    document.getElementById("navbar-help").innerText = i18n.HELP(); 
-    document.getElementById("navbar-api").title = i18n.API(); 
+    var translatestrings = document.querySelectorAll(".translate");
+    function translation(key) {
+        // get [key] from data-i18n* and return translation
+        try {
+            var i18nkey = (el.dataset[key]).toUpperCase();
+            //console.log("with key %o", i18nkey);
+            return i18n[i18nkey]();
+        } catch(e) {
+            //console.error(e);
+            return false;
+        }
+    }
+    for (var i=0; i<translatestrings.length; i++) {
+        var el = translatestrings[i];
+        //console.log("translating element %o ...", el);
+        var txt = translation("i18n");
+        if(txt) el.innerText = txt;
+        var title = translation("i18nTitle");
+        if(title) el.title = title;
+        var placeholder = translation("i18nPlaceholder");
+        if(placeholder) el.placeholder = placeholder;
+    }
 
+    var toggleFeedbackButton = document.getElementById('toggle-feedback');
     toggleFeedbackButton.onclick = function(event) {
         event.preventDefault();
         feedbackdialog();
     }
+
 
 }
 
@@ -140,32 +141,6 @@ function resolveClip(metadatacell_id) {
     var clipname = cell.timelinedata.clipname;
     //console.log("resolveClip: %o %o->%o", clipname, resolver, url);
     resolve(clipname, url)
-}
-
-function submit(formData) {
-    // send the already prepared form data to the json endpoint for analysis
-    // Set up the request.
-    var xhr = new XMLHttpRequest();
-    // Open the connection.
-    xhr.open('POST', '/analyze', true);
-
-    // Set up a handler for when the request finishes.
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            // File(s) uploaded.
-            var audio = JSON.parse(xhr.response);
-            console.log('got audio response: %o', audio);
-            return formatAudible(audio["audioclips"]);
-        } else {
-            alertmsg(i18n.ALERTMSG({ERRCODE:xhr.status, ERRMSG:xhr.statusText}, 'danger'));
-        }
-    };
-    var fileList = document.getElementById('files-list');
-    // empty the files table
-    removeChildren(fileList);
-    fileList.innerHTML = "<td>"+i18n.LOADING_DATA()+"<td><td><td>";
-    // Send the Data.
-    xhr.send(formData);
 }
 
 function formatMusicServicesDropdown(music_services, metadatacell_id) {
@@ -272,73 +247,15 @@ function resolve(clipname, url) {
     xhr.send();
 }
 
-function dropHandler(ev) {
-    // handle a dropped file
-    ev.preventDefault();
-    document.querySelector('body').classList.remove('dragover');
-    // If dropped items aren't files, reject them
-    var dt = ev.dataTransfer;
-    var preview = document.getElementById('preview');
-    var chosenFile;
-    // Create a new FormData object.
-    if (dt.items) {
-        // Use DataTransferItemList interface to access the file(s)
-        chosenFile = dt.items[0].getAsFile();
-    } else {
-        // Use DataTransfer interface to access the file(s)
-        chosenFile = dt.files[0];
-    }
-    if(validFileType(chosenFile)) {
-        preview.innerText = slug(chosenFile.name, 25) + ' OK – ' + returnFileSize(chosenFile.size);
-        preview.setAttribute('title', i18n.FULL_FILE_NAME({FILENAME:chosenFile.name}));
-        preview.setAttribute('class', 'text-success');
-        document.getElementById('file-select').value = "";
-        // Keep the file info around as a javascript object
-        preview.validFile = chosenFile;
-        var formData = new FormData();
-        formData.append('xmeml', chosenFile, chosenFile.name);
-        submit(formData);
-    } else {
-        preview.innerText = 'Not a valid file type';
-        preview.setAttribute('class', 'text-danger');
-        // Clear any previous file info|
-        preview.validFile = null;
-    }
-  }
-
-  function dragoverHandler(ev) {
-    console.log("dragOver");
-    // Prevent default select and drag behavior
-    ev.preventDefault();
-    document.querySelector('body').classList.add('dragover');
-    window.setTimeout(function() {
-        document.querySelector('body').classList.remove('dragover');
-    }, 10000)
-  }
-
-  function dragendHandler(ev) {
-    console.log("dragEnd");
-    document.querySelector('body').classList.remove('dragover');
-    // Remove all of the drag data
-    var dt = ev.dataTransfer;
-    if (dt.items) {
-      // Use DataTransferItemList interface to remove the drag data
-      for (var i = 0; i < dt.items.length; i++) {
-        dt.items.remove(i);
-      }
-    } else {
-      // Use DataTransfer interface to remove the drag data
-      ev.dataTransfer.clearData();
-    }
-  }
-
 function alertmsg(msg, errortype) {
-  var e = document.getElementById('alertmsg');
-  var etype = errortype || 'warning';
-  e.innerText = msg;
-  e.classList.add('alert-'+etype);
-  e.hidden=false;
-  window.setTimeout(function() {e.hidden=true; 
+    // flash a message to the #alertmsg elemnt. Errortype one of [warning, danger, info, success, primary]
+    // https://getbootstrap.com/docs/4.0/components/alerts/
+    var e = document.getElementById('alertmsg');
+    var etype = errortype || 'warning';
+    e.innerText = msg;
+    e.classList.add('alert-'+etype);
+    e.hidden=false;
+    window.setTimeout(function() {e.hidden=true; 
                                 e.classList.remove('alert-'+etype); 
                                 e.innerText='';}, 
                             4500);
@@ -458,50 +375,23 @@ function feedbackdialog() {
     // add another button
     tinglemodal.addFooterBtn(i18n.SUBMIT(), 'tingle-btn tingle-btn--primary', function() {
         var form = document.querySelector(".tingle-modal-box form");
-        var formData = new FormData(form);
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "/feedback");
-        xhr.onload = function () {
-            if (xhr.status === 200) {
-                // File(s) uploaded.
-                var response = JSON.parse(xhr.response);
-                console.log("feedback response: %o", response);
-            } else {
-                console.error("feedback error: %o, %o", xhr.status, xhr.response);
-            }
-            tinglemodal.close();
+        if("reportValidity" in form && !form.reportValidity()) { // ie doesnt support this
+            return false;
         }
-        xhr.send(formData);
+        var formData = new FormData(form);
+        axios.post("/api/feedback", formData)
+            .then(function (response) {
+                console.log("feedback response: %o", response);
+                alertmsg(i18n.THANK_YOU(), "info");
+            })
+            .catch(function(error) {
+                console.error("feedback error: %o", error);
+                alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
+            });
+        tinglemodal.close();
     });
     tinglemodal.setContent(document.getElementById("feedback-dialog").innerHTML);
-    tinglemodal.modalBoxContent.querySelector("label[for=feedback-email]").innerHTML = i18n.EMAIL();
-    tinglemodal.modalBoxContent.querySelector("#feedback-email").setAttribute("placeholder", i18n.IF_YOU_WANT_US_TO_GET_IN_TOUCH());
-    tinglemodal.modalBoxContent.querySelector("label[for=feedback-check]").innerHTML = i18n.INCLUDE_XML();
-    tinglemodal.modalBoxContent.querySelector("label[for=feedback-text]").innerHTML = i18n.FEEDBACK();
     tinglemodal.open();
-}
-
-function report_missing_filename(button) {
-    // send missing filename to odometer devs
-    console.log("report filename: %o", button);
-    var cell = button.parentElement;
-    var metadata = cell.metadata;
-    var timelinedata = cell.timelinedata;
-    console.log("missing metaata : %o", metadata);
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", timelinedata.add_missing);
-    xhr.setRequestHeader("Content-type", "application/json;charset=utf-8");
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            // open dialog to thank for adding missing metadata / filename
-            var tinglemodal = setupModal();
-            tinglemodal.setContent(i18n.THANK_YOU());
-            tinglemodal.open();
-        } else {
-            console.error("missing filename error: %o, %o", xhr.status, xhr.response);
-        }
-    }
-    xhr.send(JSON.stringify(metadata));
 }
 
 function check_copyright(button) {
@@ -518,7 +408,7 @@ function check_copyright(button) {
 
     var xhr = new XMLHttpRequest();
     //xhr.open("GET", "/ownership/metadata/"+encodeURIComponent(JSON.stringify(metadata)));
-    xhr.open("POST", "/ownership/metadata");
+    xhr.open("POST", "/api/ownership/metadata");
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function () {
         if (xhr.status === 200) {
@@ -664,30 +554,4 @@ function download(content, filename, contentType) {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(a.href); // free memory
 }
-/*
-clips = defaultdict(list)
-for r in self.itercheckedrows():
-    if r.metadata.title is None:
-        # not resolved, use file name
-        _t = repr(r.audioname)
-    else:
-        _t = u'\u00ab%(title)s\u00bb \u2117 %(musiclibrary)s' % vars(r.metadata)
-    for sc in r.subclips:
-        _s = '<tr><td><code>%s</code></td><td><code>%s</code></td>' % (sc['in'], sc['out'])
-        _s += '<td>%06.2f\"</td>' % (sc['durationsecs'])
-        _s += '<td>%s</td>' % _t
-        _s += "</tr>"
-        clips[sc['in']].append(_s)
-# sort all clips by inpoint
-inpoints = list(clips.keys())
-inpoints.sort()
-s = s + "".join(["".join(clips[inpoint]) for inpoint in inpoints])
-s = s + '</table>'
-*/
-function finishedResolving() {
-    // things to do when all metadata is loaded
-    var btns = document.querySelectorAll('#file-form button[type="button"]');
-    for(var i=0; i<btns.length; i++) {
-        btns[i].removeAttribute('disabled');
-    }
-}
+

@@ -7,7 +7,7 @@
         <td><i>«[[ track.metadata.title ]]»</i> —
             [[ track.metadata.artist ]] <span v-if="!track.ownership.spotify" class=loading>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
             <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ copyright ]]</span>
-            <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
+            <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
         </td>
         <td>
             <label>IFPI <input type=checkbox :checked="isIFPI" disabled></label>
@@ -18,6 +18,23 @@
     </tr>
 </script>
 {% endblock templates %}
+
+{% block headscript %}
+<script type="text/javascript">
+
+function try_click(el, val) {
+    // generate string for link for interactive testing
+    var txt = i18n.TRY_IT();
+    return "<a href=# onclick='resolve_manually_delay(document.getElementById(\""+el+"\"));app.ownership=\""+val+"\";'>"+txt+"</a>";
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    document.getElementById("helptext").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA:try_click("ownership-input", "NONRE656509HD0001"),
+                                                                             SPOTIFY:try_click("ownership-input", "spotify:track:7wxSkft3f6OG3Y3Vysd470")});
+});
+</script>
+{% endblock headscript %}
+
 
 {% block docscript %}
 
@@ -31,7 +48,7 @@ Vue.component("ownership-item", {
             var inputelement = this.$el;
             var track = this.track;
             inputelement.classList.toggle("loading", true);
-            axios.get("/ownership/spotify/"+encodeURIComponent(track.spotify.uri))
+            axios.get("/api/ownership/spotify/"+encodeURIComponent(track.spotify.uri))
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
                 // add copyright to ui
@@ -94,6 +111,9 @@ var app = new Vue({
       ownership: '',
       items: []
     },
+    created: function() {
+        console.log("startup");
+    },
     delimiters: ["[[", "]]"]
   });
 
@@ -106,6 +126,7 @@ function resolve_manually_delay(inputelement) {
         resolve_manually(inputelement);
     },
     900 );
+    return true;
 }
 
 function resolve_manually(inputelement) {
@@ -115,7 +136,7 @@ function resolve_manually(inputelement) {
     //console.log('resolve form text input %o', q);
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
         inputelement.classList.toggle("loading", true);
-        axios.get("/ownership/DMA/"+encodeURIComponent(q))
+        axios.get("/api/ownership/DMA/"+encodeURIComponent(q))
             .then(function (response) {
                 console.log(response);
                 inputelement.classList.toggle("loading", false);
@@ -123,12 +144,14 @@ function resolve_manually(inputelement) {
             })
             .catch(function (error) {
                 console.log(error);
+                inputelement.classList.toggle("loading", false);
+                alertmsg(error, "warning");
+
             });
         
     } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify track URI
         inputelement.classList.toggle("loading", true);
-        //inputelement.classList.toggle("text-success", false);
-        axios.get("/ownership/spotify/"+encodeURIComponent(q))
+        axios.get("/api/ownership/spotify/"+encodeURIComponent(q))
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
                 // add copyright to ui
@@ -138,13 +161,11 @@ function resolve_manually(inputelement) {
             .catch(function(error) {
                 inputelement.classList.toggle("loading", false);
                 console.error("copyright error: %o, %o", error, error);
-                var s = "<br><b>Spotify</b>: "+i18n.PLEASE_SEARCH_MANUALLY()+
-                    "<br><b>Discogs</b>: "+i18n.PLEASE_SEARCH_MANUALLY();
-                output.innerHTML = s;
+                alertmsg(error, "warning");
             })
     } else if(q.match(/spotify:user:[a-z]+:playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
         inputelement.classList.toggle("loading", true);
-        axios.get("/tracklist/spotify/"+encodeURIComponent(q))
+        axios.get("/api/tracklist/spotify/"+encodeURIComponent(q))
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
                 // add copyright to ui
@@ -161,7 +182,8 @@ function resolve_manually(inputelement) {
             })
             .catch(function(error) {
                 inputelement.classList.toggle("loading", false);
-                throw(error);
+                console.error("copyright error: %o", error);
+                alertmsg(error, "warning");
             });
     }
     // no known resolver
@@ -174,14 +196,19 @@ function resolve_manually(inputelement) {
     <form id="ownership-form" class="form" onsubmit="return false">
         <div class="form-row">
             <div class="col-3">
-                <input id=ownership-input placeholder="Type or paste here" class=form-control 
-                    type=search oninput="if(this.value.length>5) {resolve_manually_delay(this);}"
-                    autocomplete=off autocorrect=off v-model="ownership">
+                <input 
+                    id=ownership-input 
+                    placeholder="Type or paste here" data-i18n-placeholder=type_or_paste_here 
+                    class="form-control translate" 
+                    type=search 
+                    oninput="if(this.value.length>5) {resolve_manually_delay(this);}"
+                    autocomplete=off 
+                    autocorrect=off 
+                    v-model="ownership">
             </div>
             <div class="col-9">
-                <label for=ownership-input class="col-form-label"> ⇜
+                <label for=ownership-input class="col-form-label text-secondary"> ⇜
                     <span id="helptext" class="text-secondary">Please enter a Spotify or DMA id</span>
-                    <a href=# onclick="document.getElementById('ownership-input').value='NONRE656509HD0001'">Try it</a>
                 </label>
             </div>
         </div>
@@ -194,8 +221,8 @@ function resolve_manually(inputelement) {
         <col style="width:30%">
         <thead class="thead-dark">
           <tr>
-            <th id=thead-results>results</th>
-            <th id=thead-license>licence</th>
+            <th data-i18n=results class=translate>results</th>
+            <th data-i18n=license class=translate>license</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
@@ -206,7 +233,8 @@ function resolve_manually(inputelement) {
           </ownership-item>
           </template>
           <tr v-else>
-            <td><b>To get started: Write or type a Spotify or DMA id above</b></td>
+            <td><span style="font-size: 150%;" data-i18n=startinfo_ownership class=translate>To get started: Write or type a Spotify or DMA id above</span></td>
+            <td></td>
           </tr>
         </tbody>
 
