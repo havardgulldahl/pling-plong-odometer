@@ -249,65 +249,62 @@ async def handle_add_missing(request):
         pass # slack is not that important
     return web.json_response(data={'error': [], })
 
-@routes.get(r'/api/ownership/{type:(DMA|spotify)}/{trackinfo}')
-@routes.post(r'/api/ownership/{type:metadata}')
-async def handle_getpost_ownership(request):
-    'GET / POST music data and try to get copyrights from spotify and discogs'
-    #TODO gather ifnormaton with an async queue and return EventSource
+
+@routes.get(r'/api/trackinfo/{type:(DMA|spotify)}/{trackinfo}')
+async def handle_trackinfo(request):
+    'Handle GET trackid from DMA or Spotify and return TrackMetadata or TrackStub'
     trackinfo = request.match_info.get('trackinfo', None) 
     querytype = request.match_info.get('type')
-    try:
-        # get album copyright from spoitfy
-        if querytype in ('DMA', 'metadata'):
-            if querytype == 'DMA':
-                # look up metadata from DMA
-                resolver = getResolverByName('DMA')
-                resolver.setSession(clientSession) # use the same session object for speedups
-                resolver.setConfig(request.app.configuration)
-                # run resolver
-                app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
-                _metadata = await resolver.resolve(trackinfo)
-                metadata = vars(_metadata) # TODO: verify with marshmallow
-            elif querytype == 'metadata':
-                metadata = await request.json()
-            logging.debug('Got metadata payload: %r ', metadata)
-            info = {'title': metadata['title'], 'artist': metadata['artist']}
-            spotifycopyright = app.duediligence.spotify_search_copyrights(metadata)
-        elif querytype == 'spotify':
-            metadata = None
-            spotifyuri = trackinfo
-            track = app.duediligence.sp.track(spotifyuri)
-            spotifycopyright = app.duediligence.spotify_get_album_rights(track['album']['uri'])
-            info = {'title': track['name'], 'artist': ', '.join([a['name'] for a in track['artists']])}
-        else:
-            raise NotImplementedError
-    except SpotifyNotFoundError as e:
-        spotifycopyright = None
-        #return web.json_response(status=404,
-                                 #data={'error': ['Could not find track in the spotify database, please do it manually.']}
-                                #)
+    if querytype == 'DMA':
+        # look up metadata from DMA
+        resolver = getResolverByName('DMA')
+        resolver.setSession(clientSession) # use the same session object for speedups
+        resolver.setConfig(request.app.configuration)
+        # run resolver
+        app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
+        _metadata = await resolver.resolve(trackinfo)
+        metadata = model.TrackMetadata(vars(_metadata)) # TODO: verify with marshmallow
+    elif querytype == 'spotify':
+        spotifyuri = trackinfo
+        track = app.duediligence.sp.track(spotifyuri)
+        #app.logger.info("got spotify track: %r", track)
+        trackstub = model.TrackStub()
+        metadata = trackstub.dump({'title':     track['name'],
+                                   'uri':       track['uri'],
+                                   'artists':   [a['name'] for a in track['artists']], 
+                                   'album_uri': track['album']['uri']})
+    return web.json_response({'error':[],
+                              'tracks': metadata, })
 
-    discogs_label = None
-    discogs_label_heritage = []
-    if spotifycopyright is not None:
-        try:
-            discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
-            discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
-        except DiscogsNotFoundError as e:
-            app.logger.warning('Coul dnot get label from discogs: %s', e)
+@routes.post(r'/api/ownership/')
+async def handle_post_ownership(request):
+    'handle POST music data (TrackMetadata or TrackStub) and try to get copyrights from spotify and discogs'
+    metadata = await request.json() # TODO verify with marshmallow 
+    logging.debug('Got metadata payload: %r ', metadata)
+    try:
+        # try to see if we have spotify metadata already
+        spotifycopyright = app.duediligence.spotify_get_album_rights(metadata['spotify']['album_uri'])
+    except AttributeError:
+        # fall back to finding the track on spotyfy using track metadta (title, artists, year )
+        spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
+    try:
+        discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
+        discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
+        #TODO gather ifnormaton with an async queue and return EventSource
+    except DiscogsNotFoundError as e:
+        app.logger.warning('Coul dnot get label from discogs: %s', e)
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[],
-                              'trackinfo': info,
+                              'trackinfo': metadata,
                               'ownership':{'spotify':spotifycopyright,
                                            'timestamp': datetime.datetime.now().isoformat('T'),
-                                           'original_query':trackinfo,
                                            'discogs':discogs_label_heritage}
                              }, 
                              dumps=jsonencoder
 
     )
 
-@routes.get(r'/api/tracklist/{type:(DMA|spotify)}/{tracklist}')
+@routes.get(r'/api/tracklistinfo/{type:(DMA|spotify)}/{tracklist}')
 async def handle_get_tracklist(request):
     'GET tracklist id and return lists of spoityf ids or DMA ids'
     tracklist_id = request.match_info.get('tracklist', None) 
