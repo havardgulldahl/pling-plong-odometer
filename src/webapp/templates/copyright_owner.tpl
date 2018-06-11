@@ -22,15 +22,17 @@
 {% block headscript %}
 <script type="text/javascript">
 
-function try_click(el, val) {
+function try_click(el, txt, val) {
     // generate string for link for interactive testing
-    var txt = i18n.TRY_IT();
-    return "<a href=# onclick='resolve_manually_delay(document.getElementById(\""+el+"\"));app.ownership=\""+val+"\";'>"+txt+"</a>";
+    var title = i18n.TRY_IT();
+    var text = txt.toLowerCase();
+    return "<a href=# title='"+title+"' onclick='resolve_manually_delay(document.getElementById(\""+el+"\"));app.ownership=\""+val+"\";'>"+text+"</a>";
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    document.getElementById("helptext").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA:try_click("ownership-input", "NONRE656509HD0001"),
-                                                                             SPOTIFY:try_click("ownership-input", "spotify:track:7wxSkft3f6OG3Y3Vysd470")});
+    document.getElementById("helptext").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA:try_click("ownership-input", i18n.TRACK(), "NONRE656509HD0001"),
+                                                                             SPOTIFY_TRACK:try_click("ownership-input", i18n.TRACK(), "spotify:track:7wxSkft3f6OG3Y3Vysd470"),
+                                                                             SPOTIFY_LIST:try_click("ownership-input", i18n.PLAYLIST(), "spotify:user:hgulldahl:playlist:0LZO2ZfDhOw4bV4majJ13N")});
 });
 </script>
 {% endblock headscript %}
