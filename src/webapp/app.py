@@ -295,6 +295,9 @@ async def handle_getpost_ownership(request):
             discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
         except DiscogsNotFoundError as e:
             app.logger.warning('Coul dnot get label from discogs: %s', e)
+
+    licenses = get_licenses( {'label':discogs_label_heritage.pop(),
+                              'artist':trackinfo.artist})
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[],
                               'trackinfo': info,
@@ -306,6 +309,22 @@ async def handle_getpost_ownership(request):
                              dumps=jsonencoder
 
     )
+
+async def get_licenses(where=None, active=True):
+    'Return a json list of all license rules from the DB that match'
+    schema = model.LicenseRule()
+    w = { 'active': active }
+    if where is not None:
+        w.update(where)
+
+    q = " OR ".join(" {}={} ".format(f, i+1) for f,i in enumerate(w.keys()))
+    async with app.dbpool.acquire() as connection:
+        records = await connection.fetch("SELECT * FROM license_rule WHERE {}".format(q), *w.values())
+        app.logger.debug('Got DB ROW: %r', records)
+        rules, errors = schema.load([dict(r) for r in records], many=True)
+        app.logger.debug('Made schame u %r', rules)
+
+        return rules, errors
 
 @routes.get(r'/api/tracklist/{type:(DMA|spotify)}/{tracklist}')
 async def handle_get_tracklist(request):

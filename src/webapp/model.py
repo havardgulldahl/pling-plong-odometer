@@ -93,15 +93,15 @@ class ResolveResult(Schema):
 
 class LicenseRule(Schema):
     'Rules for licensing '
-    id = fields.Int(required=True)
-    active = fields.Boolean(default=True)
-    public_id = fields.UUID(required=True)
-    timestamp = RichDateTimeField(required=True)
-    source = fields.Str(required=True)
+    id = fields.Int(required=True)               # internal id
+    active = fields.Boolean(default=True)        # boolean -  active or not
+    public_id = fields.UUID(required=True)       # public uuid
+    timestamp = RichDateTimeField(required=True) # last changed timestamp
+    source = fields.Str(required=True)           # free type string - the source of the rule
     license_property = fields.Str(required=True) # oneOf album, artist, label
-    license_value = fields.Str(required=True)
-    license_status = fields.Str(required=True) # oneOf green, yellow, red
-    comment = fields.Str(allow_none=True)
+    license_value = fields.Str(required=True)    # case insensitive search - if it matches, the rule is applied
+    license_status = fields.Str(required=True)   # oneOf green, yellow, red - allowed, check or prohibited
+    comment = fields.Str(allow_none=True)        # free type string - editor comment
 
 
 class OdometerJSONEncoder(json.JSONEncoder):

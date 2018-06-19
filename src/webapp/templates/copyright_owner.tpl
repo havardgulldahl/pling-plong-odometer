@@ -56,6 +56,8 @@ Vue.component("ownership-item", {
                 // add copyright to ui
                 console.log("copyright response: %o", response);
                 track.ownership = response.data.ownership;
+                // check license
+
             })
             .catch(function(error) {
                 inputelement.classList.toggle("loading", false);
@@ -70,7 +72,7 @@ Vue.component("ownership-item", {
         },
         isLicensed: {
             get: function() {
-                return false;
+                return this.track.license.isLicensed;
             }
         },
         isIFPI: function() {
