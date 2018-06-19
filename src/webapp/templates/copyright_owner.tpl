@@ -5,7 +5,7 @@
 <script type="text/x-template" id="ownership-template">
     <tr>
         <td><i>«[[ track.metadata.title ]]»</i> —
-            [[ track.metadata.artist ]] <span v-if="!track.ownership.spotify" class=loading>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            [[ artists ]] <span v-if="!track.ownership.spotify" class=loading>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
             <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ copyright ]]</span>
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
         </td>
@@ -50,7 +50,8 @@ Vue.component("ownership-item", {
             var inputelement = this.$el;
             var track = this.track;
             inputelement.classList.toggle("loading", true);
-            axios.get("/api/ownership/spotify/"+encodeURIComponent(track.spotify.uri))
+            //axios.get("/api/ownership/spotify/"+encodeURIComponent(track.spotify.album_uri||track.spotify.uri))
+            axios.post("/api/ownership/", track)
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
                 // add copyright to ui
@@ -69,6 +70,12 @@ Vue.component("ownership-item", {
     computed: {
         copyright: function() {
             return this.track.ownership.spotify.P || this.track.ownership.spotify.C;
+        },
+        artists : function() {
+            if(this.track.metadata.artists === undefined || this.track.metadata.artists.length === 0) {
+                return this.track.metadata.artist;
+            } 
+            return this.track.metadata.artists.join(", ");
         },
         isLicensed: {
             get: function() {
@@ -135,61 +142,38 @@ function resolve_manually_delay(inputelement) {
 
 function resolve_manually(inputelement) {
     // resolve from text input
-    var q = inputelement.value;
+    var uri, q = inputelement.value;
     app.items = []; // empty list
     //console.log('resolve form text input %o', q);
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
-        inputelement.classList.toggle("loading", true);
-        axios.get("/api/ownership/DMA/"+encodeURIComponent(q))
-            .then(function (response) {
-                console.log(response);
-                inputelement.classList.toggle("loading", false);
-                app.items.push({"metadata":response.data.trackinfo, "ownership":response.data.ownership});
-            })
-            .catch(function (error) {
-                console.log(error);
-                inputelement.classList.toggle("loading", false);
-                alertmsg(error, "warning");
-
-            });
-        
+        uri = "/api/trackinfo/DMA/"+encodeURIComponent(q);
     } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify track URI
-        inputelement.classList.toggle("loading", true);
-        axios.get("/api/ownership/spotify/"+encodeURIComponent(q))
-            .then(function (response) {
-                inputelement.classList.toggle("loading", false);
-                // add copyright to ui
-                console.log("copyright response: %o", response);
-                app.items.push({"metadata":response.data.trackinfo, "ownership":response.data.ownership});
-            })
-            .catch(function(error) {
-                inputelement.classList.toggle("loading", false);
-                console.error("copyright error: %o, %o", error, error);
-                alertmsg(error, "warning");
-            })
+        uri = "/api/trackinfo/spotify/"+encodeURIComponent(q);
     } else if(q.match(/spotify:user:[a-z]+:playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
-        inputelement.classList.toggle("loading", true);
-        axios.get("/api/tracklist/spotify/"+encodeURIComponent(q))
-            .then(function (response) {
-                inputelement.classList.toggle("loading", false);
-                // add copyright to ui
-                console.log("tracklist response: %o", response);
-                var tracks = response.data.tracks;
-                var t;
-                for(var i=0;i<tracks.length;i++) {
-                    t = tracks[i];
-                    app.items.push({"metadata":{"title":t.title, "artist":t.artist}, 
-                                    "ownership": {},
-                                    "spotify": {"album_uri": t.album_uri, "uri": t.uri}});
-                }
-
-            })
-            .catch(function(error) {
-                inputelement.classList.toggle("loading", false);
-                console.error("copyright error: %o", error);
-                alertmsg(error, "warning");
-            });
+        uri = "/api/tracklistinfo/spotify/"+encodeURIComponent(q);
     }
+    inputelement.classList.toggle("loading", true);
+    axios.get(uri)
+        .then(function (response) {
+            inputelement.classList.toggle("loading", false);
+            // add copyright to ui
+            console.log("tracklist response: %o", response);
+            var tracks = response.data.tracks;
+            var t;
+            for(var i=0;i<tracks.length;i++) {
+                t = tracks[i];
+                app.items.push({"metadata":{"title":t.title, "artists":t.artists}, 
+                                "ownership": {},
+                                "spotify": {"album_uri": t.album_uri, "uri": t.uri}});
+            }
+
+        })
+        .catch(function(error) {
+            inputelement.classList.toggle("loading", false);
+            console.error("copyright error: %o", error);
+            alertmsg(error, "warning");
+        });
+
     // no known resolver
     return false;
 }

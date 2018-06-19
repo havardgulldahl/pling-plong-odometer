@@ -7,6 +7,8 @@ import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client # pip install discogs_client  
 
+import model
+
 TRUST_ISRC=False # TODO: figure out if we can trust ISRC
 TRUST_EAN=False # TODO: figure out if we can trust EAN
 
@@ -44,7 +46,7 @@ class DueDiligence:
             q.append('upc:{}'.format(trackmetadata['ean']))
         else:
             # no unique code searches, build up a query of what we know
-            if trackmetadata['year']:
+            if 'year' in trackmetadata and trackmetadata['year'] != -1:
                 q.append('year:{}'.format(trackmetadata['year']))
             q.append('{} {}'.format(trackmetadata['title'], trackmetadata['artist']))
             if trackmetadata['albumname']:
@@ -105,13 +107,14 @@ class DueDiligence:
         # 'spotify:user:spotifycharts:playlist:37i9dQZEVXbJiZcmkrIHGU' -> spotifycharts, 37i9d...
         _, _, user, _, playlist_id = playlist_urn.split(':')
         srch = self.sp.user_playlist(user, playlist_id)
+        trackstub = model.TrackStub(many=False)
         for item in srch['tracks']['items']:
             logging.debug('got spotify item %r', json.dumps(item['track']['album']))
-            yield {'title':     item['track']['name'],
-                   'uri':       item['track']['uri'],
-                   'artist':    ', '.join([a['name'] for a in item['track']['artists']]), 
-                   'album_uri': item['track']['album']['uri']
-            }
+            yield trackstub.dump({'title':     item['track']['name'],
+                                  'uri':       item['track']['uri'],
+                                  'artists':   [a['name'] for a in item['track']['artists']], 
+                                  'album_uri': item['track']['album']['uri']})
+            
 
     def spotify_get_album_rights(self, albumuri):#:str) -> dict:
         'Get copyright info from spotify album uri'

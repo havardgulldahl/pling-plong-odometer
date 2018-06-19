@@ -103,6 +103,12 @@ class LicenseRule(Schema):
     license_status = fields.Str(required=True)   # oneOf green, yellow, red - allowed, check or prohibited
     comment = fields.Str(allow_none=True)        # free type string - editor comment
 
+class TrackStub(Schema):
+    'A short/small object to pass around while we are waiting for the rich metadata'
+    title = fields.Str(required=True)
+    artists = fields.List(fields.Str(), required=True)
+    uri = fields.Str()
+    album_uri = fields.Str()
 
 class OdometerJSONEncoder(json.JSONEncoder):
     'turning external models and complex objects into neat json'
