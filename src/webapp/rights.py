@@ -122,12 +122,16 @@ class DueDiligence:
             logging.debug('Parsing copyright owner from %r', labelstring)
             # (C) 1993 Virgin Records America, Inc. -> "Virgin Records America, Inc."
             # ℗ 2017 Propeller Recordings, distributed by Universal Music AS, Norway -> 
-            # (P) NorskAmerikaner AS 2008
             rex = re.compile(r'^(?:\(C\)|\(P\)|℗|©)? ?\d{4}?(?:, \d{4})? ?(.+)')
             try:
                 return rex.match(labelstring).group(1)
             except AttributeError:
-                return None
+                # (P) NorskAmerikaner AS 2008
+                try:
+                    rex2 = re.compile(r'^(?:\(C\)|\(P\)|℗|©)? (.+) \d{4}(?:, \d{4})?')
+                    return rex2.match(labelstring).group(1)
+                except AttributeError:
+                    return None
         r = self.sp.album(albumuri).get('copyrights')
         ret = { k['type']:k['text'] for k in r}
         if 'P' in ret: # have (P) section
@@ -143,14 +147,16 @@ class DueDiligence:
         # Bad Vibes Forever / EMPIRE 
 
         rexes = [
+            r'^(.+), manufactured and marketed by .+', # The Weeknd XO, Inc., manufactured and marketed by Republic Records, a division of UMG Recordings, Inc. -> The Weeknd XO, Inc.
+            r'^(.+), distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
             r'(?:.+), [Aa] [Dd]ivision of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
             r'(?:.+) – [Aa] [Dd]ivision of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
             r'(.+) Norway', # Def Jam Recordings Norway -> Def Jam Recordings
-            r'^(.+), distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
             r'(?:.+) under exclusive licence to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
             r'^The copyright in this sound recording is owned by (.+)', # The copyright in this sound recording is owned by Mawlaw 388 Ltd T/A Source UK
             r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
-            r'^(.+) Inc.', # Cash Money Records Inc. (company) -> Cash Money Records (label)
+            r'^(.+) Inc\.', # Cash Money Records Inc. (company) -> Cash Money Records (label)
+            r'^(.+) AS', # NorskAmerikaner AS (company) -> NorskAmerikaner (label)
         ]
         for rx in rexes:
             try:

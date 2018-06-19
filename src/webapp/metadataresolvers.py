@@ -15,6 +15,7 @@ import time
 import datetime
 import re
 import json
+import yaml # pip install PyYAML
 import html.parser
 import configparser
 
@@ -413,6 +414,14 @@ class DMAResolver(ResolverBase):
         return self.quicklookup('creator', substring)
 
     """
+    async def getPlaylist(self, playlistId):
+        'Look up a DMA playlist and return xx'
+        endpoint = self.getConfig('DMAResolver', 'playlistUrl')
+        async with self.session.post(endpoint, data={'playlistId':playlistId, 'paging':'false'}) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            resp.raise_for_status() # bomb on errors
+            data = await resp.text()
+            return yaml.load(data)
 
 class AUXResolver(ResolverBase):
     prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD']
