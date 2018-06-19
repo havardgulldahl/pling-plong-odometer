@@ -10,10 +10,9 @@
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
         </td>
         <td>
-            <label>IFPI <input type=checkbox :checked="isIFPI" disabled></label>
-            <label>FONO <input type=checkbox :checked="isFONO" disabled></label>
-            <br>
-            <b>[[ track.ownership.licenseStatus ]]</b>
+            <ul v-if="track.licenses.length > 0">
+                <li v-for="lic in track.licenses" :key="lic.id"> [[ lic.source]]: [[lic.license_property]]=[[ lic.license_status ]]</li>
+            </ul>
         </td>
     </tr>
 </script>
@@ -46,11 +45,10 @@ Vue.component("ownership-item", {
     template: "#ownership-template",
     methods: {
         update_ownership: function() {
-            //console.log("update %o spotify", this);
+            //get copyright, ownership and license info about this track
             var inputelement = this.$el;
             var track = this.track;
             inputelement.classList.toggle("loading", true);
-            //axios.get("/api/ownership/spotify/"+encodeURIComponent(track.spotify.album_uri||track.spotify.uri))
             axios.post("/api/ownership/", track)
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
@@ -58,6 +56,7 @@ Vue.component("ownership-item", {
                 console.log("copyright response: %o", response);
                 track.ownership = response.data.ownership;
                 // check license
+                track.licenses = response.data.licenses;
 
             })
             .catch(function(error) {
@@ -76,36 +75,6 @@ Vue.component("ownership-item", {
                 return this.track.metadata.artist;
             } 
             return this.track.metadata.artists.join(", ");
-        },
-        isLicensed: {
-            get: function() {
-                return this.track.license.isLicensed;
-            }
-        },
-        isIFPI: function() {
-            // http://www.ifpi.no/ifpi-norge/ifpi-medlemmer
-            var d;
-            try {
-                // get last item value lower case
-                d = (this.track.ownership.discogs[this.track.ownership.discogs.length-1]).name.toLocaleLowerCase(); 
-                //console.log('ifpi2: %o', d);
-                return (d.indexOf('warner') != -1|| d.indexOf('sony') != -1|| d.indexOf('universal') != -1);
-            } catch(e) {
-                //console.error(e);
-                return false;
-            }
-        },
-        isFONO: function() {
-            // https://www.fono.no/medlemmene/
-            var d;
-            try {
-                // get last item value lower case
-                d = (this.track.ownership.discogs[this.track.ownership.discogs.length-1]).name.toLocaleLowerCase(); 
-                return (d.indexOf('vibbefanger') != -1); //TODO: FIX THIS ADD ALL
-            } catch(e) {
-                //console.error(e);
-                return false;
-            }
         }
     },
     mounted: function () {
@@ -164,6 +133,7 @@ function resolve_manually(inputelement) {
                 t = tracks[i];
                 app.items.push({"metadata":{"title":t.title, "artists":t.artists}, 
                                 "ownership": {},
+                                "licenses": [],
                                 "spotify": {"album_uri": t.album_uri, "uri": t.uri}});
             }
 

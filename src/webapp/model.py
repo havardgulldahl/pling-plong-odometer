@@ -1,6 +1,6 @@
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2016
+# (C) 2012-2018
 
 import json
 import uuid
@@ -113,7 +113,9 @@ class TrackStub(Schema):
 class OdometerJSONEncoder(json.JSONEncoder):
     'turning external models and complex objects into neat json'
     def default(self, obj):
-        if isinstance(obj, uuid.UUID):
+        if isinstance(obj, TrackMetadata):
+            return vars(obj)
+        elif isinstance(obj, uuid.UUID):
             # https://docs.python.org/3/library/uuid.html
             return str(obj)
         # Let the base class default method raise the TypeError

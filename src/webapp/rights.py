@@ -3,6 +3,7 @@ import re
 import logging
 import configparser
 import json
+import uuid
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client # pip install discogs_client  
@@ -229,6 +230,9 @@ class DueDiligenceJSONEncoder(json.JSONEncoder):
             d = {'id':obj.id,
                  'name':obj.name,}
             return d
+        elif isinstance(obj, uuid.UUID):
+            # https://docs.python.org/3/library/uuid.html
+            return str(obj)
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 

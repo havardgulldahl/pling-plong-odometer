@@ -19,6 +19,7 @@ import jinja2
 
 import aioslacker # pip install aioslacker
 import asyncpg # pip install asyncpg
+import multidict # pip install multidict
 
 from aiohttp_apispec import docs, use_kwargs, marshal_with, AiohttpApiSpec
 
@@ -252,7 +253,7 @@ async def handle_add_missing(request):
 
 @routes.get(r'/api/trackinfo/{type:(DMA|spotify)}/{trackinfo}')
 async def handle_trackinfo(request):
-    'Handle GET trackid from DMA or Spotify and return TrackMetadata or TrackStub'
+    'Handle GET trackid from DMA or Spotify and return json formatted TrackMetadata or TrackStub'
     trackinfo = request.match_info.get('trackinfo', None) 
     querytype = request.match_info.get('type')
     if querytype == 'DMA':
@@ -269,12 +270,13 @@ async def handle_trackinfo(request):
         track = app.duediligence.sp.track(spotifyuri)
         #app.logger.info("got spotify track: %r", track)
         trackstub = model.TrackStub()
-        metadata = trackstub.dump({'title':     track['name'],
-                                   'uri':       track['uri'],
-                                   'artists':   [a['name'] for a in track['artists']], 
-                                   'album_uri': track['album']['uri']})
+        metadata, errors = trackstub.dump({'title':     track['name'],
+                                           'uri':       track['uri'],
+                                           'artists':   [a['name'] for a in track['artists']], 
+                                           'album_uri': track['album']['uri']})
     return web.json_response({'error':[],
-                              'tracks': metadata, })
+                              'tracks': [metadata,] },
+                              dumps=model.OdometerJSONEncoder().encode)
 
 @routes.post(r'/api/ownership/')
 async def handle_post_ownership(request):
@@ -284,7 +286,7 @@ async def handle_post_ownership(request):
     try:
         # try to see if we have spotify metadata already
         spotifycopyright = app.duediligence.spotify_get_album_rights(metadata['spotify']['album_uri'])
-    except AttributeError:
+    except KeyError:
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
         spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
     try:
@@ -293,9 +295,18 @@ async def handle_post_ownership(request):
         #TODO gather ifnormaton with an async queue and return EventSource
     except DiscogsNotFoundError as e:
         app.logger.warning('Coul dnot get label from discogs: %s', e)
+
+    # look up licenses from our license table
+    lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata']['artists'] ] )
+    lookup.add('label', discogs_label_heritage.pop().name) # discogs_client.models.Label 
+
+    licenses, errors = await get_licenses(lookup)
+    app.logger.info('got licenses: %r', licenses)
+                             
     jsonencoder = DueDiligenceJSONEncoder().encode
-    return web.json_response({'error':[],
+    return web.json_response({'error':[errors],
                               'trackinfo': metadata,
+                              'licenses': licenses,
                               'ownership':{'spotify':spotifycopyright,
                                            'timestamp': datetime.datetime.now().isoformat('T'),
                                            'discogs':discogs_label_heritage}
@@ -305,15 +316,26 @@ async def handle_post_ownership(request):
     )
 
 async def get_licenses(where=None, active=True):
-    'Return a json list of all license rules from the DB that match'
+    'Return a json list of all license rules from the DB that match. where is a Multidict'
     schema = model.LicenseRule()
-    w = { 'active': active }
-    if where is not None:
-        w.update(where)
 
-    q = " OR ".join(" {}={} ".format(f, i+1) for f,i in enumerate(w.keys()))
+    q = []
+    v = []
+    i = 1
+    for key, value in where.items():
+        q.append( " (license_property=${} AND license_value=${}) ".format(i, i+1) )
+        v.append(key)
+        v.append(value)
+        i = i+2
+
+    if where is not None:
+        query = " OR ".join(q) + " AND active=${}".format(i)
+    else:
+        query = "active=$1"
+    v.append(active)
+    app.logger.debug("running asyncpg query %r with values %r", query, v)
     async with app.dbpool.acquire() as connection:
-        records = await connection.fetch("SELECT * FROM license_rule WHERE {}".format(q), *w.values())
+        records = await connection.fetch("SELECT * FROM license_rule WHERE {}".format(query), *v)
         app.logger.debug('Got DB ROW: %r', records)
         rules, errors = schema.load([dict(r) for r in records], many=True)
         app.logger.debug('Made schame u %r', rules)
