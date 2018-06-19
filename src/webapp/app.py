@@ -320,7 +320,7 @@ async def get_licenses(where=None, active=True):
 
         return rules, errors
 
-@routes.get(r'/api/tracklist/{type:(DMA|spotify)}/{tracklist}')
+@routes.get(r'/api/tracklistinfo/{type:(DMA|spotify)}/{tracklist}')
 async def handle_get_tracklist(request):
     'GET tracklist id and return lists of spoityf ids or DMA ids'
     tracklist_id = request.match_info.get('tracklist', None) 
