@@ -111,10 +111,11 @@ class DueDiligence:
         trackstub = model.TrackStub(many=False)
         for item in srch['tracks']['items']:
             logging.debug('got spotify item %r', json.dumps(item['track']['album']))
-            yield trackstub.dump({'title':     item['track']['name'],
-                                  'uri':       item['track']['uri'],
-                                  'artists':   [a['name'] for a in item['track']['artists']], 
-                                  'album_uri': item['track']['album']['uri']})
+            st,_ = trackstub.dump({'title':     item['track']['name'],
+                                   'uri':       item['track']['uri'],
+                                   'artists':   [a['name'] for a in item['track']['artists']], 
+                                   'album_uri': item['track']['album']['uri']})
+            yield st
             
 
     def spotify_get_album_rights(self, albumuri):#:str) -> dict:
