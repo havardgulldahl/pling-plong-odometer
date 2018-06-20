@@ -11,7 +11,7 @@
         </td>
         <td>
             <ul v-if="track.licenses.length > 0">
-                <li v-for="lic in track.licenses" :key="lic.id"> [[ lic.source]]: [[lic.license_property]]=[[ lic.license_status ]]</li>
+                <li v-for="lic in track.licenses" :key="lic.id"> [[ lic.source]]: [[lic.license_property]]=[[ lic.license_status ]] ([[ lic.comment ]])</li>
             </ul>
         </td>
     </tr>
