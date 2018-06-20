@@ -264,7 +264,8 @@ async def handle_trackinfo(request):
         # run resolver
         app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
         _metadata = await resolver.resolve(trackinfo)
-        metadata = model.TrackMetadata(vars(_metadata)) # TODO: verify with marshmallow
+        app.logger.info("resolve audioname %r got metadata %r", trackinfo, vars(_metadata))
+        metadata = model.TrackMetadata(**vars(_metadata)) # TODO: verify with marshmallow
     elif querytype == 'spotify':
         spotifyuri = trackinfo
         track = app.duediligence.sp.track(spotifyuri)
@@ -298,7 +299,9 @@ async def handle_post_ownership(request):
         discogs_label = discogs_label_heritage = None
 
     # look up licenses from our license table
-    lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata']['artists'] ] )
+    lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata'].get('artists', []) ] )
+    if 'artist' in metadata['metadata']:
+        lookup.add('artist', metadata['metadata']['artist'])
     if discogs_label_heritage is not None:
         lookup.add('label', discogs_label_heritage[-1].name) # discogs_client.models.Label 
 

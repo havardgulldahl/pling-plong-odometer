@@ -131,7 +131,7 @@ function resolve_manually(inputelement) {
             var t;
             for(var i=0;i<tracks.length;i++) {
                 t = tracks[i];
-                app.items.push({"metadata":{"title":t.title, "artists":t.artists}, 
+                app.items.push({"metadata":{"title":t.title, "artists":t.artists, "artist":t.artist}, 
                                 "ownership": {},
                                 "licenses": [],
                                 "spotify": {"album_uri": t.album_uri, "uri": t.uri}});

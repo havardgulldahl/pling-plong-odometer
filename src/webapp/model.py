@@ -33,6 +33,7 @@ class TrackMetadata(object): # TODO: marshmallow this
                  lyricist=None,
                  identifier=None,
                  productionmusic=False,
+                 **kwargs
                 ):
 
         def tit(val):

@@ -50,7 +50,7 @@ class DueDiligence:
             if 'year' in trackmetadata and trackmetadata['year'] != -1:
                 q.append('year:{}'.format(trackmetadata['year']))
             q.append('{} {}'.format(trackmetadata['title'], trackmetadata['artist']))
-            if trackmetadata['albumname']:
+            if 'albumname' in trackmetadata and trackmetadata['albumname'] is not None:
                 q.append(trackmetadata['albumname'])
         track = self.spotify_search_track(' '.join(q))
 
