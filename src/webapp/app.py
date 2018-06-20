@@ -295,10 +295,12 @@ async def handle_post_ownership(request):
         #TODO gather ifnormaton with an async queue and return EventSource
     except DiscogsNotFoundError as e:
         app.logger.warning('Coul dnot get label from discogs: %s', e)
+        discogs_label = discogs_label_heritage = None
 
     # look up licenses from our license table
     lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata']['artists'] ] )
-    lookup.add('label', discogs_label_heritage.pop().name) # discogs_client.models.Label 
+    if discogs_label_heritage is not None:
+        lookup.add('label', discogs_label_heritage.pop().name) # discogs_client.models.Label 
 
     licenses, errors = await get_licenses(lookup)
     app.logger.info('got licenses: %r', licenses)
