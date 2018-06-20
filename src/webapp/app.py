@@ -300,7 +300,7 @@ async def handle_post_ownership(request):
     # look up licenses from our license table
     lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata']['artists'] ] )
     if discogs_label_heritage is not None:
-        lookup.add('label', discogs_label_heritage.pop().name) # discogs_client.models.Label 
+        lookup.add('label', discogs_label_heritage[-1].name) # discogs_client.models.Label 
 
     licenses, errors = await get_licenses(lookup)
     app.logger.info('got licenses: %r', licenses)
