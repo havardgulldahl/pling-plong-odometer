@@ -18,7 +18,7 @@ def iterMembers():
 
 if __name__ == '__main__':
     print("BEGIN;")
-    print("DELETE FROM license_rule WHERE source='FONO';")
+    print("DELETE FROM license_rule WHERE source='FONO' AND license_property='label';")
     for r in iterMembers():
         print("""INSERT INTO license_rule 
                 (source, license_property, license_status, license_value, comment)
