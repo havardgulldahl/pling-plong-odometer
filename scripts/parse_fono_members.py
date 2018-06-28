@@ -13,7 +13,7 @@ def iterMembers():
     for row in html.getroot().xpath("//div[@class='members']//a"): #cssselect(".members li a"):
         txt = row.text_content().strip()
         yield txt
-        if txt.endswith(' AS'): # also add item without AS suffix
+        if txt.lower().endswith(' AS'): # also add item without AS suffix
             yield txt[:-3]
 
 if __name__ == '__main__':
