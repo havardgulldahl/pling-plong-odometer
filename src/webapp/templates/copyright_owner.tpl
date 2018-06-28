@@ -88,11 +88,15 @@ Vue.component("ownership-item", {
 var app = new Vue({
     el: '#content',
     data: {
-      ownership: '',
+      ownership: document.location.search.slice(1), // empty string or query string
       items: []
     },
     created: function() {
         console.log("startup");
+        var input = document.getElementById("ownership-input");
+        input.value = document.location.search.slice(1); // empty string or query string
+        console.log("search: %o", input.value);
+        resolve_manually_delay(input);
     },
     delimiters: ["[[", "]]"]
   });
@@ -113,13 +117,21 @@ function resolve_manually(inputelement) {
     // resolve from text input
     var uri, q = inputelement.value;
     app.items = []; // empty list
+    if(q.length===0) return; // empty query
     //console.log('resolve form text input %o', q);
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
         uri = "/api/trackinfo/DMA/"+encodeURIComponent(q);
     } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify track URI
         uri = "/api/trackinfo/spotify/"+encodeURIComponent(q);
-    } else if(q.match(/spotify:user:[a-z]+:playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
+    } else if(q.match(/spotify:album:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify album URI
+        // spotify:album:40yTsvA7raOkdbeJfC6Hsc
+        uri = "/api/albuminfo/spotify/"+encodeURIComponent(q);
+    } else if(q.match(/spotify:user:[A-Za-z0-9]+:playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
         uri = "/api/tracklistinfo/spotify/"+encodeURIComponent(q);
+    }
+    if(uri===undefined) {
+        console.warn("uri not recognised");
+        return;
     }
     inputelement.classList.toggle("loading", true);
     axios.get(uri)
@@ -136,6 +148,8 @@ function resolve_manually(inputelement) {
                                 "licenses": [],
                                 "spotify": {"album_uri": t.album_uri, "uri": t.uri}});
             }
+            // add reference to history
+            window.history.pushState(null, null, "/copyright_owner?"+q);
 
         })
         .catch(function(error) {
