@@ -8,6 +8,7 @@
             [[ artists ]] <span v-if="!track.ownership.spotify" class=loading>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
             <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ copyright ]]</span>
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
+              <i v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class=translate data-i18n=NOT_FOUND>Not found </i>
         </td>
         <td>
             <ul v-if="track.licenses.length > 0">
@@ -178,10 +179,13 @@ function resolve_manually(inputelement) {
                     autocorrect=off 
                     v-model="ownership">
             </div>
-            <div class="col-9">
+            <div class="col-5">
                 <label for=ownership-input class="col-form-label text-secondary"> ⇜
                     <span id="helptext" class="text-secondary">Please enter a Spotify or DMA id</span>
                 </label>
+            </div>
+            <div class="col-4">
+                <button type=button class="btn btn-primary translate" disabled data-i18n="generate_license_report">Generate license report</button>
             </div>
         </div>
     </form>

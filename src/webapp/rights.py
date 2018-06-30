@@ -7,6 +7,9 @@ import uuid
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client # pip install discogs_client  
+from lib.discogs_client_fetcher import CachingUserTokenRequestsFetcher
+from async_lru import alru_cache # pip install async_lru
+import functools
 
 import model
 
@@ -31,6 +34,7 @@ class DueDiligence:
         )
         self.sp = spotipy.Spotify(client_credentials_manager=self.cred_manager)
         self.discogs = discogs_client.Client(self.useragent, user_token=config.get('discogs', 'token'))
+        self.discogs._fetcher = CachingUserTokenRequestsFetcher(self.discogs._fetcher.user_token)
 
     def spotify_search_copyrights(self, trackmetadata): #:dict) -> dict:
         'Try to llok up a Track in spotify and return the copyrights.'
@@ -142,23 +146,28 @@ class DueDiligence:
             ret.update({'parsed_label': parse_label(ret['C'])})
         return ret
 
-    # discogs
+    @functools.lru_cache(maxsize=256)
     def parse_label_attribution(self, labelquery):#:str) -> str:
         'Simplify label / phonograph / copyright attribution, for lookups at discogs'
         # Atlantic Recording Corporation for the United States and WEA International Inc. for the world outside of the United States. A Warner Music Group Company -> ???
         # Bad Vibes Forever / EMPIRE 
+        _origquery = labelquery
+
+        # normalize A/S, AS, as suffix
+        labelquery = re.sub(r' a/s$', ' AS', labelquery, flags=re.IGNORECASE)
+
+        # remove norway suffix
+        labelquery = re.sub(r' norway$', '', labelquery, flags=re.IGNORECASE)
 
         rexes = [
             r'^(.+), manufactured and marketed by .+', # The Weeknd XO, Inc., manufactured and marketed by Republic Records, a division of UMG Recordings, Inc. -> The Weeknd XO, Inc.
-            r'^(.+), distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
+            r'^(.+),? distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
             r'(?:.+), [Aa] [Dd]ivision of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
             r'(?:.+) – [Aa] [Dd]ivision of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
-            r'(.+) Norway', # Def Jam Recordings Norway -> Def Jam Recordings
             r'(?:.+) under exclusive licence to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
             r'^The copyright in this sound recording is owned by (.+)', # The copyright in this sound recording is owned by Mawlaw 388 Ltd T/A Source UK
             r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
             r'^(.+) Inc\.', # Cash Money Records Inc. (company) -> Cash Money Records (label)
-            r'^(.+) AS', # NorskAmerikaner AS (company) -> NorskAmerikaner (label)
         ]
         for rx in rexes:
             try:
@@ -167,9 +176,14 @@ class DueDiligence:
             except AttributeError:
                 continue
 
+        if _origquery != labelquery:
+            # no regexp matched, but we've still brushed it up a bit
+            return labelquery
+
         logging.debug('Could not simplify label %r', labelquery)
         return None
 
+    #@functools.lru_cache(maxsize=256)
     def discogs_search_label(self, labelquery):#:str) -> discogs_client.models.Label:
         'Search for label in discogs'
         # strategy
@@ -213,6 +227,7 @@ class DueDiligence:
 
         raise DiscogsNotFoundError('Could not find the label "{}" in the Discogs database'.format(labelquery))
 
+    #@functools.lru_cache(maxsize=128)
     def discogs_label_heritage(self, label):#discogs_client.models.Label) -> discogs_client.models.Label:
         'Take a discogs label and walk the parenthood till the very top'
         heritage = [label]
