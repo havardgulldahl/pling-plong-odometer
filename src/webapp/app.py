@@ -290,13 +290,8 @@ async def handle_post_ownership(request):
     except KeyError:
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
         spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
-    try:
-        discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
-        discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
-        #TODO gather ifnormaton with an async queue and return EventSource
-    except DiscogsNotFoundError as e:
-        app.logger.warning('Coul dnot get label from discogs: %s', e)
-        discogs_label = discogs_label_heritage = None
+
+    discogs_label_heritage = get_discogs_label(spotifycopyright['parsed_label'])
 
     # look up licenses from our license table
     lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata'].get('artists', []) ] )
@@ -372,6 +367,27 @@ async def handle_get_tracklist(request):
 
     return web.json_response({'error':[],
                               'tracks': tracklist})
+
+@routes.get(r'/api/labelinfo/{labelquery}')
+async def handle_get_label(request):
+    'GET a label string and look it up in discogs'
+    labelquery = request.match_info.get('labelquery')
+    discogs_labels = get_discogs_label(labelquery)
+    jsonencoder = DueDiligenceJSONEncoder().encode
+    return web.json_response({'error':[],
+                              'labels': discogs_labels},
+                             dumps=jsonencoder
+    )
+
+def get_discogs_label(labelquery):
+    try:
+        discogs_label = app.duediligence.discogs_search_label(labelquery)
+        discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
+        #TODO gather ifnormaton with an async queue and return EventSource
+    except DiscogsNotFoundError as e:
+        app.logger.warning('Coul dnot get label from discogs: %s', e)
+        discogs_label = discogs_label_heritage = None
+    return discogs_label_heritage
 
 @routes.get('/api/license_rules/')
 async def handle_get_license_rules(request):
