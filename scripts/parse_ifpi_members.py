@@ -19,12 +19,12 @@ def iterMembers():
 
 if __name__ == '__main__':
     print("BEGIN;")
-    print("DELETE FROM license_rule WHERE source='IFPI' AND license_property='label';")
+    print("DELETE FROM license_rule WHERE source='IFPI medlem' AND license_property='label';")
     for r in iterMembers():
         print("""INSERT INTO license_rule 
                 (source, license_property, license_status, license_value, comment)
                 VALUES 
-                ('IFPI', 'label', 'green', '{}', '{}');""".format(r, URL))
+                ('IFPI medlem', 'label', 'OK', '{}', '{}');""".format(r, URL))
     print("COMMIT;")
 
 

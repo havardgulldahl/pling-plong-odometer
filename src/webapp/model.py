@@ -101,7 +101,7 @@ class LicenseRule(Schema):
     source = fields.Str(required=True)           # free type string - the source of the rule
     license_property = fields.Str(required=True) # oneOf album, artist, label
     license_value = fields.Str(required=True)    # case insensitive search - if it matches, the rule is applied
-    license_status = fields.Str(required=True)   # oneOf green, yellow, red - allowed, check or prohibited
+    license_status = fields.Str(required=True)   # oneOf NO, OK, CHECK
     comment = fields.Str(allow_none=True)        # free type string - editor comment
 
 class TrackStub(Schema):

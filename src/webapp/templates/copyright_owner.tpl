@@ -12,7 +12,12 @@
         </td>
         <td>
             <ul v-if="track.licenses.length > 0">
-                <li v-for="lic in track.licenses" :key="lic.id"> [[ lic.source]]: [[lic.license_property]]=[[ lic.license_status ]] ([[ lic.comment ]])</li>
+                <!-- li v-for="lic in track.licenses" :key="lic.id"> [[ lic.source]]: [[lic.license_property]]=[[ lic.license_status ]] ([[ lic.comment ]])</li -->
+                <div class="btn-group" role="group" aria-label="License status">
+                    <button type="button" :disabled="!licenses.OK" class="btn btn-success">OK</button>
+                    <button type="button" :disabled="!licenses.NO" class="btn active btn-danger">Nei</button>
+                    <button type="button" :disabled="!licenses.CHECK" class="btn active btn-warning">Sjekk</button>
+                </div>
             </ul>
         </td>
     </tr>
@@ -76,6 +81,31 @@ Vue.component("ownership-item", {
                 return this.track.metadata.artist;
             } 
             return this.track.metadata.artists.join(", ");
+        },
+        licenses : function() {
+            console.log("check licenses: %o", this.track.licenses);
+            var status = { "OK": false,
+                           "NO": false,
+                           "CHECK": false}; // blank status
+            var lic, seems_ok = false;
+            for(var i=0; i<this.track.licenses.length; i++) {
+                lic = this.track.licenses[i]; // shortcut
+                if(lic.license_status == "NO") {
+                    status["NO"] = true;
+                    return status; // one 'no' trumps all
+                }
+                if(lic.license_status == "OK") {
+                    seems_ok = true;
+                }
+            }
+            if(seems_ok) {
+                // one or more license rules say yes
+                status["OK"] = true;
+            } else {
+                // undetermined, must check
+                status["CHECK"] = true;
+            }
+            return status;
         }
     },
     mounted: function () {
