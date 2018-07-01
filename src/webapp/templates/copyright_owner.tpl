@@ -10,15 +10,12 @@
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
               <i v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class=translate data-i18n=NOT_FOUND>Not found </i>
         </td>
-        <td>
-            <ul v-if="track.licenses.length > 0">
-                <!-- li v-for="lic in track.licenses" :key="lic.id"> [[ lic.source]]: [[lic.license_property]]=[[ lic.license_status ]] ([[ lic.comment ]])</li -->
-                <div class="btn-group" role="group" aria-label="License status">
-                    <button type="button" :disabled="!licenses.OK" class="btn btn-success">OK</button>
-                    <button type="button" :disabled="!licenses.NO" class="btn active btn-danger">Nei</button>
-                    <button type="button" :disabled="!licenses.CHECK" class="btn active btn-warning">Sjekk</button>
-                </div>
-            </ul>
+        <td class=align-middle>
+            <div class="btn-group" role="group" aria-label="License status" :title="licenses.reason">
+                <button type="button" :disabled="!licenses.OK" class="btn active btn-success">OK</button>
+                <button type="button" :disabled="!licenses.NO" class="btn active btn-danger">Nei</button>
+                <button type="button" :disabled="!licenses.CHECK" class="btn active btn-warning">Sjekk</button>
+            </div>
         </td>
     </tr>
 </script>
@@ -86,24 +83,33 @@ Vue.component("ownership-item", {
             console.log("check licenses: %o", this.track.licenses);
             var status = { "OK": false,
                            "NO": false,
-                           "CHECK": false}; // blank status
-            var lic, seems_ok = false;
+                           "CHECK": false,
+                           "reason": ""}; // baseline status object 
+            var lic, must_check = false, seems_ok = false, reasons = [];
             for(var i=0; i<this.track.licenses.length; i++) {
                 lic = this.track.licenses[i]; // shortcut
                 if(lic.license_status == "NO") {
                     status["NO"] = true;
+                    status["reason"] = lic.source;
                     return status; // one 'no' trumps all
                 }
-                if(lic.license_status == "OK") {
+                if(lic.license_status == "CHECK") {
+                    must_check = true;
+                    reasons.push(lic.source);
+                }
+                else if(lic.license_status == "OK") {
+                    reasons.push(lic.source);
                     seems_ok = true;
                 }
             }
-            if(seems_ok) {
-                // one or more license rules say yes
+            if(seems_ok && !must_check) {
+                // one or more license rules say yes, and none say we must check
                 status["OK"] = true;
+                status["reason"] = reasons.join(", ");
             } else {
-                // undetermined, must check
+                // undetermined, or specifically must check
                 status["CHECK"] = true;
+                status["reason"] = reasons.join(", ");
             }
             return status;
         }
