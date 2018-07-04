@@ -4,18 +4,20 @@
 {% block templates %}
 <script type="text/x-template" id="ownership-template">
     <tr>
-        <td><i>«[[ track.metadata.title ]]»</i> —
-            [[ artists ]] <span v-if="!track.ownership.spotify" class=loading>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <td :class="{loading: !track.ownership.spotify}">
+            <i>«[[ track.metadata.title ]]»</i> —
+            [[ artists ]] 
             <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ copyright ]]</span>
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
               <i v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class=translate data-i18n=NOT_FOUND>Not found </i>
         </td>
-        <td class=align-middle>
-            <div class="btn-group" role="group" aria-label="License status" :title="licenses.reason">
-                <button type="button" :disabled="!licenses.OK" class="btn active btn-success">OK</button>
-                <button type="button" :disabled="!licenses.NO" class="btn active btn-danger">Nei</button>
-                <button type="button" :disabled="!licenses.CHECK" class="btn active btn-warning">Sjekk</button>
-            </div>
+        <td class=align-middle >
+            <button v-if="track.ownership.spotify" 
+                    type="button" 
+                    disabled 
+                    class="btn active"
+                    :class="licenses.style">[[licenses.result]]</button>
+            <div v-if="licences &amp;&amp; licenses.reason"><i class=translate data-i18n=REASON>Forklaring:</i><span>[[ licenses.reason ]]</span></div>
         </td>
     </tr>
 </script>
@@ -81,17 +83,17 @@ Vue.component("ownership-item", {
         },
         licenses : function() {
             console.log("check licenses: %o", this.track.licenses);
-            var status = { "OK": false,
-                           "NO": false,
-                           "CHECK": false,
+            var status = { "style": "btn-warning",
+                           "result": "check",
                            "reason": ""}; // baseline status object 
             var lic, must_check = false, seems_ok = false, reasons = [];
             for(var i=0; i<this.track.licenses.length; i++) {
                 lic = this.track.licenses[i]; // shortcut
                 if(lic.license_status == "NO") {
-                    status["NO"] = true;
+                    status["result"] = "Nono";
+                    status["style"] = "btn-danger";
                     status["reason"] = lic.source;
-                    return status; // one 'no' trumps all
+                    return status; // one 'no' trumps all other licenses
                 }
                 if(lic.license_status == "CHECK") {
                     must_check = true;
@@ -104,11 +106,13 @@ Vue.component("ownership-item", {
             }
             if(seems_ok && !must_check) {
                 // one or more license rules say yes, and none say we must check
-                status["OK"] = true;
+                status["result"] = "a-ok";
+                status["style"] = "btn-success";
                 status["reason"] = reasons.join(", ");
             } else {
                 // undetermined, or specifically must check
-                status["CHECK"] = true;
+                status["result"] = "dunno";
+                status["style"] = "btn-warning";
                 status["reason"] = reasons.join(", ");
             }
             return status;
@@ -126,14 +130,32 @@ var app = new Vue({
     el: '#content',
     data: {
       ownership: document.location.search.slice(1), // empty string or query string
-      items: []
+      items: [
+        /* mock data for testing 
+            { licenses: [],
+              spotify: {
+                album_uri : "spotify:album:0tgsACxUMuBElueq2YRe1K",
+                uri : "spotify:track:7wxSkft3f6OG3Y3Vysd470" 
+              },
+              metadata: {
+                artists : [ "Loyle Carner", "Rebel Kleff"],
+                title : "NO CD"
+              },
+              ownership: {
+
+              }
+            }
+        */
+      ]
     },
     created: function() {
         console.log("startup");
         var input = document.getElementById("ownership-input");
         input.value = document.location.search.slice(1); // empty string or query string
         console.log("search: %o", input.value);
-        resolve_manually_delay(input);
+        if(input.value.length>0) {
+            resolve_manually_delay(input);
+        }
     },
     delimiters: ["[[", "]]"]
   });
