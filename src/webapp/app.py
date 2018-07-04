@@ -298,7 +298,12 @@ async def handle_post_ownership(request):
     if 'artist' in metadata['metadata']:
         lookup.add('artist', metadata['metadata']['artist'])
     if discogs_label_heritage is not None:
-        lookup.add('label', discogs_label_heritage[-1].name) # discogs_client.models.Label 
+        lbl = discogs_label_heritage[-1].name # discogs_client.models.Label 
+        for sufx in [' AS', ' A/S', ' A.S.']:  # remove suffix
+            if lbl.upper().endswith(lbl):
+                lbl = lbl[:-len(sufx)]
+                break
+        lookup.add('label', lbl)
 
     licenses, errors = await get_licenses(lookup)
     app.logger.info('got licenses: %r', licenses)
