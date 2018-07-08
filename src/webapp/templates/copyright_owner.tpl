@@ -12,12 +12,13 @@
               <i v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class=translate data-i18n=NOT_FOUND>Not found </i>
         </td>
         <td class=align-middle >
-            <button v-if="track.ownership.spotify" 
-                    type="button" 
+            <div v-if="track.ownership.spotify" >
+            <button type="button" 
                     disabled 
                     class="btn active"
                     :class="licenses.style">[[licenses.result]]</button>
-            <div v-if="licences &amp;&amp; licenses.reason"><i class=translate data-i18n=REASON>Forklaring:</i><span>[[ licenses.reason ]]</span></div>
+            <i v-if="licenses.reason">[[licenses.reason]]</i>
+            </div>
         </td>
     </tr>
 </script>
@@ -43,6 +44,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 
 {% block docscript %}
+
+var TEXT_OK=i18n.LICENSE_OK();
+var TEXT_NO=i18n.LICENSE_NO();
+var TEXT_CHECK=i18n.LICENSE_CHECK();
 
 Vue.component("ownership-item", {
     props: ["track"],
@@ -90,7 +95,7 @@ Vue.component("ownership-item", {
             for(var i=0; i<this.track.licenses.length; i++) {
                 lic = this.track.licenses[i]; // shortcut
                 if(lic.license_status == "NO") {
-                    status["result"] = "Nono";
+                    status["result"] = TEXT_NO;
                     status["style"] = "btn-danger";
                     status["reason"] = lic.source;
                     return status; // one 'no' trumps all other licenses
@@ -106,12 +111,12 @@ Vue.component("ownership-item", {
             }
             if(seems_ok && !must_check) {
                 // one or more license rules say yes, and none say we must check
-                status["result"] = "a-ok";
+                status["result"] = TEXT_OK;
                 status["style"] = "btn-success";
                 status["reason"] = reasons.join(", ");
             } else {
                 // undetermined, or specifically must check
-                status["result"] = "dunno";
+                status["result"] = TEXT_CHECK;
                 status["style"] = "btn-warning";
                 status["reason"] = reasons.join(", ");
             }
@@ -243,7 +248,7 @@ function resolve_manually(inputelement) {
                 </label>
             </div>
             <div class="col-4">
-                <button type=button class="btn btn-primary translate" disabled data-i18n="generate_license_report">Generate license report</button>
+                <button type=button class="btn btn-primary translate" disabled data-i18n="GENERATE_OWNERSHIP_REPORT">Generate ownership report</button>
             </div>
         </div>
     </form>

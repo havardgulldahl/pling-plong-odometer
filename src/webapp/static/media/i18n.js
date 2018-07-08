@@ -80,7 +80,11 @@ var messages = {
         SOURCE: "Source",
         PROPERTY: "Property",
         STATUS: "Status",
-        MISSINGFILENAMES: "Missing file names"
+        MISSINGFILENAMES: "Missing file names",
+        LICENSE_OK: "OK",
+        LICENSE_NO: "No",
+        LICENSE_CHECK: "Please research",
+        GENERATE_OWNERSHIP_REPORT: "Make ownership report"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -148,6 +152,10 @@ var messages = {
         SOURCE: "Kilde",
         PROPERTY: "Egenskap",
         STATUS: "Status",
-        MISSINGFILENAMES: "Manglende filnavn"
+        MISSINGFILENAMES: "Manglende filnavn",
+        LICENSE_OK: "OK",
+        LICENSE_NO: "Nei",
+        LICENSE_CHECK: "Undersøk det selv",
+        GENERATE_OWNERSHIP_REPORT: "Lag eierskapsrapport"
     }
 };
