@@ -39,6 +39,28 @@ document.addEventListener("DOMContentLoaded", function(event) {
                                                                              SPOTIFY_TRACK:try_click("ownership-input", i18n.TRACK(), "spotify:track:7wxSkft3f6OG3Y3Vysd470"),
                                                                              SPOTIFY_LIST:try_click("ownership-input", i18n.PLAYLIST(), "spotify:user:hgulldahl:playlist:0LZO2ZfDhOw4bV4majJ13N")});
 });
+
+function startProgress(max) {
+    // set up a progress bar, with max=max
+    console.log("set up a progress bar, with max=%o", max);
+    var parent = document.getElementById("th-license");
+    parent.origText = parent.innerText;
+    parent.innerHTML = "<progress max="+max+" id=progress value=0 class=align-bottom></progress>";
+}
+
+function updateProgress(count) {
+    //console.log('updating progress bar with count=%o', count);
+    var p = document.getElementById('progress');
+    if(!p) return; // progress element is only there with multiple resolves # TODO: FIX THIS
+    var newval = parseInt(p.getAttribute('value'))+count;
+    if(newval == p.getAttribute('max')) {
+        // all resolve tasks are finished, remove progressbar
+        console.log("all resolve tasks are finished, remove progressbar");
+        p.parentElement.innerText = p.parentElement.origText;
+    } else {
+        p.setAttribute('value', newval);
+    }
+}
 </script>
 {% endblock headscript %}
 
@@ -67,12 +89,14 @@ Vue.component("ownership-item", {
                 track.ownership = response.data.ownership;
                 // check license
                 track.licenses = response.data.licenses;
+                updateProgress(1);
 
             })
             .catch(function(error) {
                 inputelement.classList.toggle("loading", false);
                 console.error("copyright error: %o", error);
                 track.ownership.spotify = {"P" : i18n.PLEASE_SEARCH_MANUALLY()};
+                updateProgress(1);
             });
         }
     },
@@ -214,6 +238,8 @@ function resolve_manually(inputelement) {
             }
             // add reference to history
             window.history.pushState(null, null, "/copyright_owner?"+q);
+            // start progressbar
+            startProgress(i);
 
         })
         .catch(function(error) {
@@ -261,7 +287,7 @@ function resolve_manually(inputelement) {
         <thead class="thead-dark">
           <tr>
             <th data-i18n=results class=translate>results</th>
-            <th data-i18n=license class=translate>license</th>
+            <th data-i18n=license class=translate id=th-license>license</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
