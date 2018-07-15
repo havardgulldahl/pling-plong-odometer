@@ -1,3 +1,4 @@
+import sys
 import os.path
 import tempfile
 import pathlib
@@ -6,6 +7,7 @@ import configparser
 import io
 import datetime
 import json
+import functools
 
 import asyncio
 
@@ -22,6 +24,8 @@ import asyncpg # pip install asyncpg
 import multidict # pip install multidict
 
 from aiohttp_apispec import docs, use_kwargs, marshal_with, AiohttpApiSpec
+import aiocache 
+from aiocache.serializers import JsonSerializer
 
 from xmeml import iter as xmemliter
 
@@ -107,8 +111,10 @@ class AudioClip:
                 'add_missing':'/api/add_missing/{}'.format(quote(self.filename)),
                }
 
+
 @routes.get('/api/resolve/{resolver}/{audioname}')
 @swagger_path("handle_resolve.yaml")
+@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
     audioname = request.match_info.get('audioname', None) # match path string, see the respective route
@@ -206,6 +212,7 @@ async def handle_analyze_post(request):
 
 @routes.get('/api/supported_resolvers/')
 @swagger_path("handle_supported_resolvers.yaml")
+@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
 async def handle_supported_resolvers(request):
     'GET a request and return a dict of currently suppported resolvers and their file patterns'
     return web.json_response(data={
@@ -252,6 +259,7 @@ async def handle_add_missing(request):
 
 
 @routes.get(r'/api/trackinfo/{type:(DMA|spotify)}/{trackinfo}')
+@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
 async def handle_trackinfo(request):
     'Handle GET trackid from DMA or Spotify and return json formatted TrackMetadata or TrackStub'
     trackinfo = request.match_info.get('trackinfo', None) 
@@ -348,6 +356,7 @@ async def get_licenses(where=None, active=True):
         return rules, errors
 
 @routes.get(r'/api/tracklistinfo/{type:(DMA|spotify)}/{tracklist}')
+@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
 async def handle_get_tracklist(request):
     'GET tracklist id and return lists of spoityf ids or DMA ids'
     tracklist_id = request.match_info.get('tracklist', None) 
@@ -374,6 +383,7 @@ async def handle_get_tracklist(request):
                               'tracks': tracklist})
 
 @routes.get(r'/api/labelinfo/{labelquery}')
+@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
 async def handle_get_label(request):
     'GET a label string and look it up in discogs'
     labelquery = request.match_info.get('labelquery')
@@ -384,6 +394,7 @@ async def handle_get_label(request):
                              dumps=jsonencoder
     )
 
+@functools.lru_cache(maxsize=128)
 def get_discogs_label(labelquery):
     try:
         discogs_label = app.duediligence.discogs_search_label(labelquery)
@@ -516,10 +527,16 @@ if __name__ == '__main__':
 
     loop.run_until_complete(init())
 
-    web.run_app(
-        app,
-        path=args.path,
-        port=args.port)
+    try:
+        web.run_app(
+            app,
+            path=args.path,
+            port=args.port)
+    except ConnectionRefusedError:
+        print("Could not connect to Postgres SQL server. This is fatal.")
+        loop.close()
+        sys.exit(1)
+
 """ # TODO: enable AppRunner startup when we can run on py3.6 / aiohttp > v3
     # main program loop
     try:
