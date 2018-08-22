@@ -203,22 +203,33 @@ function resolve_manually_delay(inputelement) {
 
 function resolve_manually(inputelement) {
     // resolve from text input
-    var uri, q = inputelement.value;
+    var uri, q = inputelement.value.trim();
     app.items = []; // empty list
     if(q.length===0) return; // empty query
     //console.log('resolve form text input %o', q);
+    // normalize urls
+    if(q.startsWith("https://open.spotify.com/")) {
+        var u = new URL(q);
+        q = "spotify" + u.pathname.replace(/\//g, ":");
+    }
     if(q.match(/(NRKO_|NRKT_|NONRO|NONRT|NONRE)[A-Za-z0-9]{12}/)) {
         uri = "/api/trackinfo/DMA/"+encodeURIComponent(q);
     } else if(q.match(/spotify:track:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify track URI
+        // spotify:track:1oa2KQncbIY0ESKeRdF7xQ
+        // https://open.spotify.com/track/1oa2KQncbIY0ESKeRdF7xQ?si=0X_34-_bTum8pNx5YivcJA
         uri = "/api/trackinfo/spotify/"+encodeURIComponent(q);
     } else if(q.match(/spotify:album:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify album URI
         // spotify:album:40yTsvA7raOkdbeJfC6Hsc
+        // https://open.spotify.com/album/5MgPPDk6kwQJy548kjal6e?si=ZAkISLSpStWCO4s3JAvODw
         uri = "/api/albuminfo/spotify/"+encodeURIComponent(q);
     } else if(q.match(/spotify:user:[A-Za-z0-9]+:playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
+        // https://open.spotify.com/user/jimjemi/playlist/0ebeFbfnBKhWqAHEpSFucn?si=0ahYYjGCQ7yI-BPeUy3rzg
+        // spotify:user:jimjemi:playlist:0ebeFbfnBKhWqAHEpSFucn
         uri = "/api/tracklistinfo/spotify/"+encodeURIComponent(q);
     }
     if(uri===undefined) {
         console.warn("uri not recognised");
+        alertmsg(i18n.NOT_VALID_FILE_TYPE(), "warning");
         return;
     }
     inputelement.classList.toggle("loading", true);
