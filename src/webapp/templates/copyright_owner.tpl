@@ -61,6 +61,21 @@ function updateProgress(count) {
         p.setAttribute('value', newval);
     }
 }
+
+function ownershipdialog() {
+    var tinglemodal = setupModal();
+    var html = document.getElementById("ownership-dialog").innerHTML;
+
+    // add another button
+    tinglemodal.addFooterBtn(i18n.DOWNLOAD_AS_FILE(), 'tingle-btn tingle-btn--info', function() {
+        // TODO: add html header and date and time
+        download(html, "music_ownership.html", "text/html");
+        tinglemodal.close();
+    });
+    tinglemodal.setContent(html);
+    tinglemodal.open();
+}
+
 </script>
 {% endblock headscript %}
 
@@ -262,6 +277,13 @@ function resolve_manually(inputelement) {
     // no known resolver
     return false;
 }
+
+var createReportButton = document.getElementById('generate-ownership-button');
+createReportButton.onclick = function(event) {
+    event.preventDefault();
+    ownershipdialog();
+}
+
 {% endblock docscript %}
 
 {% block content %}
@@ -285,7 +307,9 @@ function resolve_manually(inputelement) {
                 </label>
             </div>
             <div class="col-4">
-                <button type=button class="btn btn-primary translate" disabled data-i18n="GENERATE_OWNERSHIP_REPORT">Generate ownership report</button>
+                <button type=button class="btn btn-primary translate" 
+                        id=generate-ownership-button
+                        data-i18n="GENERATE_OWNERSHIP_REPORT">Generate ownership report</button>
             </div>
         </div>
     </form>
@@ -315,5 +339,19 @@ function resolve_manually(inputelement) {
         </tbody>
 
     </table>
+</div>
+<div style="display:none">
+    <dialog id="ownership-dialog">
+
+        <h1 class=translate data-i18n="OWNERSHIP_REPORT_TITLE">Ownership report</h1>
+        <p class=translate data-i18n="OWNERSHIP_REPORT_BODY">
+            YOUR HELP IS NEEDED!
+            <br>This will become a full bodied report on the current copyright owners 
+            of the music you have examined. You can help shape how it looks!
+            <br>
+            Use the <i>Feedback</i> button and send a message to the Odometer squirrels 
+            on what you need from this report. Thanks!
+        </p>
+    </dialog>
 </div>
 {% endblock content %}
