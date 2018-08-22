@@ -135,3 +135,17 @@ WITH (
 );
 ALTER TABLE public.license_rule
   OWNER TO odometer;
+
+CREATE TABLE public.discogs_result (
+    id SERIAL PRIMARY KEY,
+    result_code integer NOT NULL,
+    result_text text NOT NULL,
+    spotify_parsed_label text NOT NULL,
+    discogs_label text,
+    timestamp timestamp with time zone NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.discogs_result
+  OWNER TO odometer;
+
+CREATE UNIQUE INDEX discogs_result_pkey ON discogs_result(id int4_ops);
