@@ -356,8 +356,9 @@ function reportdialog() {
         reportrows.push(_s);
     }
     var preview = document.getElementById('preview');
+    var filedate = preview.validFile.lastModifiedDate || new Date();
     var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:preview.validFile.name, 
-                 DATESTRING:preview.validFile.lastModifiedDate.toLocaleString()})+'</code>';
+                 DATESTRING:filedate.toLocaleString()})+'</code>';
     html = html + reportrows.join("\n");
     var tinglemodal = setupModal();
     // add another button
