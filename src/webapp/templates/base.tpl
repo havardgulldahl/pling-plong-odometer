@@ -14,6 +14,7 @@
 <script type="text/javascript" src="/media/messageformat.min.js"></script>
 <script type="text/javascript" src="/media/promise.polyfill.min.js"></script>
 <script type="text/javascript" src="/media/axios.min.js"></script>
+<script type="text/javascript" src="/media/purify.min.js"></script>
 <script type="text/javascript" src="/media/vue.js"></script>
 <script type="text/javascript" src="/media/odometer.js"></script>
 
