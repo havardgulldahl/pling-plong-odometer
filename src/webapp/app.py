@@ -489,6 +489,10 @@ async def handle_get_missing_filenames_api(request):
 def missing_filenames(request):
     return {}
 
+@routes.get('/favicon.ico')
+def favicon(request):
+    return web.FileResponse('./static/favicon.ico')
+
 app.router.add_routes(routes) # find all @routes.* decorators
 
 app.router.add_static('/media', 'static/media')
