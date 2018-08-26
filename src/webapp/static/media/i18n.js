@@ -85,6 +85,7 @@ var messages = {
         LICENSE_NO: "No",
         LICENSE_CHECK: "Please research",
         GENERATE_OWNERSHIP_REPORT: "Make ownership report",
+        OWNERSHIP_REPORT_TITLE: "Copyright ownership for your selection",
         OWNERSHIP_REPORT_BODY: " <b>YOUR HELP IS NEEDED!</b> <br>This will " + 
         "become a full bodied report on the current copyright owners of the " +
         "music you have examined. You can help shape how it looks! <br> Use the " +
@@ -162,6 +163,7 @@ var messages = {
         LICENSE_NO: "Nei",
         LICENSE_CHECK: "Undersøk det selv",
         GENERATE_OWNERSHIP_REPORT: "Lag eierskapsrapport",
+        OWNERSHIP_REPORT_TITLE: "Eierskapsrapport for utvalget ditt",
         OWNERSHIP_REPORT_BODY: " <b>VI TRENGER DIN HJELP!</b> <br>Dette skal bli " + 
         "en utfyllende rapport over hvem som eier rettighetene til musikken du " +
         "har sjekka ut. Du kan være med og forme hvordan den ser ut!<br> Bruk " +
