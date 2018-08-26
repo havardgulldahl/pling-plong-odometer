@@ -344,7 +344,7 @@ createReportButton.onclick = function(event) {
     <dialog id="ownership-dialog">
 
         <h1 class=translate data-i18n="OWNERSHIP_REPORT_TITLE">Ownership report</h1>
-        <p class=translate data-i18n="OWNERSHIP_REPORT_BODY">
+        <p class=translate data-i18n-html="OWNERSHIP_REPORT_BODY">
             YOUR HELP IS NEEDED!
             <br>This will become a full bodied report on the current copyright owners 
             of the music you have examined. You can help shape how it looks!

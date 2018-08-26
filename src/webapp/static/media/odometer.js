@@ -105,6 +105,8 @@ function main() {
         if(title) el.title = title;
         var placeholder = translation("i18nPlaceholder");
         if(placeholder) el.placeholder = placeholder;
+        var html = translation("i18nHtml");
+        if(html) { console.log("html!"); el.innerHTML = DOMPurify.sanitize(html); }
     }
 
     var toggleFeedbackButton = document.getElementById('toggle-feedback');
