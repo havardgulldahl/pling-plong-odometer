@@ -357,14 +357,15 @@ function reportdialog() {
     }
     var preview = document.getElementById('preview');
     var filedate = preview.validFile.lastModifiedDate || new Date();
-    var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:preview.validFile.name, 
+    var filename = preview.validFile.name;
+    var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:filename,
                  DATESTRING:filedate.toLocaleString()})+'</code>';
     html = html + reportrows.join("\n");
     var tinglemodal = setupModal();
     // add another button
     tinglemodal.addFooterBtn(i18n.DOWNLOAD_AS_FILE(), 'tingle-btn tingle-btn--info', function() {
         // TODO: add html header and date and time
-        download(html, "music_metadata.html", "text/html");
+        download(html, "music_metadata_"+filename+".html", "text/html");
         tinglemodal.close();
     });
     tinglemodal.setContent("<h1>"+i18n.REPORT_HEADER_PRF()+"</h1>"+html);
