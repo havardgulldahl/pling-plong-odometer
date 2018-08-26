@@ -84,7 +84,12 @@ var messages = {
         LICENSE_OK: "OK",
         LICENSE_NO: "No",
         LICENSE_CHECK: "Please research",
-        GENERATE_OWNERSHIP_REPORT: "Make ownership report"
+        GENERATE_OWNERSHIP_REPORT: "Make ownership report",
+        OWNERSHIP_REPORT_BODY: " <b>YOUR HELP IS NEEDED!</b> <br>This will " + 
+        "become a full bodied report on the current copyright owners of the " +
+        "music you have examined. You can help shape how it looks! <br> Use the " +
+        "<i>Feedback</i> button and send a message to the Odometer squirrels on " +
+        "what you need from this report. Thanks!"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -156,6 +161,11 @@ var messages = {
         LICENSE_OK: "OK",
         LICENSE_NO: "Nei",
         LICENSE_CHECK: "Undersøk det selv",
-        GENERATE_OWNERSHIP_REPORT: "Lag eierskapsrapport"
+        GENERATE_OWNERSHIP_REPORT: "Lag eierskapsrapport",
+        OWNERSHIP_REPORT_BODY: " <b>VI TRENGER DIN HJELP!</b> <br>Dette skal bli " + 
+        "en utfyllende rapport over hvem som eier rettighetene til musikken du " +
+        "har sjekka ut. Du kan være med og forme hvordan den ser ut!<br> Bruk " +
+        "<i>Feedback</i>-knappen og send en melding til Odometer-maskinistene " +
+        "med hva du trenger fra denne rapporten. Takk!"
     }
 };
