@@ -424,7 +424,7 @@ class DMAResolver(ResolverBase):
             return yaml.load(data)
 
 class AUXResolver(ResolverBase):
-    prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD']
+    prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD', 'MOT']
 
     labelmap = { # static label map. See .updateReportoire()
     "CUTE": "Cute Music",
@@ -473,7 +473,8 @@ class AUXResolver(ResolverBase):
     "MML": "Mediatracks",
     "RSMV": "Reliable Source Music Virtual",
     "MMIT": "MUSICA IT",
-    "IPX": "Impax Music"
+    "IPX": "Impax Music",
+    "MOT": "Motus Music",
 
                }
     name = 'AUX'
@@ -913,9 +914,10 @@ class UprightmusicResolver(ResolverBase):
 
         _UPRIGHT_EDS_016_006_Downplay_(Main).WAV ---> 6288627e-bae8-49c8-9f3c-f6ed024eb698
         _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV ---> 4ceb1f37-8ecc-42e7-a4d8-79ba4336715a 
+        _UPRIGHT_DGT_005A_120_Electricity_Hit_(Main).WAV ---> 36f76913-61b5-4405-9b7e-ac8510d49dfc
 
         """
-        rex = re.compile(r'_UPRIGHT_[A-Z]{3}_\d{1,4}_\d{1,4}_\w+', re.UNICODE) # _UPRIGHT_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
+        rex = re.compile(r'_UPRIGHT_[A-Z]{2,4}_[0-9A-Z]{1,4}_\d{1,4}_\w+', re.UNICODE) # _UPRIGHT_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
         if fuzzy:
             regexp = rex.search
         else:
@@ -947,6 +949,7 @@ class UprightmusicResolver(ResolverBase):
 
             if not countnode.text_content() == 'Showing track 1 to 1 of 1 tracks':
                 # no luck
+                # TODO: look at first result to find matching title and track number
                 return False
 
             # get the first row of table[class='tracks'] 
@@ -975,6 +978,8 @@ class UprightmusicResolver(ResolverBase):
             raise ResolveError('Couldnt understand Upright id from filename')
         internal_guid = await self.get_guid(musicid)
         logging.debug('got internal guid: %r', internal_guid)
+        if internal_guid is False:
+            raise ResolveError('Couldnt understand Upright id from filename')
         if self.session is None:
             self.session = aiohttp.ClientSession()
         async with self.session.get(self.urlbase.format(trackid=internal_guid)) as resp:
