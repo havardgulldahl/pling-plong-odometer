@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 function startProgress(max) {
     // set up a progress bar, with max=max
-    console.log("set up a progress bar, with max=%o", max);
+    //console.log("set up a progress bar, with max=%o", max);
     var parent = document.getElementById("th-license");
     parent.origText = parent.innerText;
     parent.innerHTML = "<progress max="+max+" id=progress value=0 class=align-bottom></progress>";
@@ -55,7 +55,7 @@ function updateProgress(count) {
     var newval = parseInt(p.getAttribute('value'))+count;
     if(newval == p.getAttribute('max')) {
         // all resolve tasks are finished, remove progressbar
-        console.log("all resolve tasks are finished, remove progressbar");
+        //console.log("all resolve tasks are finished, remove progressbar");
         p.parentElement.innerText = p.parentElement.origText;
     } else {
         p.setAttribute('value', newval);
