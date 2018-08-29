@@ -741,6 +741,7 @@ class UniPPMResolver(ResolverBase):
                   'ESS':'Essential Series ',
                   'EVO':'EVO',
                   'FC':'FirstCom ',
+                  'FCD':'Focus ',
                   'GAL':'GAL',
                   'GIM':'Ghost In The Machine ',
                   'GM':'Gotham Music ',
@@ -828,6 +829,7 @@ class UniPPMResolver(ResolverBase):
         BER_1216B_76_Silent_Movie_Theme_Mersch_433103.wav -> 433103
         # new format, observed late 2016
         UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
+        UPM_HM_073Q_30_Hardtop_Livin_Instrumental_Chick_Walsh_Winslow_299209.wav -> 299209
         """
         # first, try new format
         if fuzzy:
@@ -835,7 +837,7 @@ class UniPPMResolver(ResolverBase):
                 re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
             regexp = rex.search
         else:
-            rex = re.compile(r'UPM_(?:%s)\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+            rex = re.compile(r'UPM_(?:%s)_?\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
                 re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
             regexp = rex.match
         g = regexp(filename)
