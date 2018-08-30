@@ -26,25 +26,20 @@ class DiscogsNotFoundError(NotFoundError):
 class SpotifyNotFoundError(NotFoundError): 
     pass
 
-# catch 429 rate limit blowups and retry
-# this will happen if we make too many requests per minute. 
-# discogs_client.exceptions.HTTPError: 429: You are making requests too quickly.
-@backoff.on_exception(backoff.expo,
-                        discogs_client.exceptions.HTTPError,
-                        max_tries=5,
-                        jitter=backoff.full_jitter)
-def getparentlabel(lbl):
-    return lbl.parent_label
+class RateLimitedClient(discogs_client.Client):
+    'Reimplemntattion to retry if we get 429 rate limit errors'
 
-# catch 429 rate limit blowups and retry
-# this will happen if we make too many requests per minute. 
-# discogs_client.exceptions.HTTPError: 429: You are making requests too quickly.
-@backoff.on_exception(backoff.expo,
-                        discogs_client.exceptions.HTTPError,
-                        max_tries=5,
-                        jitter=backoff.full_jitter)
-def discogs_run_search(query, type, client):
-    return client.search(q=query, type=type)
+    # TODO: check HTTP_ERROR=429
+
+    # catch 429 rate limit blowups and retry
+    # this will happen if we make too many requests per minute. 
+    # discogs_client.exceptions.HTTPError: 429: You are making requests too quickly.
+    @backoff.on_exception(backoff.expo,
+                            discogs_client.exceptions.HTTPError,
+                            max_tries=5,
+                            jitter=backoff.full_jitter)
+    def _get(self, url):
+        return self._request('GET', url)
 
 class DueDiligence:
     useragent = 'no.nrk.odometer/0.2'
@@ -54,7 +49,7 @@ class DueDiligence:
                                                      config.get('spotify', 'secret')
         )
         self.sp = spotipy.Spotify(client_credentials_manager=self.cred_manager)
-        self.discogs = discogs_client.Client(self.useragent, user_token=config.get('discogs', 'token'))
+        self.discogs = RateLimitedClient(self.useragent, user_token=config.get('discogs', 'token'))
         self.discogs._fetcher = CachingUserTokenRequestsFetcher(self.discogs._fetcher.user_token)
 
     def spotify_search_copyrights(self, trackmetadata): #:dict) -> dict:
@@ -226,8 +221,7 @@ class DueDiligence:
         def search(query):
             if query is None:
                 return None
-            #srch = self.discogs.search(type='label', q=query)
-            srch = discogs_run_search(query, type='label', client=self.discogs)
+            srch = self.discogs.search(type='label', q=query)
             logging.debug('got srch :%r', srch)
             for l in srch.page(0):
                 # see if we find direct name hit
@@ -255,8 +249,7 @@ class DueDiligence:
 
         heritage = [label]
         while hasattr(label, 'parent_label'):
-            #label = label.parent_label
-            label = getparentlabel(label)
+            label = label.parent_label
             if label is not None:
                 heritage.append(label)
         return heritage
