@@ -10,6 +10,7 @@ import discogs_client # pip install discogs_client
 from lib.discogs_client_fetcher import CachingUserTokenRequestsFetcher
 from async_lru import alru_cache # pip install async_lru
 import functools
+import backoff # pip install backoff
 
 import model
 
@@ -26,7 +27,7 @@ class SpotifyNotFoundError(NotFoundError):
     pass
 
 class DueDiligence:
-    useragent = 'no.nrk.odometer/0.1'
+    useragent = 'no.nrk.odometer/0.2'
 
     def __init__(self, config): #:configparser.ConfigParser):
         self.cred_manager = SpotifyClientCredentials(config.get('spotify', 'clientId'),
@@ -230,9 +231,20 @@ class DueDiligence:
     #@functools.lru_cache(maxsize=128)
     def discogs_label_heritage(self, label):#discogs_client.models.Label) -> discogs_client.models.Label:
         'Take a discogs label and walk the parenthood till the very top'
+
+        # catch 429 rate limit blowups and retry
+        # this will happen if we make too many requests per minute. 
+        # discogs_client.exceptions.HTTPError: 429: You are making requests too quickly.
+        @backoff.on_exception(backoff.expo,
+                              discogs_client.exceptions.HTTPError,
+                              max_tries=5,
+                              jitter=backoff.full_jitter)
+        def getparentlabel(lbl):
+            return lbl.parent_label
         heritage = [label]
         while hasattr(label, 'parent_label'):
-            label = label.parent_label
+            #label = label.parent_label
+            label = getparentlabel(label)
             if label is not None:
                 heritage.append(label)
         return heritage
