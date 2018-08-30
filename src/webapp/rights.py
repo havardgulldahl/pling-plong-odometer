@@ -36,6 +36,16 @@ class SpotifyNotFoundError(NotFoundError):
 def getparentlabel(lbl):
     return lbl.parent_label
 
+# catch 429 rate limit blowups and retry
+# this will happen if we make too many requests per minute. 
+# discogs_client.exceptions.HTTPError: 429: You are making requests too quickly.
+@backoff.on_exception(backoff.expo,
+                        discogs_client.exceptions.HTTPError,
+                        max_tries=5,
+                        jitter=backoff.full_jitter)
+def discogs_run_search(query, type, client):
+    return client.search(q=query, type=type)
+
 class DueDiligence:
     useragent = 'no.nrk.odometer/0.2'
 
@@ -216,7 +226,8 @@ class DueDiligence:
         def search(query):
             if query is None:
                 return None
-            srch = self.discogs.search(type='label', q=query)
+            #srch = self.discogs.search(type='label', q=query)
+            srch = discogs_run_search(query, type='label', client=self.discogs)
             logging.debug('got srch :%r', srch)
             for l in srch.page(0):
                 # see if we find direct name hit
