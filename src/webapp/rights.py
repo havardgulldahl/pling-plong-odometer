@@ -26,6 +26,15 @@ class DiscogsNotFoundError(NotFoundError):
 class SpotifyNotFoundError(NotFoundError): 
     pass
 
+def remove_corporate_suffix(lbl):
+    'Removes common corporation suffixes to normalize string before lookup'
+    if lbl is None:
+        return lbl
+    for sufx in [' AS', ' A/S', ' A.S.', 'Ltd.']:  # remove suffix
+        if lbl.upper().endswith(sufx):
+            return lbl[:-len(sufx)]
+    return lbl
+
 class RateLimitedClient(discogs_client.Client):
     'Reimplemntattion to retry if we get 429 rate limit errors'
 

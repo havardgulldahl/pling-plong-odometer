@@ -26,6 +26,8 @@ if __name__ == '__main__':
     print("BEGIN;")
     print("DELETE FROM license_rule WHERE source='FONO medlem' AND license_property='label';")
     for r in iterMembers():
+        if r.upper().endswith(' AS'):
+            r = r[:-3]
         print("""INSERT INTO license_rule 
                 (source, license_property, license_status, license_value, comment)
                 VALUES 

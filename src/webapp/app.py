@@ -22,7 +22,6 @@ import jinja2
 import aioslacker # pip install aioslacker
 import asyncpg # pip install asyncpg
 import multidict # pip install multidict
-
 from aiohttp_apispec import docs, use_kwargs, marshal_with, AiohttpApiSpec
 import aiocache 
 from aiocache.serializers import JsonSerializer
@@ -32,7 +31,8 @@ from xmeml import iter as xmemliter
 from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 import metadataresolvers
 
-from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, SpotifyNotFoundError
+from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, SpotifyNotFoundError, \
+    remove_corporate_suffix
 
 import model
 
@@ -307,11 +307,11 @@ async def handle_post_ownership(request):
         lookup.add('artist', metadata['metadata']['artist'])
     if discogs_label_heritage is not None:
         lbl = discogs_label_heritage[-1].name # discogs_client.models.Label 
-        for sufx in [' AS', ' A/S', ' A.S.']:  # remove suffix
-            if lbl.upper().endswith(lbl):
-                lbl = lbl[:-len(sufx)]
-                break
-        lookup.add('label', lbl)
+        lookup.add('label', remove_corporate_suffix(lbl))
+    else:
+        # we have no discogs data, look in our license table for what spotify returns
+        app.logger.info('Looking in license table for spotify label info: "{}"'.format(spotifycopyright['parsed_label']))
+        lookup.add('label', remove_corporate_suffix(spotifycopyright['parsed_label']))
 
     licenses, errors = await get_licenses(lookup)
     app.logger.info('got licenses: %r', licenses)
@@ -336,7 +336,7 @@ async def get_licenses(where=None, active=True):
     v = []
     i = 1
     for key, value in where.items():
-        q.append( " (license_property=${} AND license_value=${}) ".format(i, i+1) )
+        q.append( " (license_property=${} AND license_value ILIKE ${}) ".format(i, i+1) )
         v.append(key)
         v.append(value)
         i = i+2
@@ -383,7 +383,7 @@ async def handle_get_tracklist(request):
                               'tracks': tracklist})
 
 @routes.get(r'/api/labelinfo/{labelquery}')
-@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
+@aiocache.cached(key="handle_resolve")#, serializer=JsonSerializer())
 async def handle_get_label(request):
     'GET a label string and look it up in discogs'
     labelquery = request.match_info.get('labelquery')
