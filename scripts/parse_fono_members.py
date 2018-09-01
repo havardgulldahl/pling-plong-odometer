@@ -13,10 +13,16 @@ def iterMembers():
     for row in html.getroot().xpath("//div[@class='members']//a"): #cssselect(".members li a"):
         txt = row.text_content().strip()
         yield txt
-        if txt.lower().endswith(' AS'): # also add item without AS suffix
-            yield txt[:-3]
+        suburl = row.attrib.get("href")
+        #print("url: {}{}".format(URL, suburl))
+        sub = lxml.html.parse(urlopen(URL+suburl))
+        for subrow in sub.getroot().xpath("//main/ul/li/a"):
+            subtxt = subrow.text_content().strip()
+            if len(subtxt):
+                yield subtxt
 
 if __name__ == '__main__':
+
     print("BEGIN;")
     print("DELETE FROM license_rule WHERE source='FONO medlem' AND license_property='label';")
     for r in iterMembers():
@@ -25,6 +31,7 @@ if __name__ == '__main__':
                 VALUES 
                 ('FONO medlem', 'label', 'OK', '{}', '{}');""".format(r, URL))
     print("COMMIT;")
+    print("-- Tip: Pipe this to `psql odometer`")
 
 
 
