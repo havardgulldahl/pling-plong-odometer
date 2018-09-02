@@ -278,7 +278,7 @@ async def handle_trackinfo(request):
         metadata = model.TrackMetadata(**vars(_metadata)) # TODO: verify with marshmallow
     elif querytype == 'spotify':
         spotifyuri = trackinfo
-        track = app.duediligence.sp.track(spotifyuri)
+        track = await loop.run_in_executor(executor, app.duediligence.sp.track, spotifyuri)
         #app.logger.info("got spotify track: %r", track)
         trackstub = model.TrackStub()
         metadata, errors = trackstub.dump({'title':     track['name'],
