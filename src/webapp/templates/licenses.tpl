@@ -46,10 +46,22 @@ Vue.component("license-item", {
     template: "#license-template",
     methods: {
         add: function(event) {
-            var itm = this.item;
-            //console.log("adding %o!", this.newAlias);
-            this.aliases.push(this.newAlias);
-            this.newAlias = "";
+            var that = this;
+            console.log("adding %o!", that);
+            axios.post("/api/license_alias/", { 
+                property: that.item.license_property,
+                value: that.item.license_value,
+                alias: that.newAlias
+                })
+                .then(function (response) {
+                    console.log("got aliass: %o", response);
+                    that.aliases.push(response.data.alias);
+                    that.newAlias = "";
+                })
+                .catch(function(error) {
+                    console.error("license alias error: %o", error);
+                });
+
         }
     },
     computed: {

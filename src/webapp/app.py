@@ -451,18 +451,23 @@ async def handle_get_license_alias(request):
                               'aliases': aliases},
                               dumps=model.OdometerJSONEncoder().encode)
 
-@use_kwargs(model.LicenseRule(strict=True))
+@routes.post('/api/license_alias/')
 async def handle_post_license_alias(request):
     'Add new license alias, return id'
 
+    schema_alias = model.LicenseRuleAlias()
     data = await request.json() 
-    app.logger.debug('Got POST args: %r', data)
+    #app.logger.debug('Got POST args: %r', data)
     async with app.dbpool.acquire() as connection:
-        _id = await connection.fetchval("INSERT INTO license_alias (property, value, alias) VALUES ($1, $2, $3) RETURNING public_id", 
-                                       data.get('sender'),
-                                       data.get('text'))
-    return web.json_response({'error':[],
-                              'alias_id':_id})
+        new = await connection.fetchrow("INSERT INTO license_alias (property, value, alias) VALUES ($1, $2, $3) RETURNING *", 
+                                        data.get('property'),
+                                        data.get('value'),
+                                        data.get('alias').strip())
+        #app.logger.debug("INSERTED ROW: %r", dict(new))
+        alias, errors = schema_alias.load(dict(new))
+    return web.json_response({'error':errors,
+                              'alias':alias},
+                              dumps=model.OdometerJSONEncoder().encode)
         
 
 @routes.get('/licenses')
