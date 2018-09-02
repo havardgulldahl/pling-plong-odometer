@@ -417,28 +417,52 @@ def get_discogs_label(labelquery):
 async def handle_get_license_rules(request):
     'Return a json list of all license rules from the DB'
     schema = model.LicenseRule()
+    #schema_alias = model.LicenseRuleAlias()
 
     async with app.dbpool.acquire() as connection:
-        records = await connection.fetch("SELECT * FROM license_rule WHERE active=TRUE")
-        #app.logger.debug('Got DB ROW: %r', records)
+        #records = await connection.fetch("SELECT * FROM license_rule WHERE active=TRUE")
+        records = await connection.fetch("""
+        SELECT *,
+            (select count(*) from license_alias where license_rule.license_value = license_alias.value) AS aliases
+        FROM license_rule WHERE active=TRUE""")
         rules, errors = schema.load([dict(r) for r in records], many=True)
-        #app.logger.debug('Made schame u %r', rules)
+
+        #records_aliases = await connection.fetch("SELECT * FROM license_alias")
+        #aliases, errors = schema_alias.load([dict(r) for r in records_aliases], many=True)
+
 
     return web.json_response({'error':errors,
                               'rules': rules},
                               dumps=model.OdometerJSONEncoder().encode)
 
-@use_kwargs(model.LicenseRule(strict=True))
-async def handle_post_license_rule(request):
-    'Add new license rule, return id'
-    raise NotImplementedError
+@routes.get('/api/license_alias/')
+async def handle_get_license_alias(request):
+    'Return a json list of license aliases for the matching license rule from the DB'
+    params = request.rel_url.query
+    schema_alias = model.LicenseRuleAlias()
 
-    data = await request.post() 
+    async with app.dbpool.acquire() as connection:
+        records_aliases = await connection.fetch("SELECT * FROM license_alias WHERE property=$1 AND value=$2",
+            params.get('property'), params.get('value'))
+        aliases, errors = schema_alias.load([dict(r) for r in records_aliases], many=True)
+
+
+    return web.json_response({'error':errors,
+                              'aliases': aliases},
+                              dumps=model.OdometerJSONEncoder().encode)
+
+@use_kwargs(model.LicenseRule(strict=True))
+async def handle_post_license_alias(request):
+    'Add new license alias, return id'
+
+    data = await request.json() 
     app.logger.debug('Got POST args: %r', data)
     async with app.dbpool.acquire() as connection:
-        _id = await connection.fetchval("INSERT INTO feedback (sender, message) VALUES ($1, $2) RETURNING public_id", 
+        _id = await connection.fetchval("INSERT INTO license_alias (property, value, alias) VALUES ($1, $2, $3) RETURNING public_id", 
                                        data.get('sender'),
                                        data.get('text'))
+    return web.json_response({'error':[],
+                              'alias_id':_id})
         
 
 @routes.get('/licenses')

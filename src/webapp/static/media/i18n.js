@@ -90,7 +90,8 @@ var messages = {
         "become a full bodied report on the current copyright owners of the " +
         "music you have examined. You can help shape how it looks! <br> Use the " +
         "<i>Feedback</i> button and send a message to the Odometer squirrels on " +
-        "what you need from this report. Thanks!"
+        "what you need from this report. Thanks!",
+        SINCE: "Since {SINCE}"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -168,6 +169,7 @@ var messages = {
         "en utfyllende rapport over hvem som eier rettighetene til musikken du " +
         "har sjekka ut. Du kan være med og forme hvordan den ser ut!<br> Bruk " +
         "<i>Feedback</i>-knappen og send en melding til Odometer-maskinistene " +
-        "med hva du trenger fra denne rapporten. Takk!"
+        "med hva du trenger fra denne rapporten. Takk!",
+        SINCE: "Siden {SINCE}"
     }
 };

@@ -149,3 +149,14 @@ ALTER TABLE public.discogs_result
   OWNER TO odometer;
 
 CREATE UNIQUE INDEX discogs_result_pkey ON discogs_result(id int4_ops);
+
+CREATE TABLE public.license_alias (
+    id SERIAL PRIMARY KEY,
+    property character varying(255) NOT NULL,
+    value text NOT NULL,
+    alias text NOT NULL,
+    timestamp timestamp with time zone NOT NULL DEFAULT now(),
+    public_id uuid NOT NULL DEFAULT uuid_generate_v4()
+);
+
+CREATE UNIQUE INDEX license_alias_pkey ON license_alias(id int4_ops);

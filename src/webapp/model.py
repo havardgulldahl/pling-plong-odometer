@@ -103,6 +103,16 @@ class LicenseRule(Schema):
     license_value = fields.Str(required=True)    # case insensitive search - if it matches, the rule is applied
     license_status = fields.Str(required=True)   # oneOf NO, OK, CHECK
     comment = fields.Str(allow_none=True)        # free type string - editor comment
+    aliases = fields.Int()                       # number of aliases defined - look at LicenseRuleAlias
+
+class LicenseRuleAlias(Schema):
+    'Alias for licensing rules'
+    id = fields.Int(required=True)               # internal id
+    public_id = fields.UUID(required=True)       # public uuid
+    timestamp = RichDateTimeField(required=True) # last changed timestamp
+    property = fields.Str(required=True)         # must match LicenseRule
+    value = fields.Str(required=True)            # must match LicenseRule
+    alias = fields.Str(required=True)            # case insensitive search - if it matches, the rule is applied
 
 class TrackStub(Schema):
     'A short/small object to pass around while we are waiting for the rich metadata'
