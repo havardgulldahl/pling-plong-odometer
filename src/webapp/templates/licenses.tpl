@@ -8,7 +8,7 @@
         <td> <i>[[ item.license_property]]</i> <b>[[ item.license_value ]]</b>
             a.k.a: 
             <ul class=list-inline style="display: inline-block">
-                <li class=list-inline-item v-for="a in aliases"><i>[[a.alias]]</i></li>
+                <li class=list-inline-item v-for="a in aliases"><i v-on:click="remove(a)">[[a.alias]]</i></li>
             </ul>
             <input type=text placeholder="Alias" v-model="newAlias" style="width:50px">
             <button style="display: inline-block" 
@@ -46,22 +46,39 @@ Vue.component("license-item", {
     template: "#license-template",
     methods: {
         add: function(event) {
+            // add a new alias
             var that = this;
-            console.log("adding %o!", that);
+            //console.log("adding %o!", that);
             axios.post("/api/license_alias/", { 
                 property: that.item.license_property,
                 value: that.item.license_value,
                 alias: that.newAlias
                 })
                 .then(function (response) {
-                    console.log("got aliass: %o", response);
+                    //console.log("got aliass: %o", response);
                     that.aliases.push(response.data.alias);
                     that.newAlias = "";
                 })
                 .catch(function(error) {
                     console.error("license alias error: %o", error);
                 });
-
+        },
+        remove: function(alias) {
+            // delete alias
+            var that = this;
+            //console.log("remove %o!", alias);
+            axios.delete("/api/license_alias/"+alias.public_id)
+                .then(function (response) {
+                    //console.log("remove aliass: %o", response);
+                    for(var i=0; i<that.aliases.length; i++) {
+                        if(that.aliases[i].public_id == alias.public_id) {
+                            that.aliases.splice(i, 1); // remove 1 item at index
+                        }
+                    }
+                })
+                .catch(function(error) {
+                    console.error("license alias error: %o", error);
+                });
         }
     },
     computed: {
