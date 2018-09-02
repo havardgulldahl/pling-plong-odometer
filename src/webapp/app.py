@@ -8,6 +8,7 @@ import io
 import datetime
 import json
 import functools
+import concurrent
 
 import asyncio
 
@@ -43,6 +44,7 @@ app = web.Application(loop=loop,
 headers = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36',
 }
 clientSession = aiohttp.ClientSession(loop=loop, headers=headers)
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
 aiohttp_jinja2.setup(app,
     loader=jinja2.FileSystemLoader('./templates'))
 
@@ -297,9 +299,14 @@ async def handle_post_ownership(request):
         spotifycopyright = app.duediligence.spotify_get_album_rights(metadata['spotify']['album_uri'])
     except KeyError:
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
-        spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
+        #spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
+        spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_search_copyrights, metadata['metadata'])
 
     discogs_label_heritage = get_discogs_label(spotifycopyright['parsed_label'])
+    # TODO:
+    # TODO: add discogs cache, so we can get this async from discogs without hititng rate limits
+    # TODO:
+    #discogs_label_heritage = await loop.run_in_executor(executor, get_discogs_label, spotifycopyright['parsed_label'])
 
     # look up licenses from our license table
     lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata'].get('artists', []) ] )
@@ -387,7 +394,8 @@ async def handle_get_tracklist(request):
 async def handle_get_label(request):
     'GET a label string and look it up in discogs'
     labelquery = request.match_info.get('labelquery')
-    discogs_labels = get_discogs_label(labelquery)
+    #discogs_labels = get_discogs_label(labelquery)
+    discogs_labels = await loop.run_in_executor(executor, get_discogs_label, labelquery)
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[],
                               'labels': discogs_labels},
