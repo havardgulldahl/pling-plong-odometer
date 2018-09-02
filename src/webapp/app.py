@@ -343,10 +343,12 @@ async def get_licenses(where=None, active=True):
     v = []
     i = 1
     for key, value in where.items():
-        q.append( " (license_property=${} AND license_value ILIKE ${}) ".format(i, i+1) )
+        #q.append( " (license_property=${} AND license_value ILIKE ${}) ".format(i, i+1) )
+        q.append( " (license_property=${} AND (license_value ILIKE ${} OR alias ILIKE ${})) ".format(i, i+1, i+2) )
         v.append(key)
         v.append(value)
-        i = i+2
+        v.append(value)
+        i = i+3
 
     if where is not None:
         query = " OR ".join(q) + " AND active=${}".format(i)
@@ -355,7 +357,13 @@ async def get_licenses(where=None, active=True):
     v.append(active)
     app.logger.debug("running asyncpg query %r with values %r", query, v)
     async with app.dbpool.acquire() as connection:
-        records = await connection.fetch("SELECT * FROM license_rule WHERE {}".format(query), *v)
+        records = await connection.fetch("""
+        SELECT * FROM license_rule 
+        LEFT JOIN license_alias ON 
+            license_rule.license_property=license_alias.property AND 
+            license_rule.license_value=license_alias.value 
+        WHERE {}
+        """.format(query), *v)
         app.logger.debug('Got DB ROW: %r', records)
         rules, errors = schema.load([dict(r) for r in records], many=True)
         app.logger.debug('Made schame u %r', rules)
@@ -417,25 +425,19 @@ def get_discogs_label(labelquery):
 async def handle_get_license_rules(request):
     'Return a json list of all license rules from the DB'
     schema = model.LicenseRule()
-    #schema_alias = model.LicenseRuleAlias()
 
     async with app.dbpool.acquire() as connection:
-        #records = await connection.fetch("SELECT * FROM license_rule WHERE active=TRUE")
         records = await connection.fetch("""
         SELECT *,
             (select count(*) from license_alias where license_rule.license_value = license_alias.value) AS aliases
         FROM license_rule WHERE active=TRUE""")
         rules, errors = schema.load([dict(r) for r in records], many=True)
 
-        #records_aliases = await connection.fetch("SELECT * FROM license_alias")
-        #aliases, errors = schema_alias.load([dict(r) for r in records_aliases], many=True)
-
-
     return web.json_response({'error':errors,
                               'rules': rules},
                               dumps=model.OdometerJSONEncoder().encode)
 
-@routes.get('/api/license_alias/')
+@routes.get('/api/license_alias/') # expecting ?property=<license_property>&value=<license_value>
 async def handle_get_license_alias(request):
     'Return a json list of license aliases for the matching license rule from the DB'
     params = request.rel_url.query
@@ -453,7 +455,7 @@ async def handle_get_license_alias(request):
 
 @routes.post('/api/license_alias/')
 async def handle_post_license_alias(request):
-    'Add new license alias, return id'
+    'Add new license alias, return new alias'
 
     schema_alias = model.LicenseRuleAlias()
     data = await request.json() 
@@ -469,6 +471,20 @@ async def handle_post_license_alias(request):
                               'alias':alias},
                               dumps=model.OdometerJSONEncoder().encode)
         
+@routes.delete('/api/license_alias/{alias_uuid}')
+async def handle_delete_license_alias(request):
+    'Delete license alias by uuid'
+
+    schema_alias = model.LicenseRuleAlias()
+    app.logger.debug('detele license by uuid %r', request.match_info.get('alias_uuid'))
+    async with app.dbpool.acquire() as connection:
+        status = await connection.execute("DELETE FROM license_alias WHERE public_id=$1",
+                                          request.match_info.get('alias_uuid'))
+        app.logger.debug("DELETED ROW: %r", status)
+
+    return web.json_response({'error':[],
+                              'status':status},
+                              dumps=model.OdometerJSONEncoder().encode)
 
 @routes.get('/licenses')
 @aiohttp_jinja2.template('licenses.tpl')
