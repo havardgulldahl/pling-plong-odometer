@@ -7,7 +7,6 @@ import uuid
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client # pip install discogs_client  
-#from lib.discogs_client_fetcher import CachingUserTokenRequestsFetcher
 import functools
 import backoff # pip install backoff
 import requests
