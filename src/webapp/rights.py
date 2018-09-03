@@ -7,10 +7,10 @@ import uuid
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client # pip install discogs_client  
-from lib.discogs_client_fetcher import CachingUserTokenRequestsFetcher
-from async_lru import alru_cache # pip install async_lru
+#from lib.discogs_client_fetcher import CachingUserTokenRequestsFetcher
 import functools
 import backoff # pip install backoff
+import requests
 
 import model
 
@@ -35,11 +35,21 @@ def remove_corporate_suffix(lbl):
             return lbl[:-len(sufx)]
     return lbl
 
-class RateLimitedClient(discogs_client.Client):
-    'Reimplemntattion to retry if we get 429 rate limit errors'
+class RateLimitedCachingClient(discogs_client.Client):
+    'Reimplemntattion to cache data from discogs, and to retry if we get 429 rate limit errors'
+
+    def __init__(self, *args, **kwargs):
+        'subclass that inits requests.sessions and hands over to superclass'
+        super().__init__(*args, **kwargs)
+        self._session = requests.Session()
+
+    def _fetcher(self, client, method, url, data=None, headers=None, json=True):
+        'subclassing to add token to every request, and to add session awareness'
+        resp = self._session.request(method, url, params={'token':self.user_token},
+                                     data=data, headers=headers)
+        return resp.content, resp.status_code 
 
     # TODO: check HTTP_ERROR=429
-
     # catch 429 rate limit blowups and retry
     # this will happen if we make too many requests per minute. 
     # discogs_client.exceptions.HTTPError: 429: You are making requests too quickly.
@@ -58,8 +68,7 @@ class DueDiligence:
                                                      config.get('spotify', 'secret')
         )
         self.sp = spotipy.Spotify(client_credentials_manager=self.cred_manager)
-        self.discogs = RateLimitedClient(self.useragent, user_token=config.get('discogs', 'token'))
-        self.discogs._fetcher = CachingUserTokenRequestsFetcher(self.discogs._fetcher.user_token)
+        self.discogs = RateLimitedCachingClient(self.useragent, user_token=config.get('discogs', 'token'))
 
     def spotify_search_copyrights(self, trackmetadata): #:dict) -> dict:
         'Try to llok up a Track in spotify and return the copyrights.'
