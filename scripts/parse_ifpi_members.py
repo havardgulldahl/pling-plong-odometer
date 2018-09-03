@@ -10,11 +10,12 @@ URL='http://www.ifpi.no/ifpi-norge/ifpi-medlemmer'
 
 def iterMembers():
     html = lxml.html.parse(urlopen(URL))
-    for row in html.getroot().xpath("//div[starts-with(@class, 'item')]/div/p/strong/strong"): 
+    for row in html.getroot().xpath("//div[@itemtype='https://schema.org/BlogPosting']//p/strong"): 
         txt = row.text_content().strip()
-        yield txt
-        if txt.endswith(' AS'): # also add item without AS suffix
+        if txt.endswith(' AS'): # normalize without corporate suffix
             yield txt[:-3]
+        else:
+            yield txt
 
 
 if __name__ == '__main__':
@@ -26,6 +27,8 @@ if __name__ == '__main__':
                 VALUES 
                 ('IFPI medlem', 'label', 'OK', '{}', '{}');""".format(r, URL))
     print("COMMIT;")
+    print('-- Tip:  Pipe this to `| ( sudo su postgres -c "psql odometer" )')
+
 
 
 
