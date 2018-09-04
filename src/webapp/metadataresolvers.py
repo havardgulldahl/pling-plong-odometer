@@ -804,6 +804,7 @@ class UniPPMResolver(ResolverBase):
                   'STFTA': 'Selectedtracks Unknown',
                   'SVN': 'Seventh Sense',
                   'SUN': 'Unknown',
+		  'Tru': 'Unknown',
                   'ULS':'Ultimate Latin Series ',
                   'UPM': 'Universal filename prefix', ### standard file name prefix???? observed late 2016
                   'US':'Ultimate Series ',
@@ -831,6 +832,7 @@ class UniPPMResolver(ResolverBase):
         UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
         UPM_HM_073Q_30_Hardtop_Livin_Instrumental_Chick_Walsh_Winslow_299209.wav -> 299209
         UPM_EVO289e_8_Make_It_To_The_End_Instrumental_Elias_Ramani_1034318.wav -> 1034318
+	UPM_Tru102_3_Humanly_Possible_Main_Track_Jenkins_Mahoney_Powell_1012461.wav -> 1012461
         """
         # first, try new format
         if fuzzy:
@@ -876,7 +878,10 @@ class UniPPMResolver(ResolverBase):
             resp.raise_for_status() # bomb on errors
             data = await resp.json(content_type=None)
             logging.info('got data: %r', data)
-            trackdata = data.get('docs')[0]
+            try:
+                 trackdata = data.get('docs')[0]
+            except IndexError: # this id is wrong :(
+                 raise ResolveError('Could not find the UniPPM track in the database')
 
             metadata = TrackMetadata(filename=self.filename,
                  musiclibrary=self.name,
