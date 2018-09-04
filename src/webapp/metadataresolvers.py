@@ -830,14 +830,15 @@ class UniPPMResolver(ResolverBase):
         # new format, observed late 2016
         UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
         UPM_HM_073Q_30_Hardtop_Livin_Instrumental_Chick_Walsh_Winslow_299209.wav -> 299209
+        UPM_EVO289e_8_Make_It_To_The_End_Instrumental_Elias_Ramani_1034318.wav -> 1034318
         """
         # first, try new format
         if fuzzy:
-            rex = re.compile(r'UPM_[-_A-Z]{1,6}\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*',
+            rex = re.compile(r'UPM_[-_A-Z]{1,6}\d{1,4}[A-Za-z]?_\d{1,4}_\w+_(\d+).*',
                 re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
             regexp = rex.search
         else:
-            rex = re.compile(r'UPM_(?:%s)_?\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+            rex = re.compile(r'UPM_(?:%s)_?\d{1,4}[A-Za-z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
                 re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
             regexp = rex.match
         g = regexp(filename)

@@ -146,6 +146,7 @@ class DueDiligence:
         _, _, user, _, playlist_id = playlist_urn.split(':')
         srch = self.sp.user_playlist(user, playlist_id)
         trackstub = model.TrackStub(many=False)
+        # TODO: handle paging (more than 100 items in list). look at spotipy.next(), srch["next"] is an url if there are more items, null if there arent
         for item in srch['tracks']['items']:
             logging.debug('got spotify item %r', json.dumps(item['track']['album']))
             st,_ = trackstub.dump({'title':     item['track']['name'],
