@@ -42,7 +42,7 @@ class RateLimitedCachingClient(discogs_client.Client):
     def __init__(self, *args, **kwargs):
         'subclass that inits requests.sessions and hands over to superclass'
         super().__init__(*args, **kwargs)
-        expiry = datetime.timedelta(days=1)
+        expiry = datetime.timedelta(days=7) # keep cached values this long
         self._session = requests_cache.core.CachedSession(cache_name='discogs_client', 
                                                           backend=None, 
                                                           expire_after=expiry)
@@ -57,10 +57,10 @@ class RateLimitedCachingClient(discogs_client.Client):
     # catch 429 rate limit blowups and retry
     # this will happen if we make too many requests per minute. 
     # discogs_client.exceptions.HTTPError: 429: You are making requests too quickly.
-    @backoff.on_exception(backoff.expo,
-                            discogs_client.exceptions.HTTPError,
-                            max_tries=5,
-                            jitter=backoff.full_jitter)
+    @backoff.on_exception(lambda: backoff.constant(interval=2), # wait 2 secs
+                          discogs_client.exceptions.HTTPError,
+                          max_tries=5,
+                          jitter=backoff.full_jitter)
     def _get(self, url):
         return self._request('GET', url)
 
