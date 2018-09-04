@@ -214,7 +214,7 @@ async def handle_analyze_post(request):
 
 @routes.get('/api/supported_resolvers/')
 @swagger_path("handle_supported_resolvers.yaml")
-@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
+@aiocache.cached(key="handle_supported_resolvers", serializer=JsonSerializer())
 async def handle_supported_resolvers(request):
     'GET a request and return a dict of currently suppported resolvers and their file patterns'
     return web.json_response(data={
@@ -261,7 +261,7 @@ async def handle_add_missing(request):
 
 
 @routes.get(r'/api/trackinfo/{type:(DMA|spotify)}/{trackinfo}')
-@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
+@aiocache.cached(key="handle_trackinfo", serializer=JsonSerializer())
 async def handle_trackinfo(request):
     'Handle GET trackid from DMA or Spotify and return json formatted TrackMetadata or TrackStub'
     trackinfo = request.match_info.get('trackinfo', None) 
@@ -296,7 +296,7 @@ async def handle_post_ownership(request):
     logging.debug('Got metadata payload: %r ', metadata)
     try:
         # try to see if we have spotify metadata already
-        spotifycopyright = app.duediligence.spotify_get_album_rights(metadata['spotify']['album_uri'])
+        spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_get_album_rights, metadata['spotify']['album_uri'])
     except KeyError:
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
         #spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
@@ -371,7 +371,7 @@ async def get_licenses(where=None, active=True):
         return rules, errors
 
 @routes.get(r'/api/tracklistinfo/{type:(DMA|spotify)}/{tracklist}')
-@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
+@aiocache.cached(key="handle_get_tracklist", serializer=JsonSerializer())
 async def handle_get_tracklist(request):
     'GET tracklist id and return lists of spoityf ids or DMA ids'
     tracklist_id = request.match_info.get('tracklist', None) 
@@ -398,7 +398,7 @@ async def handle_get_tracklist(request):
                               'tracks': tracklist})
 
 @routes.get(r'/api/labelinfo/{labelquery}')
-@aiocache.cached(key="handle_resolve")#, serializer=JsonSerializer())
+@aiocache.cached(key="handle_get_label")#, serializer=JsonSerializer())
 async def handle_get_label(request):
     'GET a label string and look it up in discogs'
     labelquery = request.match_info.get('labelquery')
