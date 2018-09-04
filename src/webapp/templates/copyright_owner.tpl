@@ -8,6 +8,7 @@
             <i>«[[ track.metadata.title ]]»</i> —
             [[ artists ]] 
             <br><b>Spotify:</b> <span v-if="track.ownership.spotify">[[ copyright ]]</span>
+                <a class=spotifylink title="copy spotify uri" :href="'#'+track.ownership.spotify.uri">X</a>
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
               <i v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class=translate data-i18n=NOT_FOUND>Not found </i>
         </td>
@@ -25,6 +26,22 @@
 {% endblock templates %}
 
 {% block headscript %}
+<style type="text/css">
+    .spotifylink {
+        display: hidden;
+        width: 10px;
+        height: 10px;
+    }
+
+    .spotifylink:hover {
+        display: inline;
+    }
+    
+    .spotifylink::after {
+        content: url(/static/media/link-icon.png);
+    }
+
+</style>
 <script type="text/javascript">
 
 function try_click(el, txt, val) {
