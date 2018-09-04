@@ -10,6 +10,8 @@ import discogs_client # pip install discogs_client
 import functools
 import backoff # pip install backoff
 import requests
+import requests_cache
+import datetime
 
 import model
 
@@ -40,7 +42,10 @@ class RateLimitedCachingClient(discogs_client.Client):
     def __init__(self, *args, **kwargs):
         'subclass that inits requests.sessions and hands over to superclass'
         super().__init__(*args, **kwargs)
-        self._session = requests.Session()
+        expiry = datetime.timedelta(days=1)
+        self._session = requests_cache.core.CachedSession(cache_name='discogs_client', 
+                                                          backend=None, 
+                                                          expire_after=expiry)
 
     def _fetcher(self, client, method, url, data=None, headers=None, json=True):
         'subclassing to add token to every request, and to add session awareness'

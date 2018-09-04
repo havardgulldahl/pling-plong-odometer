@@ -13,4 +13,5 @@ aiohttp-apispec
 asyncpg
 marshmallow
 backoff
+requests_cache
 
