@@ -14,12 +14,19 @@
         </td>
         <td class=align-middle >
             <div v-if="track.ownership.spotify" >
-            <button type="button" 
-                    disabled 
-                    class="btn active"
-                    :class="licenses.style">[[licenses.result]]</button>
-            <i v-if="licenses.reason">[[licenses.reason]]</i>
+              <button type="button" 
+                      disabled 
+                      class="btn active"
+                      :class="licenses.style">[[licenses.result]]</button>
+              <i v-if="licenses.reason">[[licenses.reason]]</i>
             </div>
+            <div v-if="errors">
+              <button type="button" 
+                      class="btn active btn-danger"
+                      v-on:click="update_ownership">Lookup failed. Click to retry</button>
+
+              </button>
+	    </div>
         </td>
     </tr>
 </script>
@@ -110,29 +117,42 @@ Vue.component("ownership-item", {
     props: ["track"],
     delimiters: ["[[", "]]"],
     template: "#ownership-template",
+    data: function() {
+	return { errors: false };
+    },
     methods: {
         update_ownership: function() {
             //get copyright, ownership and license info about this track
             var inputelement = this.$el;
             var track = this.track;
+            var that = this;
             inputelement.classList.toggle("loading", true);
             axios.post("/api/ownership/", track)
             .then(function (response) {
                 inputelement.classList.toggle("loading", false);
+	        that.set_errors(false);
                 // add copyright to ui
                 console.log("copyright response: %o", response);
                 track.ownership = response.data.ownership;
                 // check license
                 track.licenses = response.data.licenses;
+
                 updateProgress(1);
 
             })
             .catch(function(error) {
                 inputelement.classList.toggle("loading", false);
+		inputelement.firstChild.classList.toggle("loading", false);
                 console.error("copyright error: %o", error);
                 track.ownership.spotify = {"P" : i18n.PLEASE_SEARCH_MANUALLY()};
+                that.set_errors(true);
+		alertmsg(error);
                 updateProgress(1);
             });
+        },
+	set_errors : function(state) {
+            console.log("set errors on %o", this.track);
+	    return this.errors = state;
         }
     },
     computed: {
@@ -180,10 +200,10 @@ Vue.component("ownership-item", {
                 status["reason"] = reasons.join(", ");
             }
             return status;
-        }
+	}
     },
     mounted: function () {
-        //console.log("mounted %o", this);
+        console.log("mounted %o", this);
         if(isEmpty(this.track.ownership)) { // get ownership details for this object
             this.update_ownership();
         }
@@ -290,7 +310,7 @@ function resolve_manually(inputelement) {
         })
         .catch(function(error) {
             inputelement.classList.toggle("loading", false);
-            console.error("copyright error: %o", error);
+            console.error("tracklist error: %o", error);
             alertmsg(error, "warning");
         });
 
