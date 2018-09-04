@@ -8,7 +8,7 @@
             <i>«[[ track.metadata.title ]]»</i> —
             [[ artists ]] 
             <br><b>Spotify:</b> <span class=spotify v-if="track.ownership.spotify">[[ copyright ]]
-                <a class=spotifylink title="copy spotify uri" :href="'#'+track.ownership.spotify.uri"></a></span>
+                <a class=spotifylink title="copy spotify uri" v-on:click.prevent="clipboard(track.spotify.uri)"></a></span>
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
               <i v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class=translate data-i18n=NOT_FOUND>Not found </i>
         </td>
@@ -153,6 +153,17 @@ Vue.component("ownership-item", {
 	set_errors : function(state) {
             console.log("set errors on %o", this.track);
 	    return this.errors = state;
+        },
+	clipboard : function(txt) {
+	    console.log("clipboard copy %o", txt);
+            var copyElement = document.createElement('input');      
+	    copyElement.setAttribute('type', 'text');   
+	    copyElement.setAttribute('value', txt);    
+	    copyElement = document.body.appendChild(copyElement);   
+	    copyElement.select();   
+	    document.execCommand('copy');   
+	    copyElement.remove();
+	    alertmsg(" -"+txt+"- was copied to the clipboard");
         }
     },
     computed: {
