@@ -48,7 +48,7 @@ curl -s -L -o "${VERSION}.tar" "$LATEST" || err "Could not download latest tar: 
 result "Downloaded $VERSION";
 
 OUTPUT=/usr/local/odometer;
-OUTPUT=/tmp;
+#OUTPUT=/tmp;
 info "Unwrap into ${OUTPUT}/$VERSION";
 
 mkdir -p "$OUTPUT/$VERSION";
@@ -61,10 +61,15 @@ ln -snf ${OUTPUT}/$VERSION ${OUTPUT}/latest || err "Symlinking failed";
 result "symlinked";
 
 info "Patching version string";
-perl -pi -e "s/★/$VERSION/g" ${OUTPUT}/latest/src/webapp/static/index.html || err "Failed to patch version";
+perl -pi -e "s/★/$VERSION/g" ${OUTPUT}/latest/src/webapp/templates/base.tpl || err "Failed to patch version";
 result "patched"
 
-info "restarting odometer server with new version";
+CONFIG=${OUTPUT}/latest/src/webapp/config.ini;
+touch ${CONFIG};
+info "You need to update/create `${CONFIG}` before we restart the server. Please do this now";
 
+read -n 1 -s -r -p "Press any key to start up the new server"
+
+info "restarting odometer server with new version";
 sudo systemctl restart odometer@{1..2} || err "Systemd restart failed";
 result "Running version $VERSION";
