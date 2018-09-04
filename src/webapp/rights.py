@@ -12,6 +12,7 @@ import backoff # pip install backoff
 import requests
 import requests_cache
 import datetime
+import time
 
 import model
 
@@ -57,11 +58,12 @@ class RateLimitedCachingClient(discogs_client.Client):
     # catch 429 rate limit blowups and retry
     # this will happen if we make too many requests per minute. 
     # discogs_client.exceptions.HTTPError: 429: You are making requests too quickly.
-    @backoff.on_exception(lambda: backoff.constant(interval=2), # wait 2 secs
+    @backoff.on_exception(lambda: backoff.constant(interval=5), # wait 5 secs
                           discogs_client.exceptions.HTTPError,
                           max_tries=5,
                           jitter=backoff.full_jitter)
     def _get(self, url):
+        time.sleep(2)
         return self._request('GET', url)
 
 class DueDiligence:

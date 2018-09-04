@@ -302,11 +302,11 @@ async def handle_post_ownership(request):
         #spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
         spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_search_copyrights, metadata['metadata'])
 
-    discogs_label_heritage = get_discogs_label(spotifycopyright['parsed_label'])
+    #discogs_label_heritage = get_discogs_label(spotifycopyright['parsed_label'])
     # TODO:
     # TODO: add discogs cache, so we can get this async from discogs without hititng rate limits
     # TODO:
-    #discogs_label_heritage = await loop.run_in_executor(executor, get_discogs_label, spotifycopyright['parsed_label'])
+    discogs_label_heritage = await loop.run_in_executor(executor, get_discogs_label, spotifycopyright['parsed_label'])
 
     # look up licenses from our license table
     lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata'].get('artists', []) ] )
