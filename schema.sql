@@ -1,3 +1,11 @@
+-- READ THIS FIRST:
+-- 
+-- We need to install an extension to postgres to create uuids
+-- Do this as a superuser
+-- e.g. psql odometer -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'
+--
+-- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Sequence: public.reported_missing_id_seq
 
 -- DROP SEQUENCE public.reported_missing_id_seq;
