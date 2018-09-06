@@ -344,6 +344,9 @@ createReportButton.onclick = function(event) {
             <div class="col-3">
                 <input 
                     id=ownership-input 
+                    data-intro="Start med å lime eller skrive inn en referanse fra DMA eller Spotify."
+                    data-step=1
+                    data-position=right
                     placeholder="Type or paste here" data-i18n-placeholder=type_or_paste_here 
                     class="form-control translate" 
                     type=search 
@@ -357,7 +360,9 @@ createReportButton.onclick = function(event) {
                     <span id="helptext" class="text-secondary">Please enter a Spotify or DMA id</span>
                 </label>
             </div>
-            <div class="col-4">
+            <div class="col-4"
+                 data-step=3
+                 data-intro="Her kan du lage en rapport over eierskap. Det må du ha for hver låt du har innkopiert">
                 <button type=button class="btn btn-primary translate" 
                         id=generate-ownership-button
                         data-i18n="GENERATE_OWNERSHIP_REPORT">Generate ownership report</button>
@@ -376,7 +381,10 @@ createReportButton.onclick = function(event) {
             <th data-i18n=license class=translate id=th-license>license</th>
           </tr>
         </thead>
-        <tbody id=results-list style="font-size:80%">
+        <tbody id=results-list 
+               data-step=2
+               data-intro="Eierskapet til låtene kommer automatisk opp her"
+               style="font-size:80%">
           <template v-if="items.length">
           <ownership-item v-for="item in items" 
                           v-bind:track="item"

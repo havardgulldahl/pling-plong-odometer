@@ -204,6 +204,9 @@ function report_missing_filename(button) {
         <div class="form-row">
             <div class="col-3">
                 <input type="file" 
+                    data-intro="Start med å laste opp en xml-fil fra Premiere her."
+                    data-position="right"
+                    data-step=1
                     class="form-control translate" 
                     id="file-select" 
                     title="Choose timeline data (XMEML)" data-i18n-title=choose_timeline_data
@@ -213,7 +216,9 @@ function report_missing_filename(button) {
             <div class="col-5">
                 <label for=id-select id="preview" class="text-secondary col-form-label">⇜ <span class=translate data-i18n=please_select_file>Please select a file</span> </label>
             </div>
-            <div class="col-4">
+            <div class="col-4"
+                 data-step=3
+                 data-intro="Så kan du lage rapport eller rulletekst med disse knappene">
                 <button type="button" disabled class="btn btn-primary translate" id="create-report-button" data-i18n=generate_metadata_report>Generate metadata report</button>
                 <button type="button" disabled class="btn btn-primary translate" id="create-credits-button" data-i18n=generate_end_credits>Generate credits</button>
             </div>
@@ -233,7 +238,10 @@ function report_missing_filename(button) {
             <th class=translate data-i18n=metadata id=thead-metadata>metadata</th>
           </tr>
         </thead>
-        <tbody id=files-list style="font-size:80%">
+        <tbody id=files-list 
+               style="font-size:80%" 
+               data-step=2
+               data-intro="Når du har lastet inn xml-fila, kommer alle musikksporene automatisk opp her.">
           <tr>
             <td><span style="font-size: 150%;" data-i18n=startinfo class=translate>To get started: Select an XMEML file—exported from Adobe Premiere or Final Cut Pro 7.x. (You may also drop it anywhere in this window).</span> <td><td><td>
           </tr>
