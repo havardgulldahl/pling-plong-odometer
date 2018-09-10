@@ -107,6 +107,8 @@ function main() {
         if(placeholder) el.placeholder = placeholder;
         var html = translation("i18nHtml");
         if(html) el.innerHTML = DOMPurify.sanitize(html); 
+        var intro = translation("i18nIntro");
+        if(intro) el.dataset.intro = intro;
     }
 
     var toggleFeedbackButton = document.getElementById('toggle-feedback');

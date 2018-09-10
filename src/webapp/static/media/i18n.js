@@ -73,6 +73,9 @@ var messages = {
         TRACK: "Track",
         PLAYLIST: "Playlist",
         DONE: "Done",
+        SKIP: "Skip",
+        PREVIOUS: "Previous",
+        NEXT: "Next",
         WHEN: "When",
         MESSAGE: "Message",
         SENDER: "Sender",
@@ -91,7 +94,10 @@ var messages = {
         "music you have examined. You can help shape how it looks! <br> Use the " +
         "<i>Feedback</i> button and send a message to the Odometer squirrels on " +
         "what you need from this report. Thanks!",
-        SINCE: "Since {SINCE}"
+        SINCE: "Since {SINCE}",
+        INTRO_OWNERSHIP_RESULTS_LIST: "The copyright owner of each track will show up in this list.",
+        INTRO_OWNERSHIP_INPUT_REFERENCE: "Start by typing or pasting a reference from DMA or Spotify.",
+        INTRO_OWNERSHIP_REPORT: "This is where you make the ownership report. You need that for every track you've used."
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -152,6 +158,9 @@ var messages = {
         TRACK: "Låt",
         PLAYLIST: "Spilleliste",
         DONE: "Ferdig",
+        SKIP: "Hopp over",
+        PREVIOUS: "Forrige",
+        NEXT: "Neste",
         WHEN: "Når",
         MESSAGE: "Melding",
         SENDER: "Avsender",
@@ -170,6 +179,9 @@ var messages = {
         "har sjekka ut. Du kan være med og forme hvordan den ser ut!<br> Bruk " +
         "<i>Feedback</i>-knappen og send en melding til Odometer-maskinistene " +
         "med hva du trenger fra denne rapporten. Takk!",
-        SINCE: "Siden {SINCE}"
+        SINCE: "Siden {SINCE}",
+        INTRO_OWNERSHIP_RESULTS_LIST: "Eierskapet til låtene kommer automatisk opp her",
+        INTRO_OWNERSHIP_INPUT_REFERENCE: "Start med å lime eller skrive inn en referanse fra DMA eller Spotify.",
+        INTRO_OWNERSHIP_REPORT: "Her kan du lage en rapport over eierskap. Det må du ha for hver låt du har innkopiert"
     }
 };
