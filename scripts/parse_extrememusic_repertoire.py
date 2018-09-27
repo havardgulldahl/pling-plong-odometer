@@ -15,13 +15,13 @@ URL='https://napi.extrememusic.com/grid_items?range=0%2C50&view=series' # return
 def startSession(ses):
     'access extrememusic to get session cookie'
     data = ses.get(LOGINURL)
-    logincookie = datai['env']['API_AUTH']
-    s.headers.update({'X-API-AUTH': logincookie})
+    logincookie = data.json()['env']['API_AUTH']
+    ses.headers.update({'X-API-AUTH': logincookie})
 
 def iterReportoire(ses):
     'return an iterator of all label names in reportoire'
-    data = ses.json(URL)
-    for itm in data.get('grid_items'):
+    data = ses.get(URL)
+    for itm in data.json().get('grid_items'):
         prefix = itm.get('image_large_url').split('/')[-1].split('.')[0].upper()
         yield (prefix, itm.get('title').title())
 
@@ -32,6 +32,6 @@ if __name__ == '__main__':
     for _prefix, _label in iterReportoire(session):
         s = s+ """'{}': '{}', """.format(_prefix, _label)
 
-    s = s + '\n\n{}'.format(_short)
+    #s = s + '\n\n{}'.format(_short)
     print(s)
     session.close()
