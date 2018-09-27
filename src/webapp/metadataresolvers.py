@@ -1034,30 +1034,11 @@ class ExtremeMusicResolver(ResolverBase):
     prettyname = 'Extreme Music'
     website = 'https://www.extrememusic.com/'
     urlbase = 'https://lapi.extrememusic.com/' # JSON REST interface
-    labelmap = {'XCD': 'X-Series',
-'DCD': 'Directors Cuts',
-'HYP': 'Hype Music',
-'XXL': 'The 13 Brotherhood',
-'ATN': 'A-Tone',
-'LAA': 'Law & Audio',
-'GAA': 'Gore & Audio',
-'WAA': 'War & Audio',
-'XRC': 'Reality Check',
-'XTS': 'Two Steps From Hell',
-'SPN': 'Spintrest',
-'XLR': 'Lab Rat Recordings',
-'XGM': 'Grandmaster',
-'VEX': 'Velvet Ears',
-'XXX': 'Moonshine',
-'XSP': 'Superpop',
-'XST': 'Stampede',
-'XEL': 'Easy Listening',
-'XMT': 'Mixtape',
-'XCL': 'Ultimate Classix',
-'QCD': 'Q-Series',
-'XPS': 'Passport',
-'SCS': 'Scoreganics',
-'MDE': 'Made', } # TODO: get list of labels automatically
+    labelmap = {#  get list of labels automatically from ./scripts/parse_extrememusic_repertoire.py and paste here
+'XCD': 'X-Series', 'DCD': 'Directors Cuts', 'XXL': 'The 13 Brotherhood', 'XET': 'Earth Tones', 'HYP': 'Hype Music', 'ATN': 'A-Tone', 'XDC': 'Devils Cut', 'SRG': 'Saint Rogue', 'XSF': 'Spitfire Audio', 'XRC': 'Reality Check', 'XTS': 'Two Steps From Hell', 'XEL': 'Easy Listening', 'XTW': 'Twisted', 'XPS': 'Passport', 'QCD': 'Q-Series', 'LAA': 'Law & Audio', 'GAA': 'Gore & Audio', 'WAA': 'War & Audio', 'XLR': 'Lab Rat Recordings', 'XXX': 'Moonshine', 'XCL': 'Ultimate Classix', 'XGM': 'Grandmaster', 'SPN': 'Vortrax', 'VEX': 'Velvet Ears', 'XSP': 'Superpop', 'XMT': 'Mixtape', 'SCS': 'Scoreganics', 'MDE': 'Made', 'XST': 'Stampede', 'XSR': 'Super Rock',
+    # OLD/DEPRECATED/ALIASES: 
+'XUN': 'X-series 2',
+    } 
 
     def __init__(self):
         self.prefixes = [x.upper() for x in self.labelmap.keys()] # prfix is <LABEL> + _
@@ -1074,6 +1055,7 @@ class ExtremeMusicResolver(ResolverBase):
         prefixes = [x.upper() for x in ExtremeMusicResolver.labelmap.keys()]
         rex = re.compile(r'((%s)\d{2,5}_\d{2,3}(_\d{1,3})?)\s.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
         if fuzzy:
+            rex = re.compile(r'([A-Za-z]{2,4}\d{2,5}_\d{2,3}(_\d{1,3})?)\s.*') # <label><albumid>_<trackno>_[variant]
             regexp = rex.search
         else:
             regexp = rex.match
