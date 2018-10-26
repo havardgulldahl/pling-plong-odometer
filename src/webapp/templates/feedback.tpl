@@ -6,7 +6,7 @@
     <tr class=item v-bind:class="{'text-muted':item.done}">
         <td> <input type=checkbox v-bind:checked=item.done></td>
         <td> [[ formattedTimestamp ]]</td>
-        <td v-bind:class="{'item-done':item.done}"> [[ item.message ]]</td>
+        <td v-bind:class="{'feedback-done':item.done}"> [[ item.message ]]</td>
         <td> [[ item.sender ]]</td>
     </tr>
 </script>

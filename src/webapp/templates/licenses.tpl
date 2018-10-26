@@ -8,7 +8,7 @@
         <td> <i>[[ item.license_property]]</i> <b>[[ item.license_value ]]</b>
             a.k.a: 
             <ul class=list-inline style="display: inline-block">
-                <li class=list-inline-item v-for="a in aliases"><i v-on:click="remove(a)">[[a.alias]]</i></li>
+                <li class="list-inline-item alias-item" v-for="a in aliases"><i v-on:click="remove(a)">[[a.alias]]</i></li>
             </ul>
             <input type=text placeholder="Alias" v-model="newAlias" style="width:50px">
             <button style="display: inline-block" 

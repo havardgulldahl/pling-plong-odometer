@@ -80,6 +80,13 @@ footer {
     height: 43px;
 }
 
-.item-done {
+.feedback-done {
     text-decoration: line-through; 
+}
+
+.alias-item:hover {
+    text-decoration: line-through;
+    color: red;
+    cursor: not-allowed;
+
 }
