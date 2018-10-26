@@ -498,7 +498,7 @@ async def handle_get_feedback_api(request):
     schema = model.Feedback()
 
     async with app.dbpool.acquire() as connection:
-        records = await connection.fetch("SELECT * FROM feedback")
+        records = await connection.fetch("SELECT * FROM feedback ORDER BY done DESC")
         feedbacks, errors = schema.load([dict(r) for r in records], many=True)
 
     return web.json_response({'error':errors,

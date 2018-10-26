@@ -79,3 +79,7 @@ footer {
 #ownership-input {
     height: 43px;
 }
+
+.item-done {
+    text-decoration: line-through; 
+}
