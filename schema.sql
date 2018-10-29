@@ -168,3 +168,15 @@ CREATE TABLE public.license_alias (
 );
 
 CREATE UNIQUE INDEX license_alias_pkey ON license_alias(id int4_ops);
+
+CREATE TABLE dma_data_health (
+    id SERIAL PRIMARY KEY,
+    dma_id character varying(255) NOT NULL,
+    timestamp timestamp with time zone NOT NULL DEFAULT now(),
+    isrc character varying(255),
+    isrc_ok boolean NOT NULL DEFAULT false,
+    ean character varying(255),
+    ean_ok boolean NOT NULL DEFAULT false
+);
+
+CREATE UNIQUE INDEX dma_data_health_pkey ON dma_data_health(id int4_ops);
