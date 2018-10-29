@@ -7,13 +7,21 @@
         <td v-bind:title="'@ '+item.timestamp"> [[ item.source ]]</td>
         <td> <i>[[ item.license_property]]</i> <b>[[ item.license_value ]]</b>
             a.k.a: 
-            <ul class=list-inline style="display: inline-block">
-                <li class="list-inline-item alias-item" v-for="a in aliases"><i v-on:click="remove(a)">[[a.alias]]</i></li>
+            <ul class=list-inline v-if="aliases">
+                <li class="list-inline-item alias-item" v-for="a in aliases">
+                    <i v-on:click="remove(a)">[[a.alias]]</i>
+                </li>
             </ul>
-            <input type=text placeholder="Alias" v-model="newAlias" style="width:50px">
-            <button style="display: inline-block" 
-                    v-on:click="add"
-                    class="btn btn-outline-secondary btn-xs">Add</button>
+            <div class=input-group>
+                <div class=input-group-prepend>
+                    <span class="input-group-text">Alias</span>
+                </div>
+                <input type=text placeholder="Add a variant (e.g. different spelling)" v-model="newAlias" class="form-control translate">
+                <div class=input-group-append>
+                    <button v-on:click="add"
+                            class="btn btn-outline-secondary">+</button>
+                </div>
+            </div>
         </td>
         <td> 
             <button type="button" 
