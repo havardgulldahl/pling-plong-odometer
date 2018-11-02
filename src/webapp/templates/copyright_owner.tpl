@@ -132,7 +132,7 @@ Vue.component("ownership-item", {
                 inputelement.classList.toggle("loading", false);
 	        that.set_errors(false);
                 // add copyright to ui
-                console.log("copyright response: %o", response);
+                //console.log("copyright response: %o", response);
                 track.ownership = response.data.ownership;
                 // check license
                 track.licenses = response.data.licenses;
@@ -151,12 +151,12 @@ Vue.component("ownership-item", {
             });
         },
 	set_errors : function(state) {
-            console.log("set errors on %o", this.track);
-	    return this.errors = state;
+            //console.log("set errors on %o", this.track);
+            return this.errors = state;
         },
 	clipboard : function(txt) {
 	    console.log("clipboard copy %o", txt);
-            var copyElement = document.createElement('input');      
+        var copyElement = document.createElement('input');      
 	    copyElement.setAttribute('type', 'text');   
 	    copyElement.setAttribute('value', txt);    
 	    copyElement = document.body.appendChild(copyElement);   
@@ -177,44 +177,22 @@ Vue.component("ownership-item", {
             return this.track.metadata.artists.join(", ");
         },
         licenses : function() {
-            console.log("check licenses: %o", this.track.licenses);
-            var status = { "style": "btn-warning",
-                           "result": "check",
-                           "reason": ""}; // baseline status object 
-            var lic, must_check = false, seems_ok = false, reasons = [];
-            for(var i=0; i<this.track.licenses.length; i++) {
-                lic = this.track.licenses[i]; // shortcut
-                if(lic.license_status == "NO") {
-                    status["result"] = TEXT_NO;
-                    status["style"] = "btn-danger";
-                    status["reason"] = lic.source;
-                    return status; // one 'no' trumps all other licenses
-                }
-                if(lic.license_status == "CHECK") {
-                    must_check = true;
-                    reasons.push(lic.source);
-                }
-                else if(lic.license_status == "OK") {
-                    reasons.push(lic.source);
-                    seems_ok = true;
-                }
-            }
-            if(seems_ok && !must_check) {
-                // one or more license rules say yes, and none say we must check
-                status["result"] = TEXT_OK;
-                status["style"] = "btn-success";
-                status["reason"] = reasons.join(", ");
-            } else {
-                // undetermined, or specifically must check
-                status["result"] = TEXT_CHECK;
-                status["style"] = "btn-warning";
-                status["reason"] = reasons.join(", ");
-            }
-            return status;
-	}
+            //console.log("check licenses: %o", this.track.licenses);
+            var lic = this.track.licenses;
+            var txtmap = { "NO": TEXT_NO,
+                           "CHECK": TEXT_CHECK,
+                           "OK": TEXT_OK};
+            var stylemap = { "NO": "btn-danger",
+                             "CHECK": "btn-warning",
+                             "OK": "btn-success"};
+
+            return status = { "style": stylemap[lic.result],
+                              "result": txtmap[lic.result],
+                              "reason": (lic.reasons && lic.reasons.join(", "))}; 
+	    }
     },
     mounted: function () {
-        console.log("mounted %o", this);
+        //console.log("mounted %o", this);
         if(isEmpty(this.track.ownership)) { // get ownership details for this object
             this.update_ownership();
         }
@@ -303,7 +281,7 @@ function resolve_manually(inputelement) {
         .then(function (response) {
             inputelement.classList.toggle("loading", false);
             // add copyright to ui
-            console.log("tracklist response: %o", response);
+            //console.log("tracklist response: %o", response);
             var tracks = response.data.tracks;
             var t;
             for(var i=0;i<tracks.length;i++) {

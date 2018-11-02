@@ -322,11 +322,36 @@ async def handle_post_ownership(request):
 
     licenses, errors = await get_licenses(lookup)
     app.logger.info('got licenses: %r', licenses)
-                             
+
+    # now, loop through all licenses and come up with one answer
+    license_result = "CHECK";
+    must_check = seems_ok = is_not_ok = False
+    reasons = []
+    for l in licenses:
+        if l['license_status'] == "NO":
+            is_not_ok = True
+            reasons = [l['source'], ]
+            break
+        if l['license_status'] == "CHECK":
+            must_check = True
+            reasons.append(l['source'])
+        elif l['license_status'] == "OK":
+            seems_ok = True
+            reasons.append(l['source'])
+    if is_not_ok:
+        license_result = "NO"
+    elif seems_ok and not must_check:
+        # one or more license rules say yes, and none say we must check 
+        license_result = "OK"
+    else:
+        # undetermined, or specifically must check
+        license_result = "CHECK"
+
+
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[errors],
                               'trackinfo': metadata,
-                              'licenses': licenses,
+                              'licenses': { 'result': license_result, 'reasons': reasons},
                               'ownership':{'spotify':spotifycopyright,
                                            'timestamp': datetime.datetime.now().isoformat('T'),
                                            'discogs':discogs_label_heritage}
@@ -343,7 +368,6 @@ async def get_licenses(where=None, active=True):
     v = []
     i = 1
     for key, value in where.items():
-        #q.append( " (license_property=${} AND license_value ILIKE ${}) ".format(i, i+1) )
         q.append( " (license_property=${} AND (license_value ILIKE ${} OR alias ILIKE ${})) ".format(i, i+1, i+2) )
         v.append(key)
         v.append(value)
