@@ -24,6 +24,21 @@
                     Missing file names
                 </a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link translate" href="/isrc_ean_status" data-i18n=isrc_status>
+                    ISRC and EAN data health
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link translate" href="/tests" data-i18n=isrc_tests>
+                    Tests
+                </a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link translate" href="/dashboard" data-i18n=isrc_dashboard>
+                    Dashboard
+                </a>
+              </li>
             </ul>
 
           </div>
