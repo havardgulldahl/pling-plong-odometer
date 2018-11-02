@@ -67,7 +67,7 @@ app.on_shutdown.append(on_shutdown)
 
 APIVERSION = '0.1'
 
-async def store_resolve_result(_app, result_code:int, result_text:str, filename:str, resolver:str, overridden:bool):
+async def store_resolve_result(_app, result_code, result_text, filename, resolver, overridden):
     'Helper to add result of a resolve attempt to DB'
 
     sql = '''INSERT INTO resolve_result (result_code, result_text, filename, resolver, overridden)
@@ -75,6 +75,14 @@ async def store_resolve_result(_app, result_code:int, result_text:str, filename:
     async with _app.dbpool.acquire() as connection:
         await connection.execute(sql, result_code, result_text, filename, resolver, overridden)
         
+async def store_copyright_result(_app, spotify_id, result):
+    'Helper to add result of a copyright lookup to DB'
+
+    sql = '''INSERT INTO copyright_lookup_result (spotify_id, result)
+             VALUES ($1, $2);'''
+    async with _app.dbpool.acquire() as connection:
+        await connection.execute(sql, spotify_id, result)
+
 class AudioClip:
     'The important properties of an audio clip for JSON export'
     def __init__(self, filename):
@@ -299,10 +307,8 @@ async def handle_post_ownership(request):
         spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_get_album_rights, metadata['spotify']['album_uri'])
     except KeyError:
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
-        #spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
         spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_search_copyrights, metadata['metadata'])
 
-    #discogs_label_heritage = get_discogs_label(spotifycopyright['parsed_label'])
     # TODO:
     # TODO: add discogs cache, so we can get this async from discogs without hititng rate limits
     # TODO:
@@ -347,6 +353,8 @@ async def handle_post_ownership(request):
         # undetermined, or specifically must check
         license_result = "CHECK"
 
+    # keep track of how good we are
+    await store_copyright_result(app,metadata['spotify']['uri'], license_result)
 
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[errors],

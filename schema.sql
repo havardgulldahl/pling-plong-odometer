@@ -166,7 +166,6 @@ CREATE TABLE public.license_alias (
     timestamp timestamp with time zone NOT NULL DEFAULT now(),
     public_id uuid NOT NULL DEFAULT uuid_generate_v4()
 );
-
 CREATE UNIQUE INDEX license_alias_pkey ON license_alias(id int4_ops);
 
 CREATE TABLE dma_data_health (
@@ -178,5 +177,12 @@ CREATE TABLE dma_data_health (
     ean character varying(255),
     ean_ok boolean NOT NULL DEFAULT false
 );
-
 CREATE UNIQUE INDEX dma_data_health_pkey ON dma_data_health(id int4_ops);
+
+CREATE TABLE copyright_lookup_result (
+    id SERIAL PRIMARY KEY,
+    timestamp timestamp with time zone NOT NULL DEFAULT now(),
+    spotify_id character varying(255) NOT NULL,
+    result character varying(255) NOT NULL
+);
+CREATE UNIQUE INDEX copyright_lookup_result_pkey ON copyright_lookup_result(id int4_ops);
