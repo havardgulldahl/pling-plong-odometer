@@ -4,32 +4,33 @@
 {% block templates %}
 <script type="text/x-template" id="license-template">
     <tr>
-        <td v-bind:title="'@ '+item.timestamp"> [[ item.source ]]</td>
-        <td> <i>[[ item.license_property]]</i> <b>[[ item.license_value ]]</b>
-            a.k.a: 
-            <ul class=list-inline v-if="aliases">
-                <li class="list-inline-item alias-item" v-for="a in aliases">
-                    <i v-on:click="remove(a)">[[a.alias]]</i>
-                </li>
-            </ul>
-            <div class=input-group>
-                <div class=input-group-prepend>
-                    <span class="input-group-text">Alias</span>
-                </div>
-                <input type=text placeholder="Add a variant (e.g. different spelling)" v-model="newAlias" class="form-control translate">
-                <div class=input-group-append>
-                    <button v-on:click="add"
-                            class="btn btn-outline-secondary">+</button>
-                </div>
-            </div>
-        </td>
-        <td> 
+        <td v-bind:title="'@ '+item.timestamp"> [[ item.source ]]
+            <br>
             <button type="button" 
                     disabled 
                     :title="sinceString"
                     class="btn active"
                     :class="styleObject">[[item.license_status]]</button>
-
+        </td>
+        <td> <i>[[ item.license_property]]</i> <b>[[ item.license_value ]]</b>
+            a.k.a: 
+            <ul class=list-inline v-if="aliases">
+                <li class="list-inline-item alias-item" v-for="a in aliases">
+                    <i v-on:click="remove(a)" title="Click to remove" class=translate data-i18n-title="CLICK_TO_REMOVE">[[a.alias]]</i>
+                </li>
+            </ul>
+            <div class="input-group input-group-sm">
+                <div class=input-group-prepend>
+                    <span class="input-group-text translate" data-i18n="NEW_ALIAS">New alias</span>
+                </div>
+                <input type=text placeholder="Add a variant (e.g. different spelling)" 
+                       data-i18n-placeholder="NEW_ALIAS_DESC"
+                       v-model="newAlias" class="form-control translate">
+                <div class=input-group-append>
+                    <button v-on:click="add"
+                            class="btn btn-outline-secondary">+</button>
+                </div>
+            </div>
         </td>
     </tr>
 </script>
@@ -57,6 +58,10 @@ Vue.component("license-item", {
             // add a new alias
             var that = this;
             //console.log("adding %o!", that);
+            if(that.newAlias.trim().length == 0) {
+                console.debug("Not adding empty alias.");
+                return;
+            }
             axios.post("/api/license_alias/", { 
                 property: that.item.license_property,
                 value: that.item.license_value,
@@ -175,15 +180,12 @@ function fetch_license_rules() {
 
 
     <table class="table table-striped table-sm">
-        <!-- <col style="width:40%"> -->
-        <col style="width:10%"> 
-        <col style="width:60%">
-        <col style="width:30%">
+        <col style="width:15%"> 
+        <col style="width:75%">
         <thead class="thead-dark">
           <tr>
             <th class=translate data-i18n=source>source</th>
             <th class=translate data-i18n=property>property</th>
-            <th class=translate data-i18n=status>status</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">

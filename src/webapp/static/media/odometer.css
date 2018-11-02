@@ -85,8 +85,15 @@ footer {
 }
 
 .alias-item:hover {
-    text-decoration: line-through;
+    text-decoration: lne-through;
     color: red;
-    cursor: not-allowed;
+    cursor: pointer;
+}
 
+.alias-item:hover::before {
+    content: "❌";
+}
+
+.alias-item:not(:last-child)::after {
+    content: " | ";
 }

@@ -97,7 +97,10 @@ var messages = {
         SINCE: "Since {SINCE}",
         INTRO_OWNERSHIP_RESULTS_LIST: "The copyright owner of each track will show up in this list.",
         INTRO_OWNERSHIP_INPUT_REFERENCE: "Start by typing or pasting a reference from DMA or Spotify.",
-        INTRO_OWNERSHIP_REPORT: "This is where you make the ownership report. You need that for every track you've used."
+        INTRO_OWNERSHIP_REPORT: "This is where you make the ownership report. You need that for every track you've used.",
+        NEW_ALIAS: "New alias",
+        NEW_ALIAS_DESC: "Add a variant (e.g. different spelling)",
+        CLICK_TO_REMOVE: "Click to remove"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -182,6 +185,9 @@ var messages = {
         SINCE: "Siden {SINCE}",
         INTRO_OWNERSHIP_RESULTS_LIST: "Eierskapet til låtene kommer automatisk opp her",
         INTRO_OWNERSHIP_INPUT_REFERENCE: "Start med å lime eller skrive inn en referanse fra DMA eller Spotify.",
-        INTRO_OWNERSHIP_REPORT: "Her kan du lage en rapport over eierskap. Det må du ha for hver låt du har innkopiert"
+        INTRO_OWNERSHIP_REPORT: "Her kan du lage en rapport over eierskap. Det må du ha for hver låt du har innkopiert",
+        NEW_ALIAS: "Nytt alias",
+        NEW_ALIAS_DESC: "Legg til en variant (f.eks. annen stavemåte)",
+        CLICK_TO_REMOVE: "Klikk for å fjerne"
     }
 };
