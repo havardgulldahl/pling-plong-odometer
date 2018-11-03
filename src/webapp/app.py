@@ -542,6 +542,27 @@ async def handle_get_missing_filenames_api(request):
 def missing_filenames(request):
     return {}
 
+@routes.get('/api/tests/')
+async def handle_get_tests_api(request):
+    'Return a json list of all tests from the DB'
+    schema = model.Tests()
+
+    async with app.dbpool.acquire() as connection:
+        records = await connection.fetch("SELECT * FROM tests WHERE active=1")
+        tests, errors = schema.load([dict(r) for r in records], many=True)
+
+    return web.json_response({'error':errors,
+                              'tests': tests},
+                              dumps=model.OdometerJSONEncoder().encode)
+
+
+
+@routes.get('/tests')
+@aiohttp_jinja2.template('admin_tests.tpl')
+def tests(request):
+    return {}
+
+
 @routes.get('/favicon.ico')
 def favicon(request):
     return web.FileResponse('./static/favicon.ico')

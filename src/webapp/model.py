@@ -114,6 +114,14 @@ class LicenseRuleAlias(Schema):
     value = fields.Str(required=True)            # must match LicenseRule
     alias = fields.Str(required=True)            # case insensitive search - if it matches, the rule is applied
 
+class Test(Schema):
+    'Urls for high level test for functionality'
+    id = fields.Int(required=True)               # internal id
+    timestamp = RichDateTimeField(required=True) # last changed timestamp
+    active = fields.Boolean(default=True)        # boolean -  active or not
+    name = fields.Str(required=True)             # 
+    url = fields.Str(required=True)              # 
+
 class TrackStub(Schema):
     'A short/small object to pass around while we are waiting for the rich metadata'
     title = fields.Str(required=True)
