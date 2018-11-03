@@ -79,3 +79,21 @@ footer {
 #ownership-input {
     height: 43px;
 }
+
+.feedback-done {
+    text-decoration: line-through; 
+}
+
+.alias-item:hover {
+    text-decoration: lne-through;
+    color: red;
+    cursor: pointer;
+}
+
+.alias-item:hover::before {
+    content: "❌";
+}
+
+.alias-item:not(:last-child)::after {
+    content: " | ";
+}

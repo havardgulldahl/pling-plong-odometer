@@ -1,6 +1,6 @@
 #-*- encoding: utf8 -*-
 # This file is part of odometer by Håvard Gulldahl <havard.gulldahl@nrk.no>
-# (C) 2016
+# (C) 2012-2018
 
 import json
 import uuid
@@ -33,6 +33,7 @@ class TrackMetadata(object): # TODO: marshmallow this
                  lyricist=None,
                  identifier=None,
                  productionmusic=False,
+                 **kwargs
                 ):
 
         def tit(val):
@@ -93,15 +94,25 @@ class ResolveResult(Schema):
 
 class LicenseRule(Schema):
     'Rules for licensing '
-    id = fields.Int(required=True)
-    active = fields.Boolean(default=True)
-    public_id = fields.UUID(required=True)
-    timestamp = RichDateTimeField(required=True)
-    source = fields.Str(required=True)
+    id = fields.Int(required=True)               # internal id
+    active = fields.Boolean(default=True)        # boolean -  active or not
+    public_id = fields.UUID(required=True)       # public uuid
+    timestamp = RichDateTimeField(required=True) # last changed timestamp
+    source = fields.Str(required=True)           # free type string - the source of the rule
     license_property = fields.Str(required=True) # oneOf album, artist, label
-    license_value = fields.Str(required=True)
-    license_status = fields.Str(required=True) # oneOf green, yellow, red
-    comment = fields.Str(allow_none=True)
+    license_value = fields.Str(required=True)    # case insensitive search - if it matches, the rule is applied
+    license_status = fields.Str(required=True)   # oneOf NO, OK, CHECK
+    comment = fields.Str(allow_none=True)        # free type string - editor comment
+    aliases = fields.Int()                       # number of aliases defined - look at LicenseRuleAlias
+
+class LicenseRuleAlias(Schema):
+    'Alias for licensing rules'
+    id = fields.Int(required=True)               # internal id
+    public_id = fields.UUID(required=True)       # public uuid
+    timestamp = RichDateTimeField(required=True) # last changed timestamp
+    property = fields.Str(required=True)         # must match LicenseRule
+    value = fields.Str(required=True)            # must match LicenseRule
+    alias = fields.Str(required=True)            # case insensitive search - if it matches, the rule is applied
 
 class TrackStub(Schema):
     'A short/small object to pass around while we are waiting for the rich metadata'
@@ -113,7 +124,9 @@ class TrackStub(Schema):
 class OdometerJSONEncoder(json.JSONEncoder):
     'turning external models and complex objects into neat json'
     def default(self, obj):
-        if isinstance(obj, uuid.UUID):
+        if isinstance(obj, TrackMetadata):
+            return vars(obj)
+        elif isinstance(obj, uuid.UUID):
             # https://docs.python.org/3/library/uuid.html
             return str(obj)
         # Let the base class default method raise the TypeError

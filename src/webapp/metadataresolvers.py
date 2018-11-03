@@ -424,7 +424,7 @@ class DMAResolver(ResolverBase):
             return yaml.load(data)
 
 class AUXResolver(ResolverBase):
-    prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD']
+    prefixes = ['AUXMP_', 'AD', 'AFRO', 'BAC', 'BL', 'BM', 'CNS', 'ECM', 'FWM', 'IPX', 'ISCD', 'SPOT', 'JW', 'CAND', 'MMIT', 'KOK', 'PMA', 'ISPV', 'RSM', 'RSMV', 'SONI', 'SCD', 'SAS', 'SCDC', 'STT', 'STTV', 'SCDV', 'TM', 'TRED', 'TSU', 'UBMM', 'WDA', 'WD', 'MOT']
 
     labelmap = { # static label map. See .updateReportoire()
     "CUTE": "Cute Music",
@@ -473,7 +473,8 @@ class AUXResolver(ResolverBase):
     "MML": "Mediatracks",
     "RSMV": "Reliable Source Music Virtual",
     "MMIT": "MUSICA IT",
-    "IPX": "Impax Music"
+    "IPX": "Impax Music",
+    "MOT": "Motus Music",
 
                }
     name = 'AUX'
@@ -706,7 +707,8 @@ class UniPPMResolver(ResolverBase):
     website = 'http://www.unippm.se/'
     #urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={musicid}' # HTTP GET interface, returns json
     urlbase = 'http://cloud1.search.universalproductionmusic.com/uppm_work_12_1/select?q=editIds:({musicid})'# HTTP GET interface, returns json 
-    labelmap = {  'AA':'Atmosphere Archive ',
+    labelmap = {  '10MILES': 'Ten Miles', 
+                  'AA':'Atmosphere Archive ',
                   'AK':'Atmosphere Kitsch ',
                   'AM':'Access Music ',
                   'ATMOS':'Atmosphere ',
@@ -724,6 +726,7 @@ class UniPPMResolver(ResolverBase):
                   'BPM3':'BPM Score Series ',
                   'BR':'Bruton ',
                   'BTV':'BTV ',
+                  'BURN': 'Burn', 
                   'CHAP':'Chappell ',
                   'CHAPAV':'Chappell AV ',
                   'CHAPC':'Chappell Classical Series ',
@@ -739,9 +742,11 @@ class UniPPMResolver(ResolverBase):
                   'ESS':'Essential Series ',
                   'EVO':'EVO',
                   'FC':'FirstCom ',
+                  'FCD':'Focus ',
                   'GAL':'GAL',
                   'GIM':'Ghost In The Machine ',
                   'GM':'Gotham Music ',
+                  'GTP': 'Gum Tapes',
                   'HITS':'Greatest Hits ',
                   'HM':'Hollywood Music ',
                   'HS':'HeadSpace ',
@@ -800,6 +805,7 @@ class UniPPMResolver(ResolverBase):
                   'STFTA': 'Selectedtracks Unknown',
                   'SVN': 'Seventh Sense',
                   'SUN': 'Unknown',
+		  'Tru': 'Unknown',
                   'ULS':'Ultimate Latin Series ',
                   'UPM': 'Universal filename prefix', ### standard file name prefix???? observed late 2016
                   'US':'Ultimate Series ',
@@ -825,14 +831,18 @@ class UniPPMResolver(ResolverBase):
         BER_1216B_76_Silent_Movie_Theme_Mersch_433103.wav -> 433103
         # new format, observed late 2016
         UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
+        UPM_HM_073Q_30_Hardtop_Livin_Instrumental_Chick_Walsh_Winslow_299209.wav -> 299209
+        UPM_EVO289e_8_Make_It_To_The_End_Instrumental_Elias_Ramani_1034318.wav -> 1034318
+	UPM_Tru102_3_Humanly_Possible_Main_Track_Jenkins_Mahoney_Powell_1012461.wav -> 1012461
+        UPM_10MILES29_18_A_Morning_Wake_Up_Main_Track_Geulem_987983.wav -> 987983
         """
         # first, try new format
         if fuzzy:
-            rex = re.compile(r'UPM_[-_A-Z]{1,6}\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*',
+            rex = re.compile(r'UPM_[-_A-Z0-9]{1,}\d{1,4}[A-Za-z]?_\d{1,4}_\w+_(\d+).*',
                 re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
             regexp = rex.search
         else:
-            rex = re.compile(r'UPM_(?:%s)\d{1,4}[A-Z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
+            rex = re.compile(r'UPM_(?:%s)_?\d{1,4}[A-Za-z]?_\d{1,4}_\w+_(\d+).*' % '|'.join(UniPPMResolver.labelmap.keys()), 
                 re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
             regexp = rex.match
         g = regexp(filename)
@@ -870,7 +880,10 @@ class UniPPMResolver(ResolverBase):
             resp.raise_for_status() # bomb on errors
             data = await resp.json(content_type=None)
             logging.info('got data: %r', data)
-            trackdata = data.get('docs')[0]
+            try:
+                 trackdata = data.get('docs')[0]
+            except IndexError: # this id is wrong :(
+                 raise ResolveError('Could not find the UniPPM track in the database')
 
             metadata = TrackMetadata(filename=self.filename,
                  musiclibrary=self.name,
@@ -911,9 +924,10 @@ class UprightmusicResolver(ResolverBase):
 
         _UPRIGHT_EDS_016_006_Downplay_(Main).WAV ---> 6288627e-bae8-49c8-9f3c-f6ed024eb698
         _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV ---> 4ceb1f37-8ecc-42e7-a4d8-79ba4336715a 
+        _UPRIGHT_DGT_005A_120_Electricity_Hit_(Main).WAV ---> 36f76913-61b5-4405-9b7e-ac8510d49dfc
 
         """
-        rex = re.compile(r'_UPRIGHT_[A-Z]{3}_\d{1,4}_\d{1,4}_\w+', re.UNICODE) # _UPRIGHT_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
+        rex = re.compile(r'_UPRIGHT_[A-Z]{2,4}_[0-9A-Z]{1,4}_\d{1,4}_\w+', re.UNICODE) # _UPRIGHT_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
         if fuzzy:
             regexp = rex.search
         else:
@@ -945,6 +959,7 @@ class UprightmusicResolver(ResolverBase):
 
             if not countnode.text_content() == 'Showing track 1 to 1 of 1 tracks':
                 # no luck
+                # TODO: look at first result to find matching title and track number
                 return False
 
             # get the first row of table[class='tracks'] 
@@ -973,6 +988,8 @@ class UprightmusicResolver(ResolverBase):
             raise ResolveError('Couldnt understand Upright id from filename')
         internal_guid = await self.get_guid(musicid)
         logging.debug('got internal guid: %r', internal_guid)
+        if internal_guid is False:
+            raise ResolveError('Couldnt understand Upright id from filename')
         if self.session is None:
             self.session = aiohttp.ClientSession()
         async with self.session.get(self.urlbase.format(trackid=internal_guid)) as resp:
@@ -1017,30 +1034,11 @@ class ExtremeMusicResolver(ResolverBase):
     prettyname = 'Extreme Music'
     website = 'https://www.extrememusic.com/'
     urlbase = 'https://lapi.extrememusic.com/' # JSON REST interface
-    labelmap = {'XCD': 'X-Series',
-'DCD': 'Directors Cuts',
-'HYP': 'Hype Music',
-'XXL': 'The 13 Brotherhood',
-'ATN': 'A-Tone',
-'LAA': 'Law & Audio',
-'GAA': 'Gore & Audio',
-'WAA': 'War & Audio',
-'XRC': 'Reality Check',
-'XTS': 'Two Steps From Hell',
-'SPN': 'Spintrest',
-'XLR': 'Lab Rat Recordings',
-'XGM': 'Grandmaster',
-'VEX': 'Velvet Ears',
-'XXX': 'Moonshine',
-'XSP': 'Superpop',
-'XST': 'Stampede',
-'XEL': 'Easy Listening',
-'XMT': 'Mixtape',
-'XCL': 'Ultimate Classix',
-'QCD': 'Q-Series',
-'XPS': 'Passport',
-'SCS': 'Scoreganics',
-'MDE': 'Made', } # TODO: get list of labels automatically
+    labelmap = {#  get list of labels automatically from ./scripts/parse_extrememusic_repertoire.py and paste here
+'XCD': 'X-Series', 'DCD': 'Directors Cuts', 'XXL': 'The 13 Brotherhood', 'XET': 'Earth Tones', 'HYP': 'Hype Music', 'ATN': 'A-Tone', 'XDC': 'Devils Cut', 'SRG': 'Saint Rogue', 'XSF': 'Spitfire Audio', 'XRC': 'Reality Check', 'XTS': 'Two Steps From Hell', 'XEL': 'Easy Listening', 'XTW': 'Twisted', 'XPS': 'Passport', 'QCD': 'Q-Series', 'LAA': 'Law & Audio', 'GAA': 'Gore & Audio', 'WAA': 'War & Audio', 'XLR': 'Lab Rat Recordings', 'XXX': 'Moonshine', 'XCL': 'Ultimate Classix', 'XGM': 'Grandmaster', 'SPN': 'Vortrax', 'VEX': 'Velvet Ears', 'XSP': 'Superpop', 'XMT': 'Mixtape', 'SCS': 'Scoreganics', 'MDE': 'Made', 'XST': 'Stampede', 'XSR': 'Super Rock',
+    # OLD/DEPRECATED/ALIASES: 
+'XUN': 'X-series 2',
+    } 
 
     def __init__(self):
         self.prefixes = [x.upper() for x in self.labelmap.keys()] # prfix is <LABEL> + _
@@ -1057,6 +1055,7 @@ class ExtremeMusicResolver(ResolverBase):
         prefixes = [x.upper() for x in ExtremeMusicResolver.labelmap.keys()]
         rex = re.compile(r'((%s)\d{2,5}_\d{2,3}(_\d{1,3})?)\s.*' % '|'.join(prefixes)) # <label><albumid>_<trackno>_[variant]
         if fuzzy:
+            rex = re.compile(r'([A-Za-z]{2,4}\d{2,5}_\d{2,3}(_\d{1,3})?)\s.*') # <label><albumid>_<trackno>_[variant]
             regexp = rex.search
         else:
             regexp = rex.match

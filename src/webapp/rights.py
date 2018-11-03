@@ -3,9 +3,16 @@ import re
 import logging
 import configparser
 import json
+import uuid
 import spotipy
 from spotipy.oauth2 import SpotifyClientCredentials
 import discogs_client # pip install discogs_client  
+import functools
+import backoff # pip install backoff
+import requests
+import requests_cache
+import datetime
+import time
 
 import model
 
@@ -21,15 +28,53 @@ class DiscogsNotFoundError(NotFoundError):
 class SpotifyNotFoundError(NotFoundError): 
     pass
 
+def remove_corporate_suffix(lbl):
+    'Removes common corporation suffixes to normalize string before lookup'
+    if lbl is None:
+        return lbl
+    for sufx in [' AS', ' A/S', ' A.S.', 'Ltd.']:  # remove suffix
+        if lbl.upper().endswith(sufx):
+            return lbl[:-len(sufx)]
+    return lbl
+
+class RateLimitedCachingClient(discogs_client.Client):
+    'Reimplemntattion to cache data from discogs, and to retry if we get 429 rate limit errors'
+
+    def __init__(self, *args, **kwargs):
+        'subclass that inits requests.sessions and hands over to superclass'
+        super().__init__(*args, **kwargs)
+        expiry = datetime.timedelta(days=7) # keep cached values this long
+        self._session = requests_cache.core.CachedSession(cache_name='discogs_client', 
+                                                          backend=None, 
+                                                          expire_after=expiry)
+
+    def _fetcher(self, client, method, url, data=None, headers=None, json=True):
+        'subclassing to add token to every request, and to add session awareness'
+        resp = self._session.request(method, url, params={'token':self.user_token},
+                                     data=data, headers=headers)
+        return resp.content, resp.status_code 
+
+    # TODO: check HTTP_ERROR=429
+    # catch 429 rate limit blowups and retry
+    # this will happen if we make too many requests per minute. 
+    # discogs_client.exceptions.HTTPError: 429: You are making requests too quickly.
+    @backoff.on_exception(lambda: backoff.constant(interval=5), # wait 5 secs
+                          discogs_client.exceptions.HTTPError,
+                          max_tries=5,
+                          jitter=backoff.full_jitter)
+    def _get(self, url):
+        time.sleep(2)
+        return self._request('GET', url)
+
 class DueDiligence:
-    useragent = 'no.nrk.odometer/0.1'
+    useragent = 'no.nrk.odometer/0.2'
 
     def __init__(self, config): #:configparser.ConfigParser):
         self.cred_manager = SpotifyClientCredentials(config.get('spotify', 'clientId'),
                                                      config.get('spotify', 'secret')
         )
         self.sp = spotipy.Spotify(client_credentials_manager=self.cred_manager)
-        self.discogs = discogs_client.Client(self.useragent, user_token=config.get('discogs', 'token'))
+        self.discogs = RateLimitedCachingClient(self.useragent, user_token=config.get('discogs', 'token'))
 
     def spotify_search_copyrights(self, trackmetadata): #:dict) -> dict:
         'Try to llok up a Track in spotify and return the copyrights.'
@@ -49,7 +94,7 @@ class DueDiligence:
             if 'year' in trackmetadata and trackmetadata['year'] != -1:
                 q.append('year:{}'.format(trackmetadata['year']))
             q.append('{} {}'.format(trackmetadata['title'], trackmetadata['artist']))
-            if trackmetadata['albumname']:
+            if 'albumname' in trackmetadata and trackmetadata['albumname'] is not None:
                 q.append(trackmetadata['albumname'])
         track = self.spotify_search_track(' '.join(q))
 
@@ -108,12 +153,14 @@ class DueDiligence:
         _, _, user, _, playlist_id = playlist_urn.split(':')
         srch = self.sp.user_playlist(user, playlist_id)
         trackstub = model.TrackStub(many=False)
+        # TODO: handle paging (more than 100 items in list). look at spotipy.next(), srch["next"] is an url if there are more items, null if there arent
         for item in srch['tracks']['items']:
             logging.debug('got spotify item %r', json.dumps(item['track']['album']))
-            yield trackstub.dump({'title':     item['track']['name'],
-                                  'uri':       item['track']['uri'],
-                                  'artists':   [a['name'] for a in item['track']['artists']], 
-                                  'album_uri': item['track']['album']['uri']})
+            st,_ = trackstub.dump({'title':     item['track']['name'],
+                                   'uri':       item['track']['uri'],
+                                   'artists':   [a['name'] for a in item['track']['artists']], 
+                                   'album_uri': item['track']['album']['uri']})
+            yield st
             
 
     def spotify_get_album_rights(self, albumuri):#:str) -> dict:
@@ -140,23 +187,28 @@ class DueDiligence:
             ret.update({'parsed_label': parse_label(ret['C'])})
         return ret
 
-    # discogs
+    @functools.lru_cache(maxsize=256)
     def parse_label_attribution(self, labelquery):#:str) -> str:
         'Simplify label / phonograph / copyright attribution, for lookups at discogs'
         # Atlantic Recording Corporation for the United States and WEA International Inc. for the world outside of the United States. A Warner Music Group Company -> ???
         # Bad Vibes Forever / EMPIRE 
+        _origquery = labelquery
+
+        # normalize A/S, AS, as suffix
+        labelquery = re.sub(r' a/s$', ' AS', labelquery, flags=re.IGNORECASE)
+
+        # remove norway suffix
+        labelquery = re.sub(r' norway$', '', labelquery, flags=re.IGNORECASE)
 
         rexes = [
             r'^(.+), manufactured and marketed by .+', # The Weeknd XO, Inc., manufactured and marketed by Republic Records, a division of UMG Recordings, Inc. -> The Weeknd XO, Inc.
-            r'^(.+), distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
+            r'^(.+),? distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
             r'(?:.+), [Aa] [Dd]ivision of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
             r'(?:.+) – [Aa] [Dd]ivision of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
-            r'(.+) Norway', # Def Jam Recordings Norway -> Def Jam Recordings
             r'(?:.+) under exclusive licence to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
             r'^The copyright in this sound recording is owned by (.+)', # The copyright in this sound recording is owned by Mawlaw 388 Ltd T/A Source UK
             r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
             r'^(.+) Inc\.', # Cash Money Records Inc. (company) -> Cash Money Records (label)
-            r'^(.+) AS', # NorskAmerikaner AS (company) -> NorskAmerikaner (label)
         ]
         for rx in rexes:
             try:
@@ -165,9 +217,14 @@ class DueDiligence:
             except AttributeError:
                 continue
 
+        if _origquery != labelquery:
+            # no regexp matched, but we've still brushed it up a bit
+            return labelquery
+
         logging.debug('Could not simplify label %r', labelquery)
         return None
 
+    #@functools.lru_cache(maxsize=256)
     def discogs_search_label(self, labelquery):#:str) -> discogs_client.models.Label:
         'Search for label in discogs'
         # strategy
@@ -211,8 +268,10 @@ class DueDiligence:
 
         raise DiscogsNotFoundError('Could not find the label "{}" in the Discogs database'.format(labelquery))
 
+    #@functools.lru_cache(maxsize=128)
     def discogs_label_heritage(self, label):#discogs_client.models.Label) -> discogs_client.models.Label:
         'Take a discogs label and walk the parenthood till the very top'
+
         heritage = [label]
         while hasattr(label, 'parent_label'):
             label = label.parent_label
@@ -229,6 +288,9 @@ class DueDiligenceJSONEncoder(json.JSONEncoder):
             d = {'id':obj.id,
                  'name':obj.name,}
             return d
+        elif isinstance(obj, uuid.UUID):
+            # https://docs.python.org/3/library/uuid.html
+            return str(obj)
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 

@@ -3,10 +3,10 @@
 
 {% block templates %}
 <script type="text/x-template" id="feedback-template">
-    <tr>
+    <tr class=item v-bind:class="{'text-muted':item.done}">
         <td> <input type=checkbox v-bind:checked=item.done></td>
         <td> [[ formattedTimestamp ]]</td>
-        <td> [[ item.message ]]</td>
+        <td v-bind:class="{'feedback-done':item.done}"> [[ item.message ]]</td>
         <td> [[ item.sender ]]</td>
     </tr>
 </script>

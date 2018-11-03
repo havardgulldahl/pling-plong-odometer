@@ -6,14 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pling Plong Odometer Online</title>
 
-<link rel="stylesheet" href="/media/bootstrap.min.css" integrity="sha256-QUyqZrt5vIjBumoqQV0jM8CgGqscFfdGhN+nVCqX0vc=" crossorigin="anonymous">
+<link rel="stylesheet" href="/media/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 <link rel="stylesheet" href="/media/tingle.min.css" >
+<link rel="stylesheet" href="/media/introjs.min.css" >
 <link rel="stylesheet" href="/media/odometer.css" >
 <script type="text/javascript" src="/media/tingle.min.js"></script>
 <script type="text/javascript" src="/media/i18n.js"></script>
 <script type="text/javascript" src="/media/messageformat.min.js"></script>
 <script type="text/javascript" src="/media/promise.polyfill.min.js"></script>
 <script type="text/javascript" src="/media/axios.min.js"></script>
+<script type="text/javascript" src="/media/purify.min.js"></script>
+<script type="text/javascript" src="/media/intro.min.js"></script>
 <script type="text/javascript" src="/media/vue.js"></script>
 <script type="text/javascript" src="/media/odometer.js"></script>
 
@@ -44,7 +47,7 @@ const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "Apoll
                   <div class="navbar-nav">
                     <a class="nav-item nav-link active translate" href="/" data-i18n=analysis id=navbar-analysis>Analysis</a>
                     <a class="nav-item nav-link translate" href="/copyright_owner" data-i18n=check_ownership id=navbar-ownership>Ownership</a>
-                    <a class="nav-item nav-link disabled translate" href="#" data-i18n=help>Help</a>
+                    <a class="nav-item nav-link translate" href="#" onclick="introJs().setOptions({nextLabel: i18n.NEXT(), skipLabel: i18n.SKIP(), prevLabel: i18n.PREVIOUS(), doneLabel: i18n.DONE()}).start()" data-i18n=help>Help</a>
                     <a class="nav-item nav-link translate" href="/api/doc" title="JSON REST API (swagger)" data-i18n=api>API</a>
                     <a class="nav-item nav-link translate" href="#" title="" onclick="statusdialog()" data-i18n=status>Status</a>
                   </div>

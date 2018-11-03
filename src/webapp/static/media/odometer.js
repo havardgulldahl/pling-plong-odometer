@@ -105,6 +105,10 @@ function main() {
         if(title) el.title = title;
         var placeholder = translation("i18nPlaceholder");
         if(placeholder) el.placeholder = placeholder;
+        var html = translation("i18nHtml");
+        if(html) el.innerHTML = DOMPurify.sanitize(html); 
+        var intro = translation("i18nIntro");
+        if(intro) el.dataset.intro = intro;
     }
 
     var toggleFeedbackButton = document.getElementById('toggle-feedback');
@@ -356,14 +360,16 @@ function reportdialog() {
         reportrows.push(_s);
     }
     var preview = document.getElementById('preview');
-    var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:preview.validFile.name, 
-                 DATESTRING:preview.validFile.lastModifiedDate.toLocaleString()})+'</code>';
+    var filedate = preview.validFile.lastModifiedDate || new Date();
+    var filename = preview.validFile.name;
+    var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:filename,
+                 DATESTRING:filedate.toLocaleString()})+'</code>';
     html = html + reportrows.join("\n");
     var tinglemodal = setupModal();
     // add another button
     tinglemodal.addFooterBtn(i18n.DOWNLOAD_AS_FILE(), 'tingle-btn tingle-btn--info', function() {
         // TODO: add html header and date and time
-        download(html, "music_metadata.html", "text/html");
+        download(html, "music_metadata_"+filename+".html", "text/html");
         tinglemodal.close();
     });
     tinglemodal.setContent("<h1>"+i18n.REPORT_HEADER_PRF()+"</h1>"+html);
@@ -397,18 +403,17 @@ function feedbackdialog() {
 function check_copyright(button) {
     // check the copyright info of commercial releases
     var cell = button.parentElement;
-    var metadata = cell.metadata; // Trackmetadata from model.py
+    var metadata = {"metadata": cell.metadata}; // Trackmetadata from model.py
     var timelinedata = cell.timelinedata; // timeline object from xmeml parser
     console.log("check copyright metadata : %o", metadata);
     var sp = document.createElement('div');
-    var dmarights = "<b>DMA</b>: ℗ "+metadata.year+" "+metadata.label;
+    var dmarights = "<b>DMA</b>: ℗ "+cell.metadata.year+" "+cell.metadata.label;
     sp.innerHTML = dmarights
         +"<br><b>Spotify</b>: <img class=spinner src='/media/spinner.gif'><br><b>Discogs</b>: <img class=spinner src='/media/spinner.gif'>";
     cell.appendChild(sp);
 
     var xhr = new XMLHttpRequest();
-    //xhr.open("GET", "/ownership/metadata/"+encodeURIComponent(JSON.stringify(metadata)));
-    xhr.open("POST", "/api/ownership/metadata");
+    xhr.open("POST", "/api/ownership/");
     xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     xhr.onload = function () {
         if (xhr.status === 200) {
@@ -419,7 +424,7 @@ function check_copyright(button) {
             var s = dmarights + "<br><b>Spotify</b>: ";
             s += response.ownership.spotify.P || response.ownership.spotify.C;
             s += "<br><b>Discogs</b>: ";
-            if(response.ownership.discogs.length) {
+            if(response.ownership.discogs !== null) {
                 var d = response.ownership.discogs;
                 for(var i=0;i<d.length;i++) {
                     s += " ⇝ "+d[i].name;

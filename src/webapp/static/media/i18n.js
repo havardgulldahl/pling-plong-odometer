@@ -62,7 +62,7 @@ var messages = {
         CHECK_OWNERSHIP_TITLE: "Check ownership of commercial releases",
         RESULTS: "Results",
         TYPE_OR_PASTE_HERE: "Type or paste here",
-        OWNERSHIP_HELPTEXT: "Enter a DMA id ({DMA}) or a spotify reference ({SPOTIFY}).",
+        OWNERSHIP_HELPTEXT: "Enter a DMA id ({DMA}) or a spotify reference ({SPOTIFY_TRACK} or {SPOTIFY_LIST}).",
         EMAIL: "E-mail",
         IF_YOU_WANT_US_TO_GET_IN_TOUCH: "If you want us to get in touch",
         INCLUDE_XML: "Include XML",
@@ -70,7 +70,12 @@ var messages = {
         STARTINFO_OWNERSHIP: "To get started: Enter a reference to a track or a playlist above",
         LICENSE: "Lisense",
         TRY_IT: "Try it",
+        TRACK: "Track",
+        PLAYLIST: "Playlist",
         DONE: "Done",
+        SKIP: "Skip",
+        PREVIOUS: "Previous",
+        NEXT: "Next",
         WHEN: "When",
         MESSAGE: "Message",
         SENDER: "Sender",
@@ -78,7 +83,24 @@ var messages = {
         SOURCE: "Source",
         PROPERTY: "Property",
         STATUS: "Status",
-        MISSINGFILENAMES: "Missing file names"
+        MISSINGFILENAMES: "Missing file names",
+        LICENSE_OK: "OK",
+        LICENSE_NO: "No",
+        LICENSE_CHECK: "Please research",
+        GENERATE_OWNERSHIP_REPORT: "Make ownership report",
+        OWNERSHIP_REPORT_TITLE: "Copyright ownership for your selection",
+        OWNERSHIP_REPORT_BODY: " <b>YOUR HELP IS NEEDED!</b> <br>This will " + 
+        "become a full bodied report on the current copyright owners of the " +
+        "music you have examined. You can help shape how it looks! <br> Use the " +
+        "<i>Feedback</i> button and send a message to the Odometer squirrels on " +
+        "what you need from this report. Thanks!",
+        SINCE: "Since {SINCE}",
+        INTRO_OWNERSHIP_RESULTS_LIST: "The copyright owner of each track will show up in this list.",
+        INTRO_OWNERSHIP_INPUT_REFERENCE: "Start by typing or pasting a reference from DMA or Spotify.",
+        INTRO_OWNERSHIP_REPORT: "This is where you make the ownership report. You need that for every track you've used.",
+        NEW_ALIAS: "New alias",
+        NEW_ALIAS_DESC: "Add a variant (e.g. different spelling)",
+        CLICK_TO_REMOVE: "Click to remove"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -128,7 +150,7 @@ var messages = {
         CHECK_OWNERSHIP_TITLE: "Sjekk eierskap på kommersielle låter",
         RESULTS: "Resultater",
         TYPE_OR_PASTE_HERE: "Skriv eller lim inn her",
-        OWNERSHIP_HELPTEXT: "Skriv inn DMA-id ({DMA}) eller spotify-referanse ({SPOTIFY}).",
+        OWNERSHIP_HELPTEXT: "Skriv inn DMA-id ({DMA}) eller spotify-referanse ({SPOTIFY_TRACK} eller {SPOTIFY_LIST}).",
         EMAIL: "E-post",
         IF_YOU_WANT_US_TO_GET_IN_TOUCH: "Hvis du vil at vi skal kontakte deg",
         INCLUDE_XML: "Inkluder XML",
@@ -136,7 +158,12 @@ var messages = {
         STARTINFO_OWNERSHIP: "For å starte: Legg inn referanse til et spor eller en spilleliste over",
         LICENSE: "Lisens",
         TRY_IT: "Prøv det",
+        TRACK: "Låt",
+        PLAYLIST: "Spilleliste",
         DONE: "Ferdig",
+        SKIP: "Hopp over",
+        PREVIOUS: "Forrige",
+        NEXT: "Neste",
         WHEN: "Når",
         MESSAGE: "Melding",
         SENDER: "Avsender",
@@ -144,6 +171,23 @@ var messages = {
         SOURCE: "Kilde",
         PROPERTY: "Egenskap",
         STATUS: "Status",
-        MISSINGFILENAMES: "Manglende filnavn"
+        MISSINGFILENAMES: "Manglende filnavn",
+        LICENSE_OK: "OK",
+        LICENSE_NO: "Nei",
+        LICENSE_CHECK: "Undersøk det selv",
+        GENERATE_OWNERSHIP_REPORT: "Lag eierskapsrapport",
+        OWNERSHIP_REPORT_TITLE: "Eierskapsrapport for utvalget ditt",
+        OWNERSHIP_REPORT_BODY: " <b>VI TRENGER DIN HJELP!</b> <br>Dette skal bli " + 
+        "en utfyllende rapport over hvem som eier rettighetene til musikken du " +
+        "har sjekka ut. Du kan være med og forme hvordan den ser ut!<br> Bruk " +
+        "<i>Feedback</i>-knappen og send en melding til Odometer-maskinistene " +
+        "med hva du trenger fra denne rapporten. Takk!",
+        SINCE: "Siden {SINCE}",
+        INTRO_OWNERSHIP_RESULTS_LIST: "Eierskapet til låtene kommer automatisk opp her",
+        INTRO_OWNERSHIP_INPUT_REFERENCE: "Start med å lime eller skrive inn en referanse fra DMA eller Spotify.",
+        INTRO_OWNERSHIP_REPORT: "Her kan du lage en rapport over eierskap. Det må du ha for hver låt du har innkopiert",
+        NEW_ALIAS: "Nytt alias",
+        NEW_ALIAS_DESC: "Legg til en variant (f.eks. annen stavemåte)",
+        CLICK_TO_REMOVE: "Klikk for å fjerne"
     }
 };

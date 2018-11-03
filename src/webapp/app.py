@@ -1,3 +1,4 @@
+import sys
 import os.path
 import tempfile
 import pathlib
@@ -6,6 +7,8 @@ import configparser
 import io
 import datetime
 import json
+import functools
+import concurrent
 
 import asyncio
 
@@ -19,15 +22,18 @@ import jinja2
 
 import aioslacker # pip install aioslacker
 import asyncpg # pip install asyncpg
-
+import multidict # pip install multidict
 from aiohttp_apispec import docs, use_kwargs, marshal_with, AiohttpApiSpec
+import aiocache 
+from aiocache.serializers import JsonSerializer
 
 from xmeml import iter as xmemliter
 
 from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 import metadataresolvers
 
-from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, SpotifyNotFoundError
+from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, SpotifyNotFoundError, \
+    remove_corporate_suffix
 
 import model
 
@@ -38,6 +44,7 @@ app = web.Application(loop=loop,
 headers = { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36',
 }
 clientSession = aiohttp.ClientSession(loop=loop, headers=headers)
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
 aiohttp_jinja2.setup(app,
     loader=jinja2.FileSystemLoader('./templates'))
 
@@ -106,8 +113,10 @@ class AudioClip:
                 'add_missing':'/api/add_missing/{}'.format(quote(self.filename)),
                }
 
+
 @routes.get('/api/resolve/{resolver}/{audioname}')
 @swagger_path("handle_resolve.yaml")
+@aiocache.cached(key="handle_resolve", serializer=JsonSerializer())
 async def handle_resolve(request):
     'Get an audioname from the request and resolve it from its respective service resolver'
     audioname = request.match_info.get('audioname', None) # match path string, see the respective route
@@ -205,6 +214,7 @@ async def handle_analyze_post(request):
 
 @routes.get('/api/supported_resolvers/')
 @swagger_path("handle_supported_resolvers.yaml")
+@aiocache.cached(key="handle_supported_resolvers", serializer=JsonSerializer())
 async def handle_supported_resolvers(request):
     'GET a request and return a dict of currently suppported resolvers and their file patterns'
     return web.json_response(data={
@@ -251,8 +261,9 @@ async def handle_add_missing(request):
 
 
 @routes.get(r'/api/trackinfo/{type:(DMA|spotify)}/{trackinfo}')
+@aiocache.cached(key="handle_trackinfo", serializer=JsonSerializer())
 async def handle_trackinfo(request):
-    'Handle GET trackid from DMA or Spotify and return TrackMetadata or TrackStub'
+    'Handle GET trackid from DMA or Spotify and return json formatted TrackMetadata or TrackStub'
     trackinfo = request.match_info.get('trackinfo', None) 
     querytype = request.match_info.get('type')
     if querytype == 'DMA':
@@ -263,18 +274,20 @@ async def handle_trackinfo(request):
         # run resolver
         app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
         _metadata = await resolver.resolve(trackinfo)
-        metadata = model.TrackMetadata(vars(_metadata)) # TODO: verify with marshmallow
+        app.logger.info("resolve audioname %r got metadata %r", trackinfo, vars(_metadata))
+        metadata = model.TrackMetadata(**vars(_metadata)) # TODO: verify with marshmallow
     elif querytype == 'spotify':
         spotifyuri = trackinfo
-        track = app.duediligence.sp.track(spotifyuri)
+        track = await loop.run_in_executor(executor, app.duediligence.sp.track, spotifyuri)
         #app.logger.info("got spotify track: %r", track)
         trackstub = model.TrackStub()
-        metadata = trackstub.dump({'title':     track['name'],
-                                   'uri':       track['uri'],
-                                   'artists':   [a['name'] for a in track['artists']], 
-                                   'album_uri': track['album']['uri']})
+        metadata, errors = trackstub.dump({'title':     track['name'],
+                                           'uri':       track['uri'],
+                                           'artists':   [a['name'] for a in track['artists']], 
+                                           'album_uri': track['album']['uri']})
     return web.json_response({'error':[],
-                              'tracks': metadata, })
+                              'tracks': [metadata,] },
+                              dumps=model.OdometerJSONEncoder().encode)
 
 @routes.post(r'/api/ownership/')
 async def handle_post_ownership(request):
@@ -283,19 +296,37 @@ async def handle_post_ownership(request):
     logging.debug('Got metadata payload: %r ', metadata)
     try:
         # try to see if we have spotify metadata already
-        spotifycopyright = app.duediligence.spotify_get_album_rights(metadata['spotify']['album_uri'])
-    except AttributeError:
+        spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_get_album_rights, metadata['spotify']['album_uri'])
+    except KeyError:
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
-        spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
-    try:
-        discogs_label = app.duediligence.discogs_search_label(spotifycopyright["parsed_label"])
-        discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
-        #TODO gather ifnormaton with an async queue and return EventSource
-    except DiscogsNotFoundError as e:
-        app.logger.warning('Coul dnot get label from discogs: %s', e)
+        #spotifycopyright = app.duediligence.spotify_search_copyrights(metadata['metadata'])
+        spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_search_copyrights, metadata['metadata'])
+
+    #discogs_label_heritage = get_discogs_label(spotifycopyright['parsed_label'])
+    # TODO:
+    # TODO: add discogs cache, so we can get this async from discogs without hititng rate limits
+    # TODO:
+    discogs_label_heritage = await loop.run_in_executor(executor, get_discogs_label, spotifycopyright['parsed_label'])
+
+    # look up licenses from our license table
+    lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata'].get('artists', []) ] )
+    if 'artist' in metadata['metadata']:
+        lookup.add('artist', metadata['metadata']['artist'])
+    if discogs_label_heritage is not None:
+        lbl = discogs_label_heritage[-1].name # discogs_client.models.Label 
+        lookup.add('label', remove_corporate_suffix(lbl))
+    else:
+        # we have no discogs data, look in our license table for what spotify returns
+        app.logger.info('Looking in license table for spotify label info: "{}"'.format(spotifycopyright['parsed_label']))
+        lookup.add('label', remove_corporate_suffix(spotifycopyright['parsed_label']))
+
+    licenses, errors = await get_licenses(lookup)
+    app.logger.info('got licenses: %r', licenses)
+                             
     jsonencoder = DueDiligenceJSONEncoder().encode
-    return web.json_response({'error':[],
+    return web.json_response({'error':[errors],
                               'trackinfo': metadata,
+                              'licenses': licenses,
                               'ownership':{'spotify':spotifycopyright,
                                            'timestamp': datetime.datetime.now().isoformat('T'),
                                            'discogs':discogs_label_heritage}
@@ -304,7 +335,43 @@ async def handle_post_ownership(request):
 
     )
 
+async def get_licenses(where=None, active=True):
+    'Return a json list of all license rules from the DB that match. where is a Multidict'
+    schema = model.LicenseRule()
+
+    q = []
+    v = []
+    i = 1
+    for key, value in where.items():
+        #q.append( " (license_property=${} AND license_value ILIKE ${}) ".format(i, i+1) )
+        q.append( " (license_property=${} AND (license_value ILIKE ${} OR alias ILIKE ${})) ".format(i, i+1, i+2) )
+        v.append(key)
+        v.append(value)
+        v.append(value)
+        i = i+3
+
+    if where is not None:
+        query = " OR ".join(q) + " AND active=${}".format(i)
+    else:
+        query = "active=$1"
+    v.append(active)
+    app.logger.debug("running asyncpg query %r with values %r", query, v)
+    async with app.dbpool.acquire() as connection:
+        records = await connection.fetch("""
+        SELECT * FROM license_rule 
+        LEFT JOIN license_alias ON 
+            license_rule.license_property=license_alias.property AND 
+            license_rule.license_value=license_alias.value 
+        WHERE {}
+        """.format(query), *v)
+        app.logger.debug('Got DB ROW: %r', records)
+        rules, errors = schema.load([dict(r) for r in records], many=True)
+        app.logger.debug('Made schame u %r', rules)
+
+        return rules, errors
+
 @routes.get(r'/api/tracklistinfo/{type:(DMA|spotify)}/{tracklist}')
+@aiocache.cached(key="handle_get_tracklist", serializer=JsonSerializer())
 async def handle_get_tracklist(request):
     'GET tracklist id and return lists of spoityf ids or DMA ids'
     tracklist_id = request.match_info.get('tracklist', None) 
@@ -330,33 +397,94 @@ async def handle_get_tracklist(request):
     return web.json_response({'error':[],
                               'tracks': tracklist})
 
+@routes.get(r'/api/labelinfo/{labelquery}')
+@aiocache.cached(key="handle_get_label")#, serializer=JsonSerializer())
+async def handle_get_label(request):
+    'GET a label string and look it up in discogs'
+    labelquery = request.match_info.get('labelquery')
+    #discogs_labels = get_discogs_label(labelquery)
+    discogs_labels = await loop.run_in_executor(executor, get_discogs_label, labelquery)
+    jsonencoder = DueDiligenceJSONEncoder().encode
+    return web.json_response({'error':[],
+                              'labels': discogs_labels},
+                             dumps=jsonencoder
+    )
+
+@functools.lru_cache(maxsize=128)
+def get_discogs_label(labelquery):
+    try:
+        discogs_label = app.duediligence.discogs_search_label(labelquery)
+        discogs_label_heritage = app.duediligence.discogs_label_heritage(discogs_label)
+        #TODO gather ifnormaton with an async queue and return EventSource
+    except DiscogsNotFoundError as e:
+        app.logger.warning('Coul dnot get label from discogs: %s', e)
+        discogs_label = discogs_label_heritage = None
+    return discogs_label_heritage
+
 @routes.get('/api/license_rules/')
 async def handle_get_license_rules(request):
     'Return a json list of all license rules from the DB'
     schema = model.LicenseRule()
 
     async with app.dbpool.acquire() as connection:
-        records = await connection.fetch("SELECT * FROM license_rule WHERE active=TRUE")
-        #app.logger.debug('Got DB ROW: %r', records)
+        records = await connection.fetch("""
+        SELECT *,
+            (select count(*) from license_alias where license_rule.license_value = license_alias.value) AS aliases
+        FROM license_rule WHERE active=TRUE""")
         rules, errors = schema.load([dict(r) for r in records], many=True)
-        #app.logger.debug('Made schame u %r', rules)
 
     return web.json_response({'error':errors,
                               'rules': rules},
                               dumps=model.OdometerJSONEncoder().encode)
 
-@use_kwargs(model.LicenseRule(strict=True))
-async def handle_post_license_rule(request):
-    'Add new license rule, return id'
-    raise NotImplementedError
+@routes.get('/api/license_alias/') # expecting ?property=<license_property>&value=<license_value>
+async def handle_get_license_alias(request):
+    'Return a json list of license aliases for the matching license rule from the DB'
+    params = request.rel_url.query
+    schema_alias = model.LicenseRuleAlias()
 
-    data = await request.post() 
-    app.logger.debug('Got POST args: %r', data)
     async with app.dbpool.acquire() as connection:
-        _id = await connection.fetchval("INSERT INTO feedback (sender, message) VALUES ($1, $2) RETURNING public_id", 
-                                       data.get('sender'),
-                                       data.get('text'))
+        records_aliases = await connection.fetch("SELECT * FROM license_alias WHERE property=$1 AND value=$2",
+            params.get('property'), params.get('value'))
+        aliases, errors = schema_alias.load([dict(r) for r in records_aliases], many=True)
+
+
+    return web.json_response({'error':errors,
+                              'aliases': aliases},
+                              dumps=model.OdometerJSONEncoder().encode)
+
+@routes.post('/api/license_alias/')
+async def handle_post_license_alias(request):
+    'Add new license alias, return new alias'
+
+    schema_alias = model.LicenseRuleAlias()
+    data = await request.json() 
+    #app.logger.debug('Got POST args: %r', data)
+    async with app.dbpool.acquire() as connection:
+        new = await connection.fetchrow("INSERT INTO license_alias (property, value, alias) VALUES ($1, $2, $3) RETURNING *", 
+                                        data.get('property'),
+                                        data.get('value'),
+                                        data.get('alias').strip())
+        #app.logger.debug("INSERTED ROW: %r", dict(new))
+        alias, errors = schema_alias.load(dict(new))
+    return web.json_response({'error':errors,
+                              'alias':alias},
+                              dumps=model.OdometerJSONEncoder().encode)
         
+@routes.delete('/api/license_alias/{alias_uuid}')
+async def handle_delete_license_alias(request):
+    'Delete license alias by uuid'
+
+    schema_alias = model.LicenseRuleAlias()
+    app.logger.debug('detele license by uuid %r', request.match_info.get('alias_uuid'))
+    async with app.dbpool.acquire() as connection:
+        status = await connection.execute("DELETE FROM license_alias WHERE public_id=$1",
+                                          request.match_info.get('alias_uuid'))
+        app.logger.debug("DELETED ROW: %r", status)
+
+    return web.json_response({'error':[],
+                              'status':status},
+                              dumps=model.OdometerJSONEncoder().encode)
 
 @routes.get('/licenses')
 @aiohttp_jinja2.template('licenses.tpl')
@@ -370,7 +498,7 @@ async def handle_get_feedback_api(request):
     schema = model.Feedback()
 
     async with app.dbpool.acquire() as connection:
-        records = await connection.fetch("SELECT * FROM feedback")
+        records = await connection.fetch("SELECT * FROM feedback ORDER BY done DESC")
         feedbacks, errors = schema.load([dict(r) for r in records], many=True)
 
     return web.json_response({'error':errors,
@@ -414,6 +542,10 @@ async def handle_get_missing_filenames_api(request):
 def missing_filenames(request):
     return {}
 
+@routes.get('/favicon.ico')
+def favicon(request):
+    return web.FileResponse('./static/favicon.ico')
+
 app.router.add_routes(routes) # find all @routes.* decorators
 
 app.router.add_static('/media', 'static/media')
@@ -452,10 +584,16 @@ if __name__ == '__main__':
 
     loop.run_until_complete(init())
 
-    web.run_app(
-        app,
-        path=args.path,
-        port=args.port)
+    try:
+        web.run_app(
+            app,
+            path=args.path,
+            port=args.port)
+    except ConnectionRefusedError:
+        print("Could not connect to Postgres SQL server. This is fatal.")
+        loop.close()
+        sys.exit(1)
+
 """ # TODO: enable AppRunner startup when we can run on py3.6 / aiohttp > v3
     # main program loop
     try:

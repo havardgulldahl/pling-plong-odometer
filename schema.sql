@@ -1,3 +1,11 @@
+-- READ THIS FIRST:
+-- 
+-- We need to install an extension to postgres to create uuids
+-- Do this as a superuser
+-- e.g. psql odometer -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp"'
+--
+-- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- Sequence: public.reported_missing_id_seq
 
 -- DROP SEQUENCE public.reported_missing_id_seq;
@@ -135,3 +143,40 @@ WITH (
 );
 ALTER TABLE public.license_rule
   OWNER TO odometer;
+
+CREATE TABLE public.discogs_result (
+    id SERIAL PRIMARY KEY,
+    result_code integer NOT NULL,
+    result_text text NOT NULL,
+    spotify_parsed_label text NOT NULL,
+    discogs_label text,
+    timestamp timestamp with time zone NOT NULL DEFAULT now()
+);
+
+ALTER TABLE public.discogs_result
+  OWNER TO odometer;
+
+CREATE UNIQUE INDEX discogs_result_pkey ON discogs_result(id int4_ops);
+
+CREATE TABLE public.license_alias (
+    id SERIAL PRIMARY KEY,
+    property character varying(255) NOT NULL,
+    value text NOT NULL,
+    alias text NOT NULL,
+    timestamp timestamp with time zone NOT NULL DEFAULT now(),
+    public_id uuid NOT NULL DEFAULT uuid_generate_v4()
+);
+
+CREATE UNIQUE INDEX license_alias_pkey ON license_alias(id int4_ops);
+
+CREATE TABLE dma_data_health (
+    id SERIAL PRIMARY KEY,
+    dma_id character varying(255) NOT NULL,
+    timestamp timestamp with time zone NOT NULL DEFAULT now(),
+    isrc character varying(255),
+    isrc_ok boolean NOT NULL DEFAULT false,
+    ean character varying(255),
+    ean_ok boolean NOT NULL DEFAULT false
+);
+
+CREATE UNIQUE INDEX dma_data_health_pkey ON dma_data_health(id int4_ops);
