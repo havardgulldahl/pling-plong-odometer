@@ -285,6 +285,11 @@ function resolve_manually(inputelement) {
             var tracks = response.data.tracks;
             var t;
             for(var i=0;i<tracks.length;i++) {
+                if(i==50) {
+                    console.warn("max 50 items in playlist");
+                    alertmsg(i18n.MAX_50_ITEMS_IN_PLAYLIST(), "warning");
+                    break;
+                }
                 t = tracks[i];
                 app.items.push({"metadata":{"title":t.title, "artists":t.artists, "artist":t.artist}, 
                                 "ownership": {},
@@ -369,7 +374,8 @@ createReportButton.onclick = function(event) {
                data-intro="The copyright owner of each track will show up in this list."
                style="font-size:80%">
           <template v-if="items.length">
-          <ownership-item v-for="item in items" 
+          <ownership-item v-for="(item, index) in items" 
+                          v-if="index &lt; 50"
                           v-bind:track="item"
                           v-bind:key="item.original_query">
           </ownership-item>

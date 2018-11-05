@@ -161,7 +161,6 @@ class DueDiligence:
                                    'artists':   [a['name'] for a in item['track']['artists']], 
                                    'album_uri': item['track']['album']['uri']})
             yield st
-            
 
     def spotify_get_album_rights(self, albumuri):#:str) -> dict:
         'Get copyright info from spotify album uri'

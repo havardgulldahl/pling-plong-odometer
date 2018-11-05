@@ -100,7 +100,8 @@ var messages = {
         INTRO_OWNERSHIP_REPORT: "This is where you make the ownership report. You need that for every track you've used.",
         NEW_ALIAS: "New alias",
         NEW_ALIAS_DESC: "Add a variant (e.g. different spelling)",
-        CLICK_TO_REMOVE: "Click to remove"
+        CLICK_TO_REMOVE: "Click to remove",
+        MAX_50_ITEMS_IN_PLAYLIST: "The maximum number of tracks in a playlist is 50"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -188,6 +189,7 @@ var messages = {
         INTRO_OWNERSHIP_REPORT: "Her kan du lage en rapport over eierskap. Det må du ha for hver låt du har innkopiert",
         NEW_ALIAS: "Nytt alias",
         NEW_ALIAS_DESC: "Legg til en variant (f.eks. annen stavemåte)",
-        CLICK_TO_REMOVE: "Klikk for å fjerne"
+        CLICK_TO_REMOVE: "Klikk for å fjerne",
+        MAX_50_ITEMS_IN_PLAYLIST: "Det maksimale antallet spor i en spilleliste er 50"
     }
 };
