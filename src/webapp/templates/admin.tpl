@@ -25,17 +25,17 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link translate" href="/isrc_ean_status" data-i18n=isrc_status>
+                <a class="nav-link translate" href="/isrc_ean_status" data-i18n=isrc_ean_status>
                     ISRC and EAN data health
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link translate" href="/tests" data-i18n=isrc_tests>
+                <a class="nav-link translate" href="/tests" data-i18n=tests>
                     Tests
                 </a>
               </li>
               <li class="nav-item">
-                <a class="nav-link translate" href="/dashboard" data-i18n=isrc_dashboard>
+                <a class="nav-link translate" href="/dashboard" data-i18n=dashboard>
                     Dashboard
                 </a>
               </li>
