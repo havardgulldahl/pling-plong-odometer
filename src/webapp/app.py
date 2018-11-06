@@ -302,6 +302,43 @@ async def handle_post_ownership(request):
     'handle POST music data (TrackMetadata or TrackStub) and try to get copyrights from spotify and discogs'
     metadata = await request.json() # TODO verify with marshmallow 
     logging.debug('Got metadata payload: %r ', metadata)
+    #
+    # Here's the routine:
+    # 1. Get the copyright info from spotify
+    #  1a If we already know the album (look at the supplied metadata), get the rights. Or,
+    #  1b Get the album first, and then the copyrights.
+    # 2. Check our license table to see if this is enough to get an explicit answer. That is,
+    #    can we tell by the artist name, track title and album label wether it's OK or NO?
+    #    In that case, we have an answer. In the case of "MUST CHECK":
+    # 3. Get the top parent label from Discogs, using the label info from Spotify as a starting point.
+    # 4. Then, check the license table again. This time, MUST CHECK means the user has to do it herself
+
+    def check_license_result(licenses):
+        license_result = "CHECK";
+        must_check = seems_ok = is_not_ok = False
+        reasons = []
+        for l in licenses:
+            if l['license_status'] == "NO":
+                is_not_ok = True
+                reasons = [l['source'], ]
+                break
+            if l['license_status'] == "CHECK":
+                must_check = True
+                reasons.append(l['source'])
+            elif l['license_status'] == "OK":
+                seems_ok = True
+                reasons.append(l['source'])
+        if is_not_ok:
+            license_result = "NO"
+        elif seems_ok and not must_check:
+            # one or more license rules say yes, and none say we must check 
+            license_result = "OK"
+        else:
+            # undetermined, or specifically must check
+            license_result = "CHECK"
+        return license_result, reasons
+
+
     try:
         # try to see if we have spotify metadata already
         spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_get_album_rights, metadata['spotify']['album_uri'])
@@ -309,49 +346,26 @@ async def handle_post_ownership(request):
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
         spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_search_copyrights, metadata['metadata'])
 
-    # TODO:
-    # TODO: add discogs cache, so we can get this async from discogs without hititng rate limits
-    # TODO:
-    discogs_label_heritage = await loop.run_in_executor(executor, get_discogs_label, spotifycopyright['parsed_label'])
-
     # look up licenses from our license table
     lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata'].get('artists', []) ] )
+    lookup.add('label', remove_corporate_suffix(spotifycopyright['parsed_label']))
     if 'artist' in metadata['metadata']:
         lookup.add('artist', metadata['metadata']['artist'])
-    if discogs_label_heritage is not None:
-        lbl = discogs_label_heritage[-1].name # discogs_client.models.Label 
-        lookup.add('label', remove_corporate_suffix(lbl))
-    else:
-        # we have no discogs data, look in our license table for what spotify returns
-        app.logger.info('Looking in license table for spotify label info: "{}"'.format(spotifycopyright['parsed_label']))
-        lookup.add('label', remove_corporate_suffix(spotifycopyright['parsed_label']))
 
     licenses, errors = await get_licenses(lookup)
-    app.logger.info('got licenses: %r', licenses)
+    license_result, reasons = check_license_result(licenses)
 
-    # now, loop through all licenses and come up with one answer
-    license_result = "CHECK";
-    must_check = seems_ok = is_not_ok = False
-    reasons = []
-    for l in licenses:
-        if l['license_status'] == "NO":
-            is_not_ok = True
-            reasons = [l['source'], ]
-            break
-        if l['license_status'] == "CHECK":
-            must_check = True
-            reasons.append(l['source'])
-        elif l['license_status'] == "OK":
-            seems_ok = True
-            reasons.append(l['source'])
-    if is_not_ok:
-        license_result = "NO"
-    elif seems_ok and not must_check:
-        # one or more license rules say yes, and none say we must check 
-        license_result = "OK"
-    else:
-        # undetermined, or specifically must check
-        license_result = "CHECK"
+    discogs_label_heritage = []
+    if license_result == "CHECK":
+        # TODO:
+        # TODO: add discogs cache, so we can get this async from discogs without hititng rate limits
+        # TODO:
+        discogs_label_heritage = await loop.run_in_executor(executor, get_discogs_label, spotifycopyright['parsed_label'])
+        if discogs_label_heritage is not None:
+            lbl = discogs_label_heritage[-1].name # discogs_client.models.Label, topmost parent 
+            lookup.add('label', remove_corporate_suffix(lbl))
+            licenses, errors = await get_licenses(lookup)
+            license_result, reasons = check_license_result(licenses)
 
     # keep track of how good we are
     await store_copyright_result(app,metadata['spotify']['uri'], license_result)
