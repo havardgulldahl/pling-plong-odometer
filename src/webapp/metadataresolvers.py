@@ -1033,7 +1033,7 @@ class ExtremeMusicResolver(ResolverBase):
     name = 'ExtremeMusic'
     prettyname = 'Extreme Music'
     website = 'https://www.extrememusic.com/'
-    urlbase = 'https://lapi.extrememusic.com/' # JSON REST interface
+    urlbase = 'https://napi.extrememusic.com/' # JSON REST interface
     labelmap = {#  get list of labels automatically from ./scripts/parse_extrememusic_repertoire.py and paste here
 'XCD': 'X-Series', 'DCD': 'Directors Cuts', 'XXL': 'The 13 Brotherhood', 'XET': 'Earth Tones', 'HYP': 'Hype Music', 'ATN': 'A-Tone', 'XDC': 'Devils Cut', 'SRG': 'Saint Rogue', 'XSF': 'Spitfire Audio', 'XRC': 'Reality Check', 'XTS': 'Two Steps From Hell', 'XEL': 'Easy Listening', 'XTW': 'Twisted', 'XPS': 'Passport', 'QCD': 'Q-Series', 'LAA': 'Law & Audio', 'GAA': 'Gore & Audio', 'WAA': 'War & Audio', 'XLR': 'Lab Rat Recordings', 'XXX': 'Moonshine', 'XCL': 'Ultimate Classix', 'XGM': 'Grandmaster', 'SPN': 'Vortrax', 'VEX': 'Velvet Ears', 'XSP': 'Superpop', 'XMT': 'Mixtape', 'SCS': 'Scoreganics', 'MDE': 'Made', 'XST': 'Stampede', 'XSR': 'Super Rock',
     # OLD/DEPRECATED/ALIASES: 
@@ -1067,13 +1067,13 @@ class ExtremeMusicResolver(ResolverBase):
 
     async def get_session_cookie(self):
         'Ping Extreme Music webserver to get a valid session cookie'
-        url = 'https://www.extrememusic.com/env'
+        url = '{}env'.format(self.website)
         async with self.session.get(url) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
             data = await resp.json()
             logging.info('got data: %r', data)
-            logincookie = data['env']['API_AUTH']
+            logincookie = data['token']
             return logincookie
 
     async def resolve(self, filename, fromcache=True, fuzzy=False):
@@ -1092,8 +1092,17 @@ class ExtremeMusicResolver(ResolverBase):
         async def get_internal_musicid(musicid):
             'Figure out the internal Extreme music id from the musicid from the file name'
             url = 'https://lapi.extrememusic.com/search/tracks?query={musicid}&mode=filter'.format(musicid=musicid)
+            # https://napi.extrememusic.com/search/tracks?facets=1&field=&isLyricsSearch=false&mode=filter&order_by=default&query=SCS062_06_3&range=0%2C100
+            url = '{}search/tracks'.format(self.urlbase)
+            params = { 'facets': 1,
+                       'field': '',
+                       'isLyricsSearch': 'false',
+                       'mode': 'filter',
+                       'order_by': 'default',
+                       'range': '0,100',
+                       'query': musicid }
             headers = {'X-API-Auth':self.session.logincookie}
-            async with self.session.get(url, headers=headers) as resp:
+            async with self.session.get(url, params=params, headers=headers) as resp:
                 logging.debug('hitting endpoint url: %r', resp.url)
                 resp.raise_for_status() # bomb on errors
                 data = await resp.json()
@@ -1110,7 +1119,7 @@ class ExtremeMusicResolver(ResolverBase):
         
         async def get_metadata(internal_musicid, musicid):
             'Get the actual metadata from the Extreme Music internal musicid'
-            url = 'https://lapi.extrememusic.com/tracks/{exid}'.format(exid=internal_musicid)
+            url = '{}tracks?id={}'.format(self.urlbase, internal_musicid)
 
             headers = {'X-API-Auth':self.session.logincookie}
             async with self.session.get(url, headers=headers) as resp:
