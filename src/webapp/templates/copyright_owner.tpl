@@ -7,7 +7,7 @@
         <td :class="{loading: !track.ownership.spotify}">
             <i>«[[ track.metadata.title ]]»</i> —
             [[ artists ]] 
-            <br><b>Spotify:</b> <span class=spotify v-if="track.ownership.spotify">[[ copyright ]]
+            <br><b>Spotify:</b> <span class=spotify v-if="track.ownership.spotify" :title="copyright">[[ prettycopyright ]]
                 <a class=spotifylink title="copy spotify uri" v-on:click.prevent="clipboard(track.spotify.uri)"></a></span>
             <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
               <i v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class=translate data-i18n=NOT_FOUND>Not found </i>
@@ -167,6 +167,9 @@ Vue.component("ownership-item", {
         }
     },
     computed: {
+        prettycopyright: function() {
+            return this.track.ownership.spotify.parsed_label || this.track.ownership.spotify.P || this.track.ownership.spotify.C;
+        },
         copyright: function() {
             return this.track.ownership.spotify.P || this.track.ownership.spotify.C;
         },
