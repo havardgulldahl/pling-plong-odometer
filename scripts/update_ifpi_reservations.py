@@ -43,14 +43,21 @@ ARTISTS = [
 
 LABELS = [
     'Beggars Group',
-    'Kobalt Music Group'
+    'Beggars Banquet Records Ltd.', 
+    '4AD Ltd', 
+    'Rough Trade Records Ltd.',
+    'Matador Records', 
+    'Young Turks Recordings',
+    'Too Pure Records Limited', 
+    'Kobalt Music Group',
 ]
 
 COLUMN_LABEL = 'IFPI reservasjonsliste'
 
 if __name__=='__main__':
-    print("Updating IFPI exclusion list.\n============\n{} artist names and {} labels are defined in this script.".format(len(ARTISTS), len(LABELS)), file=sys.stderr)
-    if(getpass("Type 'y' if you want to replace all existing IFPI exclusion rules in the database").strip().lower() != 'y'):
+    print('-- Tip:  Pipe this to `| ( sudo su postgres -c "psql odometer" )')
+    print("-- Updating IFPI exclusion list.\n-- ============ --\n-- {} artist names and {} labels are defined in this script.".format(len(ARTISTS), len(LABELS)), file=sys.stderr)
+    if(getpass("-- Type 'y' if you want to replace all existing IFPI exclusion rules in the database").strip().lower() != 'y'):
         print("Aborting, database list not changed.", file=sys.stderr)
         sys.exit()
 
