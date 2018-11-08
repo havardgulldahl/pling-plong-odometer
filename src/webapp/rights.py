@@ -200,14 +200,14 @@ class DueDiligence:
         labelquery = re.sub(r' norway$', '', labelquery, flags=re.IGNORECASE)
 
         rexes = [
-            r'^(.+), manufactured and marketed by .+', # The Weeknd XO, Inc., manufactured and marketed by Republic Records, a division of UMG Recordings, Inc. -> The Weeknd XO, Inc.
-            r'^(.+),? distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
-            r'(?:.+), [Aa] [Dd]ivision of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
-            r'(?:.+) – [Aa] [Dd]ivision of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
-            r'(?:.+) under exclusive licence to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
-            r'^The copyright in this sound recording is owned by (.+)', # The copyright in this sound recording is owned by Mawlaw 388 Ltd T/A Source UK
+            r'(?i)^(.+), manufactured and marketed by .+', # The Weeknd XO, Inc., manufactured and marketed by Republic Records, a division of UMG Recordings, Inc. -> The Weeknd XO, Inc.
+            r'(?i)^(.+),? distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
+            r'(?i)(?:.+), a division of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
+            r'(?i)(?:.+) – a division of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
+            r'(?i)(?:.+) under exclusive licence to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
+            r'(?i)^The copyright in this sound recording is owned by (.+)', # The copyright in this sound recording is owned by Mawlaw 388 Ltd T/A Source UK
             r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
-            r'^(.+) Inc\.', # Cash Money Records Inc. (company) -> Cash Money Records (label)
+            r'(?i)^(.+) Inc\.', # Cash Money Records Inc. (company) -> Cash Money Records (label)
         ]
         for rx in rexes:
             try:
