@@ -7,10 +7,12 @@
         <td :class="{loading: !track.ownership.spotify}">
             <i>«[[ track.metadata.title ]]»</i> —
             [[ artists ]] 
-            <br><b>Spotify:</b> <span class=spotify v-if="track.ownership.spotify" :title="copyright">[[ prettycopyright ]]
+            <br><b>Spotify:</b> <span class=spotify v-if="track.ownership.spotify">[[ copyright ]]
                 <a class=spotifylink title="copy spotify uri" v-on:click.prevent="clipboard(track.spotify.uri)"></a></span>
-            <br><b>Discogs:</b> <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
-              <i v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class=translate data-i18n=NOT_FOUND>Not found </i>
+            <br><b>Discogs:</b> 
+                <span class=text-muted v-if="track.ownership.spotify">[[ prettycopyright ]]</span> 
+                <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
+                <span v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class="translate text-danger" data-i18n=NOT_FOUND>Not found</span>
         </td>
         <td class=align-middle >
             <div v-if="track.ownership.spotify" >
@@ -19,6 +21,7 @@
                       class="btn active"
                       :class="licenses.style">[[licenses.result]]</button>
               <i v-if="licenses.reason">[[licenses.reason]]</i>
+              <a v-if="track.licenses.result=='CHECK'" href=#>slik sjekker du</a>
             </div>
             <div v-if="errors">
               <button type="button" 
