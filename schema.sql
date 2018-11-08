@@ -183,6 +183,8 @@ CREATE TABLE copyright_lookup_result (
     id SERIAL PRIMARY KEY,
     timestamp timestamp with time zone NOT NULL DEFAULT now(),
     spotify_id character varying(255) NOT NULL,
-    result character varying(255) NOT NULL
+    result character varying(255) NOT NULL,
+    spotify_label text NOT NULL,
+    parsed_label character varying(255) NOT NULL
 );
 CREATE UNIQUE INDEX copyright_lookup_result_pkey ON copyright_lookup_result(id int4_ops);

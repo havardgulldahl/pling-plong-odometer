@@ -75,13 +75,13 @@ async def store_resolve_result(_app, result_code, result_text, filename, resolve
     async with _app.dbpool.acquire() as connection:
         await connection.execute(sql, result_code, result_text, filename, resolver, overridden)
         
-async def store_copyright_result(_app, spotify_id, result):
+async def store_copyright_result(_app, spotify_id, result, spotify_label, parsed_label):
     'Helper to add result of a copyright lookup to DB'
 
-    sql = '''INSERT INTO copyright_lookup_result (spotify_id, result)
-             VALUES ($1, $2);'''
+    sql = '''INSERT INTO copyright_lookup_result (spotify_id, result, spotify_label, parsed_label)
+             VALUES ($1, $2, $3, $4);'''
     async with _app.dbpool.acquire() as connection:
-        await connection.execute(sql, spotify_id, result)
+        await connection.execute(sql, spotify_id, result, spotify_label, parsed_label)
 
 class AudioClip:
     'The important properties of an audio clip for JSON export'
@@ -372,7 +372,11 @@ async def handle_post_ownership(request):
             license_result, reasons = check_license_result(licenses)
 
     # keep track of how good we are
-    await store_copyright_result(app,metadata['spotify']['uri'], license_result)
+    await store_copyright_result(app, 
+                                 metadata['spotify']['uri'], 
+                                 license_result, 
+                                 spotifycopyright.get('P', spotifycopyright.get('C', None)), 
+                                 spotifycopyright['parsed_label'])
 
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[errors],
