@@ -38,7 +38,8 @@ ARTISTS = [
     'Michael Jackson',
     'Pharell Williams',
     'Adele',
-    'Karpe'
+    'Karpe',
+    'Cezinando'
 ]
 
 LABELS = [
