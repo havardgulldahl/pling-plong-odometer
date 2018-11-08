@@ -203,6 +203,7 @@ class DueDiligence:
 
         rexes = [
             r'(?i)^(.+), manufactured and marketed by .+', # The Weeknd XO, Inc., manufactured and marketed by Republic Records, a division of UMG Recordings, Inc. -> The Weeknd XO, Inc.
+            r'(?i)^(.+), marketed and distributed by .+', # Pink Floyd Music Ltd., marketed and distributed by Parlophone Records Ltd., a Warner Music Group Company -> Pink Floyd Music Ltd.
             r'(?i)^(.+?),? distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
             r'(?i)(?:.+), a division of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
             r'(?i)(?:.+) – a division of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
