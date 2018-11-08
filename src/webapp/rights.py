@@ -105,7 +105,7 @@ class DueDiligence:
         if not trackmetadata['artist'].lower() in [a['name'].lower() for a in track['artists']]: # check artist
             raise SpotifyNotFoundError('Ambigous result returned from Spotify. Please check manually')
 
-        return self.spotify_get_album_rights(track['album']['uri'])
+        return track, self.spotify_get_album_rights(track['album']['uri']) # return track metadata + album copyright
 
     def spotify_search_track(self, querystring):#:str) -> dict:
         '''Search for track in spotify and return all metadata. 

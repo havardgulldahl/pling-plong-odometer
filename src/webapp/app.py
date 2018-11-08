@@ -344,7 +344,11 @@ async def handle_post_ownership(request):
         spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_get_album_rights, metadata['spotify']['album_uri'])
     except KeyError:
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
-        spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_search_copyrights, metadata['metadata'])
+        spotifymetadata, spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_search_copyrights, metadata['metadata'])
+        # store spotify track metadata
+        metadata['spotify']['uri'] = spotifymetadata['uri']
+        metadata['spotify']['album_uri'] = spotifymetadata['album']['uri']
+
 
     # look up licenses from our license table
     lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata'].get('artists', []) ] )
