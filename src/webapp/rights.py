@@ -170,14 +170,16 @@ class DueDiligence:
             # ℗ 2017 Propeller Recordings, distributed by Universal Music AS, Norway -> 
             rex = re.compile(r'^(?:\(C\)|\(P\)|℗|©)? ?\d{4}?(?:, \d{4})? ?(.+)')
             try:
-                return rex.match(labelstring).group(1)
+                first_step = rex.match(labelstring).group(1)
             except AttributeError:
                 # (P) NorskAmerikaner AS 2008
                 try:
                     rex2 = re.compile(r'^(?:\(C\)|\(P\)|℗|©)? (.+) \d{4}(?:, \d{4})?')
-                    return rex2.match(labelstring).group(1)
+                    first_step = rex2.match(labelstring).group(1)
                 except AttributeError:
                     return None
+            second_step = self.parse_label_attribution(first_step)
+            return second_step or first_step # return what we have if the second step didnt return anything better
         r = self.sp.album(albumuri).get('copyrights')
         ret = { k['type']:k['text'] for k in r}
         if 'P' in ret: # have (P) section
@@ -201,7 +203,7 @@ class DueDiligence:
 
         rexes = [
             r'(?i)^(.+), manufactured and marketed by .+', # The Weeknd XO, Inc., manufactured and marketed by Republic Records, a division of UMG Recordings, Inc. -> The Weeknd XO, Inc.
-            r'(?i)^(.+),? distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
+            r'(?i)^(.+?),? distributed by (?:.+)', # Propeller Recordings, distributed by Universal Music AS, Norway
             r'(?i)(?:.+), a division of (.+)', #Republic Records, a division of UMG Recordings, Inc. -> UMG Recordings, Inc 
             r'(?i)(?:.+) – a division of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
             r'(?i)(?:.+) under exclusive licence to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
