@@ -1101,7 +1101,7 @@ class ExtremeMusicResolver(ResolverBase):
                        'order_by': 'default',
                        'range': '0,100',
                        'query': musicid }
-            headers = {'X-API-Auth':self.session.logincookie}
+            headers = {'X-API-Auth':self.session.logincookie, 'X-Site-Id':'4'}
             async with self.session.get(url, params=params, headers=headers) as resp:
                 logging.debug('hitting endpoint url: %r', resp.url)
                 resp.raise_for_status() # bomb on errors
@@ -1121,7 +1121,7 @@ class ExtremeMusicResolver(ResolverBase):
             'Get the actual metadata from the Extreme Music internal musicid'
             url = '{}tracks?id={}'.format(self.urlbase, internal_musicid)
 
-            headers = {'X-API-Auth':self.session.logincookie}
+            headers = {'X-API-Auth':self.session.logincookie, 'X-Site-Id':'4'}
             async with self.session.get(url, headers=headers) as resp:
                 logging.debug('hitting endpoint url: %r', resp.url)
                 resp.raise_for_status() # bomb on errors
@@ -1223,7 +1223,7 @@ class ExtremeMusicResolver(ResolverBase):
         if not hasattr(self.session, 'logincookie') or self.session.logincookie is None:
             self.session.logincookie = await self.get_session_cookie() 
         url = 'https://lapi.extrememusic.com/grid_items?range=0%2C200&view=series'
-        headers = {'X-API-Auth':self.session.logincookie}
+        headers = {'X-API-Auth':self.session.logincookie, 'X-Site-Id':'4'}
         async with self.session.get(url, headers=headers) as resp:
             logging.debug('update labels. hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
