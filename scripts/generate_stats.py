@@ -15,9 +15,9 @@ import logging
 @attr.s
 class DataPoint:
     'Hold data from the DB'
-    resolver:str = attr.ib()
-    result_code:int = attr.ib()
-    count:int = attr.ib()
+    resolver = attr.ib()
+    result_code = attr.ib()
+    count = attr.ib()
     #'relative:float = attr.ib(init=False)
 
     def to_dict(self): 
@@ -26,9 +26,10 @@ class DataPoint:
 @attr.s
 class Dataset:
     'sort DataPoints'
-    _set:collections.OrderedDict = attr.ib(default=collections.OrderedDict())
+    #_set:collections.OrderedDict = attr.ib(default=collections.OrderedDict())
+    _set = attr.ib(default=collections.OrderedDict())
 
-    def append(self, dp:DataPoint):
+    def append(self, dp):#:DataPoint):
         'add to dataset'
         if not dp.resolver in self._set:
             self._set.update({dp.resolver: []})
@@ -41,11 +42,11 @@ class DataPointEncoder(json.JSONEncoder):
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 
-async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper):
+async def main(configuration, outfile):#:configparser.ConfigParser, outfile:io.TextIOWrapper):
     'main routine'
     dbpool = await asyncpg.create_pool(dsn=configuration.get('db', 'dsn'))
 
-    async def strip(sql:str) -> list:
+    async def strip(sql):#:str) -> list:
         'run an sql query and return naked items'
         result = await dbpool.fetch(sql)
         return [ r[0] for r in result ]
@@ -54,8 +55,11 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
 
     result_codes = await strip('''SELECT DISTINCT result_code from resolve_result ORDER BY result_code ASC;''')
 
+    #
+    # Make stats on how well the filename resolvers worked the last X days 
+    #
 
-    async def run(setname:str, sql:str) -> dict:
+    async def run_activity(setname, sql):#:str, sql:str) -> dict:
         'run an SQL query and return a dict with a named key'
         dataset = Dataset()
         for r in await dbpool.fetch(sql):
@@ -77,19 +81,60 @@ async def main(configuration:configparser.ConfigParser, outfile:io.TextIOWrapper
         return {setname: ret} 
 
     out = {'timestamp':datetime.datetime.now().isoformat()}
-    out.update(await run('activity_24hrs', 
+    out.update(await run_activity('activity_24hrs', 
         '''SELECT  resolver, result_code, COUNT(resolver)
         FROM    resolve_result
         WHERE   timestamp >= NOW() - '1 day'::INTERVAL
         GROUP BY result_code, resolver
         ORDER BY resolver'''
     ))
-    out.update(await run('activity_7days', 
+    out.update(await run_activity('activity_7days', 
         '''SELECT  resolver, result_code, COUNT(resolver)
         FROM    resolve_result
         WHERE   timestamp >= NOW() - '7 day'::INTERVAL
         GROUP BY result_code, resolver
         ORDER BY resolver'''
+    ))
+
+    #
+    # MAke statitics on how well the copyright resolvers work 
+
+    async def run_lookup_results(setname, sql):#:str, sql:str) -> dict:
+        datasets = {}
+        current_series = []
+        current_result = None
+        for r in await dbpool.fetch(sql):
+            # date                      result  count
+            # 2018-11-08 22:00:00+01	CHECK	37
+            logging.info("got row- {!r}".format(r))
+            if not r['result'] in datasets.keys():
+                # first time we see new series, store the old one
+                datasets[r['result']] = []
+            datasets[r['result']].append( {
+                'x': r['date'].isoformat() + "Z",
+                'y': r['count']
+            })
+
+        ret = {'labels':[],
+               'datasets':datasets,
+               'tooltips':[]
+               }
+
+
+        return {setname: ret} 
+
+    out.update(await run_lookup_results('ownership_resolve_efficiency_hours',
+        '''SELECT date_trunc('hour', timestamp) AS date, result, count(1)
+            FROM copyright_lookup_result
+            GROUP BY date, result
+            ORDER BY result'''
+    ))
+
+    out.update(await run_lookup_results('ownership_resolve_efficiency_weeks',
+        '''SELECT date_trunc('week', timestamp) AS date, result, count(1)
+            FROM copyright_lookup_result
+            GROUP BY date, result
+            ORDER BY result'''
     ))
     
     from pprint import pprint, pformat
