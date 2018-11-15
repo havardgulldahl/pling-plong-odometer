@@ -616,6 +616,12 @@ async def handle_get_tests_api(request):
 def tests(request):
     return {}
 
+@routes.get('/dashboard')
+@aiohttp_jinja2.template('admin_dashboard.tpl')
+def tests(request):
+    return {}
+
+
 
 @routes.get('/favicon.ico')
 def favicon(request):
