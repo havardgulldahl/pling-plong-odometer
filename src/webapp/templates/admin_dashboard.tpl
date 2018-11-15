@@ -20,10 +20,6 @@
 var app = new Vue({
     el: '#adminpanel',
     data: {
-      selected_test: [],
-      tests: [ { "name": "IFPI reservasjonsliste", "url": "/copyright_owner?"}, 
-               { "name": "Analyse XMEML", "url": "/?test"} 
-      ]
     },
     mounted : function() { 
         console.log("startup");
@@ -57,9 +53,9 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
                        "400": "rgba(255, 205, 86, 0.2)", 
                        "200": "rgba(75, 192, 192, 0.2)", 
                        "500": "rgba(54, 162, 235, 0.2)", 
-                       "OK": "rgba(255, 205, 86, 0.2)", 
-                       "CHECK": "rgba(75, 192, 192, 0.2)", 
-                       "NO": "rgba(54, 162, 235, 0.2)", 
+                       "OK": "#28a745",
+                       "CHECK": "#ffc107",
+                       "NO": "#dc3545",
                        "default": "rgba(201, 203, 207, 0.2)"};
             
 
@@ -144,7 +140,16 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
         },
 
         // Configuration options go here
-        options: {}
+        options: {
+            scales: {
+                yAxes: [{
+                  stacked: true,
+                }]
+              },
+              animation: {
+                duration: 750,
+              },
+        }
     });
 }
 
@@ -162,9 +167,11 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
     <div class=container>
         <div class=row>
             <div class=col>
+                <h3>Filenames</h3>
                 <canvas id="filenameStatsChart" width="500" height="500"></canvas>
             </div>
             <div class=col>
+                <h3>Ownership</h3>
                 <canvas id="ownershipStatsChart" width="500" height="500"></canvas>
             </div>
         </div>
