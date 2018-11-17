@@ -19,6 +19,9 @@ import model
 TRUST_ISRC=False # TODO: figure out if we can trust ISRC
 TRUST_EAN=False # TODO: figure out if we can trust EAN
 
+
+MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR=1962
+
 class NotFoundError(Exception): 
     pass
 
@@ -32,10 +35,22 @@ def remove_corporate_suffix(lbl):
     'Removes common corporation suffixes to normalize string before lookup'
     if lbl is None:
         return lbl
-    for sufx in [' AS', ' A/S', ' A.S.', 'Ltd.']:  # remove suffix
+    for sufx in [' AS', ' A/S', ' A.S.', 'Ltd.', 'O/S']:  # remove suffix
         if lbl.upper().endswith(sufx):
             return lbl[:-len(sufx)]
     return lbl
+
+def get_year_from_string(s):
+    'Extract everything that looks like a year from a string'
+    return [ int(y) for y in re.findall(r'\d{4}', s) if 1850 < int(y) < 2100 ]
+
+def release_is_old_and_public_domain(releaseyear, spotifylabelinfo=None):
+    '''Return True if both the released date and the copyright date are older 
+    than the 'MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR' variable.''' 
+    logging.debug('public_domain? %r %r', releaseyear, spotifylabelinfo)
+    spotifyyear = min( get_year_from_string (spotifylabelinfo.get('P', None) or spotifylabelinfo.get('C', None)) )
+
+    return min(releaseyear, spotifyyear) < MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR
 
 class RateLimitedCachingClient(discogs_client.Client):
     'Reimplemntattion to cache data from discogs, and to retry if we get 429 rate limit errors'
@@ -156,10 +171,16 @@ class DueDiligence:
         # TODO: handle paging (more than 100 items in list). look at spotipy.next(), srch["next"] is an url if there are more items, null if there arent
         for item in srch['tracks']['items']:
             logging.debug('got spotify item %r', json.dumps(item['track']['album']))
+            try:
+                y = int(item['track']['album']['release_date'][:4])
+            except TypeError:
+                y = -1
             st,_ = trackstub.dump({'title':     item['track']['name'],
                                    'uri':       item['track']['uri'],
                                    'artists':   [a['name'] for a in item['track']['artists']], 
-                                   'album_uri': item['track']['album']['uri']})
+                                   'album_uri': item['track']['album']['uri'],
+                                   'year':      y
+                                   })
             yield st
 
     def spotify_get_album_rights(self, albumuri):#:str) -> dict:

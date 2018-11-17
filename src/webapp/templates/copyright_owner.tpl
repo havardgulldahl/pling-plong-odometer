@@ -297,7 +297,7 @@ function resolve_manually(inputelement) {
                     break;
                 }
                 t = tracks[i];
-                app.items.push({"metadata":{"title":t.title, "artists":t.artists, "artist":t.artist}, 
+                app.items.push({"metadata":{"title":t.title, "artists":t.artists, "artist":t.artist, "year":t.year}, 
                                 "ownership": {},
                                 "licenses": [],
                                 "spotify": {"album_uri": t.album_uri, "uri": t.uri}});

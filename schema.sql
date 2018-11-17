@@ -185,6 +185,7 @@ CREATE TABLE copyright_lookup_result (
     spotify_id character varying(255) NOT NULL,
     result character varying(255) NOT NULL,
     spotify_label text NOT NULL,
-    parsed_label character varying(255) NOT NULL
+    parsed_label character varying(255) NOT NULL,
+    reason text
 );
 CREATE UNIQUE INDEX copyright_lookup_result_pkey ON copyright_lookup_result(id int4_ops);

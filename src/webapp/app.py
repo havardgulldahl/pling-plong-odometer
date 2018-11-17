@@ -32,7 +32,7 @@ from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 import metadataresolvers
 
 from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, SpotifyNotFoundError, \
-    remove_corporate_suffix
+    remove_corporate_suffix, release_is_old_and_public_domain
 
 import model
 
@@ -72,13 +72,13 @@ async def store_resolve_result(_app, result_code, result_text, filename, resolve
     async with _app.dbpool.acquire() as connection:
         await connection.execute(sql, result_code, result_text, filename, resolver, overridden)
         
-async def store_copyright_result(_app, spotify_id, result, spotify_label, parsed_label):
+async def store_copyright_result(_app, spotify_id, result, reason, spotify_label, parsed_label):
     'Helper to add result of a copyright lookup to DB'
 
-    sql = '''INSERT INTO copyright_lookup_result (spotify_id, result, spotify_label, parsed_label)
-             VALUES ($1, $2, $3, $4);'''
+    sql = '''INSERT INTO copyright_lookup_result (spotify_id, result, reason, spotify_label, parsed_label)
+             VALUES ($1, $2, $3, $4, $5);'''
     async with _app.dbpool.acquire() as connection:
-        await connection.execute(sql, spotify_id, result, spotify_label, parsed_label)
+        await connection.execute(sql, spotify_id, result, reason, spotify_label, parsed_label)
 
 class AudioClip:
     'The important properties of an audio clip for JSON export'
@@ -274,10 +274,16 @@ async def handle_trackinfo(request):
         track = await loop.run_in_executor(executor, app.duediligence.sp.track, spotifyuri)
         #app.logger.info("got spotify track: %r", track)
         trackstub = model.TrackStub()
+        try:
+            y = int(track['album']['release_date'][:4])
+        except TypeError:
+            y = -1
         metadata, errors = trackstub.dump({'title':     track['name'],
                                            'uri':       track['uri'],
                                            'artists':   [a['name'] for a in track['artists']], 
-                                           'album_uri': track['album']['uri']})
+                                           'album_uri': track['album']['uri'],
+                                           'year':      y
+                                           })
     return web.json_response({'error':[],
                               'tracks': [metadata,] },
                               dumps=model.OdometerJSONEncoder().encode)
@@ -333,6 +339,11 @@ async def handle_post_ownership(request):
         # store spotify track metadata
         metadata['spotify']['uri'] = spotifymetadata['uri']
         metadata['spotify']['album_uri'] = spotifymetadata['album']['uri']
+        try:
+            metadata['metadata']['year'] = int(spotifymetadata['album']['release_date'][:4]) # we only need the release year
+        except TypeError:
+            # fall back to year provided from Trackmetadata object
+            metadata['metadata']['year'] = metadata['year']
 
 
     # look up licenses from our license table
@@ -341,8 +352,15 @@ async def handle_post_ownership(request):
     if 'artist' in metadata['metadata']:
         lookup.add('artist', metadata['metadata']['artist'])
 
-    licenses, errors = await get_licenses(lookup)
-    license_result, reasons = check_license_result(licenses)
+    # CCHEKC if released year is older than 1962, since everything before that date is allowed
+    if release_is_old_and_public_domain(metadata['metadata']['year'], spotifycopyright):
+        app.logger.debug('This release is public domain')
+        license_result = 'OK'
+        reasons = ['Pre 1962. Public domain']
+        errors = []
+    else:
+        licenses, errors = await get_licenses(lookup)
+        license_result, reasons = check_license_result(licenses)
 
     discogs_label_heritage = []
     if license_result == "CHECK":
@@ -360,7 +378,8 @@ async def handle_post_ownership(request):
     await store_copyright_result(app, 
                                  metadata['spotify']['uri'], 
                                  license_result, 
-                                 spotifycopyright.get('P', spotifycopyright.get('C', None)), 
+                                 ', '.join(reasons),
+                                 spotifycopyright.get('P', None) or spotifycopyright.get('C', None), 
                                  spotifycopyright['parsed_label'])
 
     jsonencoder = DueDiligenceJSONEncoder().encode

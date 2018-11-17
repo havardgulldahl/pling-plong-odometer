@@ -128,6 +128,7 @@ class TrackStub(Schema):
     artists = fields.List(fields.Str(), required=True)
     uri = fields.Str()
     album_uri = fields.Str()
+    year = fields.Int()
 
 class OdometerJSONEncoder(json.JSONEncoder):
     'turning external models and complex objects into neat json'
