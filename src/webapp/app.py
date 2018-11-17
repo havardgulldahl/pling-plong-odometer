@@ -20,7 +20,6 @@ from aiohttp_swagger import swagger_path, setup_swagger
 import aiohttp_jinja2 # pip install aiohttp-jinja2
 import jinja2
 
-import aioslacker # pip install aioslacker
 import asyncpg # pip install asyncpg
 import multidict # pip install multidict
 from aiohttp_apispec import docs, use_kwargs, marshal_with, AiohttpApiSpec
@@ -51,14 +50,12 @@ aiohttp_jinja2.setup(app,
 async def on_shutdown(_app):
     'Cleaning up right before shutdown'
     await clientSession.close()
-    await _app.slack.close()
     await _app.dbpool.close()
 
 async def on_startup(_app):
     'Things to do on startup'
     _app.configuration = configparser.ConfigParser()
     _app.configuration.read('config.ini')
-    _app.slack = aioslacker.Slacker(_app.configuration.get('slack', 'token'))
     _app.dbpool = await asyncpg.create_pool(dsn=_app.configuration.get('db', 'dsn'))
     _app.duediligence = DueDiligence(config=_app.configuration)
 
@@ -240,11 +237,6 @@ async def handle_feedback_post(request):
                                        data.get('text'))
         
     url = '/feedback/{}'.format(str(_id))
-    try:
-        app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
-                                    'New feedback from {}: {}'.format(data.get('sender'), url))
-    except:
-        pass
     return web.json_response(data={'error': [], 'url': url})
 
 @routes.post('/api/add_missing/{filename}')
@@ -258,13 +250,6 @@ async def handle_add_missing(request):
                                   filename,
                                   data.get('recordnumber'),
                                   data.get('musiclibrary'))
-    try:
-        app.slack.chat.post_message(app.configuration.get('slack', 'channel'),
-                                'Missing audio reported:\n`{}` -> *{}* ({})'.format(filename, 
-                                                                                    data.get('recordnumber'),
-                                                                                    data.get('musiclibrary')))
-    except:
-        pass # slack is not that important
     return web.json_response(data={'error': [], })
 
 

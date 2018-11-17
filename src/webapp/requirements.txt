@@ -6,7 +6,6 @@ lxml
 git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml-iter
 spotipy
 aiopg
-aioslacker
 discogs_client
 aiohttp-jinja2
 aiohttp-apispec
