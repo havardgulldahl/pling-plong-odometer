@@ -21,7 +21,7 @@
                       class="btn active"
                       :class="licenses.style">[[licenses.result]]</button>
               <i v-if="licenses.reason">[[licenses.reason]]</i>
-              <a v-if="track.licenses.result=='CHECK'" href=#>slik sjekker du</a>
+              <!-- TODO: reenable this a v-if="track.licenses.result=='CHECK'" href=#>slik sjekker du</a -->
             </div>
             <div v-if="errors">
               <button type="button" 
