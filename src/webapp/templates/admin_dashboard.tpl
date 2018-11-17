@@ -13,7 +13,7 @@
 {% endblock templates %}
 
 {% block headscript %}
-<script src="/media/Chart.js"></script>
+<script src="/media/Chart.min.js"></script>
 {% endblock headscript %}
 {% block docscript %}
 
