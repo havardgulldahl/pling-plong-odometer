@@ -86,7 +86,11 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
             datasets: sets,
         },
         options: {
-            responsive: false,
+            responsive: true,
+            title: {
+                text: i18n.FILENAMES_STATUS_WEEK(),
+                display: true
+            },
             scales: {
                 xAxes: [{
                     stacked: true,
@@ -149,6 +153,10 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
               animation: {
                 duration: 750,
               },
+            title: {
+                text: i18n.OWNERSHIP_STATUS_HOURS(),
+                display: true
+            }
         }
     });
 }
@@ -167,11 +175,11 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
     <div class=container>
         <div class=row>
             <div class=col>
-                <h3>Filenames</h3>
+                <h3 data-i18n=Filenames class=translate>Filenames</h3>
                 <canvas id="filenameStatsChart" width="500" height="500"></canvas>
             </div>
             <div class=col>
-                <h3>Ownership</h3>
+                <h3 data-i18n=Ownership class=translate>Ownership</h3>
                 <canvas id="ownershipStatsChart" width="500" height="500"></canvas>
             </div>
         </div>

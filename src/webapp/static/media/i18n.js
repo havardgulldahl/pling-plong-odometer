@@ -101,7 +101,12 @@ var messages = {
         NEW_ALIAS: "New alias",
         NEW_ALIAS_DESC: "Add a variant (e.g. different spelling)",
         CLICK_TO_REMOVE: "Click to remove",
-        MAX_50_ITEMS_IN_PLAYLIST: "The maximum number of tracks in a playlist is 50"
+        MAX_50_ITEMS_IN_PLAYLIST: "The maximum number of tracks in a playlist is 50",
+        FILENAMES: "Filenames",
+        OWNERSHIP: "Ownership",
+        FILENAMES_STATUS_WEEK: "Results the last week",
+        OWNERSHIP_STATUS_HOURS: "Results hour by hour",
+        OWNERSHIP_STATUS_WEEKS: "Results week by week"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -190,6 +195,11 @@ var messages = {
         NEW_ALIAS: "Nytt alias",
         NEW_ALIAS_DESC: "Legg til en variant (f.eks. annen stavemåte)",
         CLICK_TO_REMOVE: "Klikk for å fjerne",
-        MAX_50_ITEMS_IN_PLAYLIST: "Det maksimale antallet spor i en spilleliste er 50"
+        MAX_50_ITEMS_IN_PLAYLIST: "Det maksimale antallet spor i en spilleliste er 50",
+        FILENAMES: "Filnavn",
+        OWNERSHIP: "Eierskap",
+        FILENAMES_STATUS_WEEK: "Resultater den siste uka",
+        OWNERSHIP_STATUS_HOURS: "Resultater time for time",
+        OWNERSHIP_STATUS_WEEKS: "Resultater uke for uke "
     }
 };
