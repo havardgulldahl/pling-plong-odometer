@@ -48,9 +48,13 @@ def release_is_old_and_public_domain(releaseyear, spotifylabelinfo=None):
     '''Return True if both the released date and the copyright date are older 
     than the 'MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR' variable.''' 
     #logging.debug('public_domain? %r %r', releaseyear, spotifylabelinfo)
-    spotifyyear = min( get_year_from_string (spotifylabelinfo.get('P', None) or spotifylabelinfo.get('C', None)) )
-    minyear =  min(releaseyear, spotifyyear) 
+    try:
+        spotifyyear = min( get_year_from_string (spotifylabelinfo.get('P', None) or spotifylabelinfo.get('C', None)) )
+    except ValueError as e:
+        # spotify cant help us, look at what we have
+        return releaseyear, releaseyear < MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR
 
+    minyear =  min(releaseyear, spotifyyear)  # get the oldest year
     return minyear, minyear < MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR
 
 class RateLimitedCachingClient(discogs_client.Client):

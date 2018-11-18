@@ -18,7 +18,8 @@ var app = new Vue({
     el: '#adminpanel',
     data: {
       selected_test: [],
-      tests: [ { "name": "IFPI reservasjonsliste", "url": "/copyright_owner?"}, 
+      tests: [ { "name": "IFPI reservasjonsliste", "url": "/copyright_owner?spotify:user:pakk77:playlist:3T02fy92u3CspDE9QLJCP7"}, 
+               { "name": "FONO-medlemmer", "url": "/copyright_owner?spotify:user:pakk77:playlist:4kCvnUTnRtu6StKNpdsqC2"}, 
                { "name": "Analyse XMEML", "url": "/?test"} 
       ]
     },
@@ -73,8 +74,9 @@ function fetch_tests() {
         </div>
     </div>
 
-    <div class="embed-responsive">
-        <iframe id=testpanel class="embed-responsive-item"  src="">
+    <div class="embed-responsive embed-responsive-16by9">
+        <iframe id=testpanel class="embed-responsive-item" src="">
+            <b>Fallback</b>
 
         </iframe>
     </div> 
