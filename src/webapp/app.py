@@ -352,17 +352,19 @@ async def handle_post_ownership(request):
     if 'artist' in metadata['metadata']:
         lookup.add('artist', metadata['metadata']['artist'])
 
-    # CCHEKC if released year is older than 1962, since everything before that date is allowed
-    if release_is_old_and_public_domain(metadata['metadata']['year'], spotifycopyright):
+    # CCHEKC if released year is older than 1963, since everything before that date is allowed
+    released_year, copyright_expired = release_is_old_and_public_domain(metadata['metadata']['year'], spotifycopyright)
+    if copyright_expired:
         app.logger.debug('This release is public domain')
         license_result = 'OK'
-        reasons = ['Pre 1962. Public domain']
+        reasons = ['Released {}. Copyright expired'.format(released_year)]
         errors = []
     else:
         licenses, errors = await get_licenses(lookup)
         license_result, reasons = check_license_result(licenses)
 
     discogs_label_heritage = []
+    # only look at discogs if we're unsure
     if license_result == "CHECK":
         # TODO:
         # TODO: add discogs cache, so we can get this async from discogs without hititng rate limits

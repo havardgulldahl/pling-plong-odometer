@@ -20,7 +20,7 @@ TRUST_ISRC=False # TODO: figure out if we can trust ISRC
 TRUST_EAN=False # TODO: figure out if we can trust EAN
 
 
-MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR=1962
+MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR=1963
 
 class NotFoundError(Exception): 
     pass
@@ -47,10 +47,11 @@ def get_year_from_string(s):
 def release_is_old_and_public_domain(releaseyear, spotifylabelinfo=None):
     '''Return True if both the released date and the copyright date are older 
     than the 'MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR' variable.''' 
-    logging.debug('public_domain? %r %r', releaseyear, spotifylabelinfo)
+    #logging.debug('public_domain? %r %r', releaseyear, spotifylabelinfo)
     spotifyyear = min( get_year_from_string (spotifylabelinfo.get('P', None) or spotifylabelinfo.get('C', None)) )
+    minyear =  min(releaseyear, spotifyyear) 
 
-    return min(releaseyear, spotifyyear) < MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR
+    return minyear, minyear < MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR
 
 class RateLimitedCachingClient(discogs_client.Client):
     'Reimplemntattion to cache data from discogs, and to retry if we get 429 rate limit errors'
@@ -186,7 +187,7 @@ class DueDiligence:
     def spotify_get_album_rights(self, albumuri):#:str) -> dict:
         'Get copyright info from spotify album uri'
         def parse_label(labelstring):#:str) -> str:
-            logging.debug('Parsing copyright owner from %r', labelstring)
+            #logging.debug('Parsing copyright owner from %r', labelstring)
             # (C) 1993 Virgin Records America, Inc. -> "Virgin Records America, Inc."
             # ℗ 2017 Propeller Recordings, distributed by Universal Music AS, Norway -> 
             rex = re.compile(r'^(?:\(C\)|\(P\)|℗|©)? ?\d{4}?(?:, \d{4})? ?(.+)')
@@ -230,6 +231,7 @@ class DueDiligence:
             r'(?i)(?:.+) – a division of (.+)', #Cosmos Music Norway – A division of Cosmos Music Group
             r'(?i)(?:.+?),? under exclusive licen[cs]e to (.+)', #The copyright in this sound recording is owned by Willy Mason under exclusive licence to Virgin Records Ltd
             r'(?i)^The copyright in this sound recording is owned by (.+)', # The copyright in this sound recording is owned by Mawlaw 388 Ltd T/A Source UK
+            r'(?i)^Originally Released \d{4}\.? (.+)', # Originally Released 1962 SONY BMG MUSIC ENTERTAINMENT
             r'^[^/]+/(.+)', # KIDinaKORNER/Interscope Records -> Interscope Records
             r'(?i)^(.+) Inc\.', # Cash Money Records Inc. (company) -> Cash Money Records (label)
         ]
