@@ -659,8 +659,13 @@ async def init():
                     )
 
 if __name__ == '__main__':
+    DBG = os.path.exists('_DEVELOPMENT') # look for this file in the current directory
     import logging
-    logging.basicConfig(level=logging.DEBUG)
+    if DBG:
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug("_DEVELOPMENT flag detected, debug mode activated")
+        loop.set_debug(True)
+
     import argparse
 
     parser = argparse.ArgumentParser(description="Odometer server")
