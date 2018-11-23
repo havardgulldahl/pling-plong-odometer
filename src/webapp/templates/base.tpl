@@ -17,8 +17,13 @@
 <script type="text/javascript" src="/media/axios.min.js"></script>
 <script type="text/javascript" src="/media/purify.min.js"></script>
 <script type="text/javascript" src="/media/intro.min.js"></script>
-<script v-if="app['debugmode']" type="text/javascript" src="/media/vue.js"></script>
-<script v-else type="text/javascript" src="/media/vue.min.js"></script>
+<script type="text/javascript" 
+        {% if app["debugmode"] %}
+        src="/media/vue.js"
+        {% else %}
+        src="/media/vue.min.js"
+        {% endif %}
+        ></script>
 <script type="text/javascript" src="/media/odometer.js"></script>
 
 {% block templates %}{% endblock templates %}
