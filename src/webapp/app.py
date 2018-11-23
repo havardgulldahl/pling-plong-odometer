@@ -624,10 +624,8 @@ def tests(request):
 
 @routes.get('/dashboard')
 @aiohttp_jinja2.template('admin_dashboard.tpl')
-def tests(request):
+def dashboard(request):
     return {}
-
-
 
 @routes.get('/favicon.ico')
 def favicon(request):
@@ -638,18 +636,18 @@ app.router.add_routes(routes) # find all @routes.* decorators
 app.router.add_static('/media', 'static/media')
 
 # TODO app.router.add_get('/submit_runsheet', handle_submit_runsheet) # submit a runsheet to applicable services
-# TODO app.router.add_get('/stats', handle_stats) # show usage stats and patterns
 # TODO app.router.add_get('/get_track', get_track) # get track from unique id
 
 
 
-async def init():
+async def init(debugmode=False):
     'init everything, but dont start it up. '
     # setup application
     # add routes
     # add startup and shutdown routines
     # set up swagger
     global app
+    app.debugmode = debugmode
     setup_swagger(app,
                     swagger_url="/api/doc",
                     description='API to parse and resolve audio metadata from XMEML files, i.e. Adobe Premiere projects',
@@ -674,7 +672,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    loop.run_until_complete(init())
+    loop.run_until_complete(init(debugmode=DBG))
 
     try:
         web.run_app(
