@@ -18,7 +18,7 @@
 <script type="text/javascript" src="/media/purify.min.js"></script>
 <script type="text/javascript" src="/media/intro.min.js"></script>
 <script type="text/javascript" 
-        {% if app["debugmode"] %}
+        {% if app['debugmode'] %}
         src="/media/vue.js"
         {% else %}
         src="/media/vue.min.js"
@@ -43,7 +43,6 @@ const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "Apoll
 <body
 {% block bodyhandlers %}{% endblock bodyhandlers %}
     >
-
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
                 <a class="navbar-brand" href="/">♫ ♪ Odometer <span class=beta title="Some things may break">BETA</span></a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,8 +50,8 @@ const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "Apoll
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                   <div class="navbar-nav">
-                    <a class="nav-item nav-link active translate" href="/" data-i18n=analysis id=navbar-analysis>Analysis</a>
-                    <a class="nav-item nav-link translate" href="/copyright_owner" data-i18n=check_ownership id=navbar-ownership>Ownership</a>
+                    <a class="nav-item nav-link {% if app["active_page"] == "analysis" %} active {% endif %} translate" href="/" data-i18n=analysis id=navbar-analysis>Analysis</a>
+                    <a class="nav-item nav-link {% if app["active_page"] == "ownership" %} active {% endif %} translate" href="/copyright_owner" data-i18n=check_ownership id=navbar-ownership>Ownership</a>
                     <a class="nav-item nav-link translate" href="#" onclick="introJs().setOptions({nextLabel: i18n.NEXT(), skipLabel: i18n.SKIP(), prevLabel: i18n.PREVIOUS(), doneLabel: i18n.DONE()}).start()" data-i18n=help>Help</a>
                     <a class="nav-item nav-link translate" href="/api/doc" title="JSON REST API (swagger)" data-i18n=api>API</a>
                   </div>

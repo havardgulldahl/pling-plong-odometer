@@ -62,6 +62,7 @@ async def on_startup(_app):
 
 app.on_startup.append(on_startup)
 app.on_shutdown.append(on_shutdown)
+app.debugmode = False # set this in init
 
 APIVERSION = '0.1'
 
@@ -575,12 +576,14 @@ async def handle_get_feedback(request):
 @routes.get('/')
 @aiohttp_jinja2.template('index.tpl')
 def index(request):
+    app.active_page = "analysis"
     return {}
 
 
 @routes.get('/copyright_owner')
 @aiohttp_jinja2.template('copyright_owner.tpl')
 def copyright_owner(request):
+    app.active_page = "ownership"
     return {}
 
 

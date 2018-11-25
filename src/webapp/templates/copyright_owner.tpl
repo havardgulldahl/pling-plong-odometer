@@ -202,7 +202,7 @@ Vue.component("ownership-item", {
         if(isEmpty(this.track.ownership)) { // get ownership details for this object
             this.update_ownership();
         }
-    },
+    }
   });
 
 var app = new Vue({
