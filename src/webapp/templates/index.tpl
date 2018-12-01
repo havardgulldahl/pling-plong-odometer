@@ -1,7 +1,93 @@
 {% extends "base.tpl" %}
 
+
+{% block templates %}
+<script type="text/x-template" id="audible-template">
+    <tr>
+        <td class="filename" :class="{loading: loading, 'text-success':track.resolvable}"> [[ track.clipname ]]</td> <!-- filename -->
+        <td class="duration">[[ duration() ]]</td> <!-- duration -->
+        <td class=""> [[ track.music_services[0] ]]</td> <!-- service selectior -->
+        <td class="metadata" :class="{'text-white': errors, 'bg-danger':errors}"> 
+            <template v-if="track.metadata !== null">
+                <template v-if="track.metadata.productionmusic">
+                    <i> [[ track.metadata.copyright ]] </i> ℗ <b> [[ track.metadata.label ]] </b>
+                </template>
+                <template v-else>
+                    <i>[[ track.metadata.title]]</i> [[ track.metadata.artist]] ℗ <b>[[ track.metadata.label]]</b> [[ track.metadata.year]]
+                </template>
+            </template>
+            <span v-else-if="errors">
+                [[ errors ]]
+            </span>
+            <span v-else class=text-secondary> [[ i18n_getting_metadata() ]]</span>
+        </td> <!-- track metadata-->
+    </tr>
+</script>
+{% endblock templates %}
+
 {% block docscript %}
-    var fileList = document.getElementById('files-list');
+
+Vue.component("audible-item", {
+    props: ["track"],
+    delimiters: ["[[", "]]"],
+    template: "#audible-template",
+    data: function() {
+        return { errors: false,
+                 state: null,
+                 loading: false
+         };
+    },
+    created: function () {
+        //console.log("created %o", this);
+        if(this.track.metadata === null) { // get metadata for this object
+            this.update_metadata();
+        }
+    },
+    methods: {
+        update_metadata: function() {
+            // get metadata from api and update this object
+            // get metadata url
+            var clip = this;
+            var url = clip.track.resolve[this.track.music_services[0]];
+            console.log("update_metadata for %s from %o", clip.track.clipname, url);
+            clip.loading = true;
+            axios.get(url)
+            .then(function (response) {
+                console.log('got trackmetadat response: %o', response.data);
+                clip.track.metadata = response.data.metadata;
+                clip.loading = false;
+            })
+            .catch(function(error) {
+                console.error("metadta error: %o", error);
+                console.log(clip);
+                clip.errors = error.message;
+                clip.loading = false;
+                //alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
+            });
+        }, 
+        duration: function() {
+            // from odometer.js import formatDuration
+            return formatDuration(this.track.audible_length);
+        },
+        i18n_getting_metadata: function() {
+            return i18n.GETTING_METADATA();
+        }
+    }
+});
+
+
+var app = new Vue({
+    el: '#content',
+    data: {
+      items: [
+      ]
+    },
+    created: function() {
+        console.log("startup");
+    },
+    delimiters: ["[[", "]]"]
+  });
+
 
     // add debug ui
     if(document.location.search == "?test") {
@@ -9,7 +95,7 @@
         tbtn.innerText = "Use testfile";
         tbtn.onclick = function(event) {
             event.preventDefault();
-            removeChildren(fileList);
+            //removeChildren(fileList);
             document.getElementById('preview').validFile = {name:'testfile',
                                                             lastModifiedDate: new Date()};
             var formData = new FormData();
@@ -19,6 +105,7 @@
         }
         document.querySelector('div.col-5').appendChild(tbtn);
     }
+    var fileList = document.getElementById('files-list');
 
     var createReportButton = document.getElementById('create-report-button');
     createReportButton.onclick = function(event) {
@@ -42,7 +129,7 @@
           preview.innerHTML = "<b>"+i18n.NO_FILES_SELECTED()+"</b>";
         } else {
             // empty files table
-            removeChildren(fileList);
+            //removeChildren(fileList);
             var chosenFile = curFiles[0];
             if(!validFileType(chosenFile)) {
                 preview.innerText = i18n.NOT_VALID_FILE_TYPE();
@@ -155,14 +242,17 @@ function submit(formData) {
     // send the already prepared form data to the json endpoint for analysis
 
     // empty the files table
-    var fileList = document.getElementById('files-list');
-    removeChildren(fileList);
-    fileList.innerHTML = "<td class=loading>"+i18n.LOADING_DATA()+"<td><td><td>";
+    //var fileList = document.getElementById('files-list');
+    //removeChildren(fileList);
+    //fileList.innerHTML = "<td class=loading>"+i18n.LOADING_DATA()+"<td><td><td>";
     // Send the Data.
     axios.post("/api/analyze", formData)
     .then(function (response) {
         console.log('got audio response: %o', response.data);
-        return formatAudible(response.data.audioclips);
+        app.items = response.data.audioclips.map(function(clip) {
+            clip.metadata = null; // this is where we put the Trackmetadata structure later
+            return clip;
+        });
     })
     .catch(function(error) {
         console.error("analysis error: %o", error);
@@ -199,6 +289,7 @@ function report_missing_filename(button) {
 {% endblock bodyhandlers %}
 
 {% block content %}
+<div id=content>
     <form id="file-form" class="form" 
           enctype="multipart/form-data" action="/api/analyze" method="POST">
         <div class="form-row">
@@ -242,10 +333,17 @@ function report_missing_filename(button) {
                style="font-size:80%" 
                data-step=2
                data-intro="Når du har lastet inn xml-fila, kommer alle musikksporene automatisk opp her.">
-          <tr>
-            <td><span style="font-size: 150%;" data-i18n=startinfo class=translate>To get started: Select an XMEML file—exported from Adobe Premiere or Final Cut Pro 7.x. (You may also drop it anywhere in this window).</span> <td><td><td>
-          </tr>
+            <template v-if="items.length">
+            <audible-item v-for="item in items" 
+                          v-bind:key="item.clipname"
+                          v-bind:track="item">
+            </audible-item>
+            </template>
+            <tr v-else>
+                <td><span style="font-size: 150%;" data-i18n=startinfo class=translate>To get started: Select an XMEML file—exported from Adobe Premiere or Final Cut Pro 7.x. (You may also drop it anywhere in this window).</span> <td><td><td>
+            </tr>
         </tbody>
 
     </table>
-    {% endblock content %}
+ </div>   
+ {% endblock content %}

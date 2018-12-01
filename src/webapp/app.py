@@ -58,7 +58,7 @@ async def on_startup(_app):
     _app.configuration.read('config.ini')
     _app.dbpool = await asyncpg.create_pool(dsn=_app.configuration.get('db', 'dsn'))
     _app.duediligence = DueDiligence(config=_app.configuration)
-    _app.debugmode = False # set this in init
+    _app.logger.debug("jinja2.Environment().globals: %r", jinja2.Environment())
 
 app.on_startup.append(on_startup)
 app.on_shutdown.append(on_shutdown)
