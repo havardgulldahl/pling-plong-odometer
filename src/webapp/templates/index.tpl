@@ -26,6 +26,46 @@
         </td> <!-- track metadata-->
     </tr>
 </script>
+<script type="text/x-template" id="audible-report-template">
+    <div>
+        <dt>Title</dt><dd>[[ title() ]]</dd>
+        <div v-if="track.metadata && track.metadata.identifier">
+            <dt>Track identifier:</dt><dd> [[ track.metadata.identifier ]]</dd>
+        </div>
+        <div v-if="track.metadata && track.metadata.artist">
+            <dt>Artist:</dt><dd> [[ track.metadata.artist ]] </dd>
+        </div>
+        <div v-if="track.metadata && track.metadata.albumname">
+            <dt>Album name:</dt><dd> [[ track.metadata.albumname ]] </dd>
+        </div>
+        <div v-if="track.metadata && track.metadata.lyricist">
+            <dt>Lyricist:</dt><dd> [[ track.metadata.lyricist ]] </dd>
+        </div>
+        <div v-if="track.metadata && track.metadata.composer">
+            <dt>Composer:</dt><dd> [[ track.metadata.composer ]] </dd>
+        </div>
+        <div v-if="track.metadata && track.metadata.label">
+            <dt>Label:</dt><dd> [[ track.metadata.label ]] </dd>
+        </div>
+        <div v-if="track.metadata && track.metadata.recordnumber">
+            <dt>Recordnumber:</dt><dd> [[ track.metadata.recordnumber ]] </dd>
+        </div>
+        <div v-if="track.metadata && track.metadata.copyright">
+            <dt>Copyright owner:</dt><dd> [[ track.metadata.copyright ]] </dd>
+        </div>
+        <div v-if="track.metadata && track.metadata.year && track.metadata.year !== -1">
+            <dt>Released year:</dt><dd> [[ track.metadata.year ]]</dd>
+        </div>
+        <div v-if="track.metadata">
+            <dt>Music Library:</dt><dd>[[ track.metadata.musiclibrary ]]</dd>
+        </div>
+        <br>
+        <b>[[ i18n_seconds_in_total() ]]</b>
+        <hr>
+
+        
+    </div>
+</script>
 {% endblock templates %}
 
 {% block docscript %}
@@ -88,12 +128,26 @@ Vue.component("audible-item", {
     }
 });
 
+Vue.component("audible-report-item", {
+    props: ["track"],
+    delimiters: ["[[", "]]"],
+    template: "#audible-report-template",
+    methods: {
+        title: function() {
+            return this.track.metadata.title || this.track.clipname;
+        },
+        i18n_seconds_in_total: function() {
+            return i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(this.track.audible_length)});
+        }
+    }
+});
 
 var app = new Vue({
     el: '#content',
     data: {
-      items: [
-      ]
+      items: [ ],
+      reportitems: [ ],
+      all_tracks: false
     },
     created: function() {
         console.log("startup");
@@ -108,7 +162,6 @@ var app = new Vue({
         tbtn.innerText = "Use testfile";
         tbtn.onclick = function(event) {
             event.preventDefault();
-            //removeChildren(fileList);
             document.getElementById('preview').validFile = {name:'testfile',
                                                             lastModifiedDate: new Date()};
             var formData = new FormData();
@@ -118,12 +171,12 @@ var app = new Vue({
         }
         document.querySelector('div.col-5').appendChild(tbtn);
     }
-    var fileList = document.getElementById('files-list');
-
     var createReportButton = document.getElementById('create-report-button');
     createReportButton.onclick = function(event) {
         event.preventDefault();
-        reportdialog();
+        var tinglemodal = setupModal();
+        tinglemodal.setContent(document.getElementById("report-dialog").innerHTML);
+        tinglemodal.open();
     }
 
     var createCreditsButton = document.getElementById('create-credits-button');
@@ -141,8 +194,6 @@ var app = new Vue({
         if(curFiles.length === 0) {
           preview.innerHTML = "<b>"+i18n.NO_FILES_SELECTED()+"</b>";
         } else {
-            // empty files table
-            //removeChildren(fileList);
             var chosenFile = curFiles[0];
             if(!validFileType(chosenFile)) {
                 preview.innerText = i18n.NOT_VALID_FILE_TYPE();
@@ -358,5 +409,21 @@ function report_missing_filename(button) {
         </tbody>
 
     </table>
+    <div style="display: none">
+        <dialog id=report-dialog>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="check_all_tracks" model="all_tracks">
+                <label class="form-check-label" for="defaultCheck1">
+                    Include all audio tracks: [[ all_tracks ]]
+                </label>
+            </div>
+            <div id=tracks>
+                <audible-report-item v-for="item in items"
+                                    v-bind:key="item.clipname"
+                                    v-bind:track="item">
+                </audible-report-item>
+            </div>
+        </dialog>
+    </div>
  </div>   
  {% endblock content %}
