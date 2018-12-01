@@ -19,7 +19,10 @@
             <span v-else-if="errors">
                 [[ errors ]]
             </span>
-            <span v-else class=text-secondary> [[ i18n_getting_metadata() ]]</span>
+            <span v-else-if="!track.resolvable" class=text-muted>
+                [[ i18n_unknown() ]]
+            </span>
+            <span v-else class=text-muted> [[ i18n_getting_metadata() ]]</span>
         </td> <!-- track metadata-->
     </tr>
 </script>
@@ -48,6 +51,11 @@ Vue.component("audible-item", {
             // get metadata from api and update this object
             // get metadata url
             var clip = this;
+            if(!clip.track.resolvable) {
+                // cant resolve this track
+                console.log("This trak cannot be resolved: %s", clip.track.clipname);
+                return false;
+            }
             var url = clip.track.resolve[this.track.music_services[0]];
             console.log("update_metadata for %s from %o", clip.track.clipname, url);
             clip.loading = true;
@@ -71,6 +79,9 @@ Vue.component("audible-item", {
         },
         i18n_getting_metadata: function() {
             return i18n.GETTING_METADATA();
+        },
+        i18n_unknown: function() {
+            return i18n.UNKNOWN();
         }
     }
 });
