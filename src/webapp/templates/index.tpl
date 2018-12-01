@@ -64,6 +64,7 @@ Vue.component("audible-item", {
                 console.log('got trackmetadat response: %o', response.data);
                 clip.track.metadata = response.data.metadata;
                 clip.loading = false;
+                updateProgress(+1);
             })
             .catch(function(error) {
                 console.error("metadta error: %o", error);
@@ -71,6 +72,7 @@ Vue.component("audible-item", {
                 clip.errors = error.message;
                 clip.loading = false;
                 //alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
+                updateProgress(+1);
             });
         }, 
         duration: function() {
@@ -251,11 +253,10 @@ function finishedResolving() {
 
 function submit(formData) {
     // send the already prepared form data to the json endpoint for analysis
+    var is_resolvable = function(itm) {
+        return itm.resolvable;
+    };
 
-    // empty the files table
-    //var fileList = document.getElementById('files-list');
-    //removeChildren(fileList);
-    //fileList.innerHTML = "<td class=loading>"+i18n.LOADING_DATA()+"<td><td><td>";
     // Send the Data.
     axios.post("/api/analyze", formData)
     .then(function (response) {
@@ -264,6 +265,7 @@ function submit(formData) {
             clip.metadata = null; // this is where we put the Trackmetadata structure later
             return clip;
         });
+        startProgress((app.items.filter(is_resolvable)).length);
     })
     .catch(function(error) {
         console.error("analysis error: %o", error);
