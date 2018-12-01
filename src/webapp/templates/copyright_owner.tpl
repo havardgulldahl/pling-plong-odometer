@@ -4,18 +4,19 @@
 {% block templates %}
 <script type="text/x-template" id="ownership-template">
     <tr>
-        <td :class="{loading: !track.ownership.spotify}">
+        <td :class="{loading: !finished_loading}">
             <i>«[[ track.metadata.title ]]»</i> —
             [[ artists ]] 
             <br><b>Spotify:</b> <span class=spotify v-if="track.ownership.spotify">[[ copyright ]]
                 <a class=spotifylink title="copy spotify uri" v-on:click.prevent="clipboard(track.spotify.uri)"></a></span>
+                <span v-else class="translate text-danger" data-i18n=NOT_FOUND>Not found</span>
             <br><b>Discogs:</b> 
                 <span class=text-muted v-if="track.ownership.spotify">[[ prettycopyright ]]</span> 
                 <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
                 <span v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class="translate text-danger" data-i18n=NOT_FOUND>Not found</span>
         </td>
         <td class=align-middle >
-            <div v-if="track.ownership.spotify" >
+            <div v-if="finished_loading" >
               <button type="button" 
                       disabled 
                       class="btn active"
@@ -121,7 +122,9 @@ Vue.component("ownership-item", {
     delimiters: ["[[", "]]"],
     template: "#ownership-template",
     data: function() {
-	return { errors: false };
+        return { errors: false,
+                 finished_loading: false 
+                };
     },
     methods: {
         update_ownership: function() {
@@ -130,28 +133,31 @@ Vue.component("ownership-item", {
             var track = this.track;
             var that = this;
             inputelement.classList.toggle("loading", true);
+            this.finished_loading = false;
             axios.post("/api/ownership/", track)
-            .then(function (response) {
-                inputelement.classList.toggle("loading", false);
-	        that.set_errors(false);
-                // add copyright to ui
-                //console.log("copyright response: %o", response);
-                track.ownership = response.data.ownership;
-                // check license
-                track.licenses = response.data.licenses;
+                .then(function (response) {
+                    inputelement.classList.toggle("loading", false);
+                    that.set_errors(false);
+                    // add copyright to ui
+                    //console.log("copyright response: %o", response);
+                    track.ownership = response.data.ownership;
+                    // check license
+                    track.licenses = response.data.licenses;
 
-                updateProgress(1);
+                    updateProgress(1);
+                    that.finished_loading = true;
 
-            })
-            .catch(function(error) {
-                inputelement.classList.toggle("loading", false);
-		inputelement.firstChild.classList.toggle("loading", false);
-                console.error("copyright error: %o", error);
-                track.ownership.spotify = {"P" : i18n.PLEASE_SEARCH_MANUALLY()};
-                that.set_errors(true);
-		alertmsg(error);
-                updateProgress(1);
-            });
+                })
+                .catch(function(error) {
+                    inputelement.classList.toggle("loading", false);
+                    inputelement.firstChild.classList.toggle("loading", false);
+                    console.error("copyright error: %o", error);
+                    track.ownership.spotify = {"P" : i18n.PLEASE_SEARCH_MANUALLY()};
+                    that.set_errors(true);
+                    alertmsg(error);
+                    updateProgress(1);
+                    that.finished_loading = true;
+                });
         },
 	set_errors : function(state) {
             //console.log("set errors on %o", this.track);

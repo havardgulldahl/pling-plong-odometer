@@ -32,7 +32,7 @@ from metadataresolvers import findResolvers, getAllResolvers, getResolverByName
 import metadataresolvers
 
 from rights import DueDiligence, DueDiligenceJSONEncoder, DiscogsNotFoundError, SpotifyNotFoundError, \
-    remove_corporate_suffix, release_is_old_and_public_domain
+    remove_corporate_suffix, release_is_old_and_public_domain, SpotifyNotFoundError
 
 import model
 
@@ -335,25 +335,39 @@ async def handle_post_ownership(request):
         spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_get_album_rights, metadata['spotify']['album_uri'])
     except KeyError:
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
-        spotifymetadata, spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_search_copyrights, metadata['metadata'])
-        # store spotify track metadata
-        metadata['spotify']['uri'] = spotifymetadata['uri']
-        metadata['spotify']['album_uri'] = spotifymetadata['album']['uri']
+        try:
+            spotifymetadata, spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_search_copyrights, metadata['metadata'])
+            # store spotify track metadata
+            metadata['spotify']['uri'] = spotifymetadata['uri']
+            metadata['spotify']['album_uri'] = spotifymetadata['album']['uri']
+        except SpotifyNotFoundError as e:
+            metadata['spotify']['uri'] = None
+            metadata['spotify']['album_uri'] = None
+            from collections import defaultdict
+            spotifycopyright = None
         try:
             metadata['metadata']['year'] = int(spotifymetadata['album']['release_date'][:4]) # we only need the release year
         except TypeError:
             # fall back to year provided from Trackmetadata object
             metadata['metadata']['year'] = metadata['year']
+        except UnboundLocalError:
+            # no spotify metadata
+            metadata['metadata']['year'] = None
 
 
     # look up licenses from our license table
     lookup = multidict.MultiDict( [ ('artist', v) for v in metadata['metadata'].get('artists', []) ] )
-    lookup.add('label', remove_corporate_suffix(spotifycopyright['parsed_label']))
+    if spotifycopyright is not None:
+        lookup.add('label', remove_corporate_suffix(spotifycopyright['parsed_label']))
     if 'artist' in metadata['metadata']:
         lookup.add('artist', metadata['metadata']['artist'])
 
     # CCHEKC if released year is older than 1963, since everything before that date is allowed
-    released_year, copyright_expired = release_is_old_and_public_domain(metadata['metadata']['year'], spotifycopyright)
+    if spotifycopyright is not None:
+        released_year, copyright_expired = release_is_old_and_public_domain(metadata['metadata']['year'], spotifycopyright)
+    else:
+        # we dont the year
+        copyright_expired = False
     if copyright_expired:
         app.logger.debug('This release is public domain')
         license_result = 'OK'
@@ -364,8 +378,8 @@ async def handle_post_ownership(request):
         license_result, reasons = check_license_result(licenses)
 
     discogs_label_heritage = []
-    # only look at discogs if we're unsure
-    if license_result == "CHECK":
+    # only look at discogs if we're unsure and we have spotify data
+    if license_result == "CHECK" and spotifycopyright is not None:
         # TODO:
         # TODO: add discogs cache, so we can get this async from discogs without hititng rate limits
         # TODO:
@@ -377,12 +391,20 @@ async def handle_post_ownership(request):
             license_result, reasons = check_license_result(licenses)
 
     # keep track of how good we are
-    await store_copyright_result(app, 
-                                 metadata['spotify']['uri'], 
-                                 license_result, 
-                                 ', '.join(reasons),
-                                 spotifycopyright.get('P', None) or spotifycopyright.get('C', None), 
-                                 spotifycopyright['parsed_label'])
+    if spotifycopyright is not None:
+        await store_copyright_result(app, 
+            metadata['spotify']['uri'], 
+            license_result, 
+            ', '.join(reasons),
+            spotifycopyright.get('P', spotifycopyright.get('C', None)),
+            spotifycopyright['parsed_label'])
+    else:
+        await store_copyright_result(app, 
+            "DMA:{}".format(json.dumps(metadata["metadata"])),
+            license_result, 
+            ', '.join(reasons),
+            "NO_SPOTIFY_MATCH_FOUND",
+            "NO_SPOTIFY_MATCH_FOUND")
 
     jsonencoder = DueDiligenceJSONEncoder().encode
     return web.json_response({'error':[errors],
