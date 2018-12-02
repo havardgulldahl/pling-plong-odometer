@@ -146,13 +146,25 @@ var app = new Vue({
     el: '#content',
     data: {
       items: [ ],
-      reportitems: [ ],
       all_tracks: false
     },
     created: function() {
         console.log("startup");
     },
-    delimiters: ["[[", "]]"]
+    delimiters: ["[[", "]]"],
+    computed: {
+        reportitems: function() {
+            // filter through items[] and return the ones that should be included in the report
+            var self = this;
+            if(self.all_tracks) {
+                return self.items;  // return everything
+            }
+            return self.items.filter(function (item) {
+                console.log("filtering item %o", item);
+                return item.resolvable;
+            });
+        }
+    }
   });
 
 
@@ -418,7 +430,7 @@ function report_missing_filename(button) {
                 </label>
             </div>
             <div id=tracks>
-                <audible-report-item v-for="item in items"
+                <audible-report-item v-for="item in reportitems"
                                     v-bind:key="item.clipname"
                                     v-bind:track="item">
                 </audible-report-item>
