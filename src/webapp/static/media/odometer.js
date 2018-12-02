@@ -116,35 +116,6 @@ function main() {
         event.preventDefault();
         feedbackdialog();
     }
-
-
-}
-
-function resolveAll() {
-    // resolve all resolvable tracks
-    var resolvables = document.querySelectorAll('#files-list .metadata.resolvable'); 
-    startProgress(resolvables.length);
-    var url, resolver, clipname;
-    for (var i = 0; i < resolvables.length; i++) {
-        resolveClip(resolvables[i].getAttribute("id"));
-    }
-}
-
-function resolveClip(metadatacell_id) {
-    // (manually) gather all the details from the dom and resolve() a clip 
-    var cell = document.getElementById(metadatacell_id);
-    var resolver = cell.previousSibling.firstChild.value;
-    var url = cell.timelinedata.resolve[resolver];
-    if(url===undefined) {
-        // odometer doesnt recognise this clip, we must force it
-        var url = cell.timelinedata.resolve_other.replace("{music_service}", resolver);
-        cell.classList.add('resolve-overridden');
-    } else {
-        cell.classList.remove('resolve-overridden');
-    }
-    var clipname = cell.timelinedata.clipname;
-    //console.log("resolveClip: %o %o->%o", clipname, resolver, url);
-    resolve(clipname, url)
 }
 
 function formatMusicServicesDropdown(music_services, metadatacell_id) {
@@ -167,89 +138,6 @@ function formatMusicServicesDropdown(music_services, metadatacell_id) {
     return s+suggested+possible+"</select>";
 
 }
-function formatAudible(audible) {
-    // get a json document of the audio file structure of the parsed xml and render it
-    var fileList = document.getElementById('files-list');
-    // empty the files table
-    removeChildren(fileList);
-
-    var tr, elm, c, r, secs, services;
-
-    for(var i=0; i<audible.length; i++) {
-        tr = document.createElement('tr');
-        elm = audible[i];
-        c = elm.clipname;
-        r = elm.resolve;
-        secs = elm.audible_length;
-        services = formatMusicServicesDropdown(elm.music_services, "o-"+utoa(c));
-        tr.innerHTML = "<td>"+c+"<td class=duration>"+formatDuration(secs)+"s<td>"+services+"<td class=metadata id='o-"+utoa(c)+"'>";
-        // keep the info around as a javascript object
-        tr.lastChild.timelinedata = elm;
-        if(elm.resolvable) {
-           tr.firstChild.classList.add('text-success');
-           tr.lastChild.classList.add('resolvable');
-        }
-        fileList.appendChild(tr);
-    }
-    resolveAll();
-}
-
-function resolve(clipname, url) {
-    // get a clipname and an url, and parse the JSON contents into a metadata string
-    // Set up the request.
-    var xhr = new XMLHttpRequest();
-    // Open the connection.
-    xhr.open('GET', url, true);
-
-    var output = document.getElementById('o-'+utoa(clipname));  // find the metadata cell of the correct row
-    // Set up a handler for when the request finishes.
-    output.innerText = i18n.GETTING_METADATA();
-    // clear any previous state 
-    output.classList.toggle("has-metadata", false);
-    output.classList.toggle("bg-danger", false);
-    output.classList.toggle("text-white", false);
-    output.classList.toggle("text-success", false);
-    output.classList.toggle("loading", true);
-
-    xhr.onload = function () {
-        output.classList.toggle("loading", false);
-        if (xhr.status === 200) {
-            // File(s) uploaded.
-            var response = JSON.parse(xhr.response);
-            console.log('got response %o', response);
-            var md = response['metadata'];
-            output.classList.add('has-metadata', 'text-success');
-            output.metadata = md;
-            if(md.productionmusic === true) {
-                output.innerHTML = md.copyright+" ℗ <b>"+md.label+"</b>";
-            } else {
-                output.innerHTML = "<i>"+md.title+"</i> "+md.artist
-                        + " <button type=button onclick='check_copyright(this)' class='btn btn-success btn-xs' title='"+i18n.CHECK_COPYRIGHT()+"'>℗</a>";
-            }
-            if(output.classList.contains('resolve-overridden')) {
-                // this is the result of a manual overridden resolve, i.e. filename should've been 
-                // recognised, but wasn't
-                // add some ui to report missing filename
-                output.innerHTML = output.innerHTML + " <button type=button onclick='report_missing_filename(this)' class='btn btn-success btn-xs' title='"+i18n.REPORT_MISSING_FILENAME()+"'>＋＋＋</a>"; }
-        } else if(xhr.status === 400) {
-            // server had issues with our request
-            var response = JSON.parse(xhr.response);
-            console.log('got error response %o', response);
-            var e = response['error'];
-            output.classList.add('text-white', 'bg-danger');
-            output.innerHTML = '<b>'+e.type+'</b>: '+e.args;
-
-        } else {
-            console.error("server returned %o -> %o", xhr.status, xhr.statusText);
-            output.innerHTML = '<i>'+xhr.statusText+'</i>';
-            output.classList.add('text-white', 'bg-danger');
-        }
-        updateProgress(+1);
-    };
-
-    // Send 
-    xhr.send();
-}
 
 function alertmsg(msg, errortype) {
     // flash a message to the #alertmsg elemnt. Errortype one of [warning, danger, info, success, primary]
@@ -263,29 +151,6 @@ function alertmsg(msg, errortype) {
                                 e.classList.remove('alert-'+etype); 
                                 e.innerText='';}, 
                             4500);
-}
-
-function creditsdialog() {
-    // pop up  a dialog suitable for copy-paste into end credits
-    var metadatarows = document.querySelectorAll('td.has-metadata');
-    var s = "";
-    var _holders = [];
-    for(var i=0; i<metadatarows.length; i++) {
-        var md = metadatarows[i].metadata;
-        if(md.title===undefined) { continue }
-        if(md.productionmusic===true) {
-            if(_holders.indexOf(md.copyright) === -1) { // only register once per copyright holder
-                s = s + "<i>"+md.copyright+"</i><br>"// <br>℗ <b>"+md.label+"</b><br>";
-                _holders.push(md.copyright);
-            }
-        } else {
-            s = s + "<i>"+md.title+"</i> "+md.artist+" <br>℗ <b>"+md.label+"</b> "+md.year+" <br>";
-        }
-    }
-    console.log('got credits: %o', s);
-    var tinglemodal = setupModal();
-    tinglemodal.setContent('<h1>'+i18n.END_CREDITS()+'</h1>'+s);
-    tinglemodal.open();
 }
 
 function runsheetdialog() {
@@ -326,56 +191,6 @@ function runsheetdialog() {
     tinglemodal.open();
 }
 
-function reportdialog() {
-    // pop up a prf report, detailing the metadata details
-    var metadatarows = document.querySelectorAll('td.has-metadata');
-    var reportrows = []; // this is where we keep the generated text of each report row
-    for(var i=0; i<metadatarows.length; i++) {
-        var md = metadatarows[i].metadata;
-        var td = metadatarows[i].timelinedata;
-        console.log("got timelinedata: %o", td);
-        var t = md.title || td.title;// TODO: let people choose ordinary files also 
-        var _s = "<div><dt>Title:</dt><dd>"+t+"</dd>";
-        if(md.identifier)
-            _s = _s + "<dt>Track identifier:</dt><dd>"+md.identifier+"</dd>";
-        if(md.artist)
-            _s = _s + "<dt>Artist:</dt><dd>"+md.artist+"</dd>";
-        if(md.albumname)
-            _s = _s + "<dt>Album name:</dt><dd>"+md.albumname+"</dd>";
-        if(md.lyricist)
-            _s = _s + "<dt>Lyricist:</dt><dd>"+md.lyricist+"</dd>";
-        if(md.composer)
-            _s = _s + "<dt>Composer:</dt><dd>"+md.composer+"</dd>";
-        if(md.label)
-            _s = _s + "<dt>Label:</dt><dd>"+md.label+"</dd>";
-        if(md.recordnumber)
-            _s = _s + "<dt>Recordnumber:</dt><dd>"+md.recordnumber+"</dd>";
-        if(md.copyright)
-            _s = _s + "<dt>Copyright owner:</dt><dd>"+md.copyright+"</dd>";
-        if(md.year && md.year !== -1)
-            _s = _s + "<dt>Released year:</dt><dd>"+md.year+"</dd>";
-        _s = _s + "<dt>Music Library:</dt><dd>"+md.musiclibrary+"</dd>";
-        
-        _s = _s + "<br><b>"+i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(td.audible_length)})+"</b></div><hr>";
-        reportrows.push(_s);
-    }
-    var preview = document.getElementById('preview');
-    var filedate = preview.validFile.lastModifiedDate || new Date();
-    var filename = preview.validFile.name;
-    var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:filename,
-                 DATESTRING:filedate.toLocaleString()})+'</code>';
-    html = html + reportrows.join("\n");
-    var tinglemodal = setupModal();
-    // add another button
-    tinglemodal.addFooterBtn(i18n.DOWNLOAD_AS_FILE(), 'tingle-btn tingle-btn--info', function() {
-        // TODO: add html header and date and time
-        download(html, "music_metadata_"+filename+".html", "text/html");
-        tinglemodal.close();
-    });
-    tinglemodal.setContent("<h1>"+i18n.REPORT_HEADER_PRF()+"</h1>"+html);
-    tinglemodal.open();
-}
-
 function feedbackdialog() {
     var tinglemodal = setupModal();
     // add another button
@@ -385,7 +200,7 @@ function feedbackdialog() {
             return false;
         }
         var formData = new FormData(form);
-        axios.post("/api/feedback", formData)
+        axios.post("/api/feedback/", formData)
             .then(function (response) {
                 console.log("feedback response: %o", response);
                 alertmsg(i18n.THANK_YOU(), "info");

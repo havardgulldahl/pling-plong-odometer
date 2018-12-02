@@ -58,9 +58,11 @@ async def on_startup(_app):
     _app.configuration.read('config.ini')
     _app.dbpool = await asyncpg.create_pool(dsn=_app.configuration.get('db', 'dsn'))
     _app.duediligence = DueDiligence(config=_app.configuration)
+    _app.logger.debug("jinja2.Environment().globals: %r", jinja2.Environment())
 
 app.on_startup.append(on_startup)
 app.on_shutdown.append(on_shutdown)
+app.debugmode = False # set this in init
 
 APIVERSION = '0.1'
 
@@ -596,12 +598,14 @@ async def handle_get_feedback(request):
 @routes.get('/')
 @aiohttp_jinja2.template('index.tpl')
 def index(request):
+    app.active_page = "analysis"
     return {}
 
 
 @routes.get('/copyright_owner')
 @aiohttp_jinja2.template('copyright_owner.tpl')
 def copyright_owner(request):
+    app.active_page = "ownership"
     return {}
 
 
