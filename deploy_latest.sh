@@ -55,21 +55,24 @@ mkdir -p "$OUTPUT/$VERSION";
 tar -xf "$VERSION.tar" --strip 1 -C "${OUTPUT}/${VERSION}" || err "Untarring $VERSION.tar failed";
 result "unpacked";
 
-info "Setting up zymlink"
+info "Copying config.ini";
+CONFIG="${OUTPUT}/latest/src/webapp/config.ini";
+cp "${OUTPUT}/latest/src/webapp/config.ini" "${CONFIG}" || err "Copying config.ini failed";
+result "copied";
 
-ln -snf ${OUTPUT}/$VERSION ${OUTPUT}/latest || err "Symlinking failed";
+info "Setting up zymlink";
+ln -snf "${OUTPUT}/$VERSION" "${OUTPUT}/latest" || err "Symlinking failed";
 result "symlinked";
 
-info "Patching version string";
-perl -pi -e "s/★/$VERSION/g" ${OUTPUT}/latest/src/webapp/templates/base.tpl || err "Failed to patch version";
-result "patched"
+info "Storing version string";
+echo "${VERSION}" > "${OUTPUT}/latest/src/webapp/_VERSION" || err "Storing version failed";
+result "stored"
 
-CONFIG=${OUTPUT}/latest/src/webapp/config.ini;
-touch ${CONFIG};
-info "You need to update/create `${CONFIG}` before we restart the server. Please do this now";
+info "You need to update/verify `${CONFIG}` before we restart the server:";
+cat "${CONFIG}";
 
 read -n 1 -s -r -p "Press any key to start up the new server"
 
-info "restarting odometer server with new version";
+info "Restarting odometer server with new version";
 sudo systemctl restart odometer@{1..2} || err "Systemd restart failed";
 result "Running version $VERSION";

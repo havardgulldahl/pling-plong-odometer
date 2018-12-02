@@ -669,7 +669,7 @@ app.router.add_static('/media', 'static/media')
 
 
 
-async def init(debugmode=False):
+async def init(debugmode=False, version=None):
     'init everything, but dont start it up. '
     # setup application
     # add routes
@@ -677,6 +677,7 @@ async def init(debugmode=False):
     # set up swagger
     global app
     app.debugmode = debugmode
+    app.version = version
     setup_swagger(app,
                     swagger_url="/api/doc",
                     description='API to parse and resolve audio metadata from XMEML files, i.e. Adobe Premiere projects',
@@ -686,12 +687,21 @@ async def init(debugmode=False):
                     )
 
 if __name__ == '__main__':
-    DBG = os.path.exists('_DEVELOPMENT') # look for this file in the current directory
+    DEV = os.path.exists('_DEVELOPMENT') # look for this file in the current directory
     import logging
-    if DBG:
+    if DEV:
         logging.basicConfig(level=logging.DEBUG)
         logging.debug("_DEVELOPMENT flag detected, debug mode activated")
         loop.set_debug(True)
+
+    try:
+        with open('_VERSION') as _v:
+            VERSION = _v.read()
+    except IOError:
+        if DEV:
+            VERSION = 'DEV'
+        else:
+            VERSION = 'Unknown#'
 
     import argparse
 
@@ -701,7 +711,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    loop.run_until_complete(init(debugmode=DBG))
+    loop.run_until_complete(init(debugmode=DEV, version=VERSION))
 
     try:
         web.run_app(

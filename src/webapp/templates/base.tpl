@@ -96,7 +96,7 @@ const all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "Apoll
 main()
 {% block docscript %}{% endblock docscript %}
 </script>
-<footer><a href="https://github.com/havardgulldahl/pling-plong-odometer/releases/tag/★" title="$Format:%ci$">Odometer ★</a></footer>
+<footer><a href="https://github.com/havardgulldahl/pling-plong-odometer/releases/tag/{{ app['version'] }}" title="$Format:%ci$">Odometer {{ app['version'] }}</a></footer>
 </body>
 
 </html>
