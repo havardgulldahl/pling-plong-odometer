@@ -294,6 +294,13 @@ function resolve_manually(inputelement) {
             inputelement.classList.toggle("loading", false);
             // add copyright to ui
             //console.log("tracklist response: %o", response);
+            var error = response.data.error;
+            if(error.length) {
+                // uh oh
+                console.error(error.join(", "));
+                alertmsg(error.join(", "), "danger");
+                return false;
+            }
             var tracks = response.data.tracks;
             var t;
             for(var i=0;i<tracks.length;i++) {

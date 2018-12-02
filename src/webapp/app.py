@@ -58,7 +58,6 @@ async def on_startup(_app):
     _app.configuration.read('config.ini')
     _app.dbpool = await asyncpg.create_pool(dsn=_app.configuration.get('db', 'dsn'))
     _app.duediligence = DueDiligence(config=_app.configuration)
-    _app.logger.debug("jinja2.Environment().globals: %r", jinja2.Environment())
 
 app.on_startup.append(on_startup)
 app.on_shutdown.append(on_shutdown)
@@ -268,7 +267,11 @@ async def handle_trackinfo(request):
         resolver.setConfig(request.app.configuration)
         # run resolver
         app.logger.info("resolve audioname %r with resolver %r", trackinfo, resolver)
-        _metadata = await resolver.resolve(trackinfo)
+        try:
+            _metadata = await resolver.resolve(trackinfo)
+        except aiohttp.client_exceptions.ClientConnectorError as e:
+            app.logger.error(e)
+            return web.json_response( {'error': [str(e),], 'tracks': []})
         app.logger.info("resolve audioname %r got metadata %r", trackinfo, vars(_metadata))
         metadata = model.TrackMetadata(**vars(_metadata)) # TODO: verify with marshmallow
     elif querytype == 'spotify':
