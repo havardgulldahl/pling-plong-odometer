@@ -9,11 +9,13 @@
             [[ artists ]] 
             <br><b>Spotify:</b> <span class=spotify v-if="track.ownership.spotify">[[ copyright ]]
                 <a class=spotifylink title="copy spotify uri" v-on:click.prevent="clipboard(track.spotify.uri)"></a></span>
-                <span v-else class="translate text-danger" data-i18n=NOT_FOUND>Not found</span>
+                <span v-else-if="finished_loading &amp;&amp; !track.ownership.spotify"
+                      class="translate text-danger" data-i18n=NOT_FOUND>Not found</span>
             <br><b>Discogs:</b> 
                 <span class=text-muted v-if="track.ownership.spotify">[[ prettycopyright ]]</span> 
                 <span v-for="label in track.ownership.discogs"> ⇝ <a target=_blank :href="'http://www.discogs.com/label/'+label.id">[[ label.name ]]</a></span>
-                <span v-if="track.ownership.spotify &amp;&amp; !track.ownership.discogs" class="translate text-danger" data-i18n=NOT_FOUND>Not found</span>
+                <span v-if="finished_loading &amp;&amp; !track.ownership.discogs" 
+                      class="translate text-danger" data-i18n=NOT_FOUND>Not found</span>
         </td>
         <td class=align-middle >
             <div v-if="finished_loading" >
