@@ -62,8 +62,16 @@
         <br>
         <b>[[ i18n_seconds_in_total() ]]</b>
         <hr>
-
-        
+    </div>
+</script>
+<script type="text/x-template" id="audible-credits-template">
+    <div v-if="track.metadata">
+        <div v-if="track.metadata.productionmusic">
+            <i> [[ track.metadata.copyright ]] </i>
+        </div>
+        <div v-else>
+            <i>[[ track.metadata.title]]</i> [[ track.metadata.artist]] ℗ <b>[[ track.metadata.label]]</b> [[ track.metadata.year]]
+        </div>
     </div>
 </script>
 {% endblock templates %}
@@ -93,11 +101,11 @@ Vue.component("audible-item", {
             var clip = this;
             if(!clip.track.resolvable) {
                 // cant resolve this track
-                console.log("This trak cannot be resolved: %s", clip.track.clipname);
+                //console.log("This trak cannot be resolved: %s", clip.track.clipname);
                 return false;
             }
             var url = clip.track.resolve[this.track.music_services[0]];
-            console.log("update_metadata for %s from %o", clip.track.clipname, url);
+            //console.log("update_metadata for %s from %o", clip.track.clipname, url);
             clip.loading = true;
             axios.get(url)
             .then(function (response) {
@@ -134,12 +142,18 @@ Vue.component("audible-report-item", {
     template: "#audible-report-template",
     methods: {
         title: function() {
-            return this.track.metadata.title || this.track.clipname;
+            return (this.track.metadata !== undefined) ? this.track.title : this.track.clipname;
         },
         i18n_seconds_in_total: function() {
             return i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(this.track.audible_length)});
         }
     }
+});
+
+Vue.component("audible-credits-item", {
+    props: ["track"],
+    delimiters: ["[[", "]]"],
+    template: "#audible-credits-template"
 });
 
 var app = new Vue({
@@ -162,6 +176,24 @@ var app = new Vue({
             return self.items.filter(function (item) {
                 console.log("filtering item %o", item);
                 return item.resolvable;
+            });
+        },
+        creditsitems: function() {
+            // filter through items[] and return the ones that should be included in the credits list
+            var self = this;
+            var _holders = [];
+            return self.items.filter(function (item) {
+                if(!item.resolvable || !item.metadata) {
+                    return false;
+                }
+                if(item.metadata.productionmusic===true) {
+                    if(_holders.indexOf(item.metadata.copyright) === -1) { // only register once per copyright holder
+                        _holders.push(item.metadata.copyright);
+                        return true;
+                    }
+                } else {
+                    return true;
+                }
             });
         }
     }
@@ -194,7 +226,9 @@ var app = new Vue({
     var createCreditsButton = document.getElementById('create-credits-button');
     createCreditsButton.onclick = function(event) {
         event.preventDefault();
-        creditsdialog();
+        var tinglemodal = setupModal();
+        tinglemodal.setContent(document.getElementById("credits-dialog").innerHTML);
+        tinglemodal.open();
     }
 
     var fileSelect = document.getElementById('file-select');
@@ -423,17 +457,25 @@ function report_missing_filename(button) {
     </table>
     <div style="display: none">
         <dialog id=report-dialog>
-            <div class="form-check">
+            <div class="form-check" style="display: none">
                 <input class="form-check-input" type="checkbox" value="" id="check_all_tracks" model="all_tracks">
                 <label class="form-check-label" for="defaultCheck1">
                     Include all audio tracks: [[ all_tracks ]]
                 </label>
             </div>
-            <div id=tracks>
+            <div id=report-tracks>
                 <audible-report-item v-for="item in reportitems"
-                                    v-bind:key="item.clipname"
-                                    v-bind:track="item">
+                    v-bind:key="item.clipname"
+                    v-bind:track="item">
                 </audible-report-item>
+            </div>
+        </dialog>
+        <dialog id=credits-dialog>
+            <div id=credits-tracks>
+                <audible-credits-item v-for="item in creditsitems"
+                    v-bind:key="item.clipname"
+                    v-bind:track="item">
+                </audible-credits-item>
             </div>
         </dialog>
     </div>
