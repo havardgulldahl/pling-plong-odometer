@@ -109,14 +109,14 @@ Vue.component("audible-item", {
             clip.loading = true;
             axios.get(url)
             .then(function (response) {
-                console.log('got trackmetadat response: %o', response.data);
+                //console.log('got trackmetadat response: %o', response.data);
                 clip.track.metadata = response.data.metadata;
                 clip.loading = false;
                 updateProgress(+1);
             })
             .catch(function(error) {
                 console.error("metadta error: %o", error);
-                console.log(clip);
+                //console.log(clip);
                 clip.errors = error.message;
                 clip.loading = false;
                 //alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
@@ -163,7 +163,7 @@ var app = new Vue({
       all_tracks: false
     },
     created: function() {
-        console.log("startup");
+        console.log("Odometer startup");
     },
     delimiters: ["[[", "]]"],
     computed: {
@@ -174,7 +174,7 @@ var app = new Vue({
                 return self.items;  // return everything
             }
             return self.items.filter(function (item) {
-                console.log("filtering item %o", item);
+                //console.log("filtering item %o", item);
                 return item.resolvable;
             });
         },
@@ -296,7 +296,7 @@ function dropHandler(ev) {
   }
 
   function dragoverHandler(ev) {
-    console.log("dragOver");
+    //console.log("dragOver");
     // Prevent default select and drag behavior
     ev.preventDefault();
     document.querySelector('body').classList.add('dragover');
@@ -306,7 +306,7 @@ function dropHandler(ev) {
   }
 
   function dragendHandler(ev) {
-    console.log("dragEnd");
+    //console.log("dragEnd");
     document.querySelector('body').classList.remove('dragover');
     // Remove all of the drag data
     var dt = ev.dataTransfer;
@@ -357,7 +357,7 @@ function submit(formData) {
     // Send the Data.
     axios.post("/api/analyze", formData)
     .then(function (response) {
-        console.log('got audio response: %o', response.data);
+        //console.log('got audio response: %o', response.data);
         app.items = response.data.audioclips.map(function(clip) {
             clip.metadata = null; // this is where we put the Trackmetadata structure later
             return clip;
@@ -372,11 +372,11 @@ function submit(formData) {
 
 function report_missing_filename(button) {
     // send missing filename to odometer devs
-    console.log("report filename: %o", button);
+    //console.log("report filename: %o", button);
     var cell = button.parentElement;
     var metadata = cell.metadata;
     var timelinedata = cell.timelinedata;
-    console.log("missing metaata : %o", metadata);
+    //console.log("missing metaata : %o", metadata);
     axios.post(timelinedata.add_missing, metadata)
         .then(function (response) {
             var tinglemodal = setupModal();
