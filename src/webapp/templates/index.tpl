@@ -125,7 +125,7 @@ Vue.component("audible-item", {
         }, 
         duration: function() {
             // from odometer.js import formatDuration
-            return formatDuration(this.track.audible_length);
+            return formatDuration(this.track.audible_length) + "s";
         },
         i18n_getting_metadata: function() {
             return i18n.GETTING_METADATA();
@@ -446,7 +446,9 @@ function report_missing_filename(button) {
         <thead class="thead-dark">
           <tr>
             <th class=translate title="File name" data-i18n=name data-i18n-title=filename>name</th>
-            <th class=translate title="Measured in seconds" data-i18n=duration data-i18n-title=measured_in_seconds>audible length</th>
+            <th class=translate title="Measured in seconds" 
+                data-i18n=duration data-i18n-title=measured_in_seconds 
+                style="text-align: right">audible length</th>
             <th class=translate title="Music library" data-i18n-title=music_library>℗</th>
             <th class=translate data-i18n=metadata id=thead-metadata>metadata</th>
           </tr>
