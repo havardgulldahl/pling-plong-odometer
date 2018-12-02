@@ -142,7 +142,7 @@ Vue.component("audible-report-item", {
     template: "#audible-report-template",
     methods: {
         title: function() {
-            return (this.track.metadata !== undefined) ? this.track.title : this.track.clipname;
+            return (this.track.metadata !== undefined) ? this.track.metadata.title : this.track.clipname;
         },
         i18n_seconds_in_total: function() {
             return i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(this.track.audible_length)});
