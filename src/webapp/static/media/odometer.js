@@ -200,7 +200,7 @@ function feedbackdialog() {
             return false;
         }
         var formData = new FormData(form);
-        axios.post("/api/feedback", formData)
+        axios.post("/api/feedback/", formData)
             .then(function (response) {
                 console.log("feedback response: %o", response);
                 alertmsg(i18n.THANK_YOU(), "info");
