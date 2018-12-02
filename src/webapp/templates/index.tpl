@@ -142,7 +142,7 @@ Vue.component("audible-report-item", {
     template: "#audible-report-template",
     methods: {
         title: function() {
-            return (this.track.metadata !== undefined) ? this.track.metadata.title : this.track.clipname;
+            return (this.track.metadata !== null) ? this.track.metadata.title : this.track.clipname;
         },
         i18n_seconds_in_total: function() {
             return i18n.SECONDS_IN_TOTAL({SECONDS:formatDuration(this.track.audible_length)});
@@ -218,8 +218,20 @@ var app = new Vue({
     var createReportButton = document.getElementById('create-report-button');
     createReportButton.onclick = function(event) {
         event.preventDefault();
+        var preview = document.getElementById('preview');
+        var filedate = preview.validFile.lastModifiedDate || new Date();
+        var filename = preview.validFile.name;
+        var html = '<p><code>'+i18n.GENERATED_FROM({FILENAME:filename,
+            DATESTRING:filedate.toLocaleString()})+'</code>';
         var tinglemodal = setupModal();
-        tinglemodal.setContent(document.getElementById("report-dialog").innerHTML);
+        // add another button
+        tinglemodal.addFooterBtn(i18n.DOWNLOAD_AS_FILE(), 'tingle-btn tingle-btn--info', function() {
+            // TODO: add html header and date and time
+            html = html + document.getElementById("report-tracks").innerHTML;
+            download(html, "music_metadata_"+filename+".html", "text/html");
+            tinglemodal.close();
+        });
+        tinglemodal.setContent(html + document.getElementById("report-dialog").innerHTML);
         tinglemodal.open();
     }
 
