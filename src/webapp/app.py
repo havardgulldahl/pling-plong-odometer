@@ -68,18 +68,20 @@ APIVERSION = '0.1'
 async def store_resolve_result(_app, result_code, result_text, filename, resolver, overridden):
     'Helper to add result of a resolve attempt to DB'
 
-    sql = '''INSERT INTO resolve_result (result_code, result_text, filename, resolver, overridden)
-             VALUES ($1, $2, $3, $4, $5);'''
+    sql = '''INSERT INTO resolve_result 
+                (result_code, result_text, filename, resolver, overridden, odometer_version)
+             VALUES ($1, $2, $3, $4, $5, $6);'''
     async with _app.dbpool.acquire() as connection:
-        await connection.execute(sql, result_code, result_text, filename, resolver, overridden)
+        await connection.execute(sql, result_code, result_text, filename, resolver, overridden, _app.version)
         
 async def store_copyright_result(_app, spotify_id, result, reason, spotify_label, parsed_label):
     'Helper to add result of a copyright lookup to DB'
 
-    sql = '''INSERT INTO copyright_lookup_result (spotify_id, result, reason, spotify_label, parsed_label)
-             VALUES ($1, $2, $3, $4, $5);'''
+    sql = '''INSERT INTO copyright_lookup_result 
+                (spotify_id, result, reason, spotify_label, parsed_label, odometer_version)
+             VALUES ($1, $2, $3, $4, $5, $6);'''
     async with _app.dbpool.acquire() as connection:
-        await connection.execute(sql, spotify_id, result, reason, spotify_label, parsed_label)
+        await connection.execute(sql, spotify_id, result, reason, spotify_label, parsed_label, _app.version)
 
 class AudioClip:
     'The important properties of an audio clip for JSON export'
@@ -233,9 +235,11 @@ async def handle_feedback_post(request):
     data = await request.post() 
     app.logger.debug('Got POST args: %r', data)
     async with app.dbpool.acquire() as connection:
-        _id = await connection.fetchval("INSERT INTO feedback (sender, message) VALUES ($1, $2) RETURNING public_id", 
+        _id = await connection.fetchval("""INSERT INTO feedback (sender, message, odometer_version) 
+                                            VALUES ($1, $2, $3) RETURNING public_id""",
                                        data.get('sender'),
-                                       data.get('text'))
+                                       data.get('text'),
+                                       app.version)
         
     url = '/feedback/{}'.format(str(_id))
     return web.json_response(data={'error': [], 'url': url})
