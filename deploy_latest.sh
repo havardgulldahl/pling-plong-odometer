@@ -57,7 +57,7 @@ result "unpacked";
 
 info "Copying config.ini";
 CONFIG="${OUTPUT}/latest/src/webapp/config.ini";
-cp "${OUTPUT}/latest/src/webapp/config.ini" "${CONFIG}" || err "Copying config.ini failed";
+cp "${CONFIG}" "${OUTPUT}/${VERSION}/src/webapp/config.ini" || err "Copying config.ini failed";
 result "copied";
 
 info "Setting up zymlink";
@@ -68,7 +68,7 @@ info "Storing version string";
 echo "${VERSION}" > "${OUTPUT}/latest/src/webapp/_VERSION" || err "Storing version failed";
 result "stored"
 
-info "You need to update/verify `${CONFIG}` before we restart the server:";
+info "You need to update/verify ${CONFIG} before we restart the server:";
 cat "${CONFIG}";
 
 read -n 1 -s -r -p "Press any key to start up the new server"
