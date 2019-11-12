@@ -26,9 +26,22 @@ async def main(configuration:configparser.ConfigParser):
 
     r = DMAResolver()
     r.config = configuration
-    for fil in dma_filenames[:3]:
-        md = await r.resolve(filename=fil)
+    sql = '''INSERT INTO dma_data_health
+                (dma_id, isrc, ean)
+            VALUES ($1, $2, $3);'''
+    con = await dbpool.acquire()
+    for fil in dma_filenames:
+        try:
+            md = await r.resolve(filename=fil)
+        except Exception as e:
+            logging.error(e)
+            continue
         logging.info("dma: {identifier} - isrc: {isrc} - ean: {ean}".format(**vars(md)))
+        try:
+            await con.execute(sql, md.identifier.replace('DMATrack#', ''), md.isrc, md.ean)
+        except Exception as e:
+            logging.error(e)
+    await con.close()
     await r.session.close()
 
 

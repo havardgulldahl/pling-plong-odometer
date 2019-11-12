@@ -660,6 +660,12 @@ def tests(request):
 def dashboard(request):
     return {}
 
+@routes.get('/isrc_ean_status')
+@aiohttp_jinja2.template('admin_isrc_ean.tpl')
+async def handle_get_licenses(request):
+    'Show all a view with ISRC and EAN data health'
+    return {}
+
 @routes.get('/favicon.ico')
 def favicon(request):
     return web.FileResponse('./static/favicon.ico')
