@@ -62,10 +62,10 @@ class TrackMetadata(object): # TODO: marshmallow this
 
 class RichDateTimeField(fields.DateTime):
     'Extend fields.DateTime to also accept datetime instance upon load()ing '
-    def _deserialize(self, value, attr, data):
+    def _deserialize(self, value, attr, data, **kwargs):
         if isinstance(value, datetime.datetime):
             return value.isoformat()
-        return super()._deserialize(value, attr, data)
+        return super()._deserialize(value, attr, data, **kwargs)
 
 class ReportedMissing(Schema):
     id = fields.Int(required=True)
