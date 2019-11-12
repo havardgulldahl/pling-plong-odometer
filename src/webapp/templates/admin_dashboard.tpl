@@ -13,6 +13,7 @@
 {% endblock templates %}
 
 {% block headscript %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
 <script src="/media/Chart.min.js"></script>
 {% endblock headscript %}
 {% block docscript %}
@@ -76,7 +77,6 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
             tooltip: dataseries["activity_7days"]["tooltips"][k]
         });
     }
-    console.log("sets: %o", sets);
     
     // create filename chart
     var myChart = new Chart(ctxFilenameStats, {
@@ -129,32 +129,52 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
         dsets.push({ label: dset, 
                      data:dataseries.ownership_resolve_efficiency_hours.datasets[dset],
                      borderColor: allcolors[dset],
-                     backgroundColor: allcolors[dset]
+                     backgroundColor: allcolors[dset],
+                     type: 'line'
                    });
     }
 
+    console.log("dsets: %o", dsets);
     var chart = new Chart(ctxOwnershipStats, {
-        // The type of chart we want to create
-        type: 'line',
-
         // The data for our dataset
         data: {
-            labels: [],
             datasets: dsets
         },
 
         // Configuration options go here
         options: {
+            animation: {
+                duration: 750,
+            },
             scales: {
+                xAxes: [{
+                    type: 'time',
+                    distribution: 'series',
+                    offset: true,
+                    ticks: {
+                        major: {
+                            enabled: true,
+                            fontStyle: 'bold'
+                        },
+                        source: 'data',
+                        autoSkip: true,
+                        autoSkipPadding: 75,
+                        maxRotation: 0,
+                        sampleSize: 100
+                    }
+                }],
                 yAxes: [{
-                  stacked: true,
+                  gridLines: {
+                      drawBorder: false
+                  },
+                  scaleLabel: {
+                      display: true,
+                      labelString: 'HITS'
+                  }
                 }]
               },
-              animation: {
-                duration: 750,
-              },
             title: {
-                text: i18n.OWNERSHIP_STATUS_HOURS(),
+                text: i18n.OWNERSHIP_STATUS_WEEKS(),
                 display: true
             }
         }
@@ -178,6 +198,8 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
                 <h3 data-i18n=Filenames class=translate>Filenames</h3>
                 <canvas id="filenameStatsChart" width="500" height="500"></canvas>
             </div>
+        </div>
+        <div class=row>
             <div class=col>
                 <h3 data-i18n=Ownership class=translate>Ownership</h3>
                 <canvas id="ownershipStatsChart" width="500" height="500"></canvas>

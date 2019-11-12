@@ -111,7 +111,7 @@ async def main(configuration, outfile):#:configparser.ConfigParser, outfile:io.T
                 # first time we see new series, store the old one
                 datasets[r['result']] = []
             datasets[r['result']].append( {
-                'x': r['date'].isoformat() + "Z",
+                't': r['date'].isoformat(),
                 'y': r['count']
             })
 
