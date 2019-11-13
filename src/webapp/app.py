@@ -287,7 +287,7 @@ async def handle_trackinfo(request):
             y = int(track['album']['release_date'][:4])
         except TypeError:
             y = -1
-        metadata, errors = trackstub.dump({'title':     track['name'],
+        metadata = trackstub.dump({'title':     track['name'],
                                            'uri':       track['uri'],
                                            'artists':   [a['name'] for a in track['artists']], 
                                            'album_uri': track['album']['uri'],
