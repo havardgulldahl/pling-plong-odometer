@@ -4,9 +4,7 @@ aiodns
 appdirs
 lxml
 git+git://github.com/havardgulldahl/xmeml.git#egg=xmeml-iter
-#spotipy
-# TODO: use async pyfy
-git+git://github.com/Harrison97/spotipy.git#egg=spotipy
+pyfy
 aiopg
 discogs_client
 aiohttp-jinja2
