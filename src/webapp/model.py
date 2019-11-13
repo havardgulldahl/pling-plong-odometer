@@ -82,6 +82,7 @@ class Feedback(Schema):
     done = fields.Boolean(default=False, required=True)
     sender = fields.Str(required=True)
     message = fields.Str(required=True)
+    odometer_version = fields.Str(required=True)
 
 class ResolveResult(Schema):
     id = fields.Int(required=True)

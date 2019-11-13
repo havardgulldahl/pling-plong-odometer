@@ -68,7 +68,7 @@ var messages = {
         INCLUDE_XML: "Include XML",
         FEEDBACK: "Feedback",
         STARTINFO_OWNERSHIP: "To get started: Enter a reference to a track or a playlist above",
-        LICENSE: "Lisense",
+        LICENSE: "License",
         TRY_IT: "Try it",
         TRACK: "Track",
         PLAYLIST: "Playlist",
@@ -106,7 +106,8 @@ var messages = {
         OWNERSHIP: "Ownership",
         FILENAMES_STATUS_WEEK: "Results the last week",
         OWNERSHIP_STATUS_HOURS: "Results hour by hour",
-        OWNERSHIP_STATUS_WEEKS: "Results week by week"
+        OWNERSHIP_STATUS_WEEKS: "Results week by week",
+        VERSION: "Version"
     },
     'no-NO': {
         CLOSE: 'Lukk',
@@ -200,6 +201,7 @@ var messages = {
         OWNERSHIP: "Eierskap",
         FILENAMES_STATUS_WEEK: "Resultater den siste uka",
         OWNERSHIP_STATUS_HOURS: "Resultater time for time",
-        OWNERSHIP_STATUS_WEEKS: "Resultater uke for uke "
+        OWNERSHIP_STATUS_WEEKS: "Resultater uke for uke ",
+        VERSION: "Versjon"
     }
 };

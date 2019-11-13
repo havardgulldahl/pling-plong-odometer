@@ -8,6 +8,7 @@
         <td> [[ formattedTimestamp ]]</td>
         <td v-bind:class="{'feedback-done':item.done}"> [[ item.message ]]</td>
         <td> [[ item.sender ]]</td>
+        <td> [[ item.odometer_version ]]</td>
     </tr>
 </script>
 {% endblock templates %}
@@ -70,13 +71,15 @@ function fetch_feedback() {
         <col style="width:10%">
         <col style="width:20%"> 
         <col style="width:50%">
-        <col style="width:20%">
+        <col style="width:15%">
+        <col style="width:5%">
         <thead class="thead-dark">
           <tr>
             <th data-i18n=done class=translate>done?</th>
             <th data-i18n=when class=translate>when</th>
             <th data-i18n=message class=translate>message</th>
             <th data-i18n=sender class=translate>sender</th>
+            <th data-i18=sender class=translate>version</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
