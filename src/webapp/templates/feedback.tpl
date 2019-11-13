@@ -79,7 +79,7 @@ function fetch_feedback() {
             <th data-i18n=when class=translate>when</th>
             <th data-i18n=message class=translate>message</th>
             <th data-i18n=sender class=translate>sender</th>
-            <th data-i18=sender class=translate>version</th>
+            <th data-i18n=version class=translate>version</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
