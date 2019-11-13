@@ -70,7 +70,7 @@ function try_click(el, txt, val) {
 document.addEventListener("DOMContentLoaded", function(event) {
     document.getElementById("helptext").innerHTML = i18n.OWNERSHIP_HELPTEXT({DMA:try_click("ownership-input", i18n.TRACK(), "NONRE656509HD0001"),
                                                                              SPOTIFY_TRACK:try_click("ownership-input", i18n.TRACK(), "spotify:track:7wxSkft3f6OG3Y3Vysd470"),
-                                                                             SPOTIFY_LIST:try_click("ownership-input", i18n.PLAYLIST(), "spotify:user:hgulldahl:playlist:0LZO2ZfDhOw4bV4majJ13N")});
+                                                                             SPOTIFY_LIST:try_click("ownership-input", i18n.PLAYLIST(), "spotify:playlist:0LZO2ZfDhOw4bV4majJ13N")});
 });
 
 function startProgress(max) {
@@ -280,9 +280,11 @@ function resolve_manually(inputelement) {
         // spotify:album:40yTsvA7raOkdbeJfC6Hsc
         // https://open.spotify.com/album/5MgPPDk6kwQJy548kjal6e?si=ZAkISLSpStWCO4s3JAvODw
         uri = "/api/albuminfo/spotify/"+encodeURIComponent(q);
-    } else if(q.match(/spotify:user:[A-Za-z0-9]+:playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
+    } else if(q.match(/spotify:(user:[A-Za-z0-9]+:)?playlist:[A-Za-z0-9]{22}/)) { // base62 identifier, spotify playlist URI
         // https://open.spotify.com/user/jimjemi/playlist/0ebeFbfnBKhWqAHEpSFucn?si=0ahYYjGCQ7yI-BPeUy3rzg
         // spotify:user:jimjemi:playlist:0ebeFbfnBKhWqAHEpSFucn
+        // since 2018, new playlist format:
+        // spotify:playlist:5k6vmN2dpZjvdSv8aXvz44
         uri = "/api/tracklistinfo/spotify/"+encodeURIComponent(q);
     }
     if(uri===undefined) {

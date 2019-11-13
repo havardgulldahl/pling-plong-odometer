@@ -4,8 +4,9 @@ import logging
 import configparser
 import json
 import uuid
-import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+#import spotipy
+#from spotipy.oauth2 import SpotifyClientCredentials
+import pyfy
 import discogs_client # pip install discogs_client  
 import functools
 import backoff # pip install backoff
@@ -87,13 +88,18 @@ class RateLimitedCachingClient(discogs_client.Client):
         return self._request('GET', url)
 
 class DueDiligence:
-    useragent = 'no.nrk.odometer/0.2'
+    useragent = 'no.nrk.odometer/0.3'
 
     def __init__(self, config): #:configparser.ConfigParser):
-        self.cred_manager = SpotifyClientCredentials(config.get('spotify', 'clientId'),
-                                                     config.get('spotify', 'secret')
+        #self.cred_manager = SpotifyClientCredentials(config.get('spotify', 'clientId'),
+                                                     #config.get('spotify', 'secret')
+        #)
+        self.cred_manager = pyfy.ClientCreds(config.get('spotify', 'clientId'),
+                                             config.get('spotify', 'secret')
         )
-        self.sp = spotipy.Spotify(client_credentials_manager=self.cred_manager)
+        #self.sp = spotipy.Spotify(client_credentials_manager=self.cred_manager)
+        self.sp = pyfy.Spotify(client_creds=self.cred_manager)
+        self.sp.authorize_client_creds()
         self.discogs = RateLimitedCachingClient(self.useragent, user_token=config.get('discogs', 'token'))
 
     def spotify_search_copyrights(self, trackmetadata): #:dict) -> dict:
@@ -170,8 +176,14 @@ class DueDiligence:
     def spotify_search_playlist(self, playlist_urn): #:str) -> dict:
         'Get a list of spotify ids from a playlist'
         # 'spotify:user:spotifycharts:playlist:37i9dQZEVXbJiZcmkrIHGU' -> spotifycharts, 37i9d...
-        _, _, user, _, playlist_id = playlist_urn.split(':')
-        srch = self.sp.user_playlist(user, playlist_id)
+        try:
+            _, _, user, _, playlist_id = playlist_urn.split(':')
+        except ValueError:
+            # try the new (2018) version of playlists
+            #spotify:playlist:5k6vmN2dpZjvdSv8aXvz44
+            _, _, playlist_id = playlist_urn.split(':')
+
+        srch = self.sp.playlist(playlist_id)
         trackstub = model.TrackStub(many=False)
         # TODO: handle paging (more than 100 items in list). look at spotipy.next(), srch["next"] is an url if there are more items, null if there arent
         for item in srch['tracks']['items']:
@@ -180,7 +192,7 @@ class DueDiligence:
                 y = int(item['track']['album']['release_date'][:4])
             except TypeError:
                 y = -1
-            st,_ = trackstub.dump({'title':     item['track']['name'],
+            st = trackstub.dump({'title':     item['track']['name'],
                                    'uri':       item['track']['uri'],
                                    'artists':   [a['name'] for a in item['track']['artists']], 
                                    'album_uri': item['track']['album']['uri'],
@@ -337,5 +349,5 @@ if __name__ == '__main__':
     configuration.read(args.configfile)
 
     dd = DueDiligence(configuration)
-    rights = dd.spotify_search_copyrights(args.trackinfo)
+    rights = dd.spotify_search_track(args.trackinfo)
     pp(rights)
