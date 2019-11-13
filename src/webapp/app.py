@@ -279,9 +279,11 @@ async def handle_trackinfo(request):
         app.logger.info("resolve audioname %r got metadata %r", trackinfo, vars(_metadata))
         metadata = model.TrackMetadata(**vars(_metadata)) # TODO: verify with marshmallow
     elif querytype == 'spotify':
-        spotifyuri = trackinfo
-        track = await loop.run_in_executor(executor, app.duediligence.sp.track, spotifyuri)
-        #app.logger.info("got spotify track: %r", track)
+        # need to convert from Spotify URI to Spotify ID
+        # spotify:track:7wxSkft3f6OG3Y3Vysd470 -> 7wxSkft3f6OG3Y3Vysd470 
+        spotifyuri = trackinfo.replace('spotify:track:', '')
+        # TODO: make use of pyfy async
+        track = await loop.run_in_executor(executor, app.duediligence.sp.tracks, spotifyuri)
         trackstub = model.TrackStub()
         try:
             y = int(track['album']['release_date'][:4])
@@ -341,7 +343,8 @@ async def handle_post_ownership(request):
 
     try:
         # try to see if we have spotify metadata already
-        spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_get_album_rights, metadata['spotify']['album_uri'])
+        # TODO: make use of pyfy async
+        spotifycopyright = await loop.run_in_executor(executor, app.duediligence.spotify_get_album_rights, metadata['spotify']['album_uri'].replace('spotify:album:', '')) 
     except KeyError:
         # fall back to finding the track on spotyfy using track metadta (title, artists, year )
         try:
@@ -383,7 +386,7 @@ async def handle_post_ownership(request):
         reasons = ['Released {}. Copyright expired'.format(released_year)]
         errors = []
     else:
-        licenses, errors = await get_licenses(lookup)
+        licenses = await get_licenses(lookup)
         license_result, reasons = check_license_result(licenses)
 
     discogs_label_heritage = []
@@ -396,7 +399,7 @@ async def handle_post_ownership(request):
         if discogs_label_heritage is not None:
             lbl = discogs_label_heritage[-1].name # discogs_client.models.Label, topmost parent 
             lookup.add('label', remove_corporate_suffix(lbl))
-            licenses, errors = await get_licenses(lookup)
+            licenses = await get_licenses(lookup)
             license_result, reasons = check_license_result(licenses)
 
     # keep track of how good we are
@@ -416,7 +419,7 @@ async def handle_post_ownership(request):
             "NO_SPOTIFY_MATCH_FOUND")
 
     jsonencoder = DueDiligenceJSONEncoder().encode
-    return web.json_response({'error':[errors],
+    return web.json_response({'error':[],
                               'trackinfo': metadata,
                               'licenses': { 'result': license_result, 'reasons': reasons},
                               'ownership':{'spotify':spotifycopyright,
@@ -456,10 +459,10 @@ async def get_licenses(where=None, active=True):
         WHERE {}
         """.format(query), *v)
         app.logger.debug('Got DB ROW: %r', records)
-        rules, errors = schema.load([dict(r) for r in records], many=True)
+        rules = schema.load([dict(r) for r in records], many=True, unknown='EXCLUDE')
         app.logger.debug('Made schame u %r', rules)
 
-        return rules, errors
+        return rules
 
 @routes.get(r'/api/tracklistinfo/{type:(DMA|spotify)}/{tracklist}')
 @aiocache.cached(key="handle_get_tracklist", serializer=JsonSerializer())
@@ -522,9 +525,9 @@ async def handle_get_license_rules(request):
         SELECT *,
             (select count(*) from license_alias where license_rule.license_value = license_alias.value) AS aliases
         FROM license_rule WHERE active=TRUE""")
-        rules, errors = schema.load([dict(r) for r in records], many=True)
+        rules = schema.load([dict(r) for r in records], many=True, unknown='EXCLUDE')
 
-    return web.json_response({'error':errors,
+    return web.json_response({'error': None,
                               'rules': rules},
                               dumps=model.OdometerJSONEncoder().encode)
 
@@ -537,10 +540,10 @@ async def handle_get_license_alias(request):
     async with app.dbpool.acquire() as connection:
         records_aliases = await connection.fetch("SELECT * FROM license_alias WHERE property=$1 AND value=$2",
             params.get('property'), params.get('value'))
-        aliases, errors = schema_alias.load([dict(r) for r in records_aliases], many=True)
+        aliases = schema_alias.load([dict(r) for r in records_aliases], many=True)#, unknown='EXCLUDE')
 
 
-    return web.json_response({'error':errors,
+    return web.json_response({'error': None,
                               'aliases': aliases},
                               dumps=model.OdometerJSONEncoder().encode)
 
@@ -557,8 +560,8 @@ async def handle_post_license_alias(request):
                                         data.get('value'),
                                         data.get('alias').strip())
         #app.logger.debug("INSERTED ROW: %r", dict(new))
-        alias, errors = schema_alias.load(dict(new))
-    return web.json_response({'error':errors,
+        alias = schema_alias.load(dict(new))
+    return web.json_response({'error': None,
                               'alias':alias},
                               dumps=model.OdometerJSONEncoder().encode)
         
@@ -590,9 +593,9 @@ async def handle_get_feedback_api(request):
 
     async with app.dbpool.acquire() as connection:
         records = await connection.fetch("SELECT * FROM feedback ORDER BY done DESC")
-        feedbacks, errors = schema.load([dict(r) for r in records], many=True)
+        feedbacks = schema.load([dict(r) for r in records], many=True)
 
-    return web.json_response({'error':errors,
+    return web.json_response({'error': None,
                               'feedback': feedbacks},
                               dumps=model.OdometerJSONEncoder().encode)
 
@@ -623,9 +626,9 @@ async def handle_get_missing_filenames_api(request):
 
     async with app.dbpool.acquire() as connection:
         records = await connection.fetch("SELECT * FROM reported_missing")
-        missing, errors = schema.load([dict(r) for r in records], many=True)
+        missing = schema.load([dict(r) for r in records], many=True)
 
-    return web.json_response({'error':errors,
+    return web.json_response({'error': None,
                               'missing': missing},
                               dumps=model.OdometerJSONEncoder().encode)
 
@@ -642,9 +645,9 @@ async def handle_get_tests_api(request):
 
     async with app.dbpool.acquire() as connection:
         records = await connection.fetch("SELECT * FROM tests WHERE active=1")
-        tests, errors = schema.load([dict(r) for r in records], many=True)
+        tests = schema.load([dict(r) for r in records], many=True)
 
-    return web.json_response({'error':errors,
+    return web.json_response({'error': None,
                               'tests': tests},
                               dumps=model.OdometerJSONEncoder().encode)
 

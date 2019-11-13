@@ -69,11 +69,13 @@ class RateLimitedCachingClient(discogs_client.Client):
                                                           backend=None, 
                                                           expire_after=expiry)
 
+    '''
     def _fetcher(self, client, method, url, data=None, headers=None, json=True):
         'subclassing to add token to every request, and to add session awareness'
         resp = self._session.request(method, url, params={'token':self.user_token},
                                      data=data, headers=headers)
         return resp.content, resp.status_code 
+    '''
 
     # TODO: check HTTP_ERROR=429
     # catch 429 rate limit blowups and retry
@@ -97,7 +99,6 @@ class DueDiligence:
         self.cred_manager = pyfy.ClientCreds(config.get('spotify', 'clientId'),
                                              config.get('spotify', 'secret')
         )
-        #self.sp = spotipy.Spotify(client_credentials_manager=self.cred_manager)
         self.sp = pyfy.Spotify(client_creds=self.cred_manager)
         self.sp.authorize_client_creds()
         self.discogs = RateLimitedCachingClient(self.useragent, user_token=config.get('discogs', 'token'))
@@ -131,7 +132,7 @@ class DueDiligence:
         if not trackmetadata['artist'].lower() in [a['name'].lower() for a in track['artists']]: # check artist
             raise SpotifyNotFoundError('Ambigous result returned from Spotify. Please check manually')
 
-        return track, self.spotify_get_album_rights(track['album']['uri']) # return track metadata + album copyright
+        return track, self.spotify_get_album_rights(track['album']['id']) # return track metadata + album copyright
 
     def spotify_search_track(self, querystring):#:str) -> dict:
         '''Search for track in spotify and return all metadata. 
@@ -218,7 +219,7 @@ class DueDiligence:
                     return None
             second_step = self.parse_label_attribution(first_step)
             return second_step or first_step # return what we have if the second step didnt return anything better
-        r = self.sp.album(albumuri).get('copyrights')
+        r = self.sp.albums(albumuri).get('copyrights')
         ret = { k['type']:k['text'] for k in r}
         if 'P' in ret: # have (P) section
             ret.update({'parsed_label': parse_label(ret['P'])})
