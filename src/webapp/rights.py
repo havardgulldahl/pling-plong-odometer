@@ -14,6 +14,7 @@ import requests
 import requests_cache
 import datetime
 import time
+import aiohttp
 
 import model
 
@@ -93,9 +94,6 @@ class DueDiligence:
     useragent = 'no.nrk.odometer/0.3'
 
     def __init__(self, config): #:configparser.ConfigParser):
-        #self.cred_manager = SpotifyClientCredentials(config.get('spotify', 'clientId'),
-                                                     #config.get('spotify', 'secret')
-        #)
         self.cred_manager = pyfy.ClientCreds(config.get('spotify', 'clientId'),
                                              config.get('spotify', 'secret')
         )
@@ -320,6 +318,32 @@ class DueDiligence:
             if label is not None:
                 heritage.append(label)
         return heritage
+
+class ISRCChecker:
+    'Check ISRC codes from ifpi.org and get metadata'
+
+    def __init__(self):
+        self.session = aiohttp.ClientSession()
+
+    async def seed(self):
+        async with self.session.get('https://isrcsearch.ifpi.org/') as r:# seed cookie jar
+            _ = await r.text()
+
+    async def fetch(self, isrc_code):
+        url = 'https://isrcsearch.ifpi.org/api/v1/search'
+        postdata = {
+            'number': 10,
+            'searchFields': { 'isrcCode': isrc_code},
+            'showReleases': 0,
+            'start': 0
+        }
+        headers = {
+            'referer': 'https://isrcsearch.ifpi.org/',
+            'origin': 'https://isrcsearch.ifpi.org'
+        }
+        async with self.session.post(url, json=postdata, headers=headers) as response:
+            return await response.text()
+
 
 class DueDiligenceJSONEncoder(json.JSONEncoder):
     'turning external models into neat json'

@@ -131,6 +131,30 @@ class TrackStub(Schema):
     album_uri = fields.Str()
     year = fields.Int()
 
+class ISRCDataHealth(Schema):
+    'Model for the dma_data_health table'
+    '''
+    CREATE TABLE dma_data_health (
+    id SERIAL PRIMARY KEY,
+    dma_id character varying(255) NOT NULL UNIQUE,
+    timestamp timestamp with time zone NOT NULL DEFAULT now(),
+    isrc character varying(255),
+    isrc_ok boolean DEFAULT false,
+    ean character varying(255),
+    ean_ok boolean DEFAULT false,
+    checked timestamp with time zone
+    );
+    '''
+
+    id = fields.Int(required=True)               # internal id
+    dma_id = fields.Str(required=True)           # DMA_id
+    timestamp = RichDateTimeField(required=True) # last changed timestamp
+    isrc = fields.Str(required=False, allow_none=True) # ISRC code, might be missing
+    isrc_ok = fields.Boolean(allow_none=True)    # boolean - is the ISRC code correct? NULL means not verified
+    ean = fields.Str(required=False, allow_none=True) # EAN code, might be missing
+    ean_ok = fields.Boolean(allow_none=True )    # boolean - is the EAN code correct? NULL means not verified
+    checked = RichDateTimeField(allow_none=True) # timestamp of last check. NULL means not checked
+
 class OdometerJSONEncoder(json.JSONEncoder):
     'turning external models and complex objects into neat json'
     def default(self, obj):

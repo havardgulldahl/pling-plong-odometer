@@ -641,7 +641,7 @@ def missing_filenames(request):
 @routes.get('/api/tests/')
 async def handle_get_tests_api(request):
     'Return a json list of all tests from the DB'
-    schema = model.Tests()
+    schema = model.Test()
 
     async with app.dbpool.acquire() as connection:
         records = await connection.fetch("SELECT * FROM tests WHERE active=1")
@@ -665,9 +665,42 @@ def dashboard(request):
 
 @routes.get('/isrc_ean_status')
 @aiohttp_jinja2.template('admin_isrc_ean.tpl')
-async def handle_get_licenses(request):
-    'Show all a view with ISRC and EAN data health'
+async def handle_get_isrc_ean_admin(request):
+    'Show an admin view with ISRC and EAN data health'
     return {}
+
+@routes.get('/api/isrc_ean_status')
+async def handle_get_isrc_ean_status(request):
+    'Return a json view of the isrc&ean code status'
+    schema = model.ISRCDataHealth()
+
+    async with app.dbpool.acquire() as connection:
+        counts = await connection.fetchrow('''SELECT COUNT(*) as "all_records", 
+                                            COUNT(isrc) AS "isrc_codes", 
+                                            COUNT(ean) AS "ean_codes"  
+                                            FROM dma_data_health ;''')
+
+        isrc_ok = await connection.fetch('''SELECT isrc_ok, COUNT(isrc_ok)
+                                            FROM dma_data_health 
+                                            GROUP BY isrc_ok;''')
+        
+        ean_ok = await connection.fetch('''SELECT ean_ok, COUNT(ean_ok)
+                                            FROM dma_data_health 
+                                            GROUP BY ean_ok;''')
+        
+        stats = { 'totals': dict(counts),
+                  'status': { 'isrc': {v[0]: v[1] for v in [list(r.values()) for r in isrc_ok]},
+                              'ean': {v[0]: v[1] for v in [list(r.values()) for r in ean_ok]} }
+                }
+
+        records = await connection.fetch("SELECT * FROM dma_data_health WHERE (isrc_ok = FALSE OR ean_ok = FALSE);")
+        wrong_codes = schema.load([dict(r) for r in records], many=True)
+
+    return web.json_response({'error': None,
+                              'wrong_codes': wrong_codes,
+                              'stats':stats},
+                               dumps=model.OdometerJSONEncoder().encode)
+
 
 @routes.get('/favicon.ico')
 def favicon(request):
