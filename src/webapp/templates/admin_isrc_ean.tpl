@@ -58,6 +58,10 @@ Vue.component("isrc-item", {
                 itm.dma.artists = record.artist;
                 itm.dma.year = record.year;
                 itm.finished_loading_dma = true;
+            })                
+            .catch(function(error) {
+                //console.log("got isrc error: %o", error);
+                itm.finished_loading_dma = true;
             });
 
         },
@@ -66,13 +70,17 @@ Vue.component("isrc-item", {
             var itm = this;
             axios.get('/api/trackinfo/ISRC/' + this.item.isrc)
             .then(function(response) {
-                console.log("got isrc: %o", response);
                 let record = response.data.tracks[0];
                 itm.isrc.title = record.title;
                 itm.isrc.artists = record.artists;
                 itm.isrc.year = record.year;
                 itm.finished_loading_isrc = true;
+            })                
+            .catch(function(error) {
+                console.log("got isrc error: %o", error);
+                itm.finished_loading_isrc = true;
             });
+
         },
         formatList: function(some_list) {
             if(!some_list) return '';
