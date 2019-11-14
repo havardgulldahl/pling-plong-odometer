@@ -141,21 +141,20 @@ function fetch_isrc_ean_status() {
 {% block adminpanel %}
 <div id=adminpanel>
 
-    <table>
+    <table class=table>
         <col style="width:70%"> 
-        <col style="width:10%">
-        <col style="width:10%">
-        <col style="width:10%">
-        <thead>
+        <col style="width:15%">
+        <col style="width:15%">
+        <thead class=thead-light>
             <tr>
-                <th></th>
-                <th>total</th>
-                <th>errors</th>
+                <th scope=col></th>
+                <th scope=col>total</th>
+                <th scope=col>errors</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <th>
+                <th scope=row>
                 DMA tracks with ISRC codes
                 </th>
                 <td>[[ stats.totals.isrc_codes ]] 
@@ -164,7 +163,7 @@ function fetch_isrc_ean_status() {
                     ([[ calcPercent(stats.status.isrc.false, stats.totals.isrc_codes) ]] %) </td>
             </tr>
             <tr>
-                <th>
+                <th scope=row>
                 DMA tracks with EAN codes
                 </th>
                 <td>[[ stats.totals.ean_codes ]] 

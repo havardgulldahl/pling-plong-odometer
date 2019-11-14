@@ -46,13 +46,15 @@ async def main(configuration:configparser.ConfigParser):
         try:
             isrc = await ifpi.fetch(isrc_code)
             dma = await r.resolve(dma_id)
-        except SpotifyNotFoundError as e:
-            await update_isrc(dma_id, ok=False)
-            logging.error(e)
-            continue
         except Exception as e:
             logging.error(e)
             continue
+        if isrc is None:
+            # isrc not found
+            await update_isrc(dma_id, ok=False)
+            logging.error(f'ISRC code {isrc_code}, referenced by {dma_id} is not found')
+            continue
+        print(f"===== {isrc_code} =====")
         logging.info(f'DMA: title={dma.title}, artists={dma.artist}, year={dma.year}')
         logging.info(f"ISRC: title={isrc['title']}, artists={', '.join(isrc['artistName'])}, year={isrc['year']}")
         feedback = 'X'

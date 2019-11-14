@@ -162,6 +162,7 @@ class IFPIsearchTrack(Schema):
     isrc = fields.Str(required=True, data_key='isrcCode')           # ISRC
     title = fields.Str(required=True, data_key='trackTitle')        # track title
     year = fields.Str(allow_none=True, data_key='recordingYear')    # recorded year
+    duration = fields.Str(allow_none=True)                          # track duration in MM:SS, may be missing
     artistName = fields.List(fields.Str())
 
     @pre_load
