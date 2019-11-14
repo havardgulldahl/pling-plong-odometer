@@ -258,7 +258,7 @@ async def handle_add_missing(request):
     return web.json_response(data={'error': [], })
 
 
-@routes.get(r'/api/trackinfo/{type:(DMA|spotify)}/{trackinfo}')
+@routes.get(r'/api/trackinfo/{type:(DMA|spotify|ISRC)}/{trackinfo}')
 @aiocache.cached(key="handle_trackinfo", serializer=JsonSerializer())
 async def handle_trackinfo(request):
     'Handle GET trackid from DMA or Spotify and return json formatted TrackMetadata or TrackStub'
@@ -278,12 +278,25 @@ async def handle_trackinfo(request):
             return web.json_response( {'error': [str(e),], 'tracks': []})
         app.logger.info("resolve audioname %r got metadata %r", trackinfo, vars(_metadata))
         metadata = model.TrackMetadata(**vars(_metadata)) # TODO: verify with marshmallow
-    elif querytype == 'spotify':
-        # need to convert from Spotify URI to Spotify ID
-        # spotify:track:7wxSkft3f6OG3Y3Vysd470 -> 7wxSkft3f6OG3Y3Vysd470 
-        spotifyuri = trackinfo.replace('spotify:track:', '')
-        # TODO: make use of pyfy async
-        track = await loop.run_in_executor(executor, app.duediligence.sp.tracks, spotifyuri)
+    elif querytype in ('spotify', 'ISRC'):
+        if querytype == 'spotify':
+            # need to convert from Spotify URI to Spotify ID
+            # spotify:track:7wxSkft3f6OG3Y3Vysd470 -> 7wxSkft3f6OG3Y3Vysd470 
+            spotifyuri = trackinfo.replace('spotify:track:', '')
+            # TODO: make use of pyfy async
+            track = await loop.run_in_executor(executor, app.duediligence.sp.tracks, spotifyuri)
+        else:
+            # search Spotify by ISRC
+            try:
+                track = await loop.run_in_executor(executor, app.duediligence.spotify_search_track, f'isrc:{trackinfo}')
+            except SpotifyNotFoundError as e:
+                # invalid ISRC
+                return web.json_response({
+                    'error': {'type':'Invalid ISRC',
+                              'args':str(e) },
+                    'metadata': []
+                }, status=404)
+
         trackstub = model.TrackStub()
         try:
             y = int(track['album']['release_date'][:4])
