@@ -321,13 +321,24 @@ class DueDiligence:
 
 class ISRCChecker:
     'Check ISRC codes from ifpi.org and get metadata'
+    session = None
+    headers = {}
 
     def __init__(self):
         self.session = aiohttp.ClientSession()
+        self.headers = {
+            'referer': 'https://isrcsearch.ifpi.org/',
+            'origin': 'https://isrcsearch.ifpi.org',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36'
+        }
 
     async def seed(self):
         async with self.session.get('https://isrcsearch.ifpi.org/') as r:# seed cookie jar
-            _ = await r.text()
+            t = await r.text()
+            csrf = re.compile(r'window.csrfmiddlewaretoken\ =\ "([^"]+)";').findall(t)[0]
+            # get CSRF token
+            self.headers.update({'x-csrftoken': csrf})
+
 
     async def fetch(self, isrc_code):
         url = 'https://isrcsearch.ifpi.org/api/v1/search'
@@ -337,13 +348,16 @@ class ISRCChecker:
             'showReleases': 0,
             'start': 0
         }
-        headers = {
-            'referer': 'https://isrcsearch.ifpi.org/',
-            'origin': 'https://isrcsearch.ifpi.org'
-        }
-        async with self.session.post(url, json=postdata, headers=headers) as response:
-            return await response.text()
+        schema = model.IFPIsearchTrack()
+        async with self.session.post(url, json=postdata, headers=self.headers) as response:
+            data = await response.json()
+            if data['numberOfHits'] == 0:
+                # no hits
+                return None
 
+            # load into shecma for data validation
+            track = schema.load(data=data["displayDocs"][0])
+            return track
 
 class DueDiligenceJSONEncoder(json.JSONEncoder):
     'turning external models into neat json'

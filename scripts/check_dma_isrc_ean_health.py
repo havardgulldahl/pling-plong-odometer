@@ -11,7 +11,7 @@ import io
 import collections
 import logging
 from metadataresolvers import DMAResolver
-from rights import DueDiligence, SpotifyNotFoundError
+from rights import DueDiligence, SpotifyNotFoundError, ISRCChecker
 
 async def main(configuration:configparser.ConfigParser):
     'main routine'
@@ -36,13 +36,16 @@ async def main(configuration:configparser.ConfigParser):
     codes = await strip('''SELECT dma_id,isrc,ean FROM dma_data_health 
                            WHERE checked IS NULL AND (isrc is NOT NULL OR ean IS NOT NULL) ;''')
 
-    spotify = DueDiligence(config=configuration)
+    #spotify = DueDiligence(config=configuration)
+    ifpi = ISRCChecker()
+    await ifpi.seed()
+
     r = DMAResolver()
     r.config = configuration
     for dma_id, isrc_code, ean_code in codes:
         try:
+            isrc = await ifpi.fetch(isrc_code)
             dma = await r.resolve(dma_id)
-            isrc = spotify.spotify_search_track(f'isrc:{isrc_code}')
         except SpotifyNotFoundError as e:
             await update_isrc(dma_id, ok=False)
             logging.error(e)
@@ -51,14 +54,17 @@ async def main(configuration:configparser.ConfigParser):
             logging.error(e)
             continue
         logging.info(f'DMA: title={dma.title}, artists={dma.artist}, year={dma.year}')
-        logging.info(f"ISRC: title={isrc['name']}, artists={[a['name'] for a in isrc['artists'] ]}, year={isrc['album']['release_date'][:4]}")
+        logging.info(f"ISRC: title={isrc['title']}, artists={', '.join(isrc['artistName'])}, year={isrc['year']}")
         feedback = 'X'
         while feedback not in ('C', 'I'):
             feedback = input("====== [C]orrect  - or - [I]ncorrect ? =====").upper().strip()
         await update_isrc(dma_id, ok=feedback=='C')
         
     await con.close()
-    await r.session.close()
+    if r.session:
+        await r.session.close()
+    if ifpi.session:
+        await ifpi.session.close()
 
 
     await dbpool.close()

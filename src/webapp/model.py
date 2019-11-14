@@ -6,7 +6,7 @@ import json
 import uuid
 import time
 import datetime
-from marshmallow import Schema, fields # pip install marshmallow
+from marshmallow import Schema, fields, pre_load # pip install marshmallow
 
 class TrackMetadata(object): # TODO: marshmallow this
     'All important metadata properties of a track that we need for a sane report'
@@ -154,6 +154,25 @@ class ISRCDataHealth(Schema):
     ean = fields.Str(required=False, allow_none=True) # EAN code, might be missing
     ean_ok = fields.Boolean(allow_none=True )    # boolean - is the EAN code correct? NULL means not verified
     checked = RichDateTimeField(allow_none=True) # timestamp of last check. NULL means not checked
+
+class IFPIsearchTrack(Schema):
+    'Model for replies from IFPIsearch.org when you search for tracks'
+    '''{'duration': '3:25', 'recordingVersion': '', 'recordingYear': '2019', 'artistName': 'Drake ♦ Rick Ross', 'isrcCode': 'USCM51900314', 'documentType': 'recording', 'showReleases': 0, 'trackTitle': 'Money In The Grave', 'id': 'USCM51900314'}'''
+    id = fields.Str(required=True)                                  # id. same as ISRC?
+    isrc = fields.Str(required=True, data_key='isrcCode')           # ISRC
+    title = fields.Str(required=True, data_key='trackTitle')        # track title
+    year = fields.Str(allow_none=True, data_key='recordingYear')    # recorded year
+    artistName = fields.List(fields.Str())
+
+    @pre_load
+    def split_artists(self, in_data, **kwargs):
+        in_data['artistName'] = [f.strip() for f in in_data['artistName'].split('♦')]
+        return in_data
+
+
+    class Meta:
+        additional = ('duration', 'recordingVersion', 'documentType', 'showReleases')
+    
 
 class OdometerJSONEncoder(json.JSONEncoder):
     'turning external models and complex objects into neat json'
