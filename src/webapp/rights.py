@@ -18,9 +18,8 @@ import aiohttp
 
 import model
 
-TRUST_ISRC=False # TODO: figure out if we can trust ISRC
+TRUST_ISRC=True
 TRUST_EAN=False # TODO: figure out if we can trust EAN
-
 
 MUSIC_OWNERSHIP_IS_PUBLIC_DOMAIN_YEAR=1963
 
