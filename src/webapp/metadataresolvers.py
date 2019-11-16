@@ -86,7 +86,7 @@ def get_sec(time_str):
 class ResolverBase:
     prefixes = [] # a list of file prefixes that this resolver recognizes
     postfixes = [] # a list of file postfixes (a.k.a. file suffix) that this resolver recognizes
-    labelmap = [] # a list of labels that this music service carries
+    labelmap = {} # a map of labels that this music service carries
     name = 'general'
     description = ''
     prettyname = 'General'
@@ -94,6 +94,7 @@ class ResolverBase:
     website = ''
     contractdetails = ''
     cacheTimeout = 60*60*24*2 # how long are cached objects valid? in seconds
+    urlbase = ''
 
     def __init__(self):
         self.session = None # set it in .setSession() or lazy create in .resolve()
@@ -222,7 +223,6 @@ class GenericFileResolver(ResolverBase):
         if fromcache:
             md = self.fromcache()
             if md is not None:
-                self.trackResolved.emit(self.filename, md)
                 return True
         parsed = False
         if isinstance(fullpath, str) and os.path.exists(fullpath) and fullpath.upper().endswith('.MP3'):
@@ -644,7 +644,7 @@ class ApollomusicResolver(ResolverBase):
             if data.get('success', None) == 1:
                 return resp.cookies
             else:
-                logging.error('Apollo login failed: %s', result.get('message', 'No fail message provided'))
+                logging.error('Apollo login failed: %s', data.get('message', 'No fail message provided'))
                 return None
         
 
@@ -1501,6 +1501,131 @@ class WarnerChappellResolver(ResolverBase):
         raise NotImplementedError
         # TODO: reimplement parse_warnerchappell_reportoire.py
 
+class AudioNetworkResolver(ResolverBase):
+    prefixes = [ ]
+    enabled = True 
+    name = 'Audio Network'
+    prettyname = 'Audio Network'
+    website = 'http://https://www.audionetwork.com/'
+    urlbase = 'http://https://xob04ry4ld-dsn.algolia.net/1/indexes/tracks_live/query?x-algolia-agent=Algolia%20for%20JavaScript%20(3.33.0)%3B%20Browser%20(lite)&x-algolia-application-id=XOB04RY4LD&x-algolia-api-key=6320010f904f2c08d2fdc186f11fdd83'
+    labelmap = { 
+
+    } # TODO: get list of labels automatically
+
+    def __init__(self):
+        self.prefixes = [x.upper() for x in self.labelmap.keys()] # prfix is <LABEL> + _
+        super(AudioNetworkResolver, self).__init__()
+
+    @staticmethod
+    def musicid(filename, fuzzy=False):
+        """Returns musicid from filename.
+
+        """
+        # typical file name  ANW3068_32_We-The-People-3.wav ANW3068_02_We-The-People
+        # -> ANW3068_32_We-The-People-3
+        prefixes = [x.upper() for x in WarnerChappellResolver.labelmap.keys()]
+        rex = re.compile(r'(ANW\d+_.+)')
+        if fuzzy:
+            regexp = rex.search
+        else:
+            regexp = rex.match
+        g = regexp(filename)
+        try:
+            return g.group(1)
+        except AttributeError: #no match
+            return None
+
+    async def get_session_cookie(self):
+        'Ping audionetwork webserver to get a valid session cookie'
+        url = 'https://www.audionetwork.com/'
+        async with self.session.get(url) as resp:
+        #async with self.session.get(url) as resp:
+            logging.debug('hitting endpoint url: %r', resp.url)
+            #logging.debug('hitting endpoint data: %s', await resp.text())
+            _c = self.session.cookie_jar.filter_cookies('https://www.audionetwork.com/')
+            #logging.info('got cooki: %r', _c)
+            resp.raise_for_status() # bomb on errors
+            return _c
+
+    async def resolve(self, filename, fromcache=True, fuzzy=False):
+        # POST to https://xob04ry4ld-dsn.algolia.net/1/indexes/tracks_live/query
+        # with data : 
+        # {"params":"query: ANW3068_32_We-The-People-3
+        #offset: 0
+        #length: 25
+        #filters: Duration >= 0 AND Duration <= 600
+        #facets: *
+        #facetFilters: []
+        #maxValuesPerFacet: 400"}
+
+        # and get JSON back
+        
+        self.filename = filename
+        if fromcache:
+            md = self.fromcache()
+            if md is not None:
+                return md
+
+        #define helper functions
+        async def get_trackdata(_musicid):  
+            'lookup musicid and return dict'
+            searchurl = 'https://xob04ry4ld-dsn.algolia.net/1/indexes/tracks_live/query?x-algolia-agent=Algolia%20for%20JavaScript%20(3.33.0)%3B%20Browser%20(lite)&x-algolia-application-id=XOB04RY4LD&x-algolia-api-key=6320010f904f2c08d2fdc186f11fdd83'
+            searchfrase = {"params":"query={}&offset=0&length=25".format(_musicid)}
+            headers = {
+                       "origin": "https://www.audionetwork.com",
+                       "accept": "application/json",
+                       "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.97 Safari/537.36",
+                       "referer": "https://www.audionetwork.com/track/searchkeyword?keyword=ANW3068_02_We-The-People",
+                       "sec-fetch-site": "cross-site",
+                       "sec-fetch-mode": "cors",
+            }
+                       
+            async with self.session.post(searchurl, json=searchfrase, headers=headers) as rsp:
+                logging.debug('got lxml data: %r', rsp)
+                rsp.raise_for_status()
+                data = await rsp.json()
+                logging.debug('read json: %r', data)
+
+                if not len(data['hits']) > 0:
+                    return None # TODO: raise some 404 exception here
+                return data['hits'][0]
+
+        _musicid = self.musicid(filename, fuzzy=fuzzy)
+        if _musicid is None:
+            raise ResolveError("Couldn't read AudioNetworks id from filename")
+        # TODO: check if old cookie is still  valid before gtting new
+        _cookie = await self.get_session_cookie()
+        trackdata = await get_trackdata(_musicid) # will return None if track is not found
+        if trackdata is None:
+            return None # TODO: raise 404 exception here
+
+        logging.info('got data:', trackdata)
+
+        data = TrackMetadata(filename=self.filename,
+                             musiclibrary=self.name,
+                             title=trackdata.get('Title'),
+                             length=trackdata.get('Duration'),
+                             composer=['{} {}'.format(c["FirstName"], c["LastName"]) for c in trackdata.get('Composers')],
+                             artist=None,
+                             year=trackdata.get('ReleaseYear'),
+                             recordnumber=_musicid,
+                             albumname=trackdata.get('albumname'),
+                             copyright='Audio Network Limited',
+                             # lcnumber=None,
+                             isrc=trackdata.get('Isrc'),
+                             # ean=None,
+                             #catalogue=trackdata.get('catalogue', None),
+                             #label=trackdata.get('label'),
+                             # lyricist=None,
+                             identifier='AudioNetworTrack#{}'.format(trackdata.get('CustomId')),
+                             productionmusic=True,
+             )
+        return data
+
+    async def fetchlabels(self):
+        raise NotImplementedError
+        # TODO: reimplement parse_warnerchappell_reportoire.py
+
 # a list of supported resolvers, for easy disabling etc
 CURRENT_RESOLVERS = [
     DMAResolver,
@@ -1510,5 +1635,6 @@ CURRENT_RESOLVERS = [
     UprightmusicResolver,
     ExtremeMusicResolver,
     WarnerChappellResolver,
+    AudioNetworkResolver,
     GenericFileResolver
 ]
