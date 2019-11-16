@@ -130,6 +130,7 @@ class TrackStub(Schema):
     uri = fields.Str()
     album_uri = fields.Str()
     year = fields.Int()
+    isrc = fields.Str(required=False, allow_none=True) # ISRC code, might be missing
 
 class ISRCDataHealth(Schema):
     'Model for the dma_data_health table'

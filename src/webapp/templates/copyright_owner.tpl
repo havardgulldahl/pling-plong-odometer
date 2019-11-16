@@ -314,7 +314,14 @@ function resolve_manually(inputelement) {
                     break;
                 }
                 t = tracks[i];
-                app.items.push({"metadata":{"title":t.title, "artists":t.artists, "artist":t.artist, "year":t.year}, 
+                /*
+                app.items.push({"metadata":{"title":t.title, 
+                                            "artists":t.artists, 
+                                            "artist":t.artist, 
+                                            "isrc":t.isrc,
+                                            "year":t.year}, 
+                                            */
+                app.items.push({"metadata":t,
                                 "ownership": {},
                                 "licenses": [],
                                 "spotify": {"album_uri": t.album_uri, "uri": t.uri}});

@@ -109,9 +109,11 @@ class DueDiligence:
 
         # Trackmetadata is modelled in model.py
         q = []
-        if TRUST_ISRC and trackmetadata['isrc']:
+        SEARCH_USING_ISRC=False
+        if TRUST_ISRC and 'isrc' in trackmetadata:
             q.append('isrc:{}'.format(trackmetadata['isrc']))
-        elif TRUST_EAN and trackmetadata['ean']:
+            SEARCH_USING_ISRC=True
+        elif TRUST_EAN and 'ean' in trackmetadata:
             q.append('upc:{}'.format(trackmetadata['ean']))
         else:
             # no unique code searches, build up a query of what we know
@@ -123,11 +125,21 @@ class DueDiligence:
         track = self.spotify_search_track(' '.join(q))
 
         # sanity check to figure out if spotify gave us something that looks like what we are after
+        # because sometimes, ISRC codes are wrong
         logging.debug("got track from spotify: %r", track)
         if track['name'].lower() != trackmetadata['title'].lower(): # check if title matches
+            if SEARCH_USING_ISRC:
+                # we have hit a wrong ISRC code
+                # try to search again, without the ISRC 
+                logging.warn("ISRC code seems to be wrong: %s (%s)", 
+                            trackmetadata['isrc'], trackmetadata['identifier'])
+                del trackmetadata['isrc']
+                return self.spotify_search_copyrights(trackmetadata)
             raise SpotifyNotFoundError('Ambigous result returned from Spotify. Please check manually')
-        if not trackmetadata['artist'].lower() in [a['name'].lower() for a in track['artists']]: # check artist
-            raise SpotifyNotFoundError('Ambigous result returned from Spotify. Please check manually')
+        if not SEARCH_USING_ISRC:
+            # we only check artist if we haven't used ISRC 
+            if not trackmetadata['artist'].lower() in [a['name'].lower() for a in track['artists']]: # check artist
+                raise SpotifyNotFoundError('Ambigous result returned from Spotify. Please check manually')
 
         return track, self.spotify_get_album_rights(track['album']['id']) # return track metadata + album copyright
 
