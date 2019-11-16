@@ -295,7 +295,8 @@ async def handle_trackinfo(request):
                     'error': {'type':'Invalid ISRC',
                               'args':str(e) },
                     'metadata': []
-                }, status=404)
+                }, status=404,
+                dumps=model.OdometerJSONEncoder().encode)
 
         trackstub = model.TrackStub()
         try:
@@ -303,11 +304,11 @@ async def handle_trackinfo(request):
         except TypeError:
             y = -1
         metadata = trackstub.dump({'title':     track['name'],
-                                           'uri':       track['uri'],
-                                           'artists':   [a['name'] for a in track['artists']], 
-                                           'album_uri': track['album']['uri'],
-                                           'year':      y
-                                           })
+                                    'uri':       track['uri'],
+                                    'artists':   [a['name'] for a in track['artists']], 
+                                    'album_uri': track['album']['uri'],
+                                    'year':      y
+                                    })
     return web.json_response({'error':[],
                               'tracks': [metadata,] },
                               dumps=model.OdometerJSONEncoder().encode)
@@ -465,7 +466,7 @@ async def get_licenses(where=None, active=True):
     app.logger.debug("running asyncpg query %r with values %r", query, v)
     async with app.dbpool.acquire() as connection:
         records = await connection.fetch("""
-        SELECT * FROM license_rule 
+        SELECT license_rule.* FROM license_rule 
         LEFT JOIN license_alias ON 
             license_rule.license_property=license_alias.property AND 
             license_rule.license_value=license_alias.value 
@@ -605,7 +606,7 @@ async def handle_get_feedback_api(request):
     schema = model.Feedback()
 
     async with app.dbpool.acquire() as connection:
-        records = await connection.fetch("SELECT * FROM feedback ORDER BY done DESC")
+        records = await connection.fetch("SELECT * FROM feedback ORDER BY done,timestamp DESC")
         feedbacks = schema.load([dict(r) for r in records], many=True)
 
     return web.json_response({'error': None,
