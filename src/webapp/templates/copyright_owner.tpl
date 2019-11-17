@@ -166,7 +166,7 @@ Vue.component("ownership-item", {
             return this.errors = state;
         },
 	clipboard : function(txt) {
-	    console.log("clipboard copy %o", txt);
+	    //console.log("clipboard copy %o", txt);
         var copyElement = document.createElement('input');      
 	    copyElement.setAttribute('type', 'text');   
 	    copyElement.setAttribute('value', txt);    
@@ -239,7 +239,7 @@ var app = new Vue({
         console.log("startup");
         var input = document.getElementById("ownership-input");
         input.value = document.location.search.slice(1); // empty string or query string
-        console.log("search: %o", input.value);
+        //console.log("search: %o", input.value);
         if(input.value.length>0) {
             resolve_manually_delay(input);
         }
@@ -314,13 +314,6 @@ function resolve_manually(inputelement) {
                     break;
                 }
                 t = tracks[i];
-                /*
-                app.items.push({"metadata":{"title":t.title, 
-                                            "artists":t.artists, 
-                                            "artist":t.artist, 
-                                            "isrc":t.isrc,
-                                            "year":t.year}, 
-                                            */
                 app.items.push({"metadata":t,
                                 "ownership": {},
                                 "licenses": [],
