@@ -251,9 +251,12 @@ async def handle_add_missing(request):
     data = await request.json() 
     app.logger.debug('add missing filename: %r, with POST args %r', filename, data)
     async with app.dbpool.acquire() as connection:
-        await connection.fetchval("INSERT INTO reported_missing (filename) VALUES ($1)", 
-                                  filename,
-        )
+        try:
+            await connection.execute("INSERT INTO reported_missing (filename) VALUES ($1)", 
+                                    filename,
+            )
+        except asyncpg.exceptions.UniqueViolationError:
+            pass
     return web.json_response(data={'error': [], })
 
 
