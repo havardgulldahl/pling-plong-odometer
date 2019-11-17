@@ -711,6 +711,7 @@ class UniPPMResolver(ResolverBase):
                   'AA':'Atmosphere Archive ',
                   'AK':'Atmosphere Kitsch ',
                   'AM':'Access Music ',
+                  'AUPM': 'AUPM',
                   'ATMOS':'Atmosphere ',
                   'ATV':'Atmosphere TV ',
                   'AXS':'Access Promo ',
@@ -739,6 +740,7 @@ class UniPPMResolver(ResolverBase):
                   'DC':'Directors Choice ',
                   'DF':'Darkfly ',
                   'DM': 'DM',
+                  'DM1': 'DM1',
                   'EDGE':'Killer Edge ',
                   'ESS':'Essential Series ',
                   'EVO':'EVO',
@@ -928,56 +930,46 @@ class UprightmusicResolver(ResolverBase):
         _UPRIGHT_EDS_016_006_Downplay_(Main).WAV ---> 6288627e-bae8-49c8-9f3c-f6ed024eb698
         _UPRIGHT_CAV_402_001_Black_Magic_(Main)__UPRIGHT.WAV ---> 4ceb1f37-8ecc-42e7-a4d8-79ba4336715a 
         _UPRIGHT_DGT_005A_120_Electricity_Hit_(Main).WAV ---> 36f76913-61b5-4405-9b7e-ac8510d49dfc
+        _1_UPRIGHT_NLM_086_005_A_Beautiful_Morning_(Full).WAV 
 
         """
-        rex = re.compile(r'_UPRIGHT_[A-Z]{2,4}_[0-9A-Z]{1,4}_\d{1,4}_\w+', re.UNICODE) # _UPRIGHT_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
+        rex = re.compile(r'_UPRIGHT_([A-Z]{2,4}_[0-9A-Z]{1,4}_\d{1,4}_\w+)', re.UNICODE) # _UPRIGHT_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
         if fuzzy:
             regexp = rex.search
         else:
             regexp = rex.match
         m = regexp(filename)
         try:
-            return m.group(0)
+            return m.group(1)
         except AttributeError: #no match
             return None
 
     async def get_guid(self, filename):
         'Search for filename on website and hope we get the unique guid back'
-        url = 'https://search.upright-music.com/search?phrase[0]={filename}'
+        url = 'https://search.upright-music.com/search?phrase[]={filename}'
 
         if self.session is None:
             self.session = aiohttp.ClientSession()
-        async with self.session.get(url.format(filename=filename)) as resp:
+        async with self.session.get(url.format(filename=filename.replace('_', ' '))) as resp:
             logging.debug('hitting endpoint url: %r', resp.url)
             resp.raise_for_status() # bomb on errors
             data = await resp.text()
-            #logging.info('got data: %r', data)
 
             # check to see if we have something
             html = lxml.html.fromstring(data)
 
-            searchcount = 'search-results-count'
-            countnode = html.find_class(searchcount)[0]
-            #logging.debug('lxml result: %r', countnode)
-
-            if not countnode.text_content() == 'Showing track 1 to 1 of 1 tracks':
-                # no luck
-                # TODO: look at first result to find matching title and track number
+            logging.info('got results: %r', data)
+            results = html.get_element_by_id('search-results')#.find_class('playlist-item')
+            logging.info('got results: %r', lxml.html.tostring(results))
+            if not results:
+                # no hits.
+                # return 404/False
+                logging.warn('Got no results when searching upgright for %s', filename)
                 return False
 
-            # get the first row of table[class='tracks'] 
-            # alternatively
-            # //*[@id="jp_playlist_1_item_0"]/td[1]
-            # this is what it looks like:
-            #
-            #<td class="icon playable playable-processed" dur="141662" 
-            # fid="e5d3b215-3810-4cf9-9e89-7cc3218b2cc7" 
-            # tid="6288627e-bae8-49c8-9f3c-f6ed024eb698"></td>
-            #
-            # where tid = internal track id
-            itemnode = html.get_element_by_id('jp_playlist_1_item_2').find('td') # get first td
-            #logging.debug('lxml result: %r', itemnode)
-            return itemnode.get('tid', default=None)
+            logging.info('got results: %r', results)
+            # return value of a specific attribute that contains Upright's internal UUID of the track
+            return results[0].get('data-us-tid', None)
 
 
     async def resolve(self, filename, fromcache=True, fuzzy=False):
