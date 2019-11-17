@@ -7,8 +7,13 @@
 {% block headscript %}
 <script src="/media/moment.min.js"></script>
 <script src="/media/Chart.min.js"></script>
+<script src="/media/chartjs-plugin-datalabels.min.js"></script>
 {% endblock headscript %}
 {% block docscript %}
+
+// This plugin registers itself globally, meaning that once imported, all charts will display labels. 
+// In case you want it enabled only for a few charts, you first need to unregister it globally:
+Chart.plugins.unregister(ChartDataLabels);
 
 var app = new Vue({
     el: '#adminpanel',
@@ -28,6 +33,53 @@ var app = new Vue({
     }
   });
 
+function color(idx) {
+    let colors = [
+        {
+        "value":"#6B8E23",
+        "css":true,
+        "name":"olivedrab"
+      },
+      {
+        "value":"#808000",
+        "vga":true,
+        "css":true,
+        "name":"olive"
+      },{
+        "value":"#B8860B",
+        "css":true,
+        "name":"darkgoldenrod"
+      },{
+        "value":"#FF7F50",
+        "css":true,
+        "name":"coral"
+      },{
+        "value":"#FFF5EE",
+        "css":true,
+        "name":"seashell"
+      },{
+        "value":"#D2B48C",
+        "css":true,
+        "name":"tan"
+      },{
+        "value":"#191970",
+        "css":true,
+        "name":"midnightblue"
+      },{
+        "value":"#FF69B4",
+        "css":true,
+        "name":"hotpink"
+      },{
+        "value":"#EEA2AD",
+        "name":"lightpink 2"
+      },{
+        "value":"#E066FF",
+        "name":"mediumorchid 1"
+      }];
+      //return colors.filter(function(el) { return el.name == colorName })[0];
+      return colors[idx].value;
+}
+
 function load_charts(ctxFilenameStats, ctxMusiclibraryStats, ctxOwnershipStats) { 
     console.log("creating all status charts");
     axios.get("/media/status.json")
@@ -44,15 +96,15 @@ function load_charts(ctxFilenameStats, ctxMusiclibraryStats, ctxOwnershipStats) 
 function create_charts(dataseries, ctxFilenameStats, ctxMusiclibraryStats, ctxOwnershipStats) {
     // parse status data
     console.log("dataseries: %o", dataseries);
-    const allcolors = {"404": "rgba(255, 99, 132, 0.2)", 
-                       "201": "rgba(255, 159, 64, 0.2)", 
-                       "400": "rgba(255, 205, 86, 0.2)", 
-                       "200": "rgba(75, 192, 192, 0.2)", 
-                       "500": "rgba(54, 162, 235, 0.2)", 
+    const allcolors = {"404": "rgba(255, 99, 132, 0.6)", 
+                       "201": "rgba(255, 159, 64, 0.6)", 
+                       "400": "rgba(255, 205, 86, 0.6)", 
+                       "200": "rgba(75, 192, 192, 0.6)", 
+                       "500": "rgba(54, 162, 235, 0.6)", 
                        "OK": "#28a745",
                        "CHECK": "#ffc107",
                        "NO": "#dc3545",
-                       "default": "rgba(201, 203, 207, 0.2)"};
+                       "default": "rgba(201, 203, 207, 0.9)"};
             
 
     var sets = []
@@ -123,11 +175,18 @@ function create_charts(dataseries, ctxFilenameStats, ctxMusiclibraryStats, ctxOw
 
     var libraryChart = new Chart(ctxMusiclibraryStats, {
         type: 'pie',
+        plugins: [ChartDataLabels],
         data: {
             labels: dataseries["activity_7days"]["labels"],
             total_use: dataseries["activity_7days"]["tooltips"]["200"].reduce(function(acc, val) { return acc + val; }, 0),
             datasets: [{
-                data: dataseries["activity_7days"]["tooltips"]["200"]
+                data: dataseries["activity_7days"]["tooltips"]["200"],
+                datalabels: {
+                    color: allcolors["default"]
+                },
+                backgroundColor: function(ctx) {
+                    return color(ctx.dataIndex);
+                }
             }]
         },
         options: {
@@ -146,7 +205,15 @@ function create_charts(dataseries, ctxFilenameStats, ctxMusiclibraryStats, ctxOw
                         return label;
                     }
                 }
+            },
+            plugins: {
+                datalabels: {
+                    formatter: function(value, context) {
+                        return context.chart.data.labels[context.dataIndex];
+                    }
+                }
             }
+
         }
     });
 
