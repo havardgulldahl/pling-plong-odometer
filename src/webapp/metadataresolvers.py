@@ -550,7 +550,7 @@ class AUXResolver(ResolverBase):
                     year=-1,
                     recordnumber=_musicid,
                     albumname=trackdata.get('cd_title', None),
-                    copyright='AUX',
+                    copyright='AUX Publishing AB',
                     lcnumber=trackdata.get('lc', None),
                     isrc=trackdata.get('isrc', None),
                     ean=trackdata.get('ean', None),
@@ -703,7 +703,7 @@ class ApollomusicResolver(ResolverBase):
 class UniPPMResolver(ResolverBase):
     prefixes = [ ]
     name = 'UniPPM'
-    prettyname = 'Universal Production Publising Music'
+    prettyname = 'Universal Production Music'
     website = 'http://www.unippm.se/'
     #urlbase = 'http://www.unippm.se/Feeds/TracksHandler.aspx?method=workaudiodetails&workAudioId={musicid}' # HTTP GET interface, returns json
     urlbase = 'http://cloud1.search.universalproductionmusic.com/uppm_work_12_1/select?q=editIds:({musicid})'# HTTP GET interface, returns json 
@@ -711,6 +711,7 @@ class UniPPMResolver(ResolverBase):
                   'AA':'Atmosphere Archive ',
                   'AK':'Atmosphere Kitsch ',
                   'AM':'Access Music ',
+                  'AR': 'A-List Records',
                   'AUPM': 'AUPM',
                   'ATMOS':'Atmosphere ',
                   'ATV':'Atmosphere TV ',
@@ -797,6 +798,7 @@ class UniPPMResolver(ResolverBase):
                   'RDR':'RADAR ',
                   'RNM':'ReverbNation Music ',
                   'RW':'Real World Production Music ',
+                  'SA': 'SaraoMusic',
                   'SAMP':'Sampler ',
                   'SEE':'See Trailer Tracks ',
                   'SLAM':'SLAM!',
@@ -839,7 +841,7 @@ class UniPPMResolver(ResolverBase):
         UPM_BEE21_1_Getting_Down_Main_Track_Illingworth_Wilson_882527___UNIPPM.wav -> 882527
         UPM_HM_073Q_30_Hardtop_Livin_Instrumental_Chick_Walsh_Winslow_299209.wav -> 299209
         UPM_EVO289e_8_Make_It_To_The_End_Instrumental_Elias_Ramani_1034318.wav -> 1034318
-	UPM_Tru102_3_Humanly_Possible_Main_Track_Jenkins_Mahoney_Powell_1012461.wav -> 1012461
+        UPM_Tru102_3_Humanly_Possible_Main_Track_Jenkins_Mahoney_Powell_1012461.wav -> 1012461
         UPM_10MILES29_18_A_Morning_Wake_Up_Main_Track_Geulem_987983.wav -> 987983
         """
         # first, try new format
@@ -900,7 +902,7 @@ class UniPPMResolver(ResolverBase):
                  year=-1,
                  recordnumber=trackdata.get('tid', _musicid),
                  albumname=trackdata.get('ana', None),
-                 copyright='Universal Publishing Production Music',
+                 copyright='Universal Production Music',
                  # lcnumber=None,
                  # isrc=None,
                  # ean=None,
@@ -1167,7 +1169,8 @@ class ExtremeMusicResolver(ResolverBase):
                         year=-1,
                         recordnumber=musicid,
                         albumname=trackdata.get('album_title', None),
-                        copyright=', '.join([c['name'] for c in trackdata['collecting_publishers']]),
+                        #copyright=', '.join([c['name'] for c in trackdata['collecting_publishers']]),
+                        copyright='Extreme Music',
                         # lcnumber=None,
                         # isrc=None,
                         # ean=None,
@@ -1603,7 +1606,7 @@ class AudioNetworkResolver(ResolverBase):
                              year=trackdata.get('ReleaseYear'),
                              recordnumber=_musicid,
                              albumname=trackdata.get('albumname'),
-                             copyright='Audio Network Limited',
+                             copyright='Audio Network',
                              # lcnumber=None,
                              isrc=trackdata.get('Isrc'),
                              # ean=None,
