@@ -120,7 +120,7 @@ function create_charts(dataseries, ctxFilenameStats, ctxMusiclibraryStats, ctxOw
             borderColor: kolor,
             backgroundColor: kolor,
             fill: true,
-            data: dataseries["activity_7days"]["datasets"][k],
+            data: dataseries["activity_7days"]["tooltips"][k],
             tooltip: dataseries["activity_7days"]["tooltips"][k]
         });
     }
@@ -153,7 +153,7 @@ function create_charts(dataseries, ctxFilenameStats, ctxMusiclibraryStats, ctxOw
                     }
                 }],
                 yAxes: [{
-                    stacked: false,
+                    stacked: true,
                     ticks: {
                         display: false
                     }
