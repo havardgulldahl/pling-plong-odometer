@@ -11,10 +11,18 @@
                 <a v-on:click="force_select_service = true;" href="#">[[ track.music_services[0] ]]</a>
             </template>
             <template v-else>
-                <select v-model="resolve_using_music_service" v-on:change="override_music_service()">
+                <select v-model="resolve_using_music_service" 
+                        v-on:change="override_music_service()"
+                        xclass="form-control form-control-sm">
                     <option disabled value="null">Søk opp i:</option>
                     <option v-for="service in this.$all_music_services" v-bind:value="service">[[ service ]]</option>
                 </select>
+            </template>
+            <template v-if="unknown_track && track.resolvable">
+                <button v-on:click="add_missing()"
+                        role=button
+                        data-i18n-title=report_missing_filename
+                        class="translate btn btn-outline-secondary btn-xs">＋</button>
             </template>
         <td class="metadata" :class="{'text-white': errors, 'bg-danger':errors}"> 
             <template v-if="track.metadata !== null">
@@ -30,9 +38,6 @@
             </span>
             <span v-else-if="!track.resolvable" class=text-muted>
                 [[ i18n_unknown() ]]
-                <button v-on:click="add_missing()"
-                        role=button
-                        class="btn btn-outline-secondary btn-xs">Add missing file</button>
             </span>
             <span v-else class=text-muted> [[ i18n_getting_metadata() ]]</span>
         </td> <!-- track metadata-->
@@ -96,7 +101,7 @@ Vue.component("audible-item", {
     template: "#audible-template",
     data: function() {
         return { errors: false,
-                 state: null,
+                 unknown_track: null,
                  loading: false,
                  resolve_using_music_service: null,
                  force_select_service: false
@@ -108,6 +113,8 @@ Vue.component("audible-item", {
             // update detected music service
             this.resolve_using_music_service = this.track.music_services[0];
         }
+        // set initial known state
+        this.unknown_track = !this.track.resolvable;
         if(this.track.metadata === null) { // get metadata for this object
             this.update_metadata();
         }
@@ -124,8 +131,8 @@ Vue.component("audible-item", {
             var clip = this;
             // get metadata url, use the overridden music service or detected music service
             // fall back to default
-            var url = clip.track.resolve[this.resolve_using_music_service] || 
-                    clip.track.resolve_other.replace("{music_service}", this.resolve_using_music_service);
+            var url = clip.track.resolve[clip.resolve_using_music_service] || 
+                    clip.track.resolve_other.replace("{music_service}", clip.resolve_using_music_service);
             //console.log("update_metadata for %s from %o", clip.track.clipname, url);
             clip.loading = true;
             axios.get(url)
@@ -133,7 +140,14 @@ Vue.component("audible-item", {
                 //console.log('got trackmetadat response: %o', response.data);
                 clip.track.metadata = response.data.metadata;
                 clip.loading = false;
-                updateProgress(+1);
+                if(force_resolve) {
+                    // we have overridden the autodetection and gotten a result
+                    // update model to reflect this
+                    clip.track.resolvable = true;
+                    clip.track.music_services[0] = clip.resolve_using_music_service;
+                }
+                //updateProgress(+1);
+                app.finished_tracks += 1;
             })
             .catch(function(error) {
                 console.error("metadta error: %o", error);
@@ -141,7 +155,8 @@ Vue.component("audible-item", {
                 clip.errors = error.message;
                 clip.loading = false;
                 //alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
-                updateProgress(+1);
+                //updateProgress(+1);
+                app.finished_tracks += 1;
             });
         }, 
         duration: function() {
@@ -150,9 +165,11 @@ Vue.component("audible-item", {
         },
         add_missing: function() {
             // 
-            console.log("music_service_missing %o", this);
-            axios.post(this.track.add_missing, data={'item':this.track.clipname});
-            return true;
+            //console.log("music_service_missing %o", this);
+            axios.post(this.track.add_missing, data={'item':this.track.clipname})
+            .then(function(response) {
+                alertmsg(i18n.THANK_YOU(), "success");
+            });
         },
         override_music_service: function() {
             console.log("override music service: %o", this.resolve_using_music_service);
@@ -193,7 +210,9 @@ var app = new Vue({
     el: '#content',
     data: {
       items: [ ],
-      all_tracks: false
+      all_tracks: false,
+      tracks_to_resolve: 0,
+      finished_tracks: 0
     },
     created: function() {
         console.log("Odometer startup");
@@ -366,33 +385,6 @@ function dropHandler(ev) {
     }
   }
 
-function startProgress(max) {
-   //console.log('creating progress bar with max=%o', max);
-   document.getElementById('thead-metadata').innerHTML = "<progress id=progress value=0 class=align-bottom max="+max+"></progress>";
-}
-
-function updateProgress(val) {
-    //console.log('updating progress bar with val=%o', val);
-    var p = document.getElementById('progress');
-    if(!p) return; // progress element is only there with multiple resolves # TODO: FIX THIS
-    var newval = parseInt(p.getAttribute('value'))+val;
-    if(newval == p.getAttribute('max')) {
-        // all resolve tasks are finished, remove progressbar
-        p.parentElement.innerText = i18n.METADATA();
-        finishedResolving();
-    } else {
-        p.setAttribute('value', newval);
-    }
-}
-
-function finishedResolving() {
-    // things to do when all metadata is loaded
-    var btns = document.querySelectorAll('#file-form button[type="button"]');
-    for(var i=0; i<btns.length; i++) {
-        btns[i].removeAttribute('disabled');
-    }
-}
-
 function submit(formData) {
     // send the already prepared form data to the json endpoint for analysis
     var is_resolvable = function(itm) {
@@ -407,33 +399,16 @@ function submit(formData) {
             clip.metadata = null; // this is where we put the Trackmetadata structure later
             return clip;
         });
-        startProgress((app.items.filter(is_resolvable)).length);
+        //startProgress((app.items.filter(is_resolvable)).length);
+        app.tracks_to_resolve = (app.items.filter(is_resolvable)).length;
+        // reset counter
+        app.finished_tracks = 0;
     })
     .catch(function(error) {
         console.error("analysis error: %o", error);
         alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
     });
 }
-
-function report_missing_filename(button) {
-    // send missing filename to odometer devs
-    //console.log("report filename: %o", button);
-    var cell = button.parentElement;
-    var metadata = cell.metadata;
-    var timelinedata = cell.timelinedata;
-    //console.log("missing metaata : %o", metadata);
-    axios.post(timelinedata.add_missing, metadata)
-        .then(function (response) {
-            var tinglemodal = setupModal();
-            tinglemodal.setContent(i18n.THANK_YOU());
-            tinglemodal.open();
-        })
-        .catch(function (error) {
-            console.error("missing filename error: %o", error);
-            alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
-        });
-}
-
 
 {% endblock docscript %}
 
@@ -465,8 +440,16 @@ function report_missing_filename(button) {
             <div class="col-4"
                  data-step=3
                  data-intro="Så kan du lage rapport eller rulletekst med disse knappene">
-                <button type="button" disabled class="btn btn-primary translate" id="create-report-button" data-i18n=generate_metadata_report>Generate metadata report</button>
-                <button type="button" disabled class="btn btn-primary translate" id="create-credits-button" data-i18n=generate_end_credits>Generate credits</button>
+                <button type="button" 
+                        v-bind:disabled="tracks_to_resolve == 0 || finished_tracks != tracks_to_resolve"
+                        class="btn btn-primary translate" 
+                        id="create-report-button" 
+                        data-i18n=generate_metadata_report>Generate metadata report</button>
+                <button type="button" 
+                        v-bind:disabled="tracks_to_resolve == 0 || finished_tracks != tracks_to_resolve"
+                        class="btn btn-primary translate" 
+                        id="create-credits-button" 
+                        data-i18n=generate_end_credits>Generate credits</button>
             </div>
         </div>
     </form>
@@ -483,7 +466,18 @@ function report_missing_filename(button) {
                 data-i18n=duration data-i18n-title=measured_in_seconds 
                 style="text-align: right">audible length</th>
             <th class=translate title="Music library" data-i18n-title=music_library>℗</th>
-            <th class=translate data-i18n=metadata id=thead-metadata>metadata</th>
+            <th>
+                <template v-if="finished_tracks == tracks_to_resolve">
+                    <span class=translate data-i18n=metadata id=thead-metadata>metadata</span>
+                </template>
+                <template v-else>
+                    <progress id=progress 
+                              v-bind:value="finished_tracks"
+                              class=align-bottom 
+                              v-bind:max="tracks_to_resolve"
+                    >
+                </template>
+            </th>
           </tr>
         </thead>
         <tbody id=files-list 
