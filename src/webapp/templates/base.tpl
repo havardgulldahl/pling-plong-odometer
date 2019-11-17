@@ -32,7 +32,7 @@
 
 var languagecode = "no-NO"; // TODO: update this dynamically
 var i18n = new MessageFormat(languagecode).compile(messages)[languagecode];
-Vue.prototype.$all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "ApolloMusic", "UniPPM"]; // TOOD: get this dynamically/lazily
+Vue.prototype.$all_music_services = ["DMA", "ExtremeMusic", "UprightMusic", "AUX", "ApolloMusic", "UniPPM", "AudioNetwork"]; // TOOD: get this dynamically/lazily
 
 </script>
 

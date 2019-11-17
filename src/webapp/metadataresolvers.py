@@ -1500,7 +1500,7 @@ class WarnerChappellResolver(ResolverBase):
 class AudioNetworkResolver(ResolverBase):
     prefixes = [ ]
     enabled = True 
-    name = 'Audio Network'
+    name = 'AudioNetwork'
     prettyname = 'Audio Network'
     website = 'http://https://www.audionetwork.com/'
     urlbase = 'http://https://xob04ry4ld-dsn.algolia.net/1/indexes/tracks_live/query?x-algolia-agent=Algolia%20for%20JavaScript%20(3.33.0)%3B%20Browser%20(lite)&x-algolia-application-id=XOB04RY4LD&x-algolia-api-key=6320010f904f2c08d2fdc186f11fdd83'
