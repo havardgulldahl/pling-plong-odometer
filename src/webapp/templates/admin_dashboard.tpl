@@ -2,18 +2,10 @@
 
 
 {% block templates %}
-<script type="text/x-template" id="feedback-template">
-    <tr class=item v-bind:class="{'text-muted':item.done}">
-        <td> <input type=checkbox v-bind:checked=item.done></td>
-        <td> [[ formattedTimestamp ]]</td>
-        <td v-bind:class="{'feedback-done':item.done}"> [[ item.message ]]</td>
-        <td> [[ item.sender ]]</td>
-    </tr>
-</script>
 {% endblock templates %}
 
 {% block headscript %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+<script src="/media/moment.min.js"></script>
 <script src="/media/Chart.min.js"></script>
 {% endblock headscript %}
 {% block docscript %}
@@ -24,29 +16,32 @@ var app = new Vue({
     },
     mounted : function() { 
         console.log("startup");
-        var ctxFilenameStats = document.getElementById("filenameStatsChart").getContext('2d');
-        var ctxOwnershipStats = document.getElementById("ownershipStatsChart").getContext('2d');
-        load_charts(ctxFilenameStats, ctxOwnershipStats);
+        function canvas(idel) {
+            return document.getElementById(idel).getContext('2d');
+        }
+        load_charts(canvas("filenameStatsChart"), 
+                    canvas("musiclibraryStatsChart"), 
+                    canvas("ownershipStatsChart"));
     },
     delimiters: ["[[", "]]"],
     methods: {
     }
   });
 
-function load_charts(ctxFilenameStats, ctxOwnershipStats) { 
+function load_charts(ctxFilenameStats, ctxMusiclibraryStats, ctxOwnershipStats) { 
     console.log("creating all status charts");
     axios.get("/media/status.json")
     .then(function(response) {
         // handle success
         console.log(response);
-        create_charts(response.data, ctxFilenameStats, ctxOwnershipStats);
+        create_charts(response.data, ctxFilenameStats, ctxMusiclibraryStats, ctxOwnershipStats);
     }).catch(function(error) {
         // handle fails
         console.error(error);
     });
 }
 
-function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
+function create_charts(dataseries, ctxFilenameStats, ctxMusiclibraryStats, ctxOwnershipStats) {
     // parse status data
     console.log("dataseries: %o", dataseries);
     const allcolors = {"404": "rgba(255, 99, 132, 0.2)", 
@@ -72,15 +67,16 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
             label: k,
             borderColor: kolor,
             backgroundColor: kolor,
-            fill: false,
+            fill: true,
             data: dataseries["activity_7days"]["datasets"][k],
             tooltip: dataseries["activity_7days"]["tooltips"][k]
         });
     }
     
+    console.log("sets: %o", sets);
     // create filename chart
     var myChart = new Chart(ctxFilenameStats, {
-        type: "bar",
+        type: 'bar',
         data: {
             labels: dataseries["activity_7days"]["labels"],
             datasets: sets,
@@ -94,6 +90,7 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
             scales: {
                 xAxes: [{
                     stacked: true,
+                    fill: true,
                     scaleLabel: {
                         labelString: 'Service'
                     },
@@ -104,7 +101,7 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
                     }
                 }],
                 yAxes: [{
-                    stacked: true,
+                    stacked: false,
                     ticks: {
                         display: false
                     }
@@ -115,6 +112,37 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
                     label: function(item, data) {
                         //console.log("lblclb: %o - %o", item, data);
                         var label = "Sum: "+data.datasets[item.datasetIndex].tooltip[item.index];
+                        return label;
+                    }
+                }
+            }
+        }
+    });
+
+    // create music library usage
+
+    var libraryChart = new Chart(ctxMusiclibraryStats, {
+        type: 'pie',
+        data: {
+            labels: dataseries["activity_7days"]["labels"],
+            total_use: dataseries["activity_7days"]["tooltips"]["200"].reduce(function(acc, val) { return acc + val; }, 0),
+            datasets: [{
+                data: dataseries["activity_7days"]["tooltips"]["200"]
+            }]
+        },
+        options: {
+            responsive: true,
+            title: {
+                text: i18n.FILENAMES_STATUS_WEEK(),
+                display: true
+            },
+            tooltips: {
+                callbacks: {
+                    label: function(item, data) {
+                        //console.log("lblclb: %o - %o", item, data);
+                        let val = data.datasets[item.datasetIndex].data[item.index];
+                        let label = data.labels[item.index] + ": " + val + 
+                                " ( " + parseInt( val/data.total_use*100, 10) +" % )";
                         return label;
                     }
                 }
@@ -134,7 +162,6 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
                    });
     }
 
-    console.log("dsets: %o", dsets);
     var chart = new Chart(ctxOwnershipStats, {
         // The data for our dataset
         data: {
@@ -197,6 +224,10 @@ function create_charts(dataseries, ctxFilenameStats, ctxOwnershipStats) {
             <div class=col>
                 <h3 data-i18n=Filenames class=translate>Filenames</h3>
                 <canvas id="filenameStatsChart" width="500" height="500"></canvas>
+            </div>
+            <div class=col>
+                <h3 data-i18n=source class=translate>Source</h3>
+                <canvas id="musiclibraryStatsChart" width="500" height="500"></canvas>
             </div>
         </div>
         <div class=row>
