@@ -251,10 +251,9 @@ async def handle_add_missing(request):
     data = await request.json() 
     app.logger.debug('add missing filename: %r, with POST args %r', filename, data)
     async with app.dbpool.acquire() as connection:
-        await connection.fetchval("INSERT INTO reported_missing (filename, recordnumber, musiclibrary) VALUES ($1, $2, $3)", 
+        await connection.fetchval("INSERT INTO reported_missing (filename) VALUES ($1)", 
                                   filename,
-                                  data.get('recordnumber'),
-                                  data.get('musiclibrary'))
+        )
     return web.json_response(data={'error': [], })
 
 

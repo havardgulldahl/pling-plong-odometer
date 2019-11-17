@@ -6,7 +6,16 @@
     <tr>
         <td class="filename" :class="{loading: loading, 'text-success':track.resolvable}"> [[ track.clipname ]]</td> <!-- filename -->
         <td class="duration">[[ duration() ]]</td> <!-- duration -->
-        <td class=""> [[ track.music_services[0] ]]</td> <!-- service selectior -->
+        <td class="service">  <!-- service selectior -->
+            <template v-if="track.music_services.length && !force_select_service">
+                <a v-on:click="force_select_service = true;" href="#">[[ track.music_services[0] ]]</a>
+            </template>
+            <template v-else>
+                <select v-model="resolve_using_music_service" v-on:change="override_music_service()">
+                    <option disabled value="null">Søk opp i:</option>
+                    <option v-for="service in this.$all_music_services" v-bind:value="service">[[ service ]]</option>
+                </select>
+            </template>
         <td class="metadata" :class="{'text-white': errors, 'bg-danger':errors}"> 
             <template v-if="track.metadata !== null">
                 <template v-if="track.metadata.productionmusic">
@@ -21,6 +30,9 @@
             </span>
             <span v-else-if="!track.resolvable" class=text-muted>
                 [[ i18n_unknown() ]]
+                <button v-on:click="add_missing()"
+                        role=button
+                        class="btn btn-outline-secondary btn-xs">Add missing file</button>
             </span>
             <span v-else class=text-muted> [[ i18n_getting_metadata() ]]</span>
         </td> <!-- track metadata-->
@@ -85,26 +97,35 @@ Vue.component("audible-item", {
     data: function() {
         return { errors: false,
                  state: null,
-                 loading: false
+                 loading: false,
+                 resolve_using_music_service: null,
+                 force_select_service: false
          };
     },
     created: function () {
         //console.log("created %o", this);
+        if(this.track.music_services.length > 0) {
+            // update detected music service
+            this.resolve_using_music_service = this.track.music_services[0];
+        }
         if(this.track.metadata === null) { // get metadata for this object
             this.update_metadata();
         }
     },
     methods: {
-        update_metadata: function() {
+        update_metadata: function(override) {
+            let force_resolve = override || false;
             // get metadata from api and update this object
-            // get metadata url
-            var clip = this;
-            if(!clip.track.resolvable) {
+            if(!force_resolve && !this.track.resolvable) {
                 // cant resolve this track
                 //console.log("This trak cannot be resolved: %s", clip.track.clipname);
                 return false;
             }
-            var url = clip.track.resolve[this.track.music_services[0]];
+            var clip = this;
+            // get metadata url, use the overridden music service or detected music service
+            // fall back to default
+            var url = clip.track.resolve[this.resolve_using_music_service] || 
+                    clip.track.resolve_other.replace("{music_service}", this.resolve_using_music_service);
             //console.log("update_metadata for %s from %o", clip.track.clipname, url);
             clip.loading = true;
             axios.get(url)
@@ -126,6 +147,18 @@ Vue.component("audible-item", {
         duration: function() {
             // from odometer.js import formatDuration
             return formatDuration(this.track.audible_length) + "s";
+        },
+        add_missing: function() {
+            // 
+            console.log("music_service_missing %o", this);
+            axios.post(this.track.add_missing, data={'item':this.track.clipname});
+            return true;
+        },
+        override_music_service: function() {
+            console.log("override music service: %o", this.resolve_using_music_service);
+            let override = true;
+            this.update_metadata(override);
+
         },
         i18n_getting_metadata: function() {
             return i18n.GETTING_METADATA();
