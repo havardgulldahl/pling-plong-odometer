@@ -784,6 +784,7 @@ class UniPPMResolver(ResolverBase):
                   'NOVA': 'NOVA',
                   'NPM':'NoisePumpMusic ',
                   'Nuggets':'Nuggets',
+                  'Nuvs': 'Nuvotone Stratos',
                   'OM':'OneMusic ',
                   'PMCD':'Parry Classical ',
                   'PML':'Parry Music Library ',
@@ -843,7 +844,7 @@ class UniPPMResolver(ResolverBase):
         """
         # first, try new format
         if fuzzy:
-            rex = re.compile(r'UPM_[-_A-Z0-9]{1,}\d{1,4}[A-Za-z]?_\d{1,4}_\w+_(\d+).*',
+            rex = re.compile(r'UPM_[-_A-Za-z0-9]{1,}\d{1,4}[A-Za-z]?_\d{1,4}_\w+_(\d+).*',
                 re.UNICODE) # UPM_<label><albumid>_<trackno>_<title>_<musicid>___UNIPPM.wav
             regexp = rex.search
         else:
