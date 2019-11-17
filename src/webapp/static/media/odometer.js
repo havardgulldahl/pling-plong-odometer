@@ -118,27 +118,6 @@ function main() {
     }
 }
 
-function formatMusicServicesDropdown(music_services, metadatacell_id) {
-    // get a list of music services and return a html string of a <select> element
-    var s = "<select size=1 onchange=\"resolveClip('"+metadatacell_id+"')\">";
-    var possible_services = all_music_services.slice(0); //make a copy
-    var suggested = "<optgroup label='"+i18n.RECOGNISED()+"'>";
-    if(music_services.length == 0){
-        suggested = suggested+"<option selected disabled>"+i18n.UNKNOWN()+"</option>";
-    } else {
-        for(var i=0;i<music_services.length;i++){
-            suggested = suggested+"<option>"+music_services[i]+"</option>";
-            possible_services.splice(possible_services.indexOf(music_services[i]), 1); // remove from that list
-        }
-    }
-    var possible = "<optgroup label='"+i18n.OTHERS()+"'>";
-    for(var j=0;j<possible_services.length;j++) {
-        possible = possible + "<option>"+possible_services[j]+"</option>";
-    }
-    return s+suggested+possible+"</select>";
-
-}
-
 function alertmsg(msg, errortype) {
     // flash a message to the #alertmsg elemnt. Errortype one of [warning, danger, info, success, primary]
     // https://getbootstrap.com/docs/4.0/components/alerts/
@@ -151,44 +130,6 @@ function alertmsg(msg, errortype) {
                                 e.classList.remove('alert-'+etype); 
                                 e.innerText='';}, 
                             4500);
-}
-
-function runsheetdialog() {
-    // pop up a run sheet dialog, listing each track by inpoint on timeline on timeline
-    var metadatarows = document.querySelectorAll('td.has-metadata');
-    var preview = document.getElementById('preview');
-    var s = "<h1>"+i18n.REPORT_HEADER_TIMELINE()+"</h1>";
-    s = s + '<p><code>'+i18n.FULL_FILE_NAME({FILENAME:preview.validFile.name})+'</code>';
-    s = s + '<table cellpadding=10><tr>';
-    s = s + '<th>'+i18n.IN()+'</th>';
-    s = s + '<th>'+i18n.OUT()+'</th>';
-    s = s + '<th>'+i18n.DURATION()+'</th>';
-    s = s + '<th>'+i18n.CLIP_DETAILS()+'</th>';
-    s = s + '</tr>';
-    var reportrows = []; // this is where we keep the generated text of each report row
-    for(var i=0; i<metadatarows.length; i++) {
-        var md = metadatarows[i].metadata;
-        var td = metadatarows[i].timelinedata;
-        console.log("got timelinedata: %o", td);
-        var t;
-        if(md.title===undefined) {// TODO: let people choose ordinary files also 
-            t = td.filename; 
-        } else {
-            t = '\u00ab'+md.title+'\u00bb \u2117 '+td.musiclibrary
-            //_t = u'\u00ab%(title)s\u00bb \u2117 %(musiclibrary)s' % vars(r.metadata)
-        }
-        if(md.productionmusic===true) {
-            if(_labels.indexOf(md.label) === -1) { // only register once per label
-                s = s + "<i>"+md.copyright+"</i> ℗ <b>"+md.label+"</b><br>";
-            }
-        } else {
-            s = s + "<i>"+md.title+"</i> "+md.artist+" ℗ <b>"+md.label+"</b> "+md.year+" <br>";
-        }
-    }
-    console.log('got credits: %o', s);
-    var tinglemodal = setupModal();
-    tinglemodal.setContent('<h1>End credits</h1>'+s);
-    tinglemodal.open();
 }
 
 function feedbackdialog() {
@@ -213,51 +154,6 @@ function feedbackdialog() {
     });
     tinglemodal.setContent(document.getElementById("feedback-dialog").innerHTML);
     tinglemodal.open();
-}
-
-function check_copyright(button) {
-    // check the copyright info of commercial releases
-    var cell = button.parentElement;
-    var metadata = {"metadata": cell.metadata}; // Trackmetadata from model.py
-    var timelinedata = cell.timelinedata; // timeline object from xmeml parser
-    console.log("check copyright metadata : %o", metadata);
-    var sp = document.createElement('div');
-    var dmarights = "<b>DMA</b>: ℗ "+cell.metadata.year+" "+cell.metadata.label;
-    sp.innerHTML = dmarights
-        +"<br><b>Spotify</b>: <img class=spinner src='/media/spinner.gif'><br><b>Discogs</b>: <img class=spinner src='/media/spinner.gif'>";
-    cell.appendChild(sp);
-
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/ownership/");
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    xhr.onload = function () {
-        if (xhr.status === 200) {
-            // add copyright to ui
-
-            var response = JSON.parse(xhr.response);
-            console.log("copyright response: %o", response);
-            var s = dmarights + "<br><b>Spotify</b>: ";
-            s += response.ownership.spotify.P || response.ownership.spotify.C;
-            s += "<br><b>Discogs</b>: ";
-            if(response.ownership.discogs !== null) {
-                var d = response.ownership.discogs;
-                for(var i=0;i<d.length;i++) {
-                    s += " ⇝ "+d[i].name;
-                }
-            } else {
-                s += i18n.PLEASE_SEARCH_MANUALLY();
-            }
-            sp.innerHTML = s;
-        } else {
-            console.error("copyright error: %o, %o", xhr.status, xhr.response);
-            var s = dmarights + "<br><b>Spotify</b>: "+i18n.PLEASE_SEARCH_MANUALLY()+
-                "<br><b>Discogs</b>: "+i18n.PLEASE_SEARCH_MANUALLY();
-            sp.innerHTML = s;
-        }
-        // remove button, clear ui
-        button.remove();
-    }
-    xhr.send(JSON.stringify(metadata));
 }
 
 function download(content, filename, contentType) {
