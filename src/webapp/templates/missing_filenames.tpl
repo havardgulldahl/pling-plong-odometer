@@ -4,11 +4,10 @@
 {% block templates %}
 <script type="text/x-template" id="missing-template">
     <tr>
-        <td> <input type=checkbox v-bind:checked=item.done></td>
+        <td> <input type=checkbox v-bind:checked=item.resolved disabled></td>
         <td> [[ formattedTimestamp ]]</td>
         <td> [[ item.filename ]]</td>
-        <td> [[ item.recordnumber ]]</td>
-        <td> [[ item.musiclibrary ]]</td>
+        <td> [[ item.reporter ]]</td>
     </tr>
 </script>
 {% endblock templates %}
@@ -68,18 +67,16 @@ function fetch_missing() {
 
 
     <table class="table table-striped table-sm">
-        <col style="width:10%">
-        <col style="width:10%">
-        <col style="width:30%"> 
-        <col style="width:30%">
+        <col style="width:15%">
         <col style="width:20%">
+        <col style="width:40%"> 
+        <col style="width:25%">
         <thead class="thead-dark">
           <tr>
             <th data-i18n=done class=translate>done?</th>
             <th data-i18n=when class=translate>when</th>
             <th data-i18n=filename class=translate>filename</th>
-            <th data-i18n=recordnumber class=translate>recordnumber</th>
-            <th data-i18n=musiclibrary class=translate>music library</th>
+            <th data-i18n=reporter class=translate>reporter</th>
           </tr>
         </thead>
         <tbody id=results-list style="font-size:80%">
