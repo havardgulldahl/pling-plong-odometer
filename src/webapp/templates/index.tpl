@@ -137,7 +137,6 @@ Vue.component("audible-item", {
             clip.loading = true;
             axios.get(url)
             .then(function (response) {
-                //console.log('got trackmetadat response: %o', response.data);
                 clip.track.metadata = response.data.metadata;
                 clip.loading = false;
                 if(force_resolve) {
@@ -146,16 +145,12 @@ Vue.component("audible-item", {
                     clip.track.resolvable = true;
                     clip.track.music_services[0] = clip.resolve_using_music_service;
                 }
-                //updateProgress(+1);
                 app.finished_tracks += 1;
             })
             .catch(function(error) {
                 console.error("metadta error: %o", error);
-                //console.log(clip);
                 clip.errors = error.message;
                 clip.loading = false;
-                //alertmsg(i18n.ALERTMSG({ERRCODE:"XX", ERRMSG:error}, 'danger'));
-                //updateProgress(+1);
                 app.finished_tracks += 1;
             });
         }, 
@@ -168,12 +163,16 @@ Vue.component("audible-item", {
             //console.log("music_service_missing %o", this);
             axios.post(this.track.add_missing, data={'item':this.track.clipname})
             .then(function(response) {
-                alertmsg(i18n.THANK_YOU(), "success");
+                var tinglemodal = setupModal();
+                tinglemodal.setContent(i18n.THANK_YOU());
+                tinglemodal.open();
+                //alertmsg(i18n.THANK_YOU(), "success");
             });
         },
         override_music_service: function() {
-            console.log("override music service: %o", this.resolve_using_music_service);
+            //console.log("override music service: %o", this.resolve_using_music_service);
             let override = true;
+            app.tracks_to_resolve += 1;
             this.update_metadata(override);
 
         },
