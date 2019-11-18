@@ -81,7 +81,7 @@ async def store_copyright_result(_app, spotify_id, result, reason, spotify_label
                 (spotify_id, result, reason, spotify_label, parsed_label, odometer_version)
              VALUES ($1, $2, $3, $4, $5, $6);'''
     async with _app.dbpool.acquire() as connection:
-        await connection.execute(sql, spotify_id, result, reason, spotify_label, parsed_label, _app.version)
+        await connection.execute(sql, spotify_id[:254], result[:254], reason, spotify_label, parsed_label[:254], _app.version)
 
 class AudioClip:
     'The important properties of an audio clip for JSON export'
@@ -428,7 +428,7 @@ async def handle_post_ownership(request):
             spotifycopyright['parsed_label'])
     else:
         await store_copyright_result(app, 
-            "DMA:{}".format(json.dumps(metadata["metadata"])),
+            "DMA:{}".format(metadata["metadata"]["filename"]),
             license_result, 
             ', '.join(reasons),
             "NO_SPOTIFY_MATCH_FOUND",
