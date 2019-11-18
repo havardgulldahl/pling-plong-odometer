@@ -110,10 +110,10 @@ class DueDiligence:
         # Trackmetadata is modelled in model.py
         q = []
         SEARCH_USING_ISRC=False
-        if TRUST_ISRC and 'isrc' in trackmetadata:
+        if TRUST_ISRC and 'isrc' in trackmetadata and trackmetadata['isrc'] is not None:
             q.append('isrc:{}'.format(trackmetadata['isrc']))
             SEARCH_USING_ISRC=True
-        elif TRUST_EAN and 'ean' in trackmetadata:
+        elif TRUST_EAN and 'ean' in trackmetadata and trackmetadata['ean'] is not None:
             q.append('upc:{}'.format(trackmetadata['ean']))
         else:
             # no unique code searches, build up a query of what we know
