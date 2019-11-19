@@ -220,16 +220,24 @@ function create_charts(dataseries, ctxFilenameStats, ctxMusiclibraryStats, ctxOw
     // create ownersihp status
 
     var dsets = [];
-    for(var dset in dataseries.ownership_resolve_efficiency_hours.datasets) {
+    for(var dset in dataseries.ownership_resolve_efficiency_weeks.datasets) {
         dsets.push({ label: dset, 
-                     data:dataseries.ownership_resolve_efficiency_hours.datasets[dset],
+                     data:dataseries.ownership_resolve_efficiency_weeks.datasets[dset],
                      borderColor: allcolors[dset],
                      backgroundColor: allcolors[dset],
-                     type: 'line'
+                     type: 'bar',
+                     yAxisID:'y-axis-1'
                    });
     }
+    dsets.push( {
+        label: "resolve_rate",
+        data: dataseries.resolved_rate,
+        type: "line",
+        yAxisID:'y-axis-2'
+    });
 
     var chart = new Chart(ctxOwnershipStats, {
+        type: "bar",
         // The data for our dataset
         data: {
             datasets: dsets
@@ -237,35 +245,35 @@ function create_charts(dataseries, ctxFilenameStats, ctxMusiclibraryStats, ctxOw
 
         // Configuration options go here
         options: {
-            animation: {
-                duration: 750,
-            },
             scales: {
                 xAxes: [{
-                    type: 'time',
-                    distribution: 'series',
-                    offset: true,
-                    ticks: {
-                        major: {
-                            enabled: true,
-                            fontStyle: 'bold'
-                        },
-                        source: 'data',
-                        autoSkip: true,
-                        autoSkipPadding: 75,
-                        maxRotation: 0,
-                        sampleSize: 100
+                    type: "time",
+                    stacked: true,
+                    time: {
+                        unit: "week"
                     }
                 }],
                 yAxes: [{
-                  gridLines: {
-                      drawBorder: false
-                  },
-                  scaleLabel: {
+                    type: 'linear',
+                    display: true,
+                    stacked: true,
+                    position: 'left',
+                    id: 'y-axis-1'
+                }, {
+                    type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+                    display: true,
+                    position: 'right',
+                    id: 'y-axis-2',
+
+                    // grid line settings
+                    gridLines: {
+                        drawOnChartArea: false, // only want the grid lines for one axis to show up
+                    },
+                }],
+                scaleLabel: {
                       display: true,
                       labelString: 'HITS'
-                  }
-                }]
+                }
               },
             title: {
                 text: i18n.OWNERSHIP_STATUS_WEEKS(),

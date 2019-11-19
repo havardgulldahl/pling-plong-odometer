@@ -99,44 +99,83 @@ async def main(configuration, outfile):#:configparser.ConfigParser, outfile:io.T
     #
     # MAke statitics on how well the copyright resolvers work 
 
+    def mkweek(record):
+       return '{}W{:02d}'.format(int(record['year']), int(record['week']))
+
     async def run_lookup_results(setname, sql):#:str, sql:str) -> dict:
         datasets = {}
-        current_series = []
-        current_result = None
+        tooltips = []
+
         for r in await dbpool.fetch(sql):
-            # date                      result  count
-            # 2018-11-08 22:00:00+01	CHECK	37
-            logging.info("got row- {!r}".format(r))
+            #year   week    result  numrecords    
+            #2019	36	    CHECK	139
+            #2019	36	    NO	    3
+            #2019	36	    OK	    108
+            #logging.info("got row- {!r}".format(r))
             if not r['result'] in datasets.keys():
                 # first time we see new series, store the old one
                 datasets[r['result']] = []
             datasets[r['result']].append( {
-                't': r['date'].isoformat(),
-                'y': r['count']
+                'x': mkweek(r),
+                'y': r['numrecords']
             })
+
+        # calculate  percentage
+        
 
         ret = {'labels':[],
                'datasets':datasets,
-               'tooltips':[]
+               'tooltips':tooltips
                }
 
 
         return {setname: ret} 
 
-    out.update(await run_lookup_results('ownership_resolve_efficiency_hours',
-        '''SELECT date_trunc('hour', timestamp) AS date, result, count(1)
+    out.update(await run_lookup_results('ownership_resolve_efficiency_weeks',
+        '''SELECT date_part('year', timestamp) as year, 
+                  date_part('week', timestamp) as week, 
+                  result, 
+                  Count(ID) as numRecords
             FROM copyright_lookup_result
-            GROUP BY date, result
-            ORDER BY result'''
+            GROUP BY date_part('year', timestamp), date_part('week', timestamp), result
+            ORDER BY year, week ASC;'''
     ))
 
-    out.update(await run_lookup_results('ownership_resolve_efficiency_weeks',
-        '''SELECT date_trunc('week', timestamp) AS date, result, count(1)
-            FROM copyright_lookup_result
-            GROUP BY date, result
-            ORDER BY result'''
-    ))
-    
+    _totals = await dbpool.fetch(
+        '''SELECT date_part('year', timestamp) as year, 
+                  date_part('week', timestamp) as week, 
+                  Count(ID) as numRecords
+        FROM copyright_lookup_result
+        GROUP BY date_part('year', timestamp), date_part('week', timestamp)
+        ORDER BY year, week ASC '''
+    )
+
+    totals = { mkweek(r):r['numrecords'] for r in _totals }
+
+    _resolved = await dbpool.fetch(
+        '''SELECT date_part('year', timestamp) as year, 
+                  date_part('week', timestamp) as week, 
+                  Count(ID) as numRecords
+        FROM copyright_lookup_result
+        WHERE result = 'OK' OR result = 'NO'
+        GROUP BY date_part('year', timestamp), date_part('week', timestamp)
+        ORDER BY year, week ASC '''
+    )
+    resolved = { mkweek(r):r['numrecords'] for r in _resolved }
+
+    resolved_rate = []
+    for week,total_hits in totals.items():
+        try:
+            val = resolved[week] / total_hits 
+        except KeyError:
+            val = 0
+        resolved_rate.append( {
+            'x': week,
+            'y': val
+        })  
+
+    out.update({'resolved_rate':resolved_rate})
+
     from pprint import pprint, pformat
 
     #pprint(out)
