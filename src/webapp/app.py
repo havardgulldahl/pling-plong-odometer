@@ -290,7 +290,7 @@ async def handle_trackinfo(request):
         else:
             # search Spotify by ISRC
             try:
-                track = await loop.run_in_executor(executor, app.duediligence.spotify_search_track, f'isrc:{trackinfo}')
+                track = await loop.run_in_executor(executor, app.duediligence.spotify_search_track, 'isrc:{}'.format(trackinfo))
             except SpotifyNotFoundError as e:
                 # invalid ISRC
                 return web.json_response({
